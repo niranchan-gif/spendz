@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print
+// ignore_for_file: avoid_print, dangling_library_doc_comments, unnecessary_import
 /// Phase 3 — Vault Security, AES-256-GCM Encryption & Key Lifecycle Test Suite
 ///
 /// Comprehensive security verification covering:

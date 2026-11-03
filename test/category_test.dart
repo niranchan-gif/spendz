@@ -1,8 +1,7 @@
+// ignore_for_file: avoid_print
 import 'package:flutter_test/flutter_test.dart';
 import 'package:spendz/services/category_engine.dart';
 import 'package:spendz/providers/category_provider.dart';
-import 'package:spendz/models/category_model.dart';
-import 'package:spendz/database/database_helper.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {

@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print
+// ignore_for_file: avoid_print, dangling_library_doc_comments, unnecessary_import
 /// WalletProvider unit tests
 ///
 /// The WalletProvider now delegates to SQLite repositories. We initialise the

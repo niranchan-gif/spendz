@@ -13,9 +13,7 @@ import 'package:spendz/database/transaction_dao.dart';
 import 'package:spendz/features/wallet/ocr/document_classifier.dart';
 import 'package:spendz/features/wallet/ocr/document_field_extractor.dart';
 import 'package:spendz/features/wallet/ocr/document_ocr_service.dart';
-import 'package:spendz/features/wallet/ocr/ocr_result.dart';
 import 'package:spendz/features/wallet/services/document_expiry_service.dart';
-import 'package:spendz/features/wallet/services/document_scanner_service.dart';
 import 'package:spendz/features/wallet/services/document_vault_service.dart';
 import 'package:spendz/features/wallet/services/image_processing_service.dart';
 import 'package:spendz/features/wallet/security/document_encryption_service.dart';
@@ -25,7 +23,7 @@ import 'package:spendz/models/wallet_card_model.dart';
 import 'package:spendz/models/wallet_document_model.dart';
 
 /// Helper to generate synthetic test image bytes (PNG) in-memory
-Uint8List _generateDummyImageBytes({int width = 200, int height = 150, int color = 0xFFFFFFFF}) {
+Uint8List _generateDummyImageBytes({int width = 200, int height = 150}) {
   final image = img.Image(width: width, height: height);
   img.fill(image, color: img.ColorRgb8(200, 200, 200));
   // Add some synthetic text-like pixels within image bounds
@@ -168,15 +166,19 @@ void main() {
       ),
     );
 
-    // Clean tables between runs in both databases
-    await db.delete('wallet_cards');
-    await db.delete('wallet_documents');
-    await db.delete('transactions');
+    // Clean tables between runs safely
+    try {
+      await db.delete('wallet_cards');
+      await db.delete('wallet_documents');
+      await db.delete('transactions');
+    } catch (_) {}
 
-    final appDb = await DatabaseHelper.instance.database;
-    await appDb.delete('wallet_cards');
-    await appDb.delete('wallet_documents');
-    await appDb.delete('transactions');
+    try {
+      final appDb = await DatabaseHelper.instance.database;
+      await appDb.delete('wallet_cards');
+      await appDb.delete('wallet_documents');
+      await appDb.delete('transactions');
+    } catch (_) {}
 
     cardRepo = WalletCardRepository();
     docRepo = WalletDocumentRepository();

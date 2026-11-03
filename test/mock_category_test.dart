@@ -1,6 +1,8 @@
+// ignore_for_file: avoid_print
 import 'package:spendz/services/category_engine.dart';
 import 'package:spendz/providers/category_provider.dart';
 import 'package:spendz/models/category_model.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:uuid/uuid.dart';
 
 // Create a mock CategoryProvider
@@ -32,6 +34,8 @@ class MockCategoryProvider extends CategoryProvider {
 }
 
 void main() {
+  sqfliteFfiInit();
+  databaseFactory = databaseFactoryFfi;
   final provider = MockCategoryProvider();
   provider.addMock('Food & Dining', 'expense');
   provider.addMock('Transport', 'expense');
