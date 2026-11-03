@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:ui';
 import '../providers/transaction_provider.dart';
+import '../providers/wallet_provider.dart';
 import '../app/theme/app_colors.dart';
 
 import 'home/home_screen.dart';
 import 'transactions/transactions_screen.dart';
+import 'wallet/wallet_dashboard_screen.dart';
 import 'analytics/analytics_screen.dart';
-import 'categories/categories_screen.dart';
-import 'settings/settings_screen.dart';
-import 'transactions/add_transaction_screen.dart';
+import 'profile/profile_screen.dart';
+import 'wallet/widgets/spendz_pop_sheet.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -27,6 +28,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<TransactionProvider>().loadTransactions();
+        context.read<WalletProvider>().loadWallet();
       }
     });
   }
@@ -34,8 +36,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const TransactionsScreen(),
+    const WalletDashboardScreen(),
     const AnalyticsScreen(),
-    const SettingsScreen(),
+    const ProfileScreen(),
   ];
 
   @override
@@ -43,21 +46,23 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: _screens[_currentIndex],
-      floatingActionButton: _currentIndex == 1
-          ? FloatingActionButton.extended(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const AddTransactionScreen()),
-                );
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('Add Transaction'),
-            )
-          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.miniEndFloat,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 76.0),
+        child: FloatingActionButton(
+          heroTag: 'spendz_pop_fab',
+          mini: true,
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.background,
+          elevation: 6,
+          tooltip: 'Spendz POP Quick Wallet',
+          onPressed: () => SpendzPopSheet.show(context),
+          child: const Icon(Icons.bolt_rounded, size: 24),
+        ),
+      ),
       bottomNavigationBar: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(32),
             child: BackdropFilter(
@@ -65,12 +70,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.surface.withAlpha(100), // More transparent for glass effect
+                  color: AppColors.surface.withAlpha(140),
                   borderRadius: BorderRadius.circular(32),
-                  border: Border.all(color: Colors.white.withAlpha(30), width: 1),
+                  border: Border.all(color: Colors.white.withAlpha(35), width: 1),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withAlpha(40),
+                      color: Colors.black.withAlpha(50),
                       blurRadius: 30,
                       offset: const Offset(0, 10),
                     ),
@@ -80,8 +85,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                   elevation: 0,
                   backgroundColor: Colors.transparent,
                   type: BottomNavigationBarType.fixed,
-                  showSelectedLabels: false,
-                  showUnselectedLabels: false,
+                  showSelectedLabels: true,
+                  showUnselectedLabels: true,
+                  selectedFontSize: 11,
+                  unselectedFontSize: 10,
                   selectedItemColor: AppColors.primary,
                   unselectedItemColor: AppColors.textHint,
                   currentIndex: _currentIndex,
@@ -99,17 +106,22 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                     BottomNavigationBarItem(
                       icon: Icon(Icons.receipt_long_outlined),
                       activeIcon: Icon(Icons.receipt_long),
-                      label: 'Transactions',
+                      label: 'Activity',
                     ),
                     BottomNavigationBarItem(
-                      icon: Icon(Icons.pie_chart_outline),
-                      activeIcon: Icon(Icons.pie_chart),
-                      label: 'Analytics',
+                      icon: Icon(Icons.account_balance_wallet_outlined),
+                      activeIcon: Icon(Icons.account_balance_wallet),
+                      label: 'Wallet',
                     ),
                     BottomNavigationBarItem(
-                      icon: Icon(Icons.settings_outlined),
-                      activeIcon: Icon(Icons.settings),
-                      label: 'Settings',
+                      icon: Icon(Icons.insights_outlined),
+                      activeIcon: Icon(Icons.insights),
+                      label: 'Insights',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.person_outline),
+                      activeIcon: Icon(Icons.person),
+                      label: 'Profile',
                     ),
                   ],
                 ),

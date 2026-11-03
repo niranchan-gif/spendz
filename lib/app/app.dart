@@ -5,6 +5,7 @@ import '../providers/transaction_provider.dart';
 import '../providers/category_provider.dart';
 import '../providers/dashboard_provider.dart';
 import '../providers/gmail_import_provider.dart';
+import '../providers/wallet_provider.dart';
 
 import 'theme/app_theme.dart';
 import 'routes/app_routes.dart';
@@ -23,6 +24,7 @@ class SpendzApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CategoryProvider()),
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
         ChangeNotifierProvider(create: (_) => GmailImportProvider()),
+        ChangeNotifierProvider(create: (_) => WalletProvider()),
         ChangeNotifierProxyProvider<TransactionProvider, DashboardProvider>(
           create: (_) => DashboardProvider(),
           update: (_, txProvider, dashboardProvider) {

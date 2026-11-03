@@ -8,9 +8,7 @@ import '../../utils/icon_mapper.dart';
 import '../../utils/currency_formatter.dart';
 import '../../utils/date_formatter.dart';
 import '../../app/theme/app_colors.dart';
-import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_text_styles.dart';
-import 'glass_container.dart';
 
 class TransactionTile extends StatelessWidget {
   final TransactionModel transaction;
