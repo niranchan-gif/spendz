@@ -132,65 +132,74 @@ class TransactionTile extends StatelessWidget {
               );
             },
           ),
-          trailing: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (transaction.expectedPayments > 0)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 6),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: transaction.linkedPayments >= transaction.expectedPayments ? Colors.green.withAlpha(30) : Colors.orange.withAlpha(30),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: transaction.linkedPayments >= transaction.expectedPayments ? Colors.green.withAlpha(50) : Colors.orange.withAlpha(50)),
-                        ),
-                        child: Text(
-                          transaction.linkedPayments >= transaction.expectedPayments 
-                              ? 'Settled' 
-                              : 'Owed: ${CurrencyFormatter.format(transaction.owedAmount)} (${transaction.linkedPayments}/${transaction.expectedPayments})',
-                          style: TextStyle(
-                            fontSize: 10, 
-                            color: transaction.linkedPayments >= transaction.expectedPayments ? Colors.green : Colors.orange
-                          ),
-                        ),
-                      ),
-                    )
-                  else if (transaction.owedAmount > 0)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 6),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.withAlpha(30),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.orange.withAlpha(50)),
-                        ),
-                        child: Text(
-                          'Owed: ${CurrencyFormatter.format(transaction.owedAmount)}',
-                          style: const TextStyle(fontSize: 10, color: Colors.orange),
-                        ),
+          trailing: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 160),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                // Amount row — badge above if present, amount always shown
+                if (transaction.expectedPayments > 0)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 3),
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: transaction.linkedPayments >= transaction.expectedPayments
+                          ? Colors.green.withAlpha(30)
+                          : Colors.orange.withAlpha(30),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: transaction.linkedPayments >= transaction.expectedPayments
+                            ? Colors.green.withAlpha(50)
+                            : Colors.orange.withAlpha(50),
                       ),
                     ),
-                  Text(
-                    '${isIncome ? '+' : '-'}${CurrencyFormatter.format(transaction.amount)}',
-                    style: AppTextStyles.bodyLarge.copyWith(
-                      color: isIncome ? AppColors.success : AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
+                    child: Text(
+                      transaction.linkedPayments >= transaction.expectedPayments
+                          ? 'Settled'
+                          : '${transaction.linkedPayments}/${transaction.expectedPayments} paid',
+                      style: TextStyle(
+                        fontSize: 9,
+                        color: transaction.linkedPayments >= transaction.expectedPayments
+                            ? Colors.green
+                            : Colors.orange,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  )
+                else if (transaction.owedAmount > 0)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 3),
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withAlpha(30),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.orange.withAlpha(50)),
+                    ),
+                    child: Text(
+                      'Owed ${CurrencyFormatter.format(transaction.owedAmount)}',
+                      style: const TextStyle(fontSize: 9, color: Colors.orange),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                DateFormatter.formatTime(transaction.date),
-                style: AppTextStyles.bodySmall.copyWith(fontSize: 12),
-              ),
-            ],
+                Text(
+                  '${isIncome ? '+' : '-'}${CurrencyFormatter.format(transaction.amount)}',
+                  style: AppTextStyles.bodyLarge.copyWith(
+                    color: isIncome ? AppColors.success : AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  DateFormatter.formatTime(transaction.date),
+                  style: AppTextStyles.bodySmall.copyWith(fontSize: 11),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -215,32 +224,47 @@ class TransactionTile extends StatelessWidget {
           maxChildSize: 0.9,
           expand: false,
           builder: (context, scrollController) {
-            return Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text('Assign Category', style: AppTextStyles.heading3),
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    controller: scrollController,
-                    itemCount: categories.length,
-                    itemBuilder: (ctx, index) {
-                      final cat = categories[index];
-                      final color = Color(int.tryParse(cat.color) ?? AppColors.primary.toARGB32());
-                      return ListTile(
-                        leading: Icon(IconMapper.getIcon(cat.icon), color: color),
-                        title: Text(cat.name, style: AppTextStyles.bodyMedium),
-                        onTap: () {
-                          final updatedTx = transaction.copyWith(categoryId: cat.id);
-                          context.read<TransactionProvider>().updateTransaction(updatedTx);
-                          Navigator.pop(ctx);
-                        },
-                      );
-                    },
+            return Material(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              child: Column(
+                children: [
+                  // Drag handle
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12, bottom: 4),
+                    child: Container(
+                      width: 40, height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text('Assign Category', style: AppTextStyles.heading3),
+                  ),
+                  Expanded(
+                    child: ListView.builder(
+                      controller: scrollController,
+                      itemCount: categories.length,
+                      itemBuilder: (ctx, index) {
+                        final cat = categories[index];
+                        final color = Color(int.tryParse(cat.color) ?? AppColors.primary.toARGB32());
+                        return ListTile(
+                          leading: Icon(IconMapper.getIcon(cat.icon), color: color),
+                          title: Text(cat.name, style: AppTextStyles.bodyMedium),
+                          onTap: () {
+                            final updatedTx = transaction.copyWith(categoryId: cat.id);
+                            context.read<TransactionProvider>().updateTransaction(updatedTx);
+                            Navigator.pop(ctx);
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
             );
           },
         );
@@ -444,59 +468,68 @@ class TransactionTile extends StatelessWidget {
           maxChildSize: 0.9,
           expand: false,
           builder: (context, scrollController) {
-            return Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text('Select Expense to Offset', style: AppTextStyles.heading3),
-                ),
-                Expanded(
-                  child: recentExpenses.isEmpty
-                      ? const Center(child: Text('No recent expenses found.'))
-                      : ListView.builder(
-                          controller: scrollController,
-                          itemCount: recentExpenses.length,
-                          itemBuilder: (ctx, index) {
-                            final expense = recentExpenses[index];
-                            return ListTile(
-                              title: Text(expense.merchant ?? expense.description ?? 'Unknown Expense', style: AppTextStyles.bodyMedium),
-                              subtitle: Text(DateFormatter.formatShortDate(expense.date), style: AppTextStyles.bodySmall),
-                              trailing: Text(
-                                CurrencyFormatter.format(expense.amount),
-                                style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textPrimary),
-                              ),
-                              onTap: () {
-                                // 1. Calculate new expense amount and owed amount
-                                final newExpenseAmount = (expense.amount - transaction.amount).clamp(0.0, double.infinity);
-                                final newOwedAmount = (expense.owedAmount - transaction.amount).clamp(0.0, double.infinity);
-                                final newLinkedPayments = expense.linkedPayments + 1;
-                                
-                                // 2. Update the Expense
-                                final updatedExpense = expense.copyWith(
-                                  amount: newExpenseAmount,
-                                  owedAmount: newOwedAmount,
-                                  linkedPayments: newLinkedPayments,
-                                  description: '${expense.description ?? ''} (Refunded ${CurrencyFormatter.format(transaction.amount)} from ${transaction.merchant ?? 'Income'})',
-                                );
-                                txProvider.updateTransaction(updatedExpense);
-                                
-                                // 3. Mark this Income as a refund so it stops counting towards Income totals but still shows in Received UI
-                                final updatedIncome = transaction.copyWith(
-                                  type: 'refund',
-                                  description: 'Linked refund to ${expense.merchant ?? expense.description ?? 'expense'}',
-                                );
-                                txProvider.updateTransaction(updatedIncome);
-                                
-                                Navigator.pop(ctx);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Linked to expense! Amount reduced to ${CurrencyFormatter.format(newExpenseAmount)}.')),
-                                );
-                              },
-                            );
-                          },
-                        ),
-                ),
-              ],
+            return Material(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              child: Column(
+                children: [
+                  // Drag handle
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12, bottom: 4),
+                    child: Container(
+                      width: 40, height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text('Select Expense to Offset', style: AppTextStyles.heading3),
+                  ),
+                  Expanded(
+                    child: recentExpenses.isEmpty
+                        ? const Center(child: Text('No recent expenses found.'))
+                        : ListView.builder(
+                            controller: scrollController,
+                            itemCount: recentExpenses.length,
+                            itemBuilder: (ctx, index) {
+                              final expense = recentExpenses[index];
+                              return ListTile(
+                                title: Text(expense.merchant ?? expense.description ?? 'Unknown Expense', style: AppTextStyles.bodyMedium),
+                                subtitle: Text(DateFormatter.formatShortDate(expense.date), style: AppTextStyles.bodySmall),
+                                trailing: Text(
+                                  CurrencyFormatter.format(expense.amount),
+                                  style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textPrimary),
+                                ),
+                                onTap: () {
+                                  final newExpenseAmount = (expense.amount - transaction.amount).clamp(0.0, double.infinity);
+                                  final newOwedAmount = (expense.owedAmount - transaction.amount).clamp(0.0, double.infinity);
+                                  final newLinkedPayments = expense.linkedPayments + 1;
+                                  final updatedExpense = expense.copyWith(
+                                    amount: newExpenseAmount,
+                                    owedAmount: newOwedAmount,
+                                    linkedPayments: newLinkedPayments,
+                                    description: '${expense.description ?? ''} (Refunded ${CurrencyFormatter.format(transaction.amount)} from ${transaction.merchant ?? 'Income'})',
+                                  );
+                                  txProvider.updateTransaction(updatedExpense);
+                                  final updatedIncome = transaction.copyWith(
+                                    type: 'refund',
+                                    description: 'Linked refund to ${expense.merchant ?? expense.description ?? 'expense'}',
+                                  );
+                                  txProvider.updateTransaction(updatedIncome);
+                                  Navigator.pop(ctx);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Linked to expense! Amount reduced to ${CurrencyFormatter.format(newExpenseAmount)}.')),
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
             );
           },
         );
