@@ -1,11 +1,17 @@
+import 'dart:typed_data';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
-import '../../providers/wallet_provider.dart';
-import '../../models/wallet_document_model.dart';
+import 'package:provider/provider.dart';
+
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_text_styles.dart';
+import '../../features/wallet/services/document_vault_service.dart';
+import '../../models/wallet_document_model.dart';
+import '../../providers/wallet_document_provider.dart';
+import '../../providers/wallet_provider.dart';
+import 'document_preview_screen.dart';
+import 'wallet_security_settings_screen.dart';
 import 'widgets/document_category_chip.dart';
 import 'widgets/document_vault_tile.dart';
 
@@ -19,6 +25,7 @@ class DocumentsScreen extends StatefulWidget {
 }
 
 class _DocumentsScreenState extends State<DocumentsScreen> {
+  final DocumentVaultService _vaultService = DocumentVaultService();
   String _selectedCategory = 'all';
   String _searchQuery = '';
 
@@ -39,7 +46,10 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     String category = 'aadhaar';
     DateTime? issueDate;
     DateTime? expiryDate;
-    String mimeType = 'image/jpeg';
+    String mimeType = 'application/pdf';
+    Uint8List? pickedFileBytes;
+    String? pickedFileName;
+    bool isEncrypting = false;
 
     final categories = [
       'aadhaar',
@@ -83,7 +93,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                           Text('Add Document to Vault', style: AppTextStyles.heading3),
                           IconButton(
                             icon: const Icon(Icons.close),
-                            onPressed: () => Navigator.pop(ctx),
+                            onPressed: isEncrypting ? null : () => Navigator.pop(ctx),
                           ),
                         ],
                       ),
@@ -97,11 +107,11 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                         ),
                         child: const Row(
                           children: [
-                            Icon(Icons.lock_rounded, color: AppColors.primary, size: 18),
+                            Icon(Icons.shield_outlined, color: AppColors.primary, size: 18),
                             SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'Files are encrypted with AES-256-GCM before saving locally.',
+                                'Documents are encrypted with AES-256-GCM before saving locally.',
                                 style: TextStyle(fontSize: 11, color: Colors.white70),
                               ),
                             ),
@@ -115,7 +125,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                           labelText: 'Document Name (e.g. My Aadhaar)',
                           prefixIcon: Icon(Icons.description_outlined),
                         ),
-                        validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                        validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
                       ),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
@@ -138,7 +148,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                       TextFormField(
                         controller: descController,
                         decoration: const InputDecoration(
-                          labelText: 'Description / Document ID (Optional)',
+                          labelText: 'Description / ID (Optional)',
                           prefixIcon: Icon(Icons.notes_outlined),
                         ),
                       ),
@@ -189,66 +199,178 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      Text('Import Method', style: AppTextStyles.labelLarge),
+                      Text('Select Document File', style: AppTextStyles.labelLarge),
                       const SizedBox(height: 8),
+
+                      // File picker trigger buttons
                       Row(
                         children: [
                           Expanded(
                             child: OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(
+                                  color: mimeType.contains('pdf') ? AppColors.primary : Colors.white24,
+                                ),
+                              ),
                               icon: const Icon(Icons.picture_as_pdf, size: 18),
-                              label: const Text('PDF File'),
-                              onPressed: () {
-                                setModalState(() => mimeType = 'application/pdf');
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('File picker ready for encrypted import.')),
-                                );
-                              },
+                              label: const Text('Pick PDF'),
+                              onPressed: isEncrypting
+                                  ? null
+                                  : () async {
+                                      final files = await FilePicker.pickFiles(
+                                        type: FileType.custom,
+                                        allowedExtensions: ['pdf'],
+                                      );
+                                      if (files.isNotEmpty) {
+                                        final file = files.first;
+                                        final bytes = await file.readAsBytes();
+                                        setModalState(() {
+                                          pickedFileBytes = bytes;
+                                          pickedFileName = file.name;
+                                          mimeType = 'application/pdf';
+                                          if (nameController.text.trim().isEmpty) {
+                                            nameController.text = file.name.replaceAll('.pdf', '');
+                                          }
+                                        });
+                                      }
+                                    },
                             ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(
+                                  color: mimeType.contains('image') ? AppColors.primary : Colors.white24,
+                                ),
+                              ),
                               icon: const Icon(Icons.image, size: 18),
-                              label: const Text('Image'),
-                              onPressed: () {
-                                setModalState(() => mimeType = 'image/jpeg');
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Gallery picker ready for encrypted import.')),
-                                );
-                              },
+                              label: const Text('Pick Image'),
+                              onPressed: isEncrypting
+                                  ? null
+                                  : () async {
+                                      final files = await FilePicker.pickFiles(
+                                        type: FileType.image,
+                                      );
+                                      if (files.isNotEmpty) {
+                                        final file = files.first;
+                                        final bytes = await file.readAsBytes();
+                                        final ext = file.extension?.toLowerCase() ?? 'jpg';
+                                        setModalState(() {
+                                          pickedFileBytes = bytes;
+                                          pickedFileName = file.name;
+                                          mimeType = ext == 'png' ? 'image/png' : 'image/jpeg';
+                                          if (nameController.text.trim().isEmpty) {
+                                            nameController.text = file.name.replaceAll(RegExp(r'\.[a-zA-Z]+$'), '');
+                                          }
+                                        });
+                                      }
+                                    },
                             ),
                           ),
                         ],
                       ),
+
+                      // Display chosen file badge
+                      if (pickedFileName != null) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withAlpha(20),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.green.withAlpha(50)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.check_circle_outline, color: Colors.green, size: 16),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  pickedFileName!,
+                                  style: const TextStyle(fontSize: 12, color: Colors.green, fontWeight: FontWeight.bold),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              Text(
+                                '${((pickedFileBytes?.length ?? 0) / 1024).toStringAsFixed(0)} KB',
+                                style: const TextStyle(fontSize: 10, color: Colors.white60),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+
                       const SizedBox(height: 24),
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () {
-                            if (formKey.currentState!.validate()) {
-                              final doc = WalletDocumentModel(
-                                id: const Uuid().v4(),
-                                documentName: nameController.text.trim(),
-                                category: category,
-                                description: descController.text.trim().isEmpty ? null : descController.text.trim(),
-                                encryptedFilePath: 'vault/${DateTime.now().millisecondsSinceEpoch}_vault.dat',
-                                mimeType: mimeType,
-                                fileSize: 1024 * 350,
-                                issueDate: issueDate,
-                                expiryDate: expiryDate,
-                                isFavorite: false,
-                                createdAt: DateTime.now(),
-                                updatedAt: DateTime.now(),
-                              );
+                          onPressed: isEncrypting
+                              ? null
+                              : () async {
+                                  if (formKey.currentState!.validate()) {
+                                    if (pickedFileBytes == null) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Please select a PDF or Image file to import.')),
+                                      );
+                                      return;
+                                    }
 
-                              context.read<WalletProvider>().addDocument(doc);
-                              Navigator.pop(ctx);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Document encrypted and stored in vault!')),
-                              );
-                            }
-                          },
-                          child: const Text('Encrypt & Save to Vault'),
+                                    setModalState(() => isEncrypting = true);
+
+                                    try {
+                                      final doc = await _vaultService.importDocument(
+                                        documentName: nameController.text.trim(),
+                                        category: category,
+                                        mimeType: mimeType,
+                                        fileBytes: pickedFileBytes!,
+                                        description: descController.text.trim().isEmpty ? null : descController.text.trim(),
+                                        issueDate: issueDate,
+                                        expiryDate: expiryDate,
+                                      );
+
+                                      if (!context.mounted) return;
+
+                                      // Refresh providers
+                                      await context.read<WalletProvider>().loadWallet();
+                                      if (context.mounted) {
+                                        await context.read<WalletDocumentProvider>().loadDocuments();
+                                      }
+
+                                      if (!ctx.mounted) return;
+                                      Navigator.pop(ctx);
+
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('"${doc.documentName}" encrypted and saved to vault!'),
+                                          ),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      setModalState(() => isEncrypting = false);
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Import failed: $e')),
+                                        );
+                                      }
+                                    }
+                                  }
+                                },
+                          child: isEncrypting
+                              ? const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                                    ),
+                                    SizedBox(width: 12),
+                                    Text('Encrypting with AES-256-GCM...'),
+                                  ],
+                                )
+                              : const Text('Encrypt & Save to Vault'),
                         ),
                       ),
                     ],
@@ -286,12 +408,20 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.white.withAlpha(25),
+                        color: Colors.green.withAlpha(25),
                         borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.green.withAlpha(40)),
                       ),
-                      child: const Text(
-                        'Preview • Phase 3 Encrypted',
-                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white70),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.lock, size: 10, color: Colors.green),
+                          SizedBox(width: 4),
+                          Text(
+                            'AES-256-GCM',
+                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.green),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -344,7 +474,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                           const Text('Type', style: TextStyle(fontSize: 11, color: Colors.white54)),
                           const SizedBox(height: 4),
                           Text(
-                            doc.mimeType.contains('pdf') ? 'PDF' : 'JPEG',
+                            doc.mimeType.contains('pdf') ? 'PDF' : 'Image',
                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                           ),
                         ],
@@ -354,26 +484,38 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                 ),
                 const SizedBox(height: 16),
                 ListTile(
-                  leading: const Icon(Icons.remove_red_eye_outlined, color: AppColors.primary),
+                  leading: const Icon(Icons.lock_open_rounded, color: AppColors.primary),
                   title: const Text('Preview Decrypted Document'),
-                  subtitle: const Text('Requires biometric or passcode unlock'),
-                  trailing: const Icon(Icons.fingerprint),
+                  subtitle: const Text('Requires biometric or device passcode unlock'),
+                  trailing: const Icon(Icons.fingerprint, color: AppColors.primary),
                   onTap: () {
                     Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Document preview unlocked.')),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => DocumentPreviewScreen(document: doc),
+                      ),
                     );
                   },
                 ),
                 ListTile(
                   leading: const Icon(Icons.delete_outline, color: AppColors.error),
                   title: const Text('Delete from Vault', style: TextStyle(color: AppColors.error)),
-                  onTap: () {
-                    context.read<WalletProvider>().deleteDocument(doc.id);
+                  subtitle: const Text('Removes encrypted file and metadata'),
+                  onTap: () async {
                     Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Document deleted.')),
-                    );
+                    await _vaultService.deleteDocument(doc.id);
+                    if (context.mounted) {
+                      await context.read<WalletProvider>().loadWallet();
+                    }
+                    if (context.mounted) {
+                      await context.read<WalletDocumentProvider>().loadDocuments();
+                    }
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Document deleted from vault.')),
+                      );
+                    }
                   },
                 ),
               ],
@@ -387,9 +529,22 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Document Vault'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.shield_outlined),
+            tooltip: 'Vault Security Settings',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const WalletSecuritySettingsScreen()),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'Add Document',
@@ -398,24 +553,28 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         ],
       ),
       body: Consumer<WalletProvider>(
-        builder: (context, wallet, child) {
-          var docs = wallet.getDocumentsByCategory(_selectedCategory);
-
-          if (_searchQuery.isNotEmpty) {
-            docs = docs.where((d) {
-              return d.documentName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                  (d.description != null && d.description!.toLowerCase().contains(_searchQuery.toLowerCase()));
-            }).toList();
+        builder: (context, wallet, _) {
+          if (wallet.isLoading) {
+            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
           }
+
+          final allDocs = wallet.documents;
+          final filteredDocs = allDocs.where((doc) {
+            final matchesCat = _selectedCategory == 'all' || doc.category.toLowerCase() == _selectedCategory;
+            final matchesSearch = _searchQuery.isEmpty ||
+                doc.documentName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                (doc.description?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
+            return matchesCat && matchesSearch;
+          }).toList();
 
           return Column(
             children: [
-              // Search field
+              // Search Bar
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: TextField(
                   decoration: InputDecoration(
-                    hintText: 'Search documents...',
+                    hintText: 'Search documents in vault...',
                     prefixIcon: const Icon(Icons.search),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
@@ -424,11 +583,11 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                           )
                         : null,
                   ),
-                  onChanged: (q) => setState(() => _searchQuery = q),
+                  onChanged: (val) => setState(() => _searchQuery = val),
                 ),
               ),
 
-              // Category chips
+              // Category Filter Bar
               DocumentCategoryChips(
                 selectedCategory: _selectedCategory,
                 onSelected: (cat) => setState(() => _selectedCategory = cat),
@@ -436,34 +595,72 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
 
               const SizedBox(height: 8),
 
+              // Expiring Documents Alert Banner
+              if (wallet.expiringDocuments.isNotEmpty && _selectedCategory == 'all')
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withAlpha(20),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.orange.withAlpha(60)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '${wallet.expiringDocuments.length} document(s) expiring soon or expired.',
+                            style: const TextStyle(fontSize: 12, color: Colors.orange, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+              // Documents List
               Expanded(
-                child: docs.isEmpty
+                child: filteredDocs.isEmpty
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.folder_open, size: 64, color: Colors.white24),
+                            Icon(Icons.shield_outlined, size: 64, color: Colors.white.withAlpha(60)),
                             const SizedBox(height: 16),
-                            Text('No Documents Found', style: AppTextStyles.heading3),
+                            Text(
+                              _searchQuery.isEmpty ? 'No documents in vault' : 'No matching documents',
+                              style: AppTextStyles.heading3,
+                            ),
                             const SizedBox(height: 8),
-                            const Text('Import Aadhaar, PAN, DL, or certificates.', style: TextStyle(color: Colors.white54)),
-                            const SizedBox(height: 24),
-                            ElevatedButton(
-                              onPressed: () => _showAddDocumentDialog(context),
-                              child: const Text('Add Document'),
+                            Text(
+                              _searchQuery.isEmpty
+                                  ? 'Tap + to encrypt and store personal IDs'
+                                  : 'Try adjusting your search or category filter',
+                              style: AppTextStyles.bodyMedium.copyWith(color: Colors.white60),
                             ),
                           ],
                         ),
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        itemCount: docs.length,
+                        padding: const EdgeInsets.all(16),
+                        itemCount: filteredDocs.length,
                         itemBuilder: (context, index) {
-                          final doc = docs[index];
+                          final doc = filteredDocs[index];
                           return DocumentVaultTile(
                             document: doc,
-                            onFavoriteToggle: () => wallet.toggleDocumentFavorite(doc.id),
                             onTap: () => _showDocumentDetails(context, doc),
+                            onFavoriteToggle: () {
+                              context.read<WalletProvider>().toggleDocumentFavorite(doc.id);
+                            },
+                            onDelete: () async {
+                              await _vaultService.deleteDocument(doc.id);
+                              if (context.mounted) {
+                                await context.read<WalletProvider>().loadWallet();
+                              }
+                            },
                           );
                         },
                       ),

@@ -8,6 +8,7 @@ import '../../providers/wallet_provider.dart';
 import '../../database/database_helper.dart';
 import '../categories/categories_screen.dart';
 import '../../widgets/glass_container.dart';
+import '../wallet/wallet_security_settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -152,12 +153,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: Colors.blue.withAlpha(30),
+                      color: Colors.green.withAlpha(30),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: const Text(
-                      'Phase 3 Target',
-                      style: TextStyle(color: Colors.lightBlueAccent, fontSize: 10, fontWeight: FontWeight.bold),
+                      'Phase 3 Active',
+                      style: TextStyle(color: Colors.green, fontSize: 10, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
@@ -166,10 +167,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
               GlassContainer(
                 child: Column(
                   children: [
+                    ListTile(
+                      leading: const Icon(Icons.shield_outlined, color: AppColors.primary),
+                      title: const Text('Vault Security & Hardware Keystore'),
+                      subtitle: const Text('AES-256-GCM status, hardware keys, and auto-lock'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const WalletSecuritySettingsScreen()),
+                        );
+                      },
+                    ),
+                    const Divider(height: 1, indent: 56),
                     SwitchListTile(
                       secondary: const Icon(Icons.fingerprint, color: AppColors.primary),
                       title: const Text('Biometric Authentication'),
-                      subtitle: const Text('Require fingerprint/face to decrypt documents (Phase 3)'),
+                      subtitle: const Text('Require fingerprint/face to decrypt documents'),
                       value: _biometricEnabled,
                       activeThumbColor: AppColors.primary,
                       onChanged: _updateBiometric,
@@ -178,7 +192,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     SwitchListTile(
                       secondary: const Icon(Icons.lock_outline, color: AppColors.primary),
                       title: const Text('App Lock on Startup'),
-                      subtitle: const Text('Lock entire app when minimized or backgrounded (Phase 3)'),
+                      subtitle: const Text('Lock entire app when minimized or backgrounded'),
                       value: _appLockEnabled,
                       activeThumbColor: AppColors.primary,
                       onChanged: _updateAppLock,
@@ -242,7 +256,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Database: spendwise.db (v3) • Fully local & private',
+                            'Database: spendwise.db (v4) • Fully local & private',
                             style: AppTextStyles.bodySmall.copyWith(color: Colors.white70),
                           ),
                         ),
