@@ -160,7 +160,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                                 final entry = sortedSpending[value.toInt()];
                                 final category = catProvider.getCategoryById(entry.key);
                                 final color = category != null 
-                                    ? Color(int.tryParse(category.color) ?? AppColors.primary.value)
+                                    ? Color(int.tryParse(category.color) ?? AppColors.primary.toARGB32())
                                     : AppColors.textHint;
                                 return Padding(
                                   padding: const EdgeInsets.only(top: 8.0),
@@ -180,7 +180,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                           final item = entry.value;
                           final category = catProvider.getCategoryById(item.key);
                           final color = category != null 
-                              ? Color(int.tryParse(category.color) ?? AppColors.primary.value)
+                              ? Color(int.tryParse(category.color) ?? AppColors.primary.toARGB32())
                               : AppColors.textHint;
                           return BarChartGroupData(
                             x: index,
@@ -214,7 +214,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       final item = entry.value;
                       final category = catProvider.getCategoryById(item.key);
                       final color = category != null 
-                          ? Color(int.tryParse(category.color) ?? AppColors.primary.value)
+                          ? Color(int.tryParse(category.color) ?? AppColors.primary.toARGB32())
                           : AppColors.textHint;
                           
                       final isTouched = index == _touchedIndex;

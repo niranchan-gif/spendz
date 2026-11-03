@@ -2,7 +2,7 @@ class WalletPassModel {
   final String id;
   final String title;
   final String passType; // 'qr_code', 'barcode', 'event_ticket', 'boarding_pass', 'membership', 'loyalty'
-  final String codeData;
+  final String encryptedCodePath; // Column 'encrypted_code_path' in DB
   final String codeFormat; // 'QR_CODE', 'CODE_128', 'AZTEC', 'PDF_417'
   final String? issuer;
   final DateTime? validUntil;
@@ -15,7 +15,7 @@ class WalletPassModel {
     required this.id,
     required this.title,
     this.passType = 'qr_code',
-    required this.codeData,
+    required this.encryptedCodePath,
     this.codeFormat = 'QR_CODE',
     this.issuer,
     this.validUntil,
@@ -25,16 +25,18 @@ class WalletPassModel {
     required this.updatedAt,
   });
 
+  // Backward compatibility alias for UI
+  String get codeData => encryptedCodePath;
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
       'title': title,
       'pass_type': passType,
-      'code_data': codeData,
+      'encrypted_code_path': encryptedCodePath,
       'code_format': codeFormat,
       'issuer': issuer,
       'valid_until': validUntil?.toIso8601String(),
-      'notes': notes,
       'is_favorite': isFavorite ? 1 : 0,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
@@ -46,7 +48,7 @@ class WalletPassModel {
       id: map['id'],
       title: map['title'] ?? '',
       passType: map['pass_type'] ?? 'qr_code',
-      codeData: map['code_data'] ?? '',
+      encryptedCodePath: map['encrypted_code_path'] ?? map['code_data'] ?? '',
       codeFormat: map['code_format'] ?? 'QR_CODE',
       issuer: map['issuer'],
       validUntil: map['valid_until'] != null ? DateTime.tryParse(map['valid_until']) : null,
@@ -61,7 +63,7 @@ class WalletPassModel {
     String? id,
     String? title,
     String? passType,
-    String? codeData,
+    String? encryptedCodePath,
     String? codeFormat,
     String? issuer,
     DateTime? validUntil,
@@ -74,7 +76,7 @@ class WalletPassModel {
       id: id ?? this.id,
       title: title ?? this.title,
       passType: passType ?? this.passType,
-      codeData: codeData ?? this.codeData,
+      encryptedCodePath: encryptedCodePath ?? this.encryptedCodePath,
       codeFormat: codeFormat ?? this.codeFormat,
       issuer: issuer ?? this.issuer,
       validUntil: validUntil ?? this.validUntil,
@@ -86,3 +88,4 @@ class WalletPassModel {
   }
 }
 
+typedef WalletPass = WalletPassModel;

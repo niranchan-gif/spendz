@@ -20,7 +20,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -34,9 +34,83 @@ class DatabaseHelper {
       await db.execute('ALTER TABLE transactions ADD COLUMN expected_payments INTEGER DEFAULT 0');
       await db.execute('ALTER TABLE transactions ADD COLUMN linked_payments INTEGER DEFAULT 0');
     }
+    if (oldVersion < 4) {
+      // 1. Add nullable card_id column to transactions
+      await db.execute('ALTER TABLE transactions ADD COLUMN card_id TEXT');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_transactions_card_id ON transactions (card_id)');
+
+      // 2. Create wallet_cards table
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS wallet_cards (
+          id TEXT PRIMARY KEY,
+          nickname TEXT NOT NULL,
+          issuer_name TEXT NOT NULL,
+          cardholder_name TEXT NOT NULL,
+          masked_number TEXT NOT NULL,
+          last_four TEXT NOT NULL,
+          expiry_month INTEGER NOT NULL,
+          expiry_year INTEGER NOT NULL,
+          card_type TEXT NOT NULL,
+          card_network TEXT NOT NULL,
+          theme_gradient TEXT NOT NULL,
+          is_favorite INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        )
+      ''');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_wallet_cards_fav ON wallet_cards (is_favorite)');
+
+      // 3. Create wallet_documents table
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS wallet_documents (
+          id TEXT PRIMARY KEY,
+          document_name TEXT NOT NULL,
+          category TEXT NOT NULL,
+          description TEXT,
+          encrypted_file_path TEXT NOT NULL,
+          thumbnail_path TEXT,
+          mime_type TEXT NOT NULL,
+          file_size INTEGER NOT NULL DEFAULT 0,
+          issue_date TEXT,
+          expiry_date TEXT,
+          is_favorite INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        )
+      ''');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_wallet_docs_cat ON wallet_documents (category)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_wallet_docs_fav ON wallet_documents (is_favorite)');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_wallet_docs_expiry ON wallet_documents (expiry_date)');
+
+      // 4. Create wallet_passes table
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS wallet_passes (
+          id TEXT PRIMARY KEY,
+          title TEXT NOT NULL,
+          pass_type TEXT NOT NULL,
+          encrypted_code_path TEXT NOT NULL,
+          code_format TEXT NOT NULL,
+          issuer TEXT,
+          valid_until TEXT,
+          is_favorite INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        )
+      ''');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_wallet_passes_fav ON wallet_passes (is_favorite)');
+
+      // 5. Create wallet_preferences table
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS wallet_preferences (
+          key TEXT PRIMARY KEY,
+          value TEXT NOT NULL
+        )
+      ''');
+    }
   }
 
   Future _createDB(Database db, int version) async {
+    // 1. Categories
     await db.execute('''
       CREATE TABLE categories (
         id TEXT PRIMARY KEY,
@@ -49,6 +123,7 @@ class DatabaseHelper {
       )
     ''');
 
+    // 2. Transactions
     await db.execute('''
       CREATE TABLE transactions (
         id TEXT PRIMARY KEY,
@@ -67,17 +142,82 @@ class DatabaseHelper {
         owed_amount REAL DEFAULT 0.0,
         expected_payments INTEGER DEFAULT 0,
         linked_payments INTEGER DEFAULT 0,
+        card_id TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       )
     ''');
 
-    await db.execute('''
-      CREATE INDEX idx_transactions_date ON transactions (date);
-    ''');
+    await db.execute('CREATE INDEX idx_transactions_date ON transactions (date)');
+    await db.execute('CREATE INDEX idx_transactions_category_id ON transactions (category_id)');
+    await db.execute('CREATE INDEX idx_transactions_card_id ON transactions (card_id)');
 
+    // 3. Wallet Cards
     await db.execute('''
-      CREATE INDEX idx_transactions_category_id ON transactions (category_id);
+      CREATE TABLE wallet_cards (
+        id TEXT PRIMARY KEY,
+        nickname TEXT NOT NULL,
+        issuer_name TEXT NOT NULL,
+        cardholder_name TEXT NOT NULL,
+        masked_number TEXT NOT NULL,
+        last_four TEXT NOT NULL,
+        expiry_month INTEGER NOT NULL,
+        expiry_year INTEGER NOT NULL,
+        card_type TEXT NOT NULL,
+        card_network TEXT NOT NULL,
+        theme_gradient TEXT NOT NULL,
+        is_favorite INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute('CREATE INDEX idx_wallet_cards_fav ON wallet_cards (is_favorite)');
+
+    // 4. Wallet Documents
+    await db.execute('''
+      CREATE TABLE wallet_documents (
+        id TEXT PRIMARY KEY,
+        document_name TEXT NOT NULL,
+        category TEXT NOT NULL,
+        description TEXT,
+        encrypted_file_path TEXT NOT NULL,
+        thumbnail_path TEXT,
+        mime_type TEXT NOT NULL,
+        file_size INTEGER NOT NULL DEFAULT 0,
+        issue_date TEXT,
+        expiry_date TEXT,
+        is_favorite INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute('CREATE INDEX idx_wallet_docs_cat ON wallet_documents (category)');
+    await db.execute('CREATE INDEX idx_wallet_docs_fav ON wallet_documents (is_favorite)');
+    await db.execute('CREATE INDEX idx_wallet_docs_expiry ON wallet_documents (expiry_date)');
+
+    // 5. Wallet Passes
+    await db.execute('''
+      CREATE TABLE wallet_passes (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        pass_type TEXT NOT NULL,
+        encrypted_code_path TEXT NOT NULL,
+        code_format TEXT NOT NULL,
+        issuer TEXT,
+        valid_until TEXT,
+        is_favorite INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute('CREATE INDEX idx_wallet_passes_fav ON wallet_passes (is_favorite)');
+
+    // 6. Wallet Preferences
+    await db.execute('''
+      CREATE TABLE wallet_preferences (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      )
     ''');
 
     await _seedDefaultCategories(db);
@@ -146,8 +286,21 @@ class DatabaseHelper {
     await db.delete('transactions');
   }
 
+  Future<void> clearAllWalletData() async {
+    final db = await instance.database;
+    await db.transaction((txn) async {
+      await txn.delete('wallet_cards');
+      await txn.delete('wallet_documents');
+      await txn.delete('wallet_passes');
+      await txn.delete('wallet_preferences');
+      // Unlink card_id from all transactions
+      await txn.rawUpdate('UPDATE transactions SET card_id = NULL');
+    });
+  }
+
   Future<void> close() async {
     final db = await instance.database;
     db.close();
+    _database = null;
   }
 }

@@ -1,24 +1,41 @@
+// ignore_for_file: avoid_print
+/// WalletProvider unit tests
+///
+/// The WalletProvider now delegates to SQLite repositories. We initialise the
+/// sqflite FFI factory so the DatabaseHelper can open an in-memory database
+/// during tests without a real device.
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:spendz/providers/wallet_provider.dart';
 import 'package:spendz/models/wallet_card_model.dart';
 import 'package:spendz/models/wallet_document_model.dart';
 import 'package:spendz/models/wallet_pass_model.dart';
 
 void main() {
+  setUpAll(() {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  });
+
   group('WalletProvider & Models Test', () {
     late WalletProvider wallet;
 
-    setUp(() {
+    setUp(() async {
       wallet = WalletProvider();
+      await wallet.loadWallet(); // loads from (empty) in-memory DB
     });
 
-    test('Initializes with default wallet items', () {
-      expect(wallet.cards.isNotEmpty, true);
-      expect(wallet.documents.isNotEmpty, true);
-      expect(wallet.passes.isNotEmpty, true);
+    // ── 1. Initial state ───────────────────────────────────────────────────
+    test('Initializes with empty wallet on fresh DB', () {
+      expect(wallet.cards, isEmpty);
+      expect(wallet.documents, isEmpty);
+      expect(wallet.passes, isEmpty);
     });
 
-    test('Card CRUD and favorite toggle operations', () {
+    // ── 2. Card CRUD ──────────────────────────────────────────────────────
+    test('Card CRUD and favorite toggle operations', () async {
       final now = DateTime.now();
       final newCard = WalletCardModel(
         id: 'test-card-1',
@@ -37,19 +54,24 @@ void main() {
         updatedAt: now,
       );
 
-      wallet.addCard(newCard);
-      expect(wallet.cards.first.id, 'test-card-1');
+      await wallet.addCard(newCard);
+      expect(wallet.cards.any((c) => c.id == 'test-card-1'), true);
 
       // Toggle favorite
-      wallet.toggleCardFavorite('test-card-1');
+      await wallet.toggleCardFavorite('test-card-1');
       expect(wallet.favoriteCards.any((c) => c.id == 'test-card-1'), true);
 
+      // Toggle back
+      await wallet.toggleCardFavorite('test-card-1');
+      expect(wallet.favoriteCards.any((c) => c.id == 'test-card-1'), false);
+
       // Delete card
-      wallet.deleteCard('test-card-1');
+      await wallet.deleteCard('test-card-1');
       expect(wallet.cards.any((c) => c.id == 'test-card-1'), false);
     });
 
-    test('Document expiry detection and category filtering', () {
+    // ── 3. Document CRUD + model helpers ──────────────────────────────────
+    test('Document expiry detection and category filtering', () async {
       final now = DateTime.now();
       final expiringDoc = WalletDocumentModel(
         id: 'test-expiring-doc',
@@ -58,29 +80,34 @@ void main() {
         encryptedFilePath: 'vault/passport.dat',
         mimeType: 'image/jpeg',
         issueDate: now.subtract(const Duration(days: 365 * 9)),
-        expiryDate: now.add(const Duration(days: 15)), // Expiring in 15 days
+        expiryDate: now.add(const Duration(days: 15)), // expiring in 15 days
         isFavorite: false,
         createdAt: now,
         updatedAt: now,
       );
 
+      // Model helpers work without DB
       expect(expiringDoc.isExpiringSoon, true);
       expect(expiringDoc.isExpired, false);
 
-      wallet.addDocument(expiringDoc);
+      await wallet.addDocument(expiringDoc);
       expect(wallet.expiringDocuments.any((d) => d.id == 'test-expiring-doc'), true);
 
       final passportDocs = wallet.getDocumentsByCategory('passport');
       expect(passportDocs.any((d) => d.id == 'test-expiring-doc'), true);
+
+      await wallet.deleteDocument('test-expiring-doc');
+      expect(wallet.documents.any((d) => d.id == 'test-expiring-doc'), false);
     });
 
-    test('Pass CRUD and favorite toggle operations', () {
+    // ── 4. Pass CRUD ──────────────────────────────────────────────────────
+    test('Pass CRUD and favorite toggle operations', () async {
       final now = DateTime.now();
       final newPass = WalletPassModel(
         id: 'test-pass-1',
         title: 'Movie Ticket',
         passType: 'event_ticket',
-        codeData: 'BMS-AVATAR-ROW-A',
+        encryptedCodePath: 'BMS-AVATAR-ROW-A',
         codeFormat: 'QR_CODE',
         issuer: 'BookMyShow',
         isFavorite: true,
@@ -88,15 +115,27 @@ void main() {
         updatedAt: now,
       );
 
-      wallet.addPass(newPass);
+      await wallet.addPass(newPass);
       expect(wallet.favoritePasses.any((p) => p.id == 'test-pass-1'), true);
 
-      wallet.togglePassFavorite('test-pass-1');
+      // Toggle favorite off
+      await wallet.togglePassFavorite('test-pass-1');
       expect(wallet.favoritePasses.any((p) => p.id == 'test-pass-1'), false);
 
-      wallet.deletePass('test-pass-1');
+      await wallet.deletePass('test-pass-1');
       expect(wallet.passes.any((p) => p.id == 'test-pass-1'), false);
+    });
+
+    // ── 5. Pass model backward-compat getter ──────────────────────────────
+    test('WalletPassModel.codeData getter returns encryptedCodePath value', () {
+      final pass = WalletPassModel(
+        id: 'p',
+        title: 'T',
+        encryptedCodePath: 'RAW_CODE_123',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      expect(pass.codeData, 'RAW_CODE_123');
     });
   });
 }
-

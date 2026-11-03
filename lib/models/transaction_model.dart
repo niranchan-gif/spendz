@@ -15,6 +15,7 @@ class TransactionModel {
   final double owedAmount; // Amount expected back for split expenses
   final int expectedPayments;
   final int linkedPayments;
+  final String? cardId; // Optional associated payment card in wallet
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -35,6 +36,7 @@ class TransactionModel {
     this.owedAmount = 0.0,
     this.expectedPayments = 0,
     this.linkedPayments = 0,
+    this.cardId,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -57,6 +59,7 @@ class TransactionModel {
       'owed_amount': owedAmount,
       'expected_payments': expectedPayments,
       'linked_payments': linkedPayments,
+      'card_id': cardId,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -80,6 +83,7 @@ class TransactionModel {
       owedAmount: map['owed_amount'] ?? 0.0,
       expectedPayments: map['expected_payments'] ?? 0,
       linkedPayments: map['linked_payments'] ?? 0,
+      cardId: map['card_id'],
       createdAt: DateTime.parse(map['created_at']),
       updatedAt: DateTime.parse(map['updated_at']),
     );
@@ -102,6 +106,8 @@ class TransactionModel {
     double? owedAmount,
     int? expectedPayments,
     int? linkedPayments,
+    String? cardId,
+    bool clearCardId = false,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -122,6 +128,7 @@ class TransactionModel {
       owedAmount: owedAmount ?? this.owedAmount,
       expectedPayments: expectedPayments ?? this.expectedPayments,
       linkedPayments: linkedPayments ?? this.linkedPayments,
+      cardId: clearCardId ? null : (cardId ?? this.cardId),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

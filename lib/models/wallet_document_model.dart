@@ -110,3 +110,5 @@ class WalletDocumentModel {
   }
 }
 
+typedef WalletDocument = WalletDocumentModel;
+

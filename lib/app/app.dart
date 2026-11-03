@@ -6,6 +6,9 @@ import '../providers/category_provider.dart';
 import '../providers/dashboard_provider.dart';
 import '../providers/gmail_import_provider.dart';
 import '../providers/wallet_provider.dart';
+import '../providers/wallet_card_provider.dart';
+import '../providers/wallet_document_provider.dart';
+import '../providers/wallet_pass_provider.dart';
 
 import 'theme/app_theme.dart';
 import 'routes/app_routes.dart';
@@ -25,6 +28,9 @@ class SpendzApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
         ChangeNotifierProvider(create: (_) => GmailImportProvider()),
         ChangeNotifierProvider(create: (_) => WalletProvider()),
+        ChangeNotifierProvider(create: (_) => WalletCardProvider()),
+        ChangeNotifierProvider(create: (_) => WalletDocumentProvider()),
+        ChangeNotifierProvider(create: (_) => WalletPassProvider()),
         ChangeNotifierProxyProvider<TransactionProvider, DashboardProvider>(
           create: (_) => DashboardProvider(),
           update: (_, txProvider, dashboardProvider) {

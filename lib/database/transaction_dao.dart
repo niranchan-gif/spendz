@@ -89,4 +89,35 @@ class TransactionDao {
     
     return false;
   }
+
+  Future<List<TransactionModel>> getTransactionsByCard(String cardId) async {
+    final db = await dbHelper.database;
+    final maps = await db.query(
+      'transactions',
+      where: 'card_id = ?',
+      whereArgs: [cardId],
+      orderBy: 'date DESC',
+    );
+    return maps.map((map) => TransactionModel.fromMap(map)).toList();
+  }
+
+  Future<int> associateCard(String transactionId, String? cardId) async {
+    final db = await dbHelper.database;
+    return await db.update(
+      'transactions',
+      {'card_id': cardId, 'updated_at': DateTime.now().toIso8601String()},
+      where: 'id = ?',
+      whereArgs: [transactionId],
+    );
+  }
+
+  Future<int> unlinkCardFromTransactions(String cardId) async {
+    final db = await dbHelper.database;
+    return await db.update(
+      'transactions',
+      {'card_id': null, 'updated_at': DateTime.now().toIso8601String()},
+      where: 'card_id = ?',
+      whereArgs: [cardId],
+    );
+  }
 }

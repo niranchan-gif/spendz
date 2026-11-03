@@ -140,7 +140,7 @@ class _PassesScreenState extends State<PassesScreen> {
                                 id: const Uuid().v4(),
                                 title: titleController.text.trim(),
                                 passType: passType,
-                                codeData: dataController.text.trim(),
+                                encryptedCodePath: dataController.text.trim(),
                                 codeFormat: 'QR_CODE',
                                 issuer: issuerController.text.trim().isEmpty ? null : issuerController.text.trim(),
                                 validUntil: validUntil,

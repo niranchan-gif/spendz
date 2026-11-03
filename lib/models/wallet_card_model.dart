@@ -104,3 +104,5 @@ class WalletCardModel {
   }
 }
 
+typedef WalletCard = WalletCardModel;
+

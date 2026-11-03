@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../models/transaction_model.dart';
 import '../../providers/transaction_provider.dart';
 import '../../providers/category_provider.dart';
+import '../../providers/wallet_provider.dart';
 import '../../models/category_model.dart';
 import '../../utils/icon_mapper.dart';
 import '../../utils/currency_formatter.dart';
@@ -90,12 +91,46 @@ class TransactionTile extends StatelessWidget {
             category?.name ?? 'Uncategorized',
             style: AppTextStyles.labelLarge,
           ),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              _getScrubbedName(),
-              style: AppTextStyles.bodySmall,
-            ),
+          subtitle: Consumer<WalletProvider>(
+            builder: (context, wallet, _) {
+              final card = transaction.cardId != null ? wallet.getCardById(transaction.cardId!) : null;
+              return Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        _getScrubbedName(),
+                        style: AppTextStyles.bodySmall,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (card != null) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withAlpha(25),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: AppColors.primary.withAlpha(40)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.credit_card, size: 10, color: AppColors.primary),
+                            const SizedBox(width: 3),
+                            Text(
+                              '${card.issuerName} • ${card.lastFour}',
+                              style: const TextStyle(fontSize: 9, color: AppColors.primary, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              );
+            },
           ),
           trailing: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -192,7 +227,7 @@ class TransactionTile extends StatelessWidget {
                     itemCount: categories.length,
                     itemBuilder: (ctx, index) {
                       final cat = categories[index];
-                      final color = Color(int.tryParse(cat.color) ?? AppColors.primary.value);
+                      final color = Color(int.tryParse(cat.color) ?? AppColors.primary.toARGB32());
                       return ListTile(
                         leading: Icon(IconMapper.getIcon(cat.icon), color: color),
                         title: Text(cat.name, style: AppTextStyles.bodyMedium),

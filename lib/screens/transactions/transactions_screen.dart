@@ -190,7 +190,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       avatar: Icon(
                         IconMapper.getIcon(cat.icon),
                         size: 14,
-                        color: isSelected ? AppColors.background : Color(int.tryParse(cat.color) ?? AppColors.primary.value),
+                        color: isSelected ? AppColors.background : Color(int.tryParse(cat.color) ?? AppColors.primary.toARGB32()),
                       ),
                       label: Text(cat.name),
                       selected: isSelected,

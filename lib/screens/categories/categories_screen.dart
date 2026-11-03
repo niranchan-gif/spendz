@@ -62,7 +62,7 @@ class CategoriesScreen extends StatelessWidget {
       itemCount: categories.length,
       itemBuilder: (context, index) {
         final cat = categories[index];
-        final color = Color(int.tryParse(cat.color) ?? AppColors.primary.value);
+        final color = Color(int.tryParse(cat.color) ?? AppColors.primary.toARGB32());
 
         return Card(
           elevation: 0,

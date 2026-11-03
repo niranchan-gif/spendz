@@ -46,4 +46,13 @@ class TransactionProvider with ChangeNotifier {
   List<TransactionModel> getRecentTransactions({int count = 5}) {
     return _transactions.take(count).toList();
   }
+
+  List<TransactionModel> getTransactionsByCard(String cardId) {
+    return _transactions.where((t) => t.cardId == cardId).toList();
+  }
+
+  Future<void> associateCardWithTransaction(String transactionId, String? cardId) async {
+    await _transactionDao.associateCard(transactionId, cardId);
+    await loadTransactions();
+  }
 }

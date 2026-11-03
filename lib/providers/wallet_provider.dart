@@ -2,211 +2,183 @@ import 'package:flutter/material.dart';
 import '../models/wallet_card_model.dart';
 import '../models/wallet_document_model.dart';
 import '../models/wallet_pass_model.dart';
+import '../database/wallet_card_repository.dart';
+import '../database/wallet_document_repository.dart';
+import '../database/wallet_pass_repository.dart';
 
 class WalletProvider with ChangeNotifier {
+  final WalletCardRepository _cardRepo = WalletCardRepository();
+  final WalletDocumentRepository _docRepo = WalletDocumentRepository();
+  final WalletPassRepository _passRepo = WalletPassRepository();
+
   List<WalletCardModel> _cards = [];
   List<WalletDocumentModel> _documents = [];
   List<WalletPassModel> _passes = [];
   bool _isLoading = false;
+  String? _error;
 
   List<WalletCardModel> get cards => _cards;
   List<WalletDocumentModel> get documents => _documents;
   List<WalletPassModel> get passes => _passes;
   bool get isLoading => _isLoading;
+  String? get error => _error;
 
   List<WalletCardModel> get favoriteCards => _cards.where((c) => c.isFavorite).toList();
   List<WalletDocumentModel> get favoriteDocuments => _documents.where((d) => d.isFavorite).toList();
   List<WalletPassModel> get favoritePasses => _passes.where((p) => p.isFavorite).toList();
 
-  List<WalletDocumentModel> get expiringDocuments => _documents.where((d) => d.isExpiringSoon || d.isExpired).toList();
+  List<WalletDocumentModel> get expiringDocuments =>
+      _documents.where((d) => d.isExpiringSoon || d.isExpired).toList();
 
   WalletProvider() {
-    _initSampleDataIfEmpty();
-  }
-
-  void _initSampleDataIfEmpty() {
-    if (_cards.isEmpty && _documents.isEmpty && _passes.isEmpty) {
-      final now = DateTime.now();
-      _cards = [
-        WalletCardModel(
-          id: 'card-1',
-          nickname: 'HDFC Millennia',
-          issuerName: 'HDFC Bank',
-          cardholderName: 'MUTHUKUMAR',
-          maskedNumber: '•••• •••• •••• 4291',
-          lastFour: '4291',
-          expiryMonth: 8,
-          expiryYear: 28,
-          cardType: 'credit',
-          cardNetwork: 'visa',
-          themeGradient: 'emerald',
-          isFavorite: true,
-          createdAt: now,
-          updatedAt: now,
-        ),
-        WalletCardModel(
-          id: 'card-2',
-          nickname: 'SBI Platinum Debit',
-          issuerName: 'State Bank of India',
-          cardholderName: 'MUTHUKUMAR',
-          maskedNumber: '•••• •••• •••• 8192',
-          lastFour: '8192',
-          expiryMonth: 11,
-          expiryYear: 29,
-          cardType: 'debit',
-          cardNetwork: 'rupay',
-          themeGradient: 'midnight',
-          isFavorite: true,
-          createdAt: now,
-          updatedAt: now,
-        ),
-      ];
-
-      _documents = [
-        WalletDocumentModel(
-          id: 'doc-1',
-          documentName: 'Aadhaar Card',
-          category: 'aadhaar',
-          description: 'UIDAI National Identity',
-          encryptedFilePath: 'vault/aadhaar_encrypted.dat',
-          mimeType: 'image/jpeg',
-          fileSize: 1024 * 240,
-          issueDate: DateTime(2021, 5, 10),
-          isFavorite: true,
-          createdAt: now,
-          updatedAt: now,
-        ),
-        WalletDocumentModel(
-          id: 'doc-2',
-          documentName: 'PAN Card',
-          category: 'pan',
-          description: 'Income Tax Department',
-          encryptedFilePath: 'vault/pan_encrypted.dat',
-          mimeType: 'image/jpeg',
-          fileSize: 1024 * 180,
-          issueDate: DateTime(2020, 1, 15),
-          isFavorite: true,
-          createdAt: now,
-          updatedAt: now,
-        ),
-        WalletDocumentModel(
-          id: 'doc-3',
-          documentName: 'Driving Licence',
-          category: 'driving_license',
-          description: 'Motor Vehicles Department',
-          encryptedFilePath: 'vault/dl_encrypted.dat',
-          mimeType: 'image/jpeg',
-          fileSize: 1024 * 320,
-          issueDate: DateTime(2022, 6, 20),
-          expiryDate: DateTime.now().add(const Duration(days: 25)), // Expiring soon reminder!
-          isFavorite: true,
-          createdAt: now,
-          updatedAt: now,
-        ),
-      ];
-
-      _passes = [
-        WalletPassModel(
-          id: 'pass-1',
-          title: 'Metro Smart QR',
-          passType: 'qr_code',
-          codeData: 'CMRL-METRO-TICKET-2026-X992',
-          codeFormat: 'QR_CODE',
-          issuer: 'Chennai Metro Rail',
-          validUntil: now.add(const Duration(hours: 3)),
-          isFavorite: true,
-          createdAt: now,
-          updatedAt: now,
-        ),
-      ];
-    }
+    loadWallet();
   }
 
   Future<void> loadWallet() async {
     _isLoading = true;
+    _error = null;
     notifyListeners();
-    // Phase 2 will load from Database
-    _isLoading = false;
-    notifyListeners();
-  }
 
-  void addCard(WalletCardModel card) {
-    _cards.insert(0, card);
-    notifyListeners();
-  }
-
-  void updateCard(WalletCardModel card) {
-    final index = _cards.indexWhere((c) => c.id == card.id);
-    if (index != -1) {
-      _cards[index] = card;
+    try {
+      _cards = await _cardRepo.getAllCards();
+      _documents = await _docRepo.getAllDocuments();
+      _passes = await _passRepo.getAllPasses();
+    } catch (e) {
+      _error = 'Failed to load wallet data: $e';
+    } finally {
+      _isLoading = false;
       notifyListeners();
     }
   }
 
-  void deleteCard(String id) {
-    _cards.removeWhere((c) => c.id == id);
-    notifyListeners();
+  Future<void> addCard(WalletCardModel card) async {
+    try {
+      await _cardRepo.insert(card);
+      await loadWallet();
+    } catch (e) {
+      _error = 'Failed to add card: $e';
+      notifyListeners();
+      rethrow;
+    }
   }
 
-  void toggleCardFavorite(String id) {
-    final index = _cards.indexWhere((c) => c.id == id);
-    if (index != -1) {
-      final item = _cards[index];
-      _cards[index] = item.copyWith(isFavorite: !item.isFavorite);
+  Future<void> updateCard(WalletCardModel card) async {
+    try {
+      await _cardRepo.update(card);
+      await loadWallet();
+    } catch (e) {
+      _error = 'Failed to update card: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  Future<void> deleteCard(String id) async {
+    try {
+      await _cardRepo.delete(id);
+      await loadWallet();
+    } catch (e) {
+      _error = 'Failed to delete card: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  Future<void> toggleCardFavorite(String id) async {
+    try {
+      final card = _cards.firstWhere((c) => c.id == id);
+      await _cardRepo.toggleFavorite(id, !card.isFavorite);
+      await loadWallet();
+    } catch (e) {
+      _error = 'Failed to toggle card favorite: $e';
       notifyListeners();
     }
   }
 
-  void addDocument(WalletDocumentModel document) {
-    _documents.insert(0, document);
-    notifyListeners();
+  Future<void> addDocument(WalletDocumentModel document) async {
+    try {
+      await _docRepo.insert(document);
+      await loadWallet();
+    } catch (e) {
+      _error = 'Failed to add document: $e';
+      notifyListeners();
+      rethrow;
+    }
   }
 
-  void updateDocument(WalletDocumentModel document) {
-    final index = _documents.indexWhere((d) => d.id == document.id);
-    if (index != -1) {
-      _documents[index] = document;
+  Future<void> updateDocument(WalletDocumentModel document) async {
+    try {
+      await _docRepo.update(document);
+      await loadWallet();
+    } catch (e) {
+      _error = 'Failed to update document: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  Future<void> deleteDocument(String id) async {
+    try {
+      await _docRepo.delete(id);
+      await loadWallet();
+    } catch (e) {
+      _error = 'Failed to delete document: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  Future<void> toggleDocumentFavorite(String id) async {
+    try {
+      final doc = _documents.firstWhere((d) => d.id == id);
+      await _docRepo.toggleFavorite(id, !doc.isFavorite);
+      await loadWallet();
+    } catch (e) {
+      _error = 'Failed to toggle document favorite: $e';
       notifyListeners();
     }
   }
 
-  void deleteDocument(String id) {
-    _documents.removeWhere((d) => d.id == id);
-    notifyListeners();
-  }
-
-  void toggleDocumentFavorite(String id) {
-    final index = _documents.indexWhere((d) => d.id == id);
-    if (index != -1) {
-      final item = _documents[index];
-      _documents[index] = item.copyWith(isFavorite: !item.isFavorite);
+  Future<void> addPass(WalletPassModel pass) async {
+    try {
+      await _passRepo.insert(pass);
+      await loadWallet();
+    } catch (e) {
+      _error = 'Failed to add pass: $e';
       notifyListeners();
+      rethrow;
     }
   }
 
-  void addPass(WalletPassModel pass) {
-    _passes.insert(0, pass);
-    notifyListeners();
-  }
-
-  void updatePass(WalletPassModel pass) {
-    final index = _passes.indexWhere((p) => p.id == pass.id);
-    if (index != -1) {
-      _passes[index] = pass;
+  Future<void> updatePass(WalletPassModel pass) async {
+    try {
+      await _passRepo.update(pass);
+      await loadWallet();
+    } catch (e) {
+      _error = 'Failed to update pass: $e';
       notifyListeners();
+      rethrow;
     }
   }
 
-  void deletePass(String id) {
-    _passes.removeWhere((p) => p.id == id);
-    notifyListeners();
+  Future<void> deletePass(String id) async {
+    try {
+      await _passRepo.delete(id);
+      await loadWallet();
+    } catch (e) {
+      _error = 'Failed to delete pass: $e';
+      notifyListeners();
+      rethrow;
+    }
   }
 
-  void togglePassFavorite(String id) {
-    final index = _passes.indexWhere((p) => p.id == id);
-    if (index != -1) {
-      final item = _passes[index];
-      _passes[index] = item.copyWith(isFavorite: !item.isFavorite);
+  Future<void> togglePassFavorite(String id) async {
+    try {
+      final pass = _passes.firstWhere((p) => p.id == id);
+      await _passRepo.toggleFavorite(id, !pass.isFavorite);
+      await loadWallet();
+    } catch (e) {
+      _error = 'Failed to toggle pass favorite: $e';
       notifyListeners();
     }
   }
@@ -224,4 +196,3 @@ class WalletProvider with ChangeNotifier {
     }
   }
 }
-
