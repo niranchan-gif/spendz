@@ -6,6 +6,9 @@ class DashboardProvider with ChangeNotifier {
   double _totalBalance = 0;
   double _monthlyIncome = 0;
   double _monthlyExpenses = 0;
+  double _monthlyTransfers = 0;
+  double _monthlyRefunds = 0;
+  double _totalOwed = 0;
   
   double _previousMonthIncome = 0;
   double _previousMonthExpenses = 0;
@@ -13,6 +16,9 @@ class DashboardProvider with ChangeNotifier {
   double get totalBalance => _totalBalance;
   double get monthlyIncome => _monthlyIncome;
   double get monthlyExpenses => _monthlyExpenses;
+  double get monthlyTransfers => _monthlyTransfers;
+  double get monthlyRefunds => _monthlyRefunds;
+  double get totalOwed => _totalOwed;
 
   double get incomeChange => _previousMonthIncome == 0 
       ? 100 
@@ -34,6 +40,9 @@ class DashboardProvider with ChangeNotifier {
     _totalBalance = 0;
     _monthlyIncome = 0;
     _monthlyExpenses = 0;
+    _monthlyTransfers = 0;
+    _monthlyRefunds = 0;
+    _totalOwed = 0;
     _previousMonthIncome = 0;
     _previousMonthExpenses = 0;
     _categorySpending = {};
@@ -60,6 +69,7 @@ class DashboardProvider with ChangeNotifier {
         }
       } else if (tx.type == 'expense') {
         _totalBalance -= tx.amount;
+        _totalOwed += tx.owedAmount;
         if (tx.date.year == currentYear && tx.date.month == currentMonth) {
           _monthlyExpenses += tx.amount;
           
@@ -68,6 +78,16 @@ class DashboardProvider with ChangeNotifier {
           }
         } else if (tx.date.year == prevYear && tx.date.month == prevMonth) {
           _previousMonthExpenses += tx.amount;
+        }
+      } else if (tx.type == 'transfer') {
+        _totalBalance += tx.amount;
+        if (tx.date.year == currentYear && tx.date.month == currentMonth) {
+          _monthlyTransfers += tx.amount;
+        }
+      } else if (tx.type == 'refund') {
+        // DO NOT add to _totalBalance because it's already accounted for by reducing the expense.amount
+        if (tx.date.year == currentYear && tx.date.month == currentMonth) {
+          _monthlyRefunds += tx.amount;
         }
       }
     }

@@ -12,6 +12,9 @@ class TransactionModel {
   final String source; // 'manual', 'bank_email', 'statement'
   final String? bankName;
   final String? referenceId;
+  final double owedAmount; // Amount expected back for split expenses
+  final int expectedPayments;
+  final int linkedPayments;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -29,6 +32,9 @@ class TransactionModel {
     required this.source,
     this.bankName,
     this.referenceId,
+    this.owedAmount = 0.0,
+    this.expectedPayments = 0,
+    this.linkedPayments = 0,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -48,6 +54,9 @@ class TransactionModel {
       'source': source,
       'bank_name': bankName,
       'reference_id': referenceId,
+      'owed_amount': owedAmount,
+      'expected_payments': expectedPayments,
+      'linked_payments': linkedPayments,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -68,6 +77,9 @@ class TransactionModel {
       source: map['source'],
       bankName: map['bank_name'],
       referenceId: map['reference_id'],
+      owedAmount: map['owed_amount'] ?? 0.0,
+      expectedPayments: map['expected_payments'] ?? 0,
+      linkedPayments: map['linked_payments'] ?? 0,
       createdAt: DateTime.parse(map['created_at']),
       updatedAt: DateTime.parse(map['updated_at']),
     );
@@ -87,6 +99,9 @@ class TransactionModel {
     String? source,
     String? bankName,
     String? referenceId,
+    double? owedAmount,
+    int? expectedPayments,
+    int? linkedPayments,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -104,6 +119,9 @@ class TransactionModel {
       source: source ?? this.source,
       bankName: bankName ?? this.bankName,
       referenceId: referenceId ?? this.referenceId,
+      owedAmount: owedAmount ?? this.owedAmount,
+      expectedPayments: expectedPayments ?? this.expectedPayments,
+      linkedPayments: linkedPayments ?? this.linkedPayments,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

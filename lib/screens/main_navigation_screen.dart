@@ -41,64 +41,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBody: true,
-      body: Stack(
-        children: [
-          // Global Gradient Background
-          Positioned.fill(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.background,
-                    AppColors.surfaceVariant, // Slightly lighter olive for depth
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
-            ),
-          ),
-          // Background ambient glow (optimized for performance)
-          Positioned(
-            top: -100,
-            right: -100,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppColors.primary.withAlpha(60),
-                    AppColors.primary.withAlpha(0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -50,
-            left: -50,
-            child: Container(
-              width: 250,
-              height: 250,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppColors.primary.withAlpha(40),
-                    AppColors.primary.withAlpha(0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          // Main Content
-          _screens[_currentIndex],
-        ],
-      ),
-      floatingActionButton: _currentIndex == 0 || _currentIndex == 1
+      backgroundColor: AppColors.background,
+      body: _screens[_currentIndex],
+      floatingActionButton: _currentIndex == 1
           ? FloatingActionButton.extended(
               onPressed: () {
                 Navigator.push(

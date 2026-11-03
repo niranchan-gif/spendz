@@ -21,9 +21,20 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 3,
       onCreate: _createDB,
+      onUpgrade: _upgradeDB,
     );
+  }
+
+  Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE transactions ADD COLUMN owed_amount REAL DEFAULT 0.0');
+    }
+    if (oldVersion < 3) {
+      await db.execute('ALTER TABLE transactions ADD COLUMN expected_payments INTEGER DEFAULT 0');
+      await db.execute('ALTER TABLE transactions ADD COLUMN linked_payments INTEGER DEFAULT 0');
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -54,6 +65,9 @@ class DatabaseHelper {
         source TEXT NOT NULL,
         bank_name TEXT,
         reference_id TEXT,
+        owed_amount REAL DEFAULT 0.0,
+        expected_payments INTEGER DEFAULT 0,
+        linked_payments INTEGER DEFAULT 0,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       )

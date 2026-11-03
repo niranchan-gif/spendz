@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 // import '../../screens/home/home_screen.dart';
 // import '../../screens/transactions/transactions_screen.dart';
 // import '../../screens/transactions/add_transaction_screen.dart';
-import '../../screens/transactions/import_review_screen.dart';
+import '../../screens/transactions/imported_transactions_screen.dart';
 // import '../../screens/analytics/analytics_screen.dart';
 // import '../../screens/categories/categories_screen.dart';
 // import '../../screens/settings/settings_screen.dart';
@@ -19,7 +19,7 @@ class AppRoutes {
     return {
       // home: (context) => const HomeScreen(), // Will replace with MainScreen for BottomNav
       // addTransaction: (context) => const AddTransactionScreen(),
-      importReview: (context) => const ImportReviewScreen(),
+      importReview: (context) => const ImportedTransactionsScreen(),
     };
   }
 }

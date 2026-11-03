@@ -7,13 +7,13 @@ import 'package:intl/intl.dart';
 import 'glass_container.dart';
 
 class SpendingSummaryCard extends StatelessWidget {
-  final double totalBalance;
+  final double owedToMe;
   final double income;
   final double expenses;
 
   const SpendingSummaryCard({
     super.key,
-    required this.totalBalance,
+    required this.owedToMe,
     required this.income,
     required this.expenses,
   });
@@ -30,7 +30,7 @@ class SpendingSummaryCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Total Balance",
+                "Total Spent",
                 style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70),
               ),
               Container(
@@ -48,7 +48,7 @@ class SpendingSummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            CurrencyFormatter.format(totalBalance),
+            CurrencyFormatter.format(expenses),
             style: AppTextStyles.displayLarge.copyWith(color: Colors.white),
           ),
           const SizedBox(height: 32),
@@ -57,7 +57,7 @@ class SpendingSummaryCard extends StatelessWidget {
             children: [
               _buildSummaryItem(
                 context,
-                'Income',
+                'Received',
                 income,
                 Icons.arrow_downward_rounded,
                 AppColors.primary, // Lime Sprout
@@ -69,10 +69,10 @@ class SpendingSummaryCard extends StatelessWidget {
               ),
               _buildSummaryItem(
                 context,
-                'Expenses',
-                expenses,
-                Icons.arrow_upward_rounded,
-                Colors.white, // White
+                'Owed to Me',
+                owedToMe,
+                Icons.people_outline,
+                Colors.orange, // Orange for owed
               ),
             ],
           ),

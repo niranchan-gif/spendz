@@ -63,7 +63,7 @@ class TransactionDao {
     );
   }
 
-  Future<bool> transactionExistsWithReference(String referenceId) async {
+  Future<bool> transactionExistsWithReference(String referenceId, {double? amount, DateTime? date}) async {
     final db = await dbHelper.database;
     final maps = await db.query(
       'transactions',
@@ -72,6 +72,21 @@ class TransactionDao {
       whereArgs: [referenceId],
       limit: 1,
     );
-    return maps.isNotEmpty;
+    if (maps.isNotEmpty) return true;
+
+    if (amount != null && date != null) {
+      final dateStart = DateTime(date.year, date.month, date.day).toIso8601String();
+      final dateEnd = DateTime(date.year, date.month, date.day, 23, 59, 59).toIso8601String();
+      final duplicateMaps = await db.query(
+        'transactions',
+        columns: ['id'],
+        where: 'amount = ? AND date >= ? AND date <= ?',
+        whereArgs: [amount, dateStart, dateEnd],
+        limit: 1,
+      );
+      if (duplicateMaps.isNotEmpty) return true;
+    }
+    
+    return false;
   }
 }

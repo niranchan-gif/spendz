@@ -25,26 +25,45 @@ class GlassContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: margin,
-      constraints: constraints,
+    Widget content = RepaintBoundary(
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-          child: Container(
-            padding: padding,
-            decoration: BoxDecoration(
-              // Default to a subtle white frost if no color is provided
-              color: color ?? Colors.white.withAlpha(12),
-              borderRadius: BorderRadius.circular(borderRadius),
-              // Use a gradient border for a more premium glass edge
-              border: border ?? Border.all(color: Colors.white.withAlpha(30), width: 1),
-            ),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(borderRadius),
+            color: color ?? Colors.black.withAlpha(64),
+            border: border ?? Border.all(color: Colors.white.withAlpha(25), width: 1.2),
+          ),
+          child: Padding(
+            padding: padding ?? EdgeInsets.zero,
             child: child,
           ),
         ),
       ),
     );
+
+    // Apply shadow
+    content = Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(borderRadius),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(51),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: content,
+    );
+
+    if (margin != null) {
+      content = Padding(
+        padding: margin!,
+        child: content,
+      );
+    }
+
+    return content;
   }
 }

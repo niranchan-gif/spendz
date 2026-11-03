@@ -44,38 +44,41 @@ class TransactionTile extends StatelessWidget {
 
     return GestureDetector(
       onDoubleTap: () => _showCategoryPicker(context),
-      child: GlassContainer(
+      onLongPress: () {
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Delete Transaction?'),
+            content: const Text('Are you sure you want to delete this transaction?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  context.read<TransactionProvider>().deleteTransaction(transaction.id);
+                  Navigator.of(ctx).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Transaction deleted')),
+                  );
+                },
+                child: const Text('Delete', style: TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
+        );
+      },
+      child: Container(
         margin: const EdgeInsets.only(bottom: 12),
-        borderRadius: 20,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+        ),
         child: ListTile(
+          onTap: onTap ?? () => _showTransactionDetails(context),
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          onTap: onTap ?? () => _showTransactionDetails(context),
-          onLongPress: () {
-            showDialog(
-              context: context,
-              builder: (ctx) => AlertDialog(
-                title: const Text('Delete Transaction?'),
-                content: const Text('Are you sure you want to delete this transaction?'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(ctx).pop(),
-                    child: const Text('Cancel'),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      context.read<TransactionProvider>().deleteTransaction(transaction.id);
-                      Navigator.of(ctx).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Transaction deleted')),
-                      );
-                    },
-                    child: const Text('Delete', style: TextStyle(color: Colors.red)),
-                  ),
-                ],
-              ),
-            );
-          },
           leading: Container(
             width: 48,
             height: 48,
@@ -94,20 +97,60 @@ class TransactionTile extends StatelessWidget {
             child: Text(
               _getScrubbedName(),
               style: AppTextStyles.bodySmall,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
           ),
           trailing: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                '${isIncome ? '+' : '-'}${CurrencyFormatter.format(transaction.amount)}',
-                style: AppTextStyles.bodyLarge.copyWith(
-                  color: isIncome ? AppColors.success : AppColors.textPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (transaction.expectedPayments > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: transaction.linkedPayments >= transaction.expectedPayments ? Colors.green.withAlpha(30) : Colors.orange.withAlpha(30),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: transaction.linkedPayments >= transaction.expectedPayments ? Colors.green.withAlpha(50) : Colors.orange.withAlpha(50)),
+                        ),
+                        child: Text(
+                          transaction.linkedPayments >= transaction.expectedPayments 
+                              ? 'Settled' 
+                              : 'Owed: ${CurrencyFormatter.format(transaction.owedAmount)} (${transaction.linkedPayments}/${transaction.expectedPayments})',
+                          style: TextStyle(
+                            fontSize: 10, 
+                            color: transaction.linkedPayments >= transaction.expectedPayments ? Colors.green : Colors.orange
+                          ),
+                        ),
+                      ),
+                    )
+                  else if (transaction.owedAmount > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withAlpha(30),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.orange.withAlpha(50)),
+                        ),
+                        child: Text(
+                          'Owed: ${CurrencyFormatter.format(transaction.owedAmount)}',
+                          style: const TextStyle(fontSize: 10, color: Colors.orange),
+                        ),
+                      ),
+                    ),
+                  Text(
+                    '${isIncome ? '+' : '-'}${CurrencyFormatter.format(transaction.amount)}',
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      color: isIncome ? AppColors.success : AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 4),
               Text(
@@ -194,6 +237,14 @@ class TransactionTile extends StatelessWidget {
     scrubbed = scrubbed.replaceAll(RegExp(r'[^\w\s]'), ' ').trim();
     if (scrubbed.isEmpty) scrubbed = 'Unknown';
     
+    final lower = scrubbed.toLowerCase();
+    if (lower.contains('tamilnadu state transpo')) {
+      return 'Tamilnadu State Transport Corporation';
+    }
+    if (lower.contains('metropolitan transpo')) {
+      return 'Metropolitan Transport Corporation';
+    }
+    
     return scrubbed;
   }
 
@@ -228,6 +279,22 @@ class TransactionTile extends StatelessWidget {
           ],
         ),
         actions: [
+          if (isIncome)
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                _showExpensePicker(context);
+              },
+              child: const Text('Link to Expense', style: TextStyle(color: Colors.blue)),
+            )
+          else if (transaction.type == 'expense')
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                _showSplitDialog(context);
+              },
+              child: const Text('Mark as Split', style: TextStyle(color: Colors.orange)),
+            ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
@@ -243,4 +310,165 @@ class TransactionTile extends StatelessWidget {
       ),
     );
   }
+  void _showSplitDialog(BuildContext context) {
+    final TextEditingController peopleController = TextEditingController(
+      text: transaction.expectedPayments > 0 ? transaction.expectedPayments.toString() : '',
+    );
+    final TextEditingController amountController = TextEditingController(
+      text: transaction.owedAmount > 0 ? transaction.owedAmount.toString() : '',
+    );
+
+    final txProvider = context.read<TransactionProvider>();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Split Expense'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Original Amount: ${CurrencyFormatter.format(transaction.amount)}'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: peopleController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Number of people paying you',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: amountController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(
+                labelText: 'Total Amount Owed to you',
+                prefixText: '₹ ',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              final peopleStr = peopleController.text.trim();
+              int expected = 0;
+              if (peopleStr.isNotEmpty) {
+                expected = int.tryParse(peopleStr) ?? 0;
+              }
+
+              final amountStr = amountController.text.trim();
+              double owed = 0.0;
+              if (amountStr.isNotEmpty) {
+                owed = double.tryParse(amountStr) ?? 0.0;
+              }
+
+              if (owed > transaction.amount) {
+                owed = transaction.amount;
+              }
+
+              final updatedTx = transaction.copyWith(
+                owedAmount: owed,
+                expectedPayments: expected,
+                linkedPayments: 0,
+              );
+              txProvider.updateTransaction(updatedTx);
+              Navigator.pop(ctx);
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Expense marked as split. Expected refund: ${CurrencyFormatter.format(owed)} from $expected people')),
+              );
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showExpensePicker(BuildContext context) {
+    final txProvider = context.read<TransactionProvider>();
+    final recentExpenses = txProvider.transactions
+        .where((t) => t.type == 'expense' && t.owedAmount > 0 && t.id != transaction.id)
+        .toList();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (context, scrollController) {
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text('Select Expense to Offset', style: AppTextStyles.heading3),
+                ),
+                Expanded(
+                  child: recentExpenses.isEmpty
+                      ? const Center(child: Text('No recent expenses found.'))
+                      : ListView.builder(
+                          controller: scrollController,
+                          itemCount: recentExpenses.length,
+                          itemBuilder: (ctx, index) {
+                            final expense = recentExpenses[index];
+                            return ListTile(
+                              title: Text(expense.merchant ?? expense.description ?? 'Unknown Expense', style: AppTextStyles.bodyMedium),
+                              subtitle: Text(DateFormatter.formatShortDate(expense.date), style: AppTextStyles.bodySmall),
+                              trailing: Text(
+                                CurrencyFormatter.format(expense.amount),
+                                style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textPrimary),
+                              ),
+                              onTap: () {
+                                // 1. Calculate new expense amount and owed amount
+                                final newExpenseAmount = (expense.amount - transaction.amount).clamp(0.0, double.infinity);
+                                final newOwedAmount = (expense.owedAmount - transaction.amount).clamp(0.0, double.infinity);
+                                final newLinkedPayments = expense.linkedPayments + 1;
+                                
+                                // 2. Update the Expense
+                                final updatedExpense = expense.copyWith(
+                                  amount: newExpenseAmount,
+                                  owedAmount: newOwedAmount,
+                                  linkedPayments: newLinkedPayments,
+                                  description: '${expense.description ?? ''} (Refunded ${CurrencyFormatter.format(transaction.amount)} from ${transaction.merchant ?? 'Income'})',
+                                );
+                                txProvider.updateTransaction(updatedExpense);
+                                
+                                // 3. Mark this Income as a refund so it stops counting towards Income totals but still shows in Received UI
+                                final updatedIncome = transaction.copyWith(
+                                  type: 'refund',
+                                  description: 'Linked refund to ${expense.merchant ?? expense.description ?? 'expense'}',
+                                );
+                                txProvider.updateTransaction(updatedIncome);
+                                
+                                Navigator.pop(ctx);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Linked to expense! Amount reduced to ${CurrencyFormatter.format(newExpenseAmount)}.')),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 }
+

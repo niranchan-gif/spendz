@@ -129,7 +129,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         ),
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        padding: const EdgeInsets.only(top: 8, bottom: 100, left: 16, right: 16),
                         itemCount: transactions.length,
                         itemBuilder: (context, index) {
                           final tx = transactions[index];
@@ -152,7 +152,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                             children: [
                               if (showHeader)
                                 Padding(
-                                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                                  padding: const EdgeInsets.fromLTRB(0, 16, 0, 8),
                                   child: Text(
                                     DateFormatter.formatFullDate(tx.date),
                                     style: AppTextStyles.bodyMedium.copyWith(
