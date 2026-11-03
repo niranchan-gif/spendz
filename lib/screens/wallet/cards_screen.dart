@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
-import '../../providers/wallet_provider.dart';
-import '../../models/wallet_card_model.dart';
+
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_text_styles.dart';
+import '../../models/wallet_card_model.dart';
+import '../../providers/wallet_provider.dart';
+import 'card_detail_screen.dart';
 import 'widgets/wallet_card_widget.dart';
 
 class CardsScreen extends StatefulWidget {
@@ -17,6 +19,8 @@ class CardsScreen extends StatefulWidget {
 }
 
 class _CardsScreenState extends State<CardsScreen> {
+  String _selectedFilter = 'all';
+
   @override
   void initState() {
     super.initState();
@@ -40,7 +44,7 @@ class _CardsScreenState extends State<CardsScreen> {
     String themeGradient = 'emerald';
 
     final themes = ['emerald', 'midnight', 'obsidian', 'amethyst', 'crimson', 'amber'];
-    final cardTypes = ['credit', 'debit', 'atm', 'membership', 'loyalty'];
+    final cardTypes = ['credit', 'debit', 'atm', 'membership', 'loyalty', 'custom'];
     final networks = ['visa', 'mastercard', 'rupay', 'amex'];
 
     showModalBottomSheet(
@@ -70,7 +74,7 @@ class _CardsScreenState extends State<CardsScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Add Payment Card', style: AppTextStyles.heading3),
+                          Text('Add Card to Studio', style: AppTextStyles.heading3),
                           IconButton(
                             icon: const Icon(Icons.close),
                             onPressed: () => Navigator.pop(ctx),
@@ -102,7 +106,7 @@ class _CardsScreenState extends State<CardsScreen> {
                       TextFormField(
                         controller: nicknameController,
                         decoration: const InputDecoration(
-                          labelText: 'Card Nickname (e.g. My Shopping Card)',
+                          labelText: 'Card Nickname (e.g. Daily Spender)',
                           prefixIcon: Icon(Icons.label_outline),
                         ),
                         validator: (v) => v == null || v.isEmpty ? 'Required' : null,
@@ -199,7 +203,7 @@ class _CardsScreenState extends State<CardsScreen> {
                           Expanded(
                             child: DropdownButtonFormField<int>(
                               initialValue: expiryYear,
-                              decoration: const InputDecoration(labelText: 'Exp Year (20xx)'),
+                              decoration: const InputDecoration(labelText: 'Exp Year'),
                               items: List.generate(15, (i) => 25 + i).map((y) {
                                 return DropdownMenuItem(value: y, child: Text('20$y'));
                               }).toList(),
@@ -211,20 +215,30 @@ class _CardsScreenState extends State<CardsScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      Text('Card Color Theme', style: AppTextStyles.labelLarge),
+                      const Text('Card Gradient Theme', style: TextStyle(fontSize: 13, color: Colors.white70)),
                       const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        children: themes.map((theme) {
-                          final isSelected = themeGradient == theme;
-                          return ChoiceChip(
-                            label: Text(theme.toUpperCase()),
-                            selected: isSelected,
-                            onSelected: (_) {
-                              setModalState(() => themeGradient = theme);
-                            },
-                          );
-                        }).toList(),
+                      SizedBox(
+                        height: 40,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: themes.length,
+                          separatorBuilder: (_, _) => const SizedBox(width: 8),
+                          itemBuilder: (context, i) {
+                            final th = themes[i];
+                            final isSelected = themeGradient == th;
+                            return ChoiceChip(
+                              label: Text(th.toUpperCase()),
+                              selected: isSelected,
+                              onSelected: (_) => setModalState(() => themeGradient = th),
+                              selectedColor: AppColors.primary,
+                              labelStyle: TextStyle(
+                                color: isSelected ? Colors.black : Colors.white70,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            );
+                          },
+                        ),
                       ),
                       const SizedBox(height: 24),
                       SizedBox(
@@ -253,11 +267,20 @@ class _CardsScreenState extends State<CardsScreen> {
                               context.read<WalletProvider>().addCard(card);
                               Navigator.pop(ctx);
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Card added to Spendz Wallet!')),
+                                const SnackBar(
+                                  content: Text('Card added to Card Studio!'),
+                                  backgroundColor: AppColors.success,
+                                ),
                               );
                             }
                           },
-                          child: const Text('Save Card'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: const Text('Save Card to Wallet'),
                         ),
                       ),
                     ],
@@ -271,60 +294,25 @@ class _CardsScreenState extends State<CardsScreen> {
     );
   }
 
-  void _showCardDetails(BuildContext context, WalletCardModel card) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+  void _openCardDetail(BuildContext context, WalletCardModel card) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CardDetailScreen(card: card),
       ),
-      builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: WalletCardWidget(card: card, isCompact: true),
-                ),
-                const SizedBox(height: 20),
-                ListTile(
-                  leading: const Icon(Icons.star_rounded, color: Colors.amber),
-                  title: Text(card.isFavorite ? 'Remove from Favourites' : 'Add to Favourites'),
-                  onTap: () {
-                    context.read<WalletProvider>().toggleCardFavorite(card.id);
-                    Navigator.pop(ctx);
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.delete_outline, color: AppColors.error),
-                  title: const Text('Delete Card', style: TextStyle(color: AppColors.error)),
-                  onTap: () {
-                    context.read<WalletProvider>().deleteCard(card.id);
-                    Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Card removed from wallet.')),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Payment Cards'),
+        title: Text('Card Studio', style: AppTextStyles.heading3),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: const Icon(Icons.add_circle_outline, color: AppColors.primary),
             tooltip: 'Add Card',
             onPressed: () => _showAddCardDialog(context),
           ),
@@ -332,9 +320,13 @@ class _CardsScreenState extends State<CardsScreen> {
       ),
       body: Consumer<WalletProvider>(
         builder: (context, wallet, child) {
-          final cards = wallet.cards;
+          final allCards = wallet.cards;
 
-          if (cards.isEmpty) {
+          final filteredCards = _selectedFilter == 'all'
+              ? allCards
+              : allCards.where((c) => c.cardType.toLowerCase() == _selectedFilter).toList();
+
+          if (allCards.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -347,31 +339,89 @@ class _CardsScreenState extends State<CardsScreen> {
                   const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: () => _showAddCardDialog(context),
-                    child: const Text('Add Card'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.black,
+                    ),
+                    child: const Text('Add Your First Card'),
                   ),
                 ],
               ),
             );
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            itemCount: cards.length,
-            itemBuilder: (context, index) {
-              final card = cards[index];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Center(
-                  child: WalletCardWidget(
-                    card: card,
-                    onFavoriteToggle: () => wallet.toggleCardFavorite(card.id),
-                    onTap: () => _showCardDetails(context, card),
-                  ),
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Filter Chips Row
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    _filterChip('all', 'All (${allCards.length})'),
+                    const SizedBox(width: 8),
+                    _filterChip('credit', 'Credit'),
+                    const SizedBox(width: 8),
+                    _filterChip('debit', 'Debit'),
+                    const SizedBox(width: 8),
+                    _filterChip('atm', 'ATM'),
+                    const SizedBox(width: 8),
+                    _filterChip('membership', 'Membership'),
+                    const SizedBox(width: 8),
+                    _filterChip('loyalty', 'Loyalty'),
+                    const SizedBox(width: 8),
+                    _filterChip('custom', 'Custom'),
+                  ],
                 ),
-              );
-            },
+              ),
+
+              // Card List
+              Expanded(
+                child: filteredCards.isEmpty
+                    ? Center(
+                        child: Text(
+                          'No $_selectedFilter cards found',
+                          style: const TextStyle(color: Colors.white54),
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        itemCount: filteredCards.length,
+                        itemBuilder: (context, index) {
+                          final card = filteredCards[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Center(
+                              child: WalletCardWidget(
+                                card: card,
+                                onFavoriteToggle: () => wallet.toggleCardFavorite(card.id),
+                                onTap: () => _openCardDetail(context, card),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _filterChip(String filterKey, String label) {
+    final isSelected = _selectedFilter == filterKey;
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (_) => setState(() => _selectedFilter = filterKey),
+      selectedColor: AppColors.primary,
+      backgroundColor: AppColors.surface,
+      labelStyle: TextStyle(
+        color: isSelected ? Colors.black : Colors.white70,
+        fontSize: 12,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
     );
   }

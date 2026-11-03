@@ -7,10 +7,12 @@ import 'package:provider/provider.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../../features/wallet/services/document_vault_service.dart';
+import '../../features/wallet/services/document_expiry_service.dart';
 import '../../models/wallet_document_model.dart';
 import '../../providers/wallet_document_provider.dart';
 import '../../providers/wallet_provider.dart';
 import 'document_preview_screen.dart';
+import 'document_scanner_screen.dart';
 import 'wallet_security_settings_screen.dart';
 import 'widgets/document_category_chip.dart';
 import 'widgets/document_vault_tile.dart';
@@ -505,6 +507,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                   onTap: () async {
                     Navigator.pop(ctx);
                     await _vaultService.deleteDocument(doc.id);
+                    await DocumentExpiryService().cancelRemindersForDocument(doc.id);
                     if (context.mounted) {
                       await context.read<WalletProvider>().loadWallet();
                     }
@@ -535,6 +538,16 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.document_scanner_outlined, color: AppColors.primary),
+            tooltip: 'Scan Document (OCR)',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const DocumentScannerScreen()),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.shield_outlined),
             tooltip: 'Vault Security Settings',
