@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../../providers/wallet_provider.dart';
 import '../../models/wallet_pass_model.dart';
 import '../../app/theme/app_colors.dart';
@@ -188,7 +189,11 @@ class _PassesScreenState extends State<PassesScreen> {
               ),
               child: Column(
                 children: [
-                  const Icon(Icons.qr_code_2_rounded, size: 160, color: Colors.black),
+                  QrImageView(
+                    data: pass.codeData.isNotEmpty ? pass.codeData : 'spendz-pass',
+                    version: QrVersions.auto,
+                    size: 180.0,
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     pass.codeData,

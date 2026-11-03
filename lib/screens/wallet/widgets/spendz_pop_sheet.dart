@@ -1,12 +1,15 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../../../providers/wallet_provider.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../widgets/wallet_card_widget.dart';
 import '../documents_screen.dart';
 import '../cards_screen.dart';
+import '../card_detail_screen.dart';
+import '../document_preview_screen.dart';
 import '../../transactions/add_transaction_screen.dart';
 
 class SpendzPopSheet extends StatelessWidget {
@@ -173,6 +176,13 @@ class SpendzPopSheet extends StatelessWidget {
                             return WalletCardWidget(
                               card: card,
                               isCompact: true,
+                              onTap: () {
+                                Navigator.pop(context);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => CardDetailScreen(card: card)),
+                                );
+                              },
                               onFavoriteToggle: () => wallet.toggleCardFavorite(card.id),
                             );
                           },
@@ -204,7 +214,7 @@ class SpendzPopSheet extends StatelessWidget {
                                 Navigator.pop(context);
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (_) => const DocumentsScreen()),
+                                  MaterialPageRoute(builder: (_) => DocumentPreviewScreen(document: doc)),
                                 );
                               },
                             ),
@@ -225,7 +235,18 @@ class SpendzPopSheet extends StatelessWidget {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.qr_code_2_rounded, color: AppColors.primary, size: 28),
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: QrImageView(
+                                data: favPasses.first.codeData.isNotEmpty ? favPasses.first.codeData : 'spendz-pass',
+                                version: QrVersions.auto,
+                                size: 36.0,
+                              ),
+                            ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(

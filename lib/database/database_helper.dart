@@ -8,6 +8,11 @@ class DatabaseHelper {
 
   DatabaseHelper._init();
 
+  /// Sets an explicit database instance for isolated testing.
+  static void setTestDatabase(Database? db) {
+    _database = db;
+  }
+
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDB('spendwise.db');

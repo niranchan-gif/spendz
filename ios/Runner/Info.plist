@@ -43,10 +43,26 @@
 					<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
 					<key>UISceneStoryboardFile</key>
 					<string>Main</string>
-				</dict>
+					<key>NSCameraUsageDescription</key>
+	<string>Spendz requires camera access to scan documents, identity cards, and receipts into your secure vault.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Spendz allows you to import documents, cards, and receipts from your photo library into the encrypted vault.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Spendz requires camera access to scan documents, identity cards, and receipts into your secure vault.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Spendz allows you to import documents, cards, and receipts from your photo library into the encrypted vault.</string>
+</dict>
 			</array>
-		</dict>
-	</dict>
+			<key>NSCameraUsageDescription</key>
+	<string>Spendz requires camera access to scan documents, identity cards, and receipts into your secure vault.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Spendz allows you to import documents, cards, and receipts from your photo library into the encrypted vault.</string>
+</dict>
+		<key>NSCameraUsageDescription</key>
+	<string>Spendz requires camera access to scan documents, identity cards, and receipts into your secure vault.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Spendz allows you to import documents, cards, and receipts from your photo library into the encrypted vault.</string>
+</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
@@ -66,8 +82,12 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-<key>NSFaceIDUsageDescription</key>
+	<key>NSFaceIDUsageDescription</key>
 	<string>Spendz requires Face ID to unlock your secure document vault.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Spendz requires camera access to scan documents, identity cards, and receipts into your secure vault.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Spendz allows you to import documents, cards, and receipts from your photo library into the encrypted vault.</string>
 </dict>
 </plist>
 
