@@ -9,19 +9,17 @@ import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../../features/wallet/services/document_vault_service.dart';
-import '../../features/wallet/services/document_expiry_service.dart';
 import '../../features/wallet/security/secure_number_service.dart';
-import '../../models/wallet_document_model.dart';
 import '../../providers/wallet_document_provider.dart';
 import '../../providers/wallet_provider.dart';
 import '../../widgets/design_system/app_bottom_sheet.dart';
 import '../../widgets/design_system/app_form_field.dart';
 import '../../widgets/design_system/primary_button.dart';
 import '../../widgets/design_system/empty_state.dart';
-import '../../widgets/design_system/custom_dialog.dart';
 import 'document_preview_screen.dart';
 import 'document_scanner_screen.dart';
 import 'wallet_security_settings_screen.dart';
+import 'widgets/virtual_document_card.dart';
 import 'widgets/document_category_chip.dart';
 import 'widgets/document_vault_tile.dart';
 
@@ -39,6 +37,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   final SecureNumberService _secureNumberService = SecureNumberService();
   String _selectedCategory = 'all';
   String _searchQuery = '';
+  bool _isCardView = true;
 
   @override
   void initState() {
@@ -382,193 +381,6 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     );
   }
 
-  void _showDocumentDetails(BuildContext context, WalletDocumentModel doc) {
-    AppBottomSheet.show(
-      context: context,
-      title: doc.documentName,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withAlpha(20),
-                  borderRadius: BorderRadius.circular(AppRadius.xs),
-                  border: Border.all(color: AppColors.primary.withAlpha(50)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.shield_rounded, size: 10, color: AppColors.primary),
-                    const SizedBox(width: 4),
-                    Text(
-                      'AES-256-GCM',
-                      style: AppTextStyles.caption.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                        fontSize: 10,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Text(
-                'Category: ${doc.category.toUpperCase()}',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.getTextSecondary(context),
-                ),
-              ),
-            ],
-          ),
-          if (doc.description != null && doc.description!.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              doc.description!,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.getTextPrimary(context),
-              ),
-            ),
-          ],
-          const SizedBox(height: AppSpacing.md),
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.getSurface(context),
-              borderRadius: BorderRadius.circular(AppRadius.card),
-              border: Border.all(color: AppColors.getBorder(context)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Column(
-                  children: [
-                    Text('Issue Date', style: AppTextStyles.caption.copyWith(color: AppColors.getTextSecondary(context))),
-                    const SizedBox(height: 3),
-                    Text(
-                      doc.issueDate != null ? DateFormat('dd MMM yyyy').format(doc.issueDate!) : 'None',
-                      style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-                Column(
-                  children: [
-                    Text('Expiry Date', style: AppTextStyles.caption.copyWith(color: AppColors.getTextSecondary(context))),
-                    const SizedBox(height: 3),
-                    Text(
-                      doc.expiryDate != null ? DateFormat('dd MMM yyyy').format(doc.expiryDate!) : 'No Expiry',
-                      style: AppTextStyles.labelMedium.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: doc.isExpired
-                            ? AppColors.error
-                            : (doc.isExpiringSoon ? AppColors.warning : AppColors.getTextPrimary(context)),
-                      ),
-                    ),
-                  ],
-                ),
-                Column(
-                  children: [
-                    Text('Type', style: AppTextStyles.caption.copyWith(color: AppColors.getTextSecondary(context))),
-                    const SizedBox(height: 3),
-                    Text(
-                      doc.mimeType.contains('pdf') ? 'PDF' : 'Image',
-                      style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withAlpha(25),
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-              ),
-              child: const Icon(Icons.lock_open_rounded, color: AppColors.primary, size: 20),
-            ),
-            title: Text(
-              'Preview Decrypted Document',
-              style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w600),
-            ),
-            subtitle: Text(
-              'Requires biometric or device passcode unlock',
-              style: AppTextStyles.bodySmall.copyWith(color: AppColors.getTextSecondary(context)),
-            ),
-            trailing: const Icon(Icons.fingerprint_rounded, color: AppColors.primary),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => DocumentPreviewScreen(document: doc),
-                ),
-              );
-            },
-          ),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.error.withAlpha(25),
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-              ),
-              child: const Icon(Icons.delete_outline_rounded, color: AppColors.error, size: 20),
-            ),
-            title: Text(
-              'Delete from Vault',
-              style: AppTextStyles.labelLarge.copyWith(
-                fontWeight: FontWeight.w600,
-                color: AppColors.error,
-              ),
-            ),
-            subtitle: Text(
-              'Removes encrypted file, secure numbers & metadata',
-              style: AppTextStyles.bodySmall.copyWith(color: AppColors.getTextSecondary(context)),
-            ),
-            onTap: () async {
-              final walletProvider = context.read<WalletProvider>();
-              final docProvider = context.read<WalletDocumentProvider>();
-              final messenger = ScaffoldMessenger.of(context);
-              final nav = Navigator.of(context);
-
-              final confirm = await CustomDialog.showConfirmation(
-                context: context,
-                title: 'Delete "${doc.documentName}"?',
-                message: 'This document will be permanently removed from your encrypted vault. This action cannot be undone.',
-                confirmLabel: 'Delete Document',
-                isDestructive: true,
-                icon: Icons.delete_outline_rounded,
-              );
-
-              if (confirm == true && mounted) {
-                nav.pop();
-                await _secureNumberService.deleteDocumentFullNumber(doc.id);
-                await _vaultService.deleteDocument(doc.id);
-                await DocumentExpiryService().cancelRemindersForDocument(doc.id);
-
-                if (mounted) {
-                  await walletProvider.loadWallet();
-                  await docProvider.loadDocuments();
-                  messenger.showSnackBar(
-                    const SnackBar(content: Text('Document deleted from vault.')),
-                  );
-                }
-              }
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -576,6 +388,11 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       appBar: AppBar(
         title: const Text('Document Vault'),
         actions: [
+          IconButton(
+            icon: Icon(_isCardView ? Icons.view_list_rounded : Icons.view_agenda_rounded),
+            tooltip: _isCardView ? 'Switch to List View' : 'Switch to Virtual Card View',
+            onPressed: () => setState(() => _isCardView = !_isCardView),
+          ),
           IconButton(
             icon: const Icon(Icons.document_scanner_outlined, color: AppColors.primary),
             tooltip: 'Scan Document (OCR)',
@@ -596,12 +413,19 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
               );
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.add_rounded),
-            tooltip: 'Add Document',
-            onPressed: () => _showAddDocumentDialog(context),
-          ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const DocumentScannerScreen()),
+          );
+        },
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.document_scanner_rounded),
+        label: const Text('Scan Document'),
       ),
       body: Consumer<WalletProvider>(
         builder: (context, wallet, _) {
@@ -677,7 +501,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                   ),
                 ),
 
-              // Documents List
+              // Documents List / Grid
               Expanded(
                 child: filteredDocs.isEmpty
                     ? Center(
@@ -685,32 +509,59 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                           icon: Icons.shield_outlined,
                           title: _searchQuery.isEmpty ? 'No Documents in Vault' : 'No Matching Documents',
                           subtitle: _searchQuery.isEmpty
-                              ? 'Tap + to encrypt and store personal IDs, passports and certificates.'
+                              ? 'Scan or import personal IDs, passports, cards and certificates.'
                               : 'Try adjusting your search query or category filters.',
-                          actionLabel: _searchQuery.isEmpty ? 'Add Document' : null,
-                          onActionPressed: _searchQuery.isEmpty ? () => _showAddDocumentDialog(context) : null,
+                          actionLabel: _searchQuery.isEmpty ? 'Scan Document' : null,
+                          onActionPressed: _searchQuery.isEmpty
+                              ? () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const DocumentScannerScreen()),
+                                  );
+                                }
+                              : null,
                         ),
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 88),
                         physics: const BouncingScrollPhysics(),
                         itemCount: filteredDocs.length,
                         itemBuilder: (context, index) {
                           final doc = filteredDocs[index];
-                          return DocumentVaultTile(
-                            document: doc,
-                            onTap: () => _showDocumentDetails(context, doc),
-                            onFavoriteToggle: () {
-                              context.read<WalletProvider>().toggleDocumentFavorite(doc.id);
-                            },
-                            onDelete: () async {
-                              await _secureNumberService.deleteDocumentFullNumber(doc.id);
-                              await _vaultService.deleteDocument(doc.id);
-                              if (context.mounted) {
-                                await context.read<WalletProvider>().loadWallet();
-                              }
-                            },
-                          );
+                          if (_isCardView) {
+                            return VirtualDocumentCard(
+                              document: doc,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => DocumentPreviewScreen(document: doc)),
+                                );
+                              },
+                              onFavoriteToggle: () {
+                                context.read<WalletProvider>().toggleDocumentFavorite(doc.id);
+                              },
+                            );
+                          } else {
+                            return DocumentVaultTile(
+                              document: doc,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => DocumentPreviewScreen(document: doc)),
+                                );
+                              },
+                              onFavoriteToggle: () {
+                                context.read<WalletProvider>().toggleDocumentFavorite(doc.id);
+                              },
+                              onDelete: () async {
+                                await _secureNumberService.deleteDocumentFullNumber(doc.id);
+                                await _vaultService.deleteDocument(doc.id);
+                                if (context.mounted) {
+                                  await context.read<WalletProvider>().loadWallet();
+                                }
+                              },
+                            );
+                          }
                         },
                       ),
               ),

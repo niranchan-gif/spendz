@@ -15,6 +15,10 @@ class DocumentClassificationResult {
   /// Readable category label for UI display.
   String get displayCategoryName {
     switch (category) {
+      case 'debit_card':
+        return 'Debit Card';
+      case 'credit_card':
+        return 'Credit Card';
       case 'aadhaar':
         return 'Aadhaar Card';
       case 'pan':
@@ -23,10 +27,14 @@ class DocumentClassificationResult {
         return 'Driving Licence';
       case 'passport':
         return 'Passport';
+      case 'voter_id':
+        return 'Voter ID';
       case 'rc':
         return 'Vehicle RC';
       case 'insurance':
         return 'Insurance Policy';
+      case 'bank_document':
+        return 'Bank Document';
       case 'college_id':
         return 'College / Student ID';
       case 'certificate':
@@ -50,10 +58,12 @@ class DocumentClassifier {
   static const double minimumAcceptableConfidence = 0.40;
 
   // Regex patterns
+  static final RegExp _cardRegex = RegExp(r'\b(?:\d{4}[ -]?){3}\d{4}\b');
   static final RegExp _aadhaarRegex = RegExp(r'\b\d{4}\s\d{4}\s\d{4}\b');
   static final RegExp _panRegex = RegExp(r'\b[A-Z]{5}[0-9]{4}[A-Z]\b');
   static final RegExp _dlRegex = RegExp(r'\b[A-Z]{2}[- ]?[0-9]{2}[- ]?[0-9]{11}\b', caseSensitive: false);
   static final RegExp _dlAlternativeRegex = RegExp(r'\bDL[- ]?[0-9A-Z]{10,15}\b', caseSensitive: false);
+  static final RegExp _voterIdRegex = RegExp(r'\b[A-Z]{3}[0-9]{7}\b');
   static final RegExp _passportRegex = RegExp(r'\b[A-PR-WYa-pr-wy][1-9][0-9]\s?[0-9]{4}[0-9]\b');
   static final RegExp _passportOldRegex = RegExp(r'\b[A-Z][0-9]{7}\b');
   static final RegExp _rcRegex = RegExp(r'\b[A-Z]{2}[ -]?[0-9]{1,2}[ -]?[A-Z]{1,3}[ -]?[0-9]{4}\b', caseSensitive: false);
@@ -73,12 +83,16 @@ class DocumentClassifier {
 
     // Score all categories
     final scores = <String, _CategoryScore>{
+      'debit_card': _scoreDebitCard(rawText, lower),
+      'credit_card': _scoreCreditCard(rawText, lower),
       'aadhaar': _scoreAadhaar(rawText, lower),
       'pan': _scorePan(rawText, lower),
       'driving_license': _scoreDrivingLicence(rawText, lower),
+      'voter_id': _scoreVoterId(rawText, lower),
       'passport': _scorePassport(rawText, lower),
       'rc': _scoreVehicleRc(rawText, lower),
       'insurance': _scoreInsurance(rawText, lower),
+      'bank_document': _scoreBankDocument(rawText, lower),
       'college_id': _scoreCollegeId(rawText, lower),
       'certificate': _scoreCertificate(rawText, lower),
     };
@@ -117,7 +131,59 @@ class DocumentClassifier {
     );
   }
 
-  // --- Category Scoring Rules (Multi-keyword & pattern requirements) ---
+  // --- Category Scoring Rules ---
+
+  _CategoryScore _scoreDebitCard(String raw, String lower) {
+    int points = 0;
+    final reasons = <String>[];
+
+    if (_cardRegex.hasMatch(raw)) {
+      points += 45;
+      reasons.add('16-digit payment card number format matched');
+    }
+    if (lower.contains('debit') || lower.contains('debit card')) {
+      points += 45;
+      reasons.add('Debit card keyword found');
+    }
+    if (lower.contains('valid thru') || lower.contains('valid from') || lower.contains('expires') || lower.contains('expiry')) {
+      points += 20;
+      reasons.add('Card validity / expiry format found');
+    }
+    if (lower.contains('visa') || lower.contains('mastercard') || lower.contains('rupay') || lower.contains('maestro')) {
+      points += 25;
+      reasons.add('Payment network brand found');
+    }
+
+    return _CategoryScore(points / 100.0, reasons);
+  }
+
+  _CategoryScore _scoreCreditCard(String raw, String lower) {
+    int points = 0;
+    final reasons = <String>[];
+
+    if (_cardRegex.hasMatch(raw)) {
+      points += 45;
+      reasons.add('16-digit payment card number format matched');
+    }
+    if (lower.contains('credit') || lower.contains('credit card')) {
+      points += 45;
+      reasons.add('Credit card keyword found');
+    }
+    if (lower.contains('platinum') || lower.contains('titanium') || lower.contains('rewards') || lower.contains('signature') || lower.contains('regalia') || lower.contains('infinia')) {
+      points += 25;
+      reasons.add('Premium credit card tier found');
+    }
+    if (lower.contains('valid thru') || lower.contains('expires')) {
+      points += 20;
+      reasons.add('Card validity format found');
+    }
+    if (lower.contains('visa') || lower.contains('mastercard') || lower.contains('american express') || lower.contains('amex') || lower.contains('diners')) {
+      points += 25;
+      reasons.add('Payment network brand found');
+    }
+
+    return _CategoryScore(points / 100.0, reasons);
+  }
 
   _CategoryScore _scoreAadhaar(String raw, String lower) {
     int points = 0;
@@ -195,6 +261,30 @@ class DocumentClassifier {
     return _CategoryScore(points / 100.0, reasons);
   }
 
+  _CategoryScore _scoreVoterId(String raw, String lower) {
+    int points = 0;
+    final reasons = <String>[];
+
+    if (_voterIdRegex.hasMatch(raw)) {
+      points += 45;
+      reasons.add('10-character Voter ID / EPIC format matched');
+    }
+    if (lower.contains('election commission of india') || lower.contains('bharat nirvachan')) {
+      points += 45;
+      reasons.add('Election Commission of India header found');
+    }
+    if (lower.contains("elector's photo identity card") || lower.contains('elector photo identity') || lower.contains('epic no') || lower.contains('voter id')) {
+      points += 40;
+      reasons.add('EPIC / Voter ID title found');
+    }
+    if (lower.contains('assembly constituency') || lower.contains('parliamentary constituency')) {
+      points += 20;
+      reasons.add('Constituency marker found');
+    }
+
+    return _CategoryScore(points / 100.0, reasons);
+  }
+
   _CategoryScore _scorePassport(String raw, String lower) {
     int points = 0;
     final reasons = <String>[];
@@ -263,9 +353,33 @@ class DocumentClassifier {
       points += 25;
       reasons.add('Sum Insured / Premium / Period indicators found');
     }
-    if (lower.contains('general insurance') || lower.contains('life insurance') || lower.contains('motor insurance')) {
+    if (lower.contains('general insurance') || lower.contains('life insurance') || lower.contains('motor insurance') || lower.contains('health insurance')) {
       points += 20;
       reasons.add('Insurance company type marker');
+    }
+
+    return _CategoryScore(points / 100.0, reasons);
+  }
+
+  _CategoryScore _scoreBankDocument(String raw, String lower) {
+    int points = 0;
+    final reasons = <String>[];
+
+    if (lower.contains('bank statement') || lower.contains('account statement') || lower.contains('statement of account')) {
+      points += 45;
+      reasons.add('Bank Statement title found');
+    }
+    if (lower.contains('account no') || lower.contains('account number') || lower.contains('a/c no')) {
+      points += 30;
+      reasons.add('Account Number marker found');
+    }
+    if (lower.contains('ifsc') || lower.contains('micr') || lower.contains('branch code')) {
+      points += 30;
+      reasons.add('IFSC / Bank routing marker found');
+    }
+    if (lower.contains('savings account') || lower.contains('current account') || lower.contains('opening balance') || lower.contains('closing balance')) {
+      points += 25;
+      reasons.add('Bank account ledger terms found');
     }
 
     return _CategoryScore(points / 100.0, reasons);
@@ -317,4 +431,3 @@ class _CategoryScore {
   final List<String> reasons;
   const _CategoryScore(this.score, this.reasons);
 }
-

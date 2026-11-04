@@ -22,6 +22,10 @@ class DocumentVaultTile extends StatelessWidget {
 
   IconData _getCategoryIcon(String category) {
     switch (category.toLowerCase()) {
+      case 'debit_card':
+        return Icons.credit_card_rounded;
+      case 'credit_card':
+        return Icons.credit_score_rounded;
       case 'aadhaar':
         return Icons.fingerprint_rounded;
       case 'pan':
@@ -30,10 +34,14 @@ class DocumentVaultTile extends StatelessWidget {
         return Icons.drive_eta_outlined;
       case 'passport':
         return Icons.flight_takeoff_rounded;
+      case 'voter_id':
+        return Icons.how_to_vote_rounded;
       case 'rc':
         return Icons.directions_car_filled_outlined;
       case 'insurance':
         return Icons.verified_user_outlined;
+      case 'bank_document':
+        return Icons.account_balance_outlined;
       case 'college_id':
         return Icons.school_outlined;
       case 'certificate':
