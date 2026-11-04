@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import '../../../models/wallet_card_model.dart';
+import '../../../features/wallet/security/secure_number_service.dart';
+import '../../../widgets/design_system/secure_protected_field.dart';
 
+/// Production-quality Fintech Card Widget with responsive sizing,
+/// biometric-guarded number reveal, and authentic financial card aesthetics.
 class WalletCardWidget extends StatelessWidget {
   final WalletCardModel card;
   final VoidCallback? onTap;
   final VoidCallback? onFavoriteToggle;
   final bool isCompact;
+  final bool allowReveal;
 
   const WalletCardWidget({
     super.key,
@@ -13,13 +18,14 @@ class WalletCardWidget extends StatelessWidget {
     this.onTap,
     this.onFavoriteToggle,
     this.isCompact = false,
+    this.allowReveal = false,
   });
 
   LinearGradient _getCardGradient(String theme) {
     switch (theme.toLowerCase()) {
       case 'emerald':
         return const LinearGradient(
-          colors: [Color(0xFF1B4332), Color(0xFF2D6A4F), Color(0xFF40916C)],
+          colors: [Color(0xFF1E3F20), Color(0xFF28562B), Color(0xFF3B7A3F)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
@@ -55,257 +61,339 @@ class WalletCardWidget extends StatelessWidget {
         );
       default:
         return const LinearGradient(
-          colors: [Color(0xFF1A2E1A), Color(0xFF2E4B2E), Color(0xFF446C44)],
+          colors: [Color(0xFF223820), Color(0xFF2E4E2B), Color(0xFF406C3C)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final width = isCompact ? 280.0 : 320.0;
-    final height = isCompact ? 170.0 : 195.0;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: width,
-        height: height,
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22),
-          gradient: _getCardGradient(card.themeGradient),
-          border: Border.all(color: Colors.white.withAlpha(45), width: 1.2),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(70),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
+  Widget _buildNetworkBadge(String network) {
+    final net = network.toLowerCase().trim();
+    if (net == 'visa') {
+      return const Text(
+        'VISA',
+        style: TextStyle(
+          color: Colors.white,
+          fontStyle: FontStyle.italic,
+          fontWeight: FontWeight.w900,
+          fontSize: 16,
+          letterSpacing: 1.2,
+        ),
+      );
+    } else if (net == 'mastercard') {
+      return SizedBox(
+        width: 32,
+        height: 20,
+        child: Stack(
+          children: [
+            Container(
+              width: 18,
+              height: 18,
+              decoration: const BoxDecoration(
+                color: Color(0xFFEB001B),
+                shape: BoxShape.circle,
+              ),
+            ),
+            Positioned(
+              right: 0,
+              child: Container(
+                width: 18,
+                height: 18,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF79E1B).withAlpha(220),
+                  shape: BoxShape.circle,
+                ),
+              ),
             ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(22),
-          child: Stack(
-            children: [
-              // Ambient overlay texture/watermark
-              Positioned(
-                right: -40,
-                bottom: -40,
-                child: Container(
-                  width: 160,
-                  height: 160,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withAlpha(12),
-                  ),
+      );
+    } else if (net == 'rupay') {
+      return const Text(
+        'RuPay ▶',
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w800,
+          fontSize: 13,
+          letterSpacing: 0.5,
+        ),
+      );
+    } else if (net == 'amex') {
+      return const Text(
+        'AMEX',
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w900,
+          fontSize: 12,
+          letterSpacing: 1.0,
+        ),
+      );
+    }
+
+    return Text(
+      network.toUpperCase(),
+      style: const TextStyle(
+        color: Colors.white70,
+        fontWeight: FontWeight.w700,
+        fontSize: 11,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final standardMasked = card.lastFour.isNotEmpty
+        ? '•••• •••• •••• ${card.lastFour}'
+        : card.maskedNumber;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Adapt card width to container while respecting credit card aspect ratio ~1.58
+        final maxW = isCompact ? 290.0 : 340.0;
+        final cardWidth = constraints.maxWidth < maxW ? constraints.maxWidth : maxW;
+        final cardHeight = cardWidth / 1.62;
+
+        return GestureDetector(
+          onTap: onTap,
+          child: Container(
+            width: cardWidth,
+            height: cardHeight,
+            margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: _getCardGradient(card.themeGradient),
+              border: Border.all(color: Colors.white.withAlpha(35), width: 1.2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(65),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
                 ),
-              ),
-              Positioned(
-                right: 30,
-                top: -50,
-                child: Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withAlpha(8),
-                  ),
-                ),
-              ),
-
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Top Row: Issuer & Chip & Favorite
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withAlpha(30),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.white.withAlpha(40)),
-                              ),
-                              child: Text(
-                                card.issuerName.toUpperCase(),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 1.1,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              card.cardType.toUpperCase(),
-                              style: TextStyle(
-                                color: Colors.white.withAlpha(170),
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.8,
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (onFavoriteToggle != null)
-                          GestureDetector(
-                            onTap: onFavoriteToggle,
-                            child: Icon(
-                              card.isFavorite ? Icons.star_rounded : Icons.star_outline_rounded,
-                              color: card.isFavorite ? Colors.amber : Colors.white.withAlpha(150),
-                              size: 22,
-                            ),
-                          ),
-                      ],
-                    ),
-
-                    // Chip and Contactless
-                    Row(
-                      children: [
-                        Container(
-                          width: 38,
-                          height: 28,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFD4AF37).withAlpha(180),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: const Color(0xFFFFE082), width: 0.8),
-                          ),
-                          child: Center(
-                            child: Container(
-                              width: 26,
-                              height: 18,
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.black26),
-                                borderRadius: BorderRadius.circular(3),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Icon(
-                          Icons.contactless,
-                          color: Colors.white.withAlpha(180),
-                          size: 24,
-                        ),
-                        const Spacer(),
-                        Text(
-                          card.nickname,
-                          style: TextStyle(
-                            color: Colors.white.withAlpha(190),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    // Card Number (Masked)
-                    Text(
-                      card.maskedNumber,
-                      style: const TextStyle(
-                        fontFamily: 'monospace',
-                        color: Colors.white,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 2.5,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black45,
-                            blurRadius: 4,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Stack(
+                children: [
+                  // Metallic ambient specular shine
+                  Positioned(
+                    right: -40,
+                    bottom: -40,
+                    child: Container(
+                      width: 160,
+                      height: 160,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withAlpha(12),
                       ),
                     ),
+                  ),
 
-                    // Bottom Row: Cardholder Name, Expiry & Network
-                    Row(
+                  Padding(
+                    padding: EdgeInsets.all(isCompact ? 14.0 : 18.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        // Top Row: Issuer & Type & Favorite
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'CARD HOLDER',
-                              style: TextStyle(
-                                color: Colors.white.withAlpha(140),
-                                fontSize: 9,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.8,
-                              ),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withAlpha(30),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(color: Colors.white.withAlpha(40)),
+                                  ),
+                                  child: Text(
+                                    card.issuerName.toUpperCase(),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 1.0,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  card.cardType.toUpperCase(),
+                                  style: TextStyle(
+                                    color: Colors.white.withAlpha(180),
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.6,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              card.cardholderName.toUpperCase(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.5,
-                              ),
+                            Row(
+                              children: [
+                                if (card.nickname.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 6),
+                                    child: Text(
+                                      card.nickname,
+                                      style: TextStyle(
+                                        color: Colors.white.withAlpha(170),
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                if (onFavoriteToggle != null)
+                                  GestureDetector(
+                                    onTap: onFavoriteToggle,
+                                    child: Icon(
+                                      card.isFavorite ? Icons.star_rounded : Icons.star_outline_rounded,
+                                      color: card.isFavorite ? Colors.amber : Colors.white60,
+                                      size: 20,
+                                    ),
+                                  ),
+                              ],
                             ),
                           ],
                         ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+
+                        // Middle Section: Chip + Contactless OR Biometric Reveal Field
+                        if (allowReveal)
+                          SecureProtectedField(
+                            maskedValue: standardMasked,
+                            label: 'Card Number',
+                            onRetrieveProtectedValue: () async {
+                              final service = SecureNumberService();
+                              final full = await service.getCardFullNumber(card.id);
+                              if (full != null && full.isNotEmpty) {
+                                return SecureNumberService.formatCardNumber(full);
+                              }
+                              return standardMasked;
+                            },
+                          )
+                        else
+                          Row(
+                            children: [
+                              // Metallic Smart Chip
+                              Container(
+                                width: 34,
+                                height: 26,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFD4AF37).withAlpha(190),
+                                  borderRadius: BorderRadius.circular(5),
+                                  border: Border.all(color: const Color(0xFFFFE082), width: 0.8),
+                                ),
+                                child: Center(
+                                  child: Container(
+                                    width: 22,
+                                    height: 16,
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: Colors.black26),
+                                      borderRadius: BorderRadius.circular(3),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Icon(
+                                Icons.contactless,
+                                color: Colors.white.withAlpha(190),
+                                size: 22,
+                              ),
+                              const Spacer(),
+                              Text(
+                                standardMasked,
+                                style: const TextStyle(
+                                  fontFamily: 'monospace',
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 2.0,
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.black45,
+                                      blurRadius: 4,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+
+                        // Bottom Row: Cardholder Name, Expiry & Network
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Text(
-                              'EXPIRES',
-                              style: TextStyle(
-                                color: Colors.white.withAlpha(140),
-                                fontSize: 9,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.8,
-                              ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'CARD HOLDER',
+                                  style: TextStyle(
+                                    color: Colors.white.withAlpha(140),
+                                    fontSize: 8.5,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.8,
+                                  ),
+                                ),
+                                const SizedBox(height: 1),
+                                Text(
+                                  card.cardholderName.toUpperCase(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              '${card.expiryMonth.toString().padLeft(2, '0')}/${card.expiryYear.toString().padLeft(2, '0')}',
-                              style: const TextStyle(
-                                fontFamily: 'monospace',
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'EXPIRES',
+                                      style: TextStyle(
+                                        color: Colors.white.withAlpha(140),
+                                        fontSize: 8.5,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 0.8,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 1),
+                                    Text(
+                                      '${card.expiryMonth.toString().padLeft(2, '0')}/${(card.expiryYear % 100).toString().padLeft(2, '0')}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(width: 14),
+                                _buildNetworkBadge(card.cardNetwork),
+                              ],
                             ),
                           ],
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(35),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            card.cardNetwork.toUpperCase(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w900,
-                              fontStyle: FontStyle.italic,
-                              letterSpacing: 1.0,
-                            ),
-                          ),
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

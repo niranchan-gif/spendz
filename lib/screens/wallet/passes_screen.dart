@@ -3,10 +3,18 @@ import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+
 import '../../providers/wallet_provider.dart';
 import '../../models/wallet_pass_model.dart';
 import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_spacing.dart';
+import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_text_styles.dart';
+import '../../widgets/design_system/app_bottom_sheet.dart';
+import '../../widgets/design_system/app_form_field.dart';
+import '../../widgets/design_system/primary_button.dart';
+import '../../widgets/design_system/empty_state.dart';
+import '../../widgets/design_system/custom_dialog.dart';
 
 class PassesScreen extends StatefulWidget {
   final bool openAddDialog;
@@ -38,136 +46,120 @@ class _PassesScreenState extends State<PassesScreen> {
 
     final passTypes = ['qr_code', 'barcode', 'event_ticket', 'boarding_pass', 'membership', 'loyalty'];
 
-    showModalBottomSheet(
+    AppBottomSheet.show(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-                left: 20,
-                right: 20,
-                top: 20,
-              ),
-              child: SingleChildScrollView(
-                child: Form(
-                  key: formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Add Digital Pass', style: AppTextStyles.heading3),
-                          IconButton(
-                            icon: const Icon(Icons.close),
-                            onPressed: () => Navigator.pop(ctx),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: titleController,
-                        decoration: const InputDecoration(
-                          labelText: 'Pass Title (e.g. Metro Smart Card)',
-                          prefixIcon: Icon(Icons.confirmation_number_outlined),
-                        ),
-                        validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-                      ),
-                      const SizedBox(height: 12),
-                      DropdownButtonFormField<String>(
-                        initialValue: passType,
-                        decoration: const InputDecoration(labelText: 'Pass Type'),
-                        items: passTypes.map((t) {
-                          return DropdownMenuItem(
-                            value: t,
-                            child: Text(t.replaceAll('_', ' ').toUpperCase()),
-                          );
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) setModalState(() => passType = val);
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: dataController,
-                        decoration: const InputDecoration(
-                          labelText: 'Code / QR Payload',
-                          prefixIcon: Icon(Icons.qr_code_2),
-                        ),
-                        validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: issuerController,
-                        decoration: const InputDecoration(
-                          labelText: 'Issuer / Organizer (Optional)',
-                          prefixIcon: Icon(Icons.business_outlined),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: const Text('Valid Until', style: TextStyle(fontSize: 12, color: Colors.white70)),
-                        subtitle: Text(
-                          validUntil != null ? DateFormat('dd MMM yyyy, HH:mm').format(validUntil!) : 'No Expiry',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        trailing: const Icon(Icons.calendar_today, size: 18),
-                        onTap: () async {
-                          final d = await showDatePicker(
-                            context: context,
-                            initialDate: DateTime.now().add(const Duration(days: 7)),
-                            firstDate: DateTime.now(),
-                            lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
-                          );
-                          if (d != null) setModalState(() => validUntil = d);
-                        },
-                      ),
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            if (formKey.currentState!.validate()) {
-                              final pass = WalletPassModel(
-                                id: const Uuid().v4(),
-                                title: titleController.text.trim(),
-                                passType: passType,
-                                encryptedCodePath: dataController.text.trim(),
-                                codeFormat: 'QR_CODE',
-                                issuer: issuerController.text.trim().isEmpty ? null : issuerController.text.trim(),
-                                validUntil: validUntil,
-                                isFavorite: false,
-                                createdAt: DateTime.now(),
-                                updatedAt: DateTime.now(),
-                              );
+      title: 'Add Digital Pass',
+      child: StatefulBuilder(
+        builder: (context, setModalState) {
+          final surfaceColor = AppColors.getSurface(context);
+          final textSecondary = AppColors.getTextSecondary(context);
 
-                              context.read<WalletProvider>().addPass(pass);
-                              Navigator.pop(ctx);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Pass saved to wallet!')),
-                              );
-                            }
-                          },
-                          child: const Text('Save Digital Pass'),
-                        ),
-                      ),
-                    ],
-                  ),
+          return Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppFormField(
+                  controller: titleController,
+                  label: 'Pass Title',
+                  hint: 'e.g. Metro Smart Card / Flight Boarding Pass',
+                  prefixIcon: Icons.confirmation_number_outlined,
+                  validator: (v) => v == null || v.trim().isEmpty ? 'Pass title required' : null,
                 ),
-              ),
-            );
-          },
-        );
-      },
+                const SizedBox(height: AppSpacing.md),
+                DropdownButtonFormField<String>(
+                  initialValue: passType,
+                  dropdownColor: surfaceColor,
+                  decoration: InputDecoration(
+                    labelText: 'Pass Type',
+                    prefixIcon: const Icon(Icons.category_outlined),
+                    filled: true,
+                    fillColor: surfaceColor,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                      borderSide: BorderSide(color: AppColors.getBorder(context)),
+                    ),
+                  ),
+                  items: passTypes.map((t) {
+                    return DropdownMenuItem(
+                      value: t,
+                      child: Text(t.replaceAll('_', ' ').toUpperCase(), style: AppTextStyles.labelMedium),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    if (val != null) setModalState(() => passType = val);
+                  },
+                ),
+                const SizedBox(height: AppSpacing.md),
+                AppFormField(
+                  controller: dataController,
+                  label: 'Code / QR Payload',
+                  hint: 'Enter barcode or QR string',
+                  prefixIcon: Icons.qr_code_2_rounded,
+                  validator: (v) => v == null || v.trim().isEmpty ? 'Payload code required' : null,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                AppFormField(
+                  controller: issuerController,
+                  label: 'Issuer / Organizer (Optional)',
+                  hint: 'e.g. Indigo Airlines, BookMyShow',
+                  prefixIcon: Icons.business_outlined,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text('Valid Until', style: AppTextStyles.caption.copyWith(color: textSecondary)),
+                  subtitle: Text(
+                    validUntil != null ? DateFormat('dd MMM yyyy, HH:mm').format(validUntil!) : 'No Expiry',
+                    style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  trailing: const Icon(Icons.calendar_today_rounded, size: 18),
+                  onTap: () async {
+                    final d = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now().add(const Duration(days: 7)),
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+                    );
+                    if (d != null) setModalState(() => validUntil = d);
+                  },
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                PrimaryButton(
+                  label: 'Save Digital Pass',
+                  icon: Icons.check_rounded,
+                  onPressed: () {
+                    if (formKey.currentState!.validate()) {
+                      final pass = WalletPassModel(
+                        id: const Uuid().v4(),
+                        title: titleController.text.trim(),
+                        passType: passType,
+                        encryptedCodePath: dataController.text.trim(),
+                        codeFormat: 'QR_CODE',
+                        issuer: issuerController.text.trim().isEmpty ? null : issuerController.text.trim(),
+                        validUntil: validUntil,
+                        isFavorite: false,
+                        createdAt: DateTime.now(),
+                        updatedAt: DateTime.now(),
+                      );
+
+                      context.read<WalletProvider>().addPass(pass);
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Pass saved to wallet!'),
+                          backgroundColor: AppColors.success,
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -175,17 +167,30 @@ class _PassesScreenState extends State<PassesScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(pass.title, style: AppTextStyles.heading3),
+        backgroundColor: AppColors.getSurface(context),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+        title: Text(
+          pass.title,
+          style: AppTextStyles.headingSmall.copyWith(
+            color: AppColors.getTextPrimary(context),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppRadius.card),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(20),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Column(
                 children: [
@@ -194,7 +199,7 @@ class _PassesScreenState extends State<PassesScreen> {
                     version: QrVersions.auto,
                     size: 180.0,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.sm),
                   Text(
                     pass.codeData,
                     style: const TextStyle(
@@ -208,26 +213,41 @@ class _PassesScreenState extends State<PassesScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.md),
             if (pass.issuer != null)
               Text(
                 'Issued by ${pass.issuer}',
-                style: const TextStyle(color: Colors.white70, fontSize: 13),
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.getTextSecondary(context),
+                ),
               ),
             if (pass.validUntil != null)
               Text(
                 'Valid until ${DateFormat('dd MMM yyyy').format(pass.validUntil!)}',
-                style: const TextStyle(color: Colors.white54, fontSize: 12),
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.getTextSecondary(context),
+                ),
               ),
           ],
         ),
         actions: [
           TextButton(
-            onPressed: () {
-              context.read<WalletProvider>().deletePass(pass.id);
-              Navigator.pop(ctx);
+            onPressed: () async {
+              final walletProvider = context.read<WalletProvider>();
+              final confirm = await CustomDialog.showConfirmation(
+                context: ctx,
+                title: 'Delete Pass?',
+                message: 'Remove "${pass.title}" from your passes?',
+                confirmLabel: 'Delete Pass',
+                isDestructive: true,
+                icon: Icons.delete_outline_rounded,
+              );
+              if (confirm == true && mounted) {
+                if (ctx.mounted) Navigator.pop(ctx);
+                walletProvider.deletePass(pass.id);
+              }
             },
-            child: const Text('Delete Pass', style: TextStyle(color: Colors.redAccent)),
+            child: const Text('Delete Pass', style: TextStyle(color: AppColors.error)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -241,11 +261,12 @@ class _PassesScreenState extends State<PassesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Digital Passes'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: const Icon(Icons.add_rounded),
             tooltip: 'Add Pass',
             onPressed: () => _showAddPassDialog(context),
           ),
@@ -257,66 +278,83 @@ class _PassesScreenState extends State<PassesScreen> {
 
           if (passes.isEmpty) {
             return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.confirmation_number_outlined, size: 64, color: Colors.white24),
-                  const SizedBox(height: 16),
-                  Text('No Passes Saved', style: AppTextStyles.heading3),
-                  const SizedBox(height: 8),
-                  const Text('Save tickets, boarding passes, or transit QR codes.', style: TextStyle(color: Colors.white54)),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: () => _showAddPassDialog(context),
-                    child: const Text('Add Pass'),
-                  ),
-                ],
+              child: EmptyState(
+                icon: Icons.confirmation_number_outlined,
+                title: 'No Passes Saved',
+                subtitle: 'Save event tickets, flight boarding passes, and transit QR codes.',
+                actionLabel: 'Add Digital Pass',
+                onActionPressed: () => _showAddPassDialog(context),
               ),
             );
           }
 
           return ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            physics: const BouncingScrollPhysics(),
             itemCount: passes.length,
             itemBuilder: (context, index) {
               final pass = passes[index];
+              final surfaceColor = AppColors.getSurface(context);
+              final borderColor = AppColors.getBorder(context);
+
               return Container(
-                margin: const EdgeInsets.only(bottom: 12),
+                margin: const EdgeInsets.only(bottom: AppSpacing.sm + 2),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: Colors.white.withAlpha(25)),
+                  color: surfaceColor,
+                  borderRadius: BorderRadius.circular(AppRadius.card),
+                  border: Border.all(color: borderColor, width: 1),
                 ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  leading: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withAlpha(25),
-                      borderRadius: BorderRadius.circular(14),
+                child: Material(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(AppRadius.card),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: 4,
                     ),
-                    child: const Icon(Icons.qr_code_2, color: AppColors.primary, size: 28),
-                  ),
-                  title: Text(pass.title, style: AppTextStyles.labelLarge),
-                  subtitle: Text(
-                    '${pass.issuer ?? 'Pass'} • ${pass.passType.toUpperCase()}',
-                    style: AppTextStyles.bodySmall,
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(
-                          pass.isFavorite ? Icons.star_rounded : Icons.star_outline_rounded,
-                          color: pass.isFavorite ? Colors.amber : Colors.white38,
-                        ),
-                        onPressed: () => wallet.togglePassFavorite(pass.id),
+                    leading: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withAlpha(25),
+                        borderRadius: BorderRadius.circular(AppRadius.sm + 2),
+                        border: Border.all(color: AppColors.primary.withAlpha(50)),
                       ),
-                      const Icon(Icons.chevron_right, color: Colors.white38),
-                    ],
+                      child: const Icon(Icons.qr_code_2_rounded, color: AppColors.primary, size: 24),
+                    ),
+                    title: Text(
+                      pass.title,
+                      style: AppTextStyles.labelLarge.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.getTextPrimary(context),
+                      ),
+                    ),
+                    subtitle: Text(
+                      '${pass.issuer ?? 'Pass'} • ${pass.passType.toUpperCase()}',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.getTextSecondary(context),
+                      ),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            pass.isFavorite ? Icons.star_rounded : Icons.star_outline_rounded,
+                            color: pass.isFavorite ? Colors.amber : AppColors.getTextSecondary(context).withAlpha(120),
+                          ),
+                          onPressed: () => wallet.togglePassFavorite(pass.id),
+                          splashRadius: 20,
+                        ),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: AppColors.getTextSecondary(context).withAlpha(140),
+                          size: 18,
+                        ),
+                      ],
+                    ),
+                    onTap: () => _showPassQR(context, pass),
                   ),
-                  onTap: () => _showPassQR(context, pass),
                 ),
               );
             },

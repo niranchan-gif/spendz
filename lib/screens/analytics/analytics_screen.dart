@@ -8,9 +8,13 @@ import '../../providers/category_provider.dart';
 import '../../models/transaction_model.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_spacing.dart';
+import '../../app/theme/app_radius.dart';
 import '../../utils/currency_formatter.dart';
 import '../../utils/icon_mapper.dart';
-import '../../widgets/glass_container.dart';
+import '../../widgets/design_system/reusable_card.dart';
+import '../../widgets/design_system/empty_state.dart';
+import '../../widgets/design_system/section_header.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
@@ -41,11 +45,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primary,
-              onPrimary: AppColors.background,
-              surface: Colors.white,
-              onSurface: AppColors.textPrimary,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: AppColors.primary,
+              brightness: Theme.of(context).brightness,
             ),
           ),
           child: child!,
@@ -64,7 +66,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   Map<String, double> _calculateCategorySpending(List<TransactionModel> transactions) {
     Map<String, double> spending = {};
     for (var tx in transactions) {
-      if (tx.type == 'expense' && tx.date.isAfter(_startDate.subtract(const Duration(seconds: 1))) && tx.date.isBefore(_endDate.add(const Duration(seconds: 1)))) {
+      if (tx.type == 'expense' &&
+          tx.date.isAfter(_startDate.subtract(const Duration(seconds: 1))) &&
+          tx.date.isBefore(_endDate.add(const Duration(seconds: 1)))) {
         if (tx.categoryId != null) {
           spending[tx.categoryId!] = (spending[tx.categoryId!] ?? 0) + tx.amount;
         }
@@ -75,15 +79,17 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final textSecondary = AppColors.getTextSecondary(context);
+    final textPrimary = AppColors.getTextPrimary(context);
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text('Analytics', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Analytics'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.date_range),
+            icon: const Icon(Icons.date_range_rounded),
+            tooltip: 'Filter date range',
             onPressed: _selectDateRange,
           ),
         ],
@@ -93,173 +99,258 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           final spending = _calculateCategorySpending(txProvider.transactions);
           final sortedSpending = spending.entries.toList()
             ..sort((a, b) => b.value.compareTo(a.value));
-            
+
+          final totalSpent = sortedSpending.fold(0.0, (sum, e) => sum + e.value);
           final dateString = '${DateFormat('MMM d').format(_startDate)} - ${DateFormat('MMM d').format(_endDate)}';
 
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Category Breakdown', style: AppTextStyles.heading3),
-                  TextButton.icon(
-                    onPressed: _selectDateRange,
-                    icon: const Icon(Icons.calendar_today, size: 16),
-                    label: Text(dateString, style: AppTextStyles.bodyMedium),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              
-              if (spending.isEmpty)
-                Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 60),
-                      Icon(Icons.pie_chart_outline, size: 64, color: Colors.grey.withAlpha(100)),
-                      const SizedBox(height: 16),
-                      Text('No expenses for this period', style: AppTextStyles.heading3),
-                      const SizedBox(height: 60),
-                    ],
-                  ),
-                )
-              else ...[
-                // Bar Chart
-                GlassContainer(
-                  padding: const EdgeInsets.all(16),
-                  borderRadius: 24,
-                  child: SizedBox(
-                    height: 250,
-                    child: BarChart(
-                      BarChartData(
-                        alignment: BarChartAlignment.spaceAround,
-                        barTouchData: BarTouchData(
-                          enabled: true,
-                          touchTooltipData: BarTouchTooltipData(
-                            getTooltipColor: (_) => AppColors.background.withAlpha(200),
-                            getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                              final entry = sortedSpending[group.x];
-                              final category = catProvider.getCategoryById(entry.key);
-                              return BarTooltipItem(
-                                '${category?.name ?? 'Unknown'}\n${CurrencyFormatter.format(rod.toY)}',
-                                const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                              );
-                            },
-                          ),
-                        ),
-                        titlesData: FlTitlesData(
-                          show: true,
-                          bottomTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              showTitles: true,
-                              reservedSize: 30,
-                              getTitlesWidget: (value, meta) {
-                                if (value.toInt() >= sortedSpending.length) return const SizedBox();
-                                final entry = sortedSpending[value.toInt()];
-                                final category = catProvider.getCategoryById(entry.key);
-                                final color = category != null 
-                                    ? Color(int.tryParse(category.color) ?? AppColors.primary.toARGB32())
-                                    : AppColors.textHint;
-                                return Padding(
-                                  padding: const EdgeInsets.only(top: 8.0),
-                                  child: Icon(category != null ? IconMapper.getIcon(category.icon) : Icons.help_outline, color: color, size: 20),
-                                );
-                              },
-                            ),
-                          ),
-                          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        ),
-                        borderData: FlBorderData(show: false),
-                        gridData: const FlGridData(show: false),
-                        barGroups: sortedSpending.asMap().entries.map((entry) {
-                          final index = entry.key;
-                          final item = entry.value;
-                          final category = catProvider.getCategoryById(item.key);
-                          final color = category != null 
-                              ? Color(int.tryParse(category.color) ?? AppColors.primary.toARGB32())
-                              : AppColors.textHint;
-                          return BarChartGroupData(
-                            x: index,
-                            barRods: [
-                              BarChartRodData(
-                                toY: item.value,
-                                color: color,
-                                width: 22,
-                                borderRadius: BorderRadius.circular(6),
-                                backDrawRodData: BackgroundBarChartRodData(
-                                  show: true,
-                                  toY: sortedSpending.isNotEmpty ? sortedSpending.first.value * 1.1 : 100, // Background max height based on highest spend
-                                  color: color.withAlpha(20),
-                                ),
-                              ),
-                            ],
-                          );
-                        }).toList(),
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SectionHeader(
+                  title: 'Category Breakdown',
+                  actionLabel: dateString,
+                  onActionPressed: _selectDateRange,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+
+                if (spending.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxl),
+                    child: Center(
+                      child: EmptyState(
+                        icon: Icons.pie_chart_outline_rounded,
+                        title: 'No Expenses Recorded',
+                        subtitle: 'No expense transactions found for $dateString.',
+                        actionLabel: 'Change Period',
+                        onActionPressed: _selectDateRange,
                       ),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 32),
-                
-                // Legend / List
-                GlassContainer(
-                  borderRadius: 24,
-                  child: Column(
-                    children: sortedSpending.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final item = entry.value;
-                      final category = catProvider.getCategoryById(item.key);
-                      final color = category != null 
-                          ? Color(int.tryParse(category.color) ?? AppColors.primary.toARGB32())
-                          : AppColors.textHint;
-                          
-                      final isTouched = index == _touchedIndex;
-
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        color: isTouched ? color.withAlpha(20) : Colors.transparent,
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                          leading: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: color.withAlpha(30),
-                              shape: BoxShape.circle,
+                  )
+                else ...[
+                  // Summary Banner Card
+                  ReusableCard(
+                    padding: const EdgeInsets.all(AppSpacing.card),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Total Spent This Period',
+                              style: AppTextStyles.caption.copyWith(color: textSecondary),
                             ),
-                            child: Icon(
-                              category != null ? IconMapper.getIcon(category.icon) : Icons.help_outline, 
-                              color: color,
-                              size: 20,
+                            const SizedBox(height: 4),
+                            Text(
+                              CurrencyFormatter.format(totalSpent),
+                              style: AppTextStyles.headingLarge.copyWith(
+                                color: textPrimary,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
-                          ),
-                          title: Text(category?.name ?? 'Unknown', style: AppTextStyles.labelLarge),
-                          trailing: Text(
-                            CurrencyFormatter.format(item.value),
-                            style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          onTap: () {
-                            setState(() {
-                              _touchedIndex = isTouched ? -1 : index;
-                            });
-                          },
+                          ],
                         ),
-                      );
-                    }).toList(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withAlpha(25),
+                            borderRadius: BorderRadius.circular(AppRadius.full),
+                            border: Border.all(color: AppColors.primary.withAlpha(50)),
+                          ),
+                          child: Text(
+                            '${sortedSpending.length} Categories',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // Bar Chart Card
+                  ReusableCard(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Spending by Category',
+                          style: AppTextStyles.labelLarge.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        SizedBox(
+                          height: 230,
+                          child: BarChart(
+                            BarChartData(
+                              alignment: BarChartAlignment.spaceAround,
+                              barTouchData: BarTouchData(
+                                enabled: true,
+                                touchTooltipData: BarTouchTooltipData(
+                                  getTooltipColor: (_) => AppColors.getSurface(context),
+                                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                                    final entry = sortedSpending[group.x];
+                                    final category = catProvider.getCategoryById(entry.key);
+                                    final pct = totalSpent > 0 ? (entry.value / totalSpent * 100).toStringAsFixed(1) : '0';
+                                    return BarTooltipItem(
+                                      '${category?.name ?? 'Unknown'}\n${CurrencyFormatter.format(rod.toY)} ($pct%)',
+                                      TextStyle(
+                                        color: AppColors.getTextPrimary(context),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              titlesData: FlTitlesData(
+                                show: true,
+                                bottomTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    reservedSize: 32,
+                                    getTitlesWidget: (value, meta) {
+                                      if (value.toInt() >= sortedSpending.length) return const SizedBox();
+                                      final entry = sortedSpending[value.toInt()];
+                                      final category = catProvider.getCategoryById(entry.key);
+                                      final color = category != null
+                                          ? Color(int.tryParse(category.color) ?? AppColors.primary.toARGB32())
+                                          : textSecondary;
+                                      return Padding(
+                                        padding: const EdgeInsets.only(top: 8.0),
+                                        child: Icon(
+                                          category != null ? IconMapper.getIcon(category.icon) : Icons.help_outline,
+                                          color: color,
+                                          size: 18,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                              ),
+                              borderData: FlBorderData(show: false),
+                              gridData: const FlGridData(show: false),
+                              barGroups: sortedSpending.asMap().entries.map((entry) {
+                                final index = entry.key;
+                                final item = entry.value;
+                                final category = catProvider.getCategoryById(item.key);
+                                final color = category != null
+                                    ? Color(int.tryParse(category.color) ?? AppColors.primary.toARGB32())
+                                    : textSecondary;
+                                return BarChartGroupData(
+                                  x: index,
+                                  barRods: [
+                                    BarChartRodData(
+                                      toY: item.value,
+                                      color: color,
+                                      width: 20,
+                                      borderRadius: BorderRadius.circular(AppRadius.xs),
+                                      backDrawRodData: BackgroundBarChartRodData(
+                                        show: true,
+                                        toY: sortedSpending.isNotEmpty ? sortedSpending.first.value * 1.1 : 100,
+                                        color: color.withAlpha(20),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+
+                  // Category Breakdown Detail List
+                  SectionHeader(title: 'Category Breakdown'),
+                  const SizedBox(height: AppSpacing.xs),
+
+                  ReusableCard(
+                    padding: EdgeInsets.zero,
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: sortedSpending.length,
+                      separatorBuilder: (context, index) => Divider(
+                        height: 1,
+                        indent: 72,
+                        color: AppColors.getBorder(context),
+                      ),
+                      itemBuilder: (context, index) {
+                        final item = sortedSpending[index];
+                        final category = catProvider.getCategoryById(item.key);
+                        final color = category != null
+                            ? Color(int.tryParse(category.color) ?? AppColors.primary.toARGB32())
+                            : textSecondary;
+
+                        final pct = totalSpent > 0 ? (item.value / totalSpent * 100).toStringAsFixed(1) : '0';
+                        final isTouched = index == _touchedIndex;
+
+                        return Material(
+                          color: isTouched ? color.withAlpha(20) : Colors.transparent,
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
+                            leading: Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: color.withAlpha(25),
+                                borderRadius: BorderRadius.circular(AppRadius.sm + 2),
+                                border: Border.all(color: color.withAlpha(50)),
+                              ),
+                              child: Icon(
+                                category != null ? IconMapper.getIcon(category.icon) : Icons.help_outline,
+                                color: color,
+                                size: 22,
+                              ),
+                            ),
+                            title: Text(
+                              category?.name ?? 'Unknown',
+                              style: AppTextStyles.labelLarge.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: textPrimary,
+                              ),
+                            ),
+                            subtitle: Text(
+                              '$pct% of total spending',
+                              style: AppTextStyles.caption.copyWith(color: textSecondary),
+                            ),
+                            trailing: Text(
+                              CurrencyFormatter.format(item.value),
+                              style: AppTextStyles.labelLarge.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: textPrimary,
+                              ),
+                            ),
+                            onTap: () {
+                              setState(() {
+                                _touchedIndex = isTouched ? -1 : index;
+                              });
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 100),
               ],
-              const SizedBox(height: 100), // padding for bottom nav
-            ],
+            ),
           );
         },
       ),
     );
   }
-
-
 }

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_radius.dart';
+import '../../../app/theme/app_spacing.dart';
+import '../../../app/theme/app_text_styles.dart';
 
 class DocumentCategoryItem {
   final String key;
@@ -33,13 +36,17 @@ class DocumentCategoryChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final surfaceColor = AppColors.getSurface(context);
+    final borderColor = AppColors.getBorder(context);
+    final textSecondary = AppColors.getTextSecondary(context);
+
     return SizedBox(
       height: 44,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
         itemCount: categories.length,
-        separatorBuilder: (context, index) => const SizedBox(width: 8),
+        separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.sm),
         itemBuilder: (context, index) {
           final item = categories[index];
           final isSelected = selectedCategory.toLowerCase() == item.key.toLowerCase();
@@ -50,20 +57,20 @@ class DocumentCategoryChips extends StatelessWidget {
             avatar: Icon(
               item.icon,
               size: 16,
-              color: isSelected ? AppColors.background : AppColors.primary,
+              color: isSelected ? Colors.white : AppColors.primary,
             ),
             label: Text(item.label),
-            labelStyle: TextStyle(
-              fontSize: 12,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-              color: isSelected ? AppColors.background : Colors.white70,
+            labelStyle: AppTextStyles.labelSmall.copyWith(
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              color: isSelected ? Colors.white : textSecondary,
             ),
-            backgroundColor: AppColors.surface,
+            backgroundColor: surfaceColor,
             selectedColor: AppColors.primary,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.full),
               side: BorderSide(
-                color: isSelected ? AppColors.primary : Colors.white.withAlpha(20),
+                color: isSelected ? AppColors.primary : borderColor,
                 width: 1,
               ),
             ),

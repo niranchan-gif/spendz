@@ -5,8 +5,11 @@ import 'package:intl/intl.dart';
 import '../../providers/transaction_provider.dart';
 import '../../providers/category_provider.dart';
 import '../../widgets/transaction_tile.dart';
+import '../../widgets/design_system/empty_state.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_spacing.dart';
+import '../../app/theme/app_radius.dart';
 import '../../utils/date_formatter.dart';
 import '../../utils/icon_mapper.dart';
 import 'add_transaction_screen.dart';
@@ -35,11 +38,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primary,
-              onPrimary: AppColors.background,
-              surface: Colors.white,
-              onSurface: AppColors.textPrimary,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: AppColors.primary,
+              brightness: Theme.of(context).brightness,
             ),
           ),
           child: child!,
@@ -64,18 +65,21 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final textSecondary = AppColors.getTextSecondary(context);
+
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Activity'),
         actions: [
           if (_startDate != null || _endDate != null)
             IconButton(
-              icon: const Icon(Icons.clear),
+              icon: const Icon(Icons.clear_rounded),
               tooltip: 'Clear date filter',
               onPressed: _clearDateRange,
             ),
           IconButton(
-            icon: const Icon(Icons.calendar_today_outlined),
+            icon: const Icon(Icons.calendar_today_rounded),
             tooltip: 'Filter by date',
             onPressed: _selectDateRange,
           ),
@@ -91,8 +95,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'activity_add_tx_fab',
         backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.background,
-        icon: const Icon(Icons.add),
+        foregroundColor: Colors.white,
+        elevation: 4,
+        icon: const Icon(Icons.add_rounded),
         label: const Text('Add Expense', style: TextStyle(fontWeight: FontWeight.bold)),
         onPressed: () {
           Navigator.push(
@@ -139,18 +144,18 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             children: [
               // Search Input
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.xs, AppSpacing.lg, AppSpacing.sm),
                 child: TextField(
                   decoration: InputDecoration(
                     hintText: 'Search merchant, note, amount...',
-                    prefixIcon: const Icon(Icons.search, size: 20),
+                    prefixIcon: const Icon(Icons.search_rounded, size: 20),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(Icons.close, size: 18),
+                            icon: const Icon(Icons.close_rounded, size: 18),
                             onPressed: () => setState(() => _searchQuery = ''),
                           )
                         : null,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm + 2),
                   ),
                   onChanged: (val) => setState(() => _searchQuery = val),
                 ),
@@ -158,25 +163,31 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
               // Category Filter Bar
               SizedBox(
-                height: 42,
+                height: 44,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                   itemCount: catProvider.categories.length + 1,
-                  separatorBuilder: (context, index) => const SizedBox(width: 8),
+                  separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.sm),
                   itemBuilder: (context, index) {
+                    final surfaceColor = AppColors.getSurface(context);
+                    final borderColor = AppColors.getBorder(context);
+
                     if (index == 0) {
                       final isSelected = _selectedCategoryId == 'all';
                       return ChoiceChip(
                         showCheckmark: false,
                         label: const Text('All Categories'),
                         selected: isSelected,
-                        backgroundColor: AppColors.surface,
+                        backgroundColor: surfaceColor,
                         selectedColor: AppColors.primary,
-                        labelStyle: TextStyle(
-                          fontSize: 12,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.full),
+                          side: BorderSide(color: isSelected ? AppColors.primary : borderColor),
+                        ),
+                        labelStyle: AppTextStyles.labelSmall.copyWith(
                           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          color: isSelected ? AppColors.background : Colors.white70,
+                          color: isSelected ? Colors.white : textSecondary,
                         ),
                         onSelected: (_) => setState(() => _selectedCategoryId = 'all'),
                       );
@@ -190,16 +201,19 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       avatar: Icon(
                         IconMapper.getIcon(cat.icon),
                         size: 14,
-                        color: isSelected ? AppColors.background : Color(int.tryParse(cat.color) ?? AppColors.primary.toARGB32()),
+                        color: isSelected ? Colors.white : Color(int.tryParse(cat.color) ?? AppColors.primary.toARGB32()),
                       ),
                       label: Text(cat.name),
                       selected: isSelected,
-                      backgroundColor: AppColors.surface,
+                      backgroundColor: surfaceColor,
                       selectedColor: AppColors.primary,
-                      labelStyle: TextStyle(
-                        fontSize: 12,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.full),
+                        side: BorderSide(color: isSelected ? AppColors.primary : borderColor),
+                      ),
+                      labelStyle: AppTextStyles.labelSmall.copyWith(
                         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                        color: isSelected ? AppColors.background : Colors.white70,
+                        color: isSelected ? Colors.white : textSecondary,
                       ),
                       onSelected: (_) => setState(() => _selectedCategoryId = cat.id),
                     );
@@ -210,61 +224,72 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               // Active Date Range Pill
               if (_startDate != null && _endDate != null)
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 0),
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: AppSpacing.md),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withAlpha(25),
-                      borderRadius: BorderRadius.circular(10),
+                      color: AppColors.primary.withAlpha(20),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
                       border: Border.all(color: AppColors.primary.withAlpha(50)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.date_range, size: 14, color: AppColors.primary),
-                        const SizedBox(width: 6),
+                        const Icon(Icons.date_range_rounded, size: 14, color: AppColors.primary),
+                        const SizedBox(width: AppSpacing.xs),
                         Text(
                           '${DateFormat('MMM d').format(_startDate!)} - ${DateFormat('MMM d, yyyy').format(_endDate!)}',
-                          style: AppTextStyles.bodySmall.copyWith(
+                          style: AppTextStyles.labelSmall.copyWith(
                             color: AppColors.primary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppSpacing.sm),
                         GestureDetector(
                           onTap: _clearDateRange,
-                          child: const Icon(Icons.close, size: 14, color: AppColors.primary),
+                          child: const Icon(Icons.close_rounded, size: 14, color: AppColors.primary),
                         ),
                       ],
                     ),
                   ),
                 ),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.xs),
 
               // Transaction List
               Expanded(
                 child: transactions.isEmpty
                     ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.receipt_long, size: 60, color: Colors.grey.withAlpha(90)),
-                            const SizedBox(height: 16),
-                            Text('No transactions match', style: AppTextStyles.heading3),
-                            const SizedBox(height: 8),
-                            Text(
-                              _searchQuery.isNotEmpty || _selectedCategoryId != 'all' || _startDate != null
-                                  ? 'Try adjusting your search or filters'
-                                  : 'Tap "+ Add Expense" to record a transaction',
-                              style: AppTextStyles.bodyMedium,
-                            ),
-                          ],
+                        child: EmptyState(
+                          icon: Icons.receipt_long_outlined,
+                          title: 'No Transactions Found',
+                          subtitle: _searchQuery.isNotEmpty || _selectedCategoryId != 'all' || _startDate != null
+                              ? 'Try adjusting your search keywords, category or date range.'
+                              : 'Tap "+ Add Expense" below to record your first transaction.',
+                          actionLabel: _searchQuery.isEmpty && _selectedCategoryId == 'all' && _startDate == null
+                              ? 'Add Expense'
+                              : 'Reset Filters',
+                          onActionPressed: () {
+                            if (_searchQuery.isNotEmpty || _selectedCategoryId != 'all' || _startDate != null) {
+                              setState(() {
+                                _searchQuery = '';
+                                _selectedCategoryId = 'all';
+                                _startDate = null;
+                                _endDate = null;
+                              });
+                            } else {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+                              );
+                            }
+                          },
                         ),
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.only(top: 8, bottom: 90, left: 16, right: 16),
+                        padding: const EdgeInsets.only(top: AppSpacing.xs, bottom: 90, left: AppSpacing.lg, right: AppSpacing.lg),
+                        physics: const BouncingScrollPhysics(),
                         itemCount: transactions.length,
                         itemBuilder: (context, index) {
                           final tx = transactions[index];
@@ -287,12 +312,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                             children: [
                               if (showHeader)
                                 Padding(
-                                  padding: const EdgeInsets.fromLTRB(4, 16, 4, 8),
+                                  padding: const EdgeInsets.fromLTRB(4, AppSpacing.md, 4, AppSpacing.xs),
                                   child: Text(
                                     DateFormatter.formatFullDate(tx.date),
-                                    style: AppTextStyles.bodySmall.copyWith(
+                                    style: AppTextStyles.labelSmall.copyWith(
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.white70,
+                                      color: textSecondary,
                                       letterSpacing: 0.5,
                                     ),
                                   ),

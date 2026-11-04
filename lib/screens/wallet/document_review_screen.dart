@@ -12,6 +12,7 @@ import '../../features/wallet/ocr/document_ocr_service.dart';
 import '../../features/wallet/services/document_expiry_service.dart';
 import '../../features/wallet/services/document_vault_service.dart';
 import '../../features/wallet/services/image_processing_service.dart';
+import '../../features/wallet/security/secure_number_service.dart';
 import '../../providers/wallet_document_provider.dart';
 import '../../providers/wallet_provider.dart';
 import '../../widgets/glass_container.dart';
@@ -239,6 +240,12 @@ class _DocumentReviewScreenState extends State<DocumentReviewScreen> {
         expiryDate: _expiryDate,
         isFavorite: _isFavorite,
       );
+
+      // Save sensitive full document number in secure hardware storage
+      final docNum = _docNumberController.text.trim();
+      if (docNum.isNotEmpty) {
+        await SecureNumberService().saveDocumentFullNumber(savedDoc.id, docNum);
+      }
 
       // 2. Schedule reminders if expiry date is present
       if (_expiryDate != null) {

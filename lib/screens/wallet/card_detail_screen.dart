@@ -3,13 +3,20 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_radius.dart';
+import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../../database/transaction_dao.dart';
+import '../../features/wallet/security/secure_number_service.dart';
 import '../../models/transaction_model.dart';
 import '../../models/wallet_card_model.dart';
 import '../../providers/wallet_card_provider.dart';
 import '../../providers/wallet_provider.dart';
-import '../../widgets/glass_container.dart';
+import '../../widgets/design_system/custom_dialog.dart';
+import '../../widgets/design_system/empty_state.dart';
+import '../../widgets/design_system/loading_state.dart';
+import '../../widgets/design_system/primary_button.dart';
+import '../../widgets/design_system/reusable_card.dart';
 import 'widgets/wallet_card_widget.dart';
 
 class CardDetailScreen extends StatefulWidget {
@@ -24,6 +31,7 @@ class CardDetailScreen extends StatefulWidget {
 class _CardDetailScreenState extends State<CardDetailScreen> {
   late WalletCardModel _currentCard;
   final TransactionDao _transactionDao = TransactionDao();
+  final SecureNumberService _secureNumberService = SecureNumberService();
   List<TransactionModel> _linkedTransactions = [];
   bool _isLoadingTransactions = true;
 
@@ -69,6 +77,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     final nicknameController = TextEditingController(text: _currentCard.nickname);
     final issuerController = TextEditingController(text: _currentCard.issuerName);
     final cardholderController = TextEditingController(text: _currentCard.cardholderName);
+    final fullNumberController = TextEditingController();
     int expiryMonth = _currentCard.expiryMonth;
     int expiryYear = _currentCard.expiryYear;
     String cardType = _currentCard.cardType;
@@ -80,19 +89,20 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      backgroundColor: AppColors.getSurface(context),
+      shape: RoundedRectangleBorder(
+        borderRadius: AppRadius.roundedSheet,
       ),
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setModalState) {
+            final bottomInset = MediaQuery.of(context).viewInsets.bottom;
             return Padding(
               padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-                left: 20,
-                right: 20,
-                top: 20,
+                bottom: bottomInset + AppSpacing.card,
+                left: AppSpacing.card,
+                right: AppSpacing.card,
+                top: AppSpacing.card,
               ),
               child: SingleChildScrollView(
                 child: Form(
@@ -104,20 +114,23 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Edit Virtual Card', style: AppTextStyles.heading3),
+                          Text(
+                            'Edit Virtual Card',
+                            style: AppTextStyles.getHeading2(context).copyWith(fontWeight: FontWeight.w700),
+                          ),
                           IconButton(
                             icon: const Icon(Icons.close),
                             onPressed: () => Navigator.pop(ctx),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.md),
                       TextFormField(
                         controller: nicknameController,
                         decoration: const InputDecoration(labelText: 'Card Nickname'),
                         validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: AppSpacing.md),
                       Row(
                         children: [
                           Expanded(
@@ -127,7 +140,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                               validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: DropdownButtonFormField<String>(
                               initialValue: cardType,
@@ -142,13 +155,23 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: AppSpacing.md),
                       TextFormField(
                         controller: cardholderController,
                         decoration: const InputDecoration(labelText: 'Cardholder Name'),
                         validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: AppSpacing.md),
+                      TextFormField(
+                        controller: fullNumberController,
+                        decoration: InputDecoration(
+                          labelText: 'Update Full Card Number (Optional)',
+                          hintText: 'Leave empty to preserve existing (${_currentCard.maskedNumber})',
+                          prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18),
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
                       Row(
                         children: [
                           Expanded(
@@ -163,7 +186,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                               },
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: DropdownButtonFormField<int>(
                               initialValue: expiryYear,
@@ -178,76 +201,70 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-                      const Text('Card Gradient Theme', style: TextStyle(fontSize: 13, color: Colors.white70)),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        height: 44,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: themes.length,
-                          separatorBuilder: (_, _) => const SizedBox(width: 8),
-                          itemBuilder: (context, i) {
-                            final th = themes[i];
-                            final isSelected = themeGradient == th;
-                            return GestureDetector(
-                              onTap: () => setModalState(() => themeGradient = th),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: isSelected ? AppColors.primary : AppColors.surface,
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                    color: isSelected ? AppColors.primary : Colors.white24,
-                                  ),
-                                ),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  th.toUpperCase(),
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    color: isSelected ? Colors.black : Colors.white,
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
+                      const SizedBox(height: AppSpacing.md),
+                      Text('Card Theme', style: AppTextStyles.labelMedium),
+                      const SizedBox(height: AppSpacing.sm),
+                      Wrap(
+                        spacing: 8,
+                        children: themes.map((t) {
+                          final isSelected = themeGradient == t;
+                          return ChoiceChip(
+                            label: Text(t.toUpperCase()),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              if (selected) setModalState(() => themeGradient = t);
+                            },
+                          );
+                        }).toList(),
                       ),
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            if (!formKey.currentState!.validate()) return;
+                      const SizedBox(height: AppSpacing.xl),
+                      PrimaryButton(
+                        label: 'Save Changes',
+                        onPressed: () async {
+                          if (formKey.currentState!.validate()) {
+                            final cardProvider = context.read<WalletCardProvider>();
+                            final walletProvider = context.read<WalletProvider>();
+                            final messenger = ScaffoldMessenger.of(context);
+
+                            String lastFour = _currentCard.lastFour;
+                            String maskedNumber = _currentCard.maskedNumber;
+
+                            final rawInput = fullNumberController.text.trim();
+                            if (rawInput.isNotEmpty) {
+                              final clean = rawInput.replaceAll(RegExp(r'\s+'), '');
+                              if (clean.length >= 4) {
+                                lastFour = clean.substring(clean.length - 4);
+                                maskedNumber = '•••• •••• •••• $lastFour';
+                                await _secureNumberService.saveCardFullNumber(_currentCard.id, clean);
+                              }
+                            }
+
                             final updated = _currentCard.copyWith(
                               nickname: nicknameController.text.trim(),
                               issuerName: issuerController.text.trim(),
                               cardholderName: cardholderController.text.trim(),
-                              cardType: cardType,
                               expiryMonth: expiryMonth,
                               expiryYear: expiryYear,
+                              cardType: cardType,
                               themeGradient: themeGradient,
+                              lastFour: lastFour,
+                              maskedNumber: maskedNumber,
                               updatedAt: DateTime.now(),
                             );
-                            final cardProvider = context.read<WalletCardProvider>();
-                            final walletProvider = context.read<WalletProvider>();
+
                             await cardProvider.updateCard(updated);
-                            walletProvider.loadWallet();
                             if (mounted) {
+                              walletProvider.loadWallet();
                               setState(() => _currentCard = updated);
+                              if (ctx.mounted) {
+                                Navigator.pop(ctx);
+                              }
+                              messenger.showSnackBar(
+                                const SnackBar(content: Text('Card updated successfully')),
+                              );
                             }
-                            if (ctx.mounted) Navigator.pop(ctx);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: const Text('Save Changes'),
-                        ),
+                          }
+                        },
                       ),
                     ],
                   ),
@@ -261,37 +278,26 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
   }
 
   Future<void> _deleteCard() async {
-    final confirm = await showDialog<bool>(
+    final cardId = _currentCard.id;
+    final cardProvider = context.read<WalletCardProvider>();
+    final walletProvider = context.read<WalletProvider>();
+    final nav = Navigator.of(context);
+
+    final confirm = await CustomDialog.showConfirmation(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: const Text('Delete Card?', style: TextStyle(color: Colors.white)),
-        content: const Text(
-          'This card will be removed from your wallet. Any associated transactions will be safely preserved with unlinked card reference.',
-          style: TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: 'Delete Card?',
+      message: 'This card will be removed from your wallet. Any associated transactions will remain safely preserved.',
+      confirmLabel: 'Delete Card',
+      isDestructive: true,
+      icon: Icons.delete_outline_rounded,
     );
 
     if (confirm == true && mounted) {
-      await context.read<WalletCardProvider>().deleteCard(_currentCard.id);
+      await _secureNumberService.deleteCardFullNumber(cardId);
+      await cardProvider.deleteCard(cardId);
       if (mounted) {
-        context.read<WalletProvider>().loadWallet();
-        Navigator.of(context).pop();
+        walletProvider.loadWallet();
+        nav.pop();
       }
     }
   }
@@ -307,16 +313,14 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.getBackground(context),
       appBar: AppBar(
-        title: Text(_currentCard.nickname, style: AppTextStyles.heading3),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        title: Text(_currentCard.nickname, style: AppTextStyles.getHeading3(context)),
         actions: [
           IconButton(
             icon: Icon(
-              _currentCard.isFavorite ? Icons.star : Icons.star_border,
-              color: _currentCard.isFavorite ? Colors.amber : Colors.white70,
+              _currentCard.isFavorite ? Icons.star_rounded : Icons.star_outline_rounded,
+              color: _currentCard.isFavorite ? Colors.amber : AppColors.getTextSecondary(context),
             ),
             onPressed: _toggleFavorite,
           ),
@@ -325,106 +329,98 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
             onPressed: _showEditCardDialog,
           ),
           IconButton(
-            icon: const Icon(Icons.delete_outline, color: AppColors.error),
+            icon: Icon(Icons.delete_outline_rounded, color: AppColors.getError(context)),
             onPressed: _deleteCard,
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Card Widget Display
+            // Card Presentation Widget with Biometric Reveal
             Center(
               child: WalletCardWidget(
                 card: _currentCard,
+                allowReveal: true,
                 onTap: _showEditCardDialog,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.md),
 
-            // Non-payment Security Disclaimer
+            // Security & Privacy Disclaimer Badge
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
-                color: AppColors.primary.withAlpha(20),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.primary.withAlpha(40)),
+                color: AppColors.getPrimary(context).withAlpha(15),
+                borderRadius: AppRadius.roundedMd,
+                border: Border.all(color: AppColors.getPrimary(context).withAlpha(35)),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.shield_outlined, color: AppColors.primary, size: 20),
-                  SizedBox(width: 10),
+                  Icon(Icons.shield_outlined, color: AppColors.getPrimary(context), size: 18),
+                  const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
-                      'Spendz never stores CVVs, PINs, or banking credentials. This virtual card is used exclusively for personal expense organization and cannot independently process financial payments.',
-                      style: TextStyle(fontSize: 11, color: Colors.white70),
+                      'Spendz never stores CVVs or PINs. Card numbers are encrypted with hardware-backed AES-256-GCM and revealed only via biometric verification.',
+                      style: AppTextStyles.getBodySmall(context).copyWith(fontSize: 11),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.lg),
 
-            // Card Metadata Summary
-            GlassContainer(
+            // Metadata Summary Card
+            ReusableCard(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
               child: Column(
                 children: [
                   _buildMetaRow('Issuer Bank', _currentCard.issuerName),
-                  const Divider(color: Colors.white10),
+                  Divider(color: AppColors.getDivider(context)),
                   _buildMetaRow('Cardholder', _currentCard.cardholderName),
-                  const Divider(color: Colors.white10),
+                  Divider(color: AppColors.getDivider(context)),
                   _buildMetaRow('Card Type', _currentCard.cardType.toUpperCase()),
-                  const Divider(color: Colors.white10),
+                  Divider(color: AppColors.getDivider(context)),
                   _buildMetaRow('Payment Network', _currentCard.cardNetwork.toUpperCase()),
-                  const Divider(color: Colors.white10),
+                  Divider(color: AppColors.getDivider(context)),
                   _buildMetaRow('Expiry Date', '${_currentCard.expiryMonth.toString().padLeft(2, '0')}/${_currentCard.expiryYear}'),
-                  const Divider(color: Colors.white10),
+                  Divider(color: AppColors.getDivider(context)),
                   _buildMetaRow('Masked Number', _currentCard.maskedNumber),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.xl),
 
             // Linked Transactions Section
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Linked Transactions', style: AppTextStyles.heading3),
+                Text(
+                  'Linked Transactions',
+                  style: AppTextStyles.getHeading3(context).copyWith(fontWeight: FontWeight.w700),
+                ),
                 if (_linkedTransactions.isNotEmpty)
                   Text(
                     'Total: ${currencyFormat.format(totalSpend)}',
-                    style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13),
+                    style: TextStyle(
+                      color: AppColors.getPrimary(context),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
                   ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
 
             if (_isLoadingTransactions)
-              const Center(child: CircularProgressIndicator(color: AppColors.primary))
+              const LoadingState(message: 'Loading linked activity...')
             else if (_linkedTransactions.isEmpty)
-              GlassContainer(
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24),
-                    child: Column(
-                      children: [
-                        Icon(Icons.receipt_long_outlined, size: 40, color: Colors.white.withAlpha(50)),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'No transactions linked to this card yet',
-                          style: TextStyle(color: Colors.white60, fontSize: 13),
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'Transactions tagged with this card will appear here automatically.',
-                          style: TextStyle(color: Colors.white38, fontSize: 11),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+              const EmptyState(
+                icon: Icons.receipt_long_outlined,
+                title: 'No Linked Transactions',
+                message: 'Transactions tagged with this card will appear here automatically.',
               )
             else
               ListView.separated(
@@ -436,48 +432,49 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                   final t = _linkedTransactions[i];
                   final isExpense = t.type == 'expense';
                   return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 12),
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white10),
+                      color: AppColors.getSurface(context),
+                      borderRadius: AppRadius.roundedMd,
+                      border: Border.all(color: AppColors.getBorder(context)),
                     ),
                     child: Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.all(AppSpacing.sm),
                           decoration: BoxDecoration(
-                            color: isExpense ? Colors.red.withAlpha(20) : Colors.green.withAlpha(20),
+                            color: (isExpense ? AppColors.getError(context) : AppColors.getSuccess(context)).withAlpha(20),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(
-                            isExpense ? Icons.arrow_upward : Icons.arrow_downward,
-                            color: isExpense ? Colors.redAccent : Colors.greenAccent,
+                            isExpense ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
                             size: 16,
+                            color: isExpense ? AppColors.getError(context) : AppColors.getSuccess(context),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 t.merchant ?? t.description ?? 'Transaction',
-                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
+                                style: AppTextStyles.getBodyMedium(context).copyWith(fontWeight: FontWeight.w600),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              const SizedBox(height: 2),
                               Text(
                                 dateFormat.format(t.date),
-                                style: const TextStyle(color: Colors.white54, fontSize: 11),
+                                style: AppTextStyles.getBodySmall(context),
                               ),
                             ],
                           ),
                         ),
                         Text(
-                          '${isExpense ? "-" : "+"}${currencyFormat.format(t.amount)}',
+                          '${isExpense ? '-' : '+'}${currencyFormat.format(t.amount)}',
                           style: TextStyle(
-                            color: isExpense ? Colors.white : Colors.greenAccent,
-                            fontWeight: FontWeight.bold,
+                            color: isExpense ? AppColors.getError(context) : AppColors.getSuccess(context),
+                            fontWeight: FontWeight.w700,
                             fontSize: 14,
                           ),
                         ),
@@ -486,7 +483,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                   );
                 },
               ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.xxl),
           ],
         ),
       ),
@@ -495,12 +492,26 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
 
   Widget _buildMetaRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 12, color: Colors.white54)),
-          Text(value, style: const TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w500)),
+          Text(
+            label,
+            style: AppTextStyles.getBodySmall(context).copyWith(
+              color: AppColors.getTextSecondary(context),
+            ),
+          ),
+          Flexible(
+            child: Text(
+              value,
+              style: AppTextStyles.getBodyMedium(context).copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.end,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
     );

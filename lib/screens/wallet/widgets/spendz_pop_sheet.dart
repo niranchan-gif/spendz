@@ -2,8 +2,11 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+
 import '../../../providers/wallet_provider.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_spacing.dart';
+import '../../../app/theme/app_radius.dart';
 import '../../../app/theme/app_text_styles.dart';
 import '../widgets/wallet_card_widget.dart';
 import '../documents_screen.dart';
@@ -26,16 +29,22 @@ class SpendzPopSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surfaceColor = AppColors.getSurface(context);
+    final borderColor = AppColors.getBorder(context);
+    final textPrimary = AppColors.getTextPrimary(context);
+    final textSecondary = AppColors.getTextSecondary(context);
+
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.background.withAlpha(220),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          border: Border.all(color: Colors.white.withAlpha(35), width: 1.2),
+          color: surfaceColor.withAlpha(isDark ? 230 : 245),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.sheet)),
+          border: Border.all(color: borderColor, width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withAlpha(120),
+              color: Colors.black.withAlpha(isDark ? 100 : 30),
               blurRadius: 30,
               offset: const Offset(0, -10),
             ),
@@ -49,7 +58,7 @@ class SpendzPopSheet extends StatelessWidget {
               final favPasses = wallet.favoritePasses.isNotEmpty ? wallet.favoritePasses : wallet.passes.take(1).toList();
 
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,14 +67,14 @@ class SpendzPopSheet extends StatelessWidget {
                     Center(
                       child: Container(
                         width: 44,
-                        height: 5,
+                        height: 4,
                         decoration: BoxDecoration(
-                          color: Colors.white.withAlpha(70),
-                          borderRadius: BorderRadius.circular(3),
+                          color: textSecondary.withAlpha(80),
+                          borderRadius: BorderRadius.circular(2),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppSpacing.md),
 
                     // Header
                     Row(
@@ -77,7 +86,7 @@ class SpendzPopSheet extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
                                 color: AppColors.primary,
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(AppRadius.xs),
                               ),
                               child: const Text(
                                 'POP WALLET',
@@ -85,35 +94,35 @@ class SpendzPopSheet extends StatelessWidget {
                                   fontSize: 11,
                                   fontWeight: FontWeight.w900,
                                   letterSpacing: 1.2,
-                                  color: AppColors.background,
+                                  color: Colors.white,
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            const Text(
+                            const SizedBox(width: AppSpacing.sm),
+                            Text(
                               'Instant Access',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.white70,
-                                fontWeight: FontWeight.w500,
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                color: textSecondary,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close_rounded, color: Colors.white54),
+                          icon: Icon(Icons.close_rounded, color: textSecondary),
                           onPressed: () => Navigator.pop(context),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.md),
 
                     // Quick Action Shortcuts
                     Row(
                       children: [
                         Expanded(
                           child: _buildActionPill(
-                            icon: Icons.add,
+                            context: context,
+                            icon: Icons.add_rounded,
                             label: 'Expense',
                             onTap: () {
                               Navigator.pop(context);
@@ -124,10 +133,11 @@ class SpendzPopSheet extends StatelessWidget {
                             },
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: _buildActionPill(
-                            icon: Icons.credit_card,
+                            context: context,
+                            icon: Icons.credit_card_rounded,
                             label: 'Cards',
                             onTap: () {
                               Navigator.pop(context);
@@ -138,10 +148,11 @@ class SpendzPopSheet extends StatelessWidget {
                             },
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: _buildActionPill(
-                            icon: Icons.lock_rounded,
+                            context: context,
+                            icon: Icons.shield_rounded,
                             label: 'Vault',
                             onTap: () {
                               Navigator.pop(context);
@@ -154,7 +165,7 @@ class SpendzPopSheet extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.lg),
 
                     // Favorite Cards Carousel
                     if (favCards.isNotEmpty) ...[
@@ -162,14 +173,18 @@ class SpendzPopSheet extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text('Favourite Cards', style: AppTextStyles.labelLarge),
-                          Text('${favCards.length} ready', style: const TextStyle(fontSize: 11, color: Colors.white54)),
+                          Text(
+                            '${favCards.length} ready',
+                            style: AppTextStyles.caption.copyWith(color: textSecondary),
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: AppSpacing.sm),
                       SizedBox(
-                        height: 175,
+                        height: 185,
                         child: ListView.builder(
                           scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
                           itemCount: favCards.length,
                           itemBuilder: (context, index) {
                             final card = favCards[index];
@@ -188,35 +203,51 @@ class SpendzPopSheet extends StatelessWidget {
                           },
                         ),
                       ),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: AppSpacing.md),
                     ],
 
-                    // Favorite Documents / Passes Quick List
+                    // Favorite Documents Quick List
                     if (favDocs.isNotEmpty) ...[
                       Text('Quick Documents', style: AppTextStyles.labelLarge),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: AppSpacing.sm),
                       Column(
                         children: favDocs.map((doc) {
                           return Container(
-                            margin: const EdgeInsets.only(bottom: 8),
+                            margin: const EdgeInsets.only(bottom: AppSpacing.xs + 2),
                             decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: Colors.white.withAlpha(20)),
+                              color: surfaceColor,
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                              border: Border.all(color: borderColor),
                             ),
-                            child: ListTile(
-                              dense: true,
-                              leading: const Icon(Icons.shield_outlined, color: AppColors.primary, size: 20),
-                              title: Text(doc.documentName, style: AppTextStyles.bodyMedium),
-                              subtitle: Text(doc.category.toUpperCase(), style: const TextStyle(fontSize: 10, color: Colors.white54)),
-                              trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.white38),
-                              onTap: () {
-                                Navigator.pop(context);
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => DocumentPreviewScreen(document: doc)),
-                                );
-                              },
+                            child: Material(
+                              color: Colors.transparent,
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                              child: ListTile(
+                                dense: true,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(AppRadius.md),
+                                ),
+                                leading: const Icon(Icons.shield_outlined, color: AppColors.primary, size: 20),
+                                title: Text(
+                                  doc.documentName,
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: textPrimary,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  doc.category.toUpperCase(),
+                                  style: AppTextStyles.caption.copyWith(color: textSecondary, fontSize: 10),
+                                ),
+                                trailing: Icon(Icons.arrow_forward_ios_rounded, size: 12, color: textSecondary),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => DocumentPreviewScreen(document: doc)),
+                                  );
+                                },
+                              ),
                             ),
                           );
                         }).toList(),
@@ -225,13 +256,13 @@ class SpendzPopSheet extends StatelessWidget {
 
                     // Active Passes Quick QR
                     if (favPasses.isNotEmpty) ...[
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.xs),
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withAlpha(15),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: AppColors.primary.withAlpha(40)),
+                          color: AppColors.primary.withAlpha(20),
+                          borderRadius: BorderRadius.circular(AppRadius.card),
+                          border: Border.all(color: AppColors.primary.withAlpha(50)),
                         ),
                         child: Row(
                           children: [
@@ -239,7 +270,7 @@ class SpendzPopSheet extends StatelessWidget {
                               padding: const EdgeInsets.all(4),
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(AppRadius.sm),
                               ),
                               child: QrImageView(
                                 data: favPasses.first.codeData.isNotEmpty ? favPasses.first.codeData : 'spendz-pass',
@@ -247,18 +278,24 @@ class SpendzPopSheet extends StatelessWidget {
                                 size: 36.0,
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: AppSpacing.md),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     favPasses.first.title,
-                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                    style: AppTextStyles.labelMedium.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: textPrimary,
+                                    ),
                                   ),
                                   Text(
                                     'Code: ${favPasses.first.codeData}',
-                                    style: const TextStyle(fontFamily: 'monospace', color: Colors.white70, fontSize: 11),
+                                    style: AppTextStyles.caption.copyWith(
+                                      fontFamily: 'monospace',
+                                      color: textSecondary,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -278,36 +315,43 @@ class SpendzPopSheet extends StatelessWidget {
   }
 
   Widget _buildActionPill({
+    required BuildContext context,
     required IconData icon,
     required String label,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withAlpha(20)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: AppColors.primary, size: 16),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+    final surfaceColor = AppColors.getSurface(context);
+    final borderColor = AppColors.getBorder(context);
+    final textPrimary = AppColors.getTextPrimary(context);
+
+    return Material(
+      color: surfaceColor,
+      borderRadius: BorderRadius.circular(AppRadius.card),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm + 2),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.card),
+            border: Border.all(color: borderColor),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: AppColors.primary, size: 16),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
-

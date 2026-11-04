@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_spacing.dart';
+import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../../models/wallet_document_model.dart';
 import '../../providers/wallet_provider.dart';
-import '../../widgets/glass_container.dart';
+import '../../widgets/design_system/reusable_card.dart';
+import '../../widgets/design_system/section_header.dart';
+import '../../widgets/design_system/empty_state.dart';
+import '../../widgets/design_system/app_bottom_sheet.dart';
 import 'card_detail_screen.dart';
 import 'cards_screen.dart';
 import 'document_preview_screen.dart';
@@ -25,114 +30,106 @@ class WalletDashboardScreen extends StatefulWidget {
 
 class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
   void _showAddOptions(BuildContext context) {
-    showModalBottomSheet(
+    AppBottomSheet.show(
       context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.white24,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text('Add to Wallet', style: AppTextStyles.heading3),
-                const SizedBox(height: 16),
-                ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withAlpha(25),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.document_scanner_outlined, color: AppColors.primary),
-                  ),
-                  title: const Text('Scan Document (OCR)'),
-                  subtitle: const Text('Auto edge detection, crop, OCR & encryption'),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const DocumentScannerScreen()),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withAlpha(25),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.credit_card, color: AppColors.primary),
-                  ),
-                  title: const Text('Add Payment Card'),
-                  subtitle: const Text('Store virtual card in Card Studio'),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const CardsScreen(openAddDialog: true)),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withAlpha(25),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.file_upload_outlined, color: AppColors.primary),
-                  ),
-                  title: const Text('Import Existing File'),
-                  subtitle: const Text('Import PDF or image into AES-256 vault'),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const DocumentsScreen(openAddDialog: true)),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withAlpha(25),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.qr_code_2_rounded, color: AppColors.primary),
-                  ),
-                  title: const Text('Add Digital Pass / QR'),
-                  subtitle: const Text('Save event ticket, boarding pass, or transit QR'),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const PassesScreen(openAddDialog: true)),
-                    );
-                  },
-                ),
-              ],
-            ),
+      title: 'Add to Wallet',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildAddOptionTile(
+            context: context,
+            icon: Icons.document_scanner_outlined,
+            title: 'Scan Document (OCR)',
+            subtitle: 'Auto edge detection, crop, OCR & encryption',
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const DocumentScannerScreen()),
+              );
+            },
           ),
-        );
-      },
+          _buildAddOptionTile(
+            context: context,
+            icon: Icons.credit_card_rounded,
+            title: 'Add Payment Card',
+            subtitle: 'Store virtual card in Card Studio',
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const CardsScreen(openAddDialog: true)),
+              );
+            },
+          ),
+          _buildAddOptionTile(
+            context: context,
+            icon: Icons.file_upload_outlined,
+            title: 'Import Existing File',
+            subtitle: 'Import PDF or image into AES-256 vault',
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const DocumentsScreen(openAddDialog: true)),
+              );
+            },
+          ),
+          _buildAddOptionTile(
+            context: context,
+            icon: Icons.qr_code_2_rounded,
+            title: 'Add Digital Pass / QR',
+            subtitle: 'Save event ticket, boarding pass, or transit QR',
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PassesScreen(openAddDialog: true)),
+              );
+            },
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddOptionTile({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      leading: Container(
+        padding: const EdgeInsets.all(AppSpacing.sm + 2),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withAlpha(25),
+          borderRadius: BorderRadius.circular(AppRadius.sm + 2),
+          border: Border.all(color: AppColors.primary.withAlpha(50)),
+        ),
+        child: Icon(icon, color: AppColors.primary, size: 22),
+      ),
+      title: Text(
+        title,
+        style: AppTextStyles.labelLarge.copyWith(
+          color: AppColors.getTextPrimary(context),
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: AppTextStyles.bodySmall.copyWith(
+          color: AppColors.getTextSecondary(context),
+        ),
+      ),
+      trailing: Icon(
+        Icons.chevron_right_rounded,
+        color: AppColors.getTextSecondary(context),
+      ),
+      onTap: onTap,
     );
   }
 
@@ -149,392 +146,305 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
             final favoriteCards = cards.where((c) => c.isFavorite).toList();
             final favoriteDocs = documents.where((d) => d.isFavorite).toList();
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 120),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // App Bar / Header
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  'Digital Wallet',
-                                  style: AppTextStyles.heading2.copyWith(color: AppColors.textPrimary),
-                                ),
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary.withAlpha(25),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: AppColors.primary.withAlpha(60)),
-                                  ),
-                                  child: const Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(Icons.shield_rounded, size: 10, color: AppColors.primary),
-                                      SizedBox(width: 4),
-                                      Text(
-                                        'AES-256 Vault',
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.primary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Card Studio • Smart Scanner • Secure Vault',
-                              style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            IconButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => const WalletSecuritySettingsScreen()),
-                                );
-                              },
-                              icon: const Icon(Icons.security, color: Colors.white70),
-                              tooltip: 'Security Settings',
-                            ),
-                            IconButton(
-                              onPressed: () => _showAddOptions(context),
-                              icon: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Icon(Icons.add, color: AppColors.background, size: 20),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+            return RefreshIndicator(
+              color: AppColors.primary,
+              onRefresh: () async {
+                await wallet.loadWallet();
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.only(bottom: 120),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header Bar
+                    _buildHeader(context),
 
-                  // Quick Actions Bar
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _quickActionButton(
-                            icon: Icons.document_scanner_outlined,
-                            label: 'Scan Doc',
-                            color: AppColors.primary,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => const DocumentScannerScreen()),
-                              );
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _quickActionButton(
-                            icon: Icons.credit_card,
-                            label: 'Add Card',
-                            color: Colors.lightBlueAccent,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => const CardsScreen(openAddDialog: true)),
-                              );
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _quickActionButton(
-                            icon: Icons.qr_code_2,
-                            label: 'Add Pass',
-                            color: Colors.amberAccent,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => const PassesScreen(openAddDialog: true)),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Expiry Intelligence Banner
-                  if (expiringDocs.isNotEmpty)
+                    // Quick Actions
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                      child: Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.withAlpha(25),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.orange.withAlpha(60)),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.event_busy_rounded, color: Colors.orange, size: 24),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '${expiringDocs.length} Document(s) Expiring Soon',
-                                    style: const TextStyle(
-                                      color: Colors.orange,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${expiringDocs.first.documentName} needs attention.',
-                                    style: const TextStyle(color: Colors.white70, fontSize: 11),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () {
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _quickActionButton(
+                              context: context,
+                              icon: Icons.document_scanner_outlined,
+                              label: 'Scan Doc',
+                              color: AppColors.primary,
+                              onTap: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (_) => const DocumentsScreen()),
+                                  MaterialPageRoute(builder: (_) => const DocumentScannerScreen()),
                                 );
                               },
-                              child: const Text('Review', style: TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.bold)),
                             ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: _quickActionButton(
+                              context: context,
+                              icon: Icons.credit_card_rounded,
+                              label: 'Add Card',
+                              color: AppColors.info,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const CardsScreen(openAddDialog: true)),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: _quickActionButton(
+                              context: context,
+                              icon: Icons.qr_code_2_rounded,
+                              label: 'Add Pass',
+                              color: AppColors.warning,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const PassesScreen(openAddDialog: true)),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
                       ),
                     ),
 
-                  const SizedBox(height: 12),
+                    // Expiry Intelligence Banner
+                    if (expiringDocs.isNotEmpty)
+                      _buildExpiryBanner(context, expiringDocs),
 
-                  // Section 1: Card Studio Carousel
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Card Studio', style: AppTextStyles.heading3),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const CardsScreen()),
-                            );
-                          },
-                          child: const Text('Manage Cards'),
-                        ),
-                      ],
-                    ),
-                  ),
+                    const SizedBox(height: AppSpacing.md),
 
-                  if (cards.isEmpty)
+                    // Section 1: Card Studio Carousel
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                      child: GlassContainer(
-                        padding: const EdgeInsets.all(20),
-                        child: Center(
-                          child: Column(
-                            children: [
-                              const Icon(Icons.credit_card_off_outlined, size: 36, color: Colors.white38),
-                              const SizedBox(height: 8),
-                              const Text('No cards stored yet', style: TextStyle(color: Colors.white70, fontSize: 13)),
-                              const SizedBox(height: 10),
-                              ElevatedButton(
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (_) => const CardsScreen(openAddDialog: true)),
-                                  );
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primary,
-                                  foregroundColor: Colors.black,
-                                ),
-                                child: const Text('Add Card to Studio'),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    )
-                  else
-                    SizedBox(
-                      height: 205,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        itemCount: cards.length,
-                        itemBuilder: (context, index) {
-                          final card = cards[index];
-                          return WalletCardWidget(
-                            card: card,
-                            onFavoriteToggle: () => wallet.toggleCardFavorite(card.id),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => CardDetailScreen(card: card)),
-                              );
-                            },
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                      child: SectionHeader(
+                        title: 'Card Studio',
+                        actionLabel: 'Manage Cards',
+                        onActionPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const CardsScreen()),
                           );
                         },
                       ),
                     ),
+                    const SizedBox(height: AppSpacing.sm),
 
-                  const SizedBox(height: 24),
-
-                  // Section 2: Document Vault Categories Grid
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Document Vault', style: AppTextStyles.heading3),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const DocumentsScreen()),
-                            );
-                          },
-                          child: const Text('Open Vault'),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Categories Grid
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _buildCategoryGrid(context, documents),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Section 3: Recent Vault Documents
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Recent Documents', style: AppTextStyles.heading3),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const DocumentsScreen()),
-                            );
-                          },
-                          child: const Text('See All'),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: documents.isEmpty
-                        ? Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 24),
-                            child: Center(
-                              child: Column(
-                                children: [
-                                  const Icon(Icons.folder_open_outlined, size: 40, color: Colors.white24),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Vault is empty. Tap Scan Doc to get started.',
-                                    style: AppTextStyles.bodyMedium.copyWith(color: Colors.white54),
+                    if (cards.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                        child: ReusableCard(
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          child: Center(
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.credit_card_off_outlined,
+                                  size: 36,
+                                  color: AppColors.getTextSecondary(context).withAlpha(120),
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                Text(
+                                  'No cards stored yet',
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: AppColors.getTextSecondary(context),
                                   ),
-                                ],
-                              ),
-                            ),
-                          )
-                        : Column(
-                            children: documents.take(3).map((doc) {
-                              return DocumentVaultTile(
-                                document: doc,
-                                onFavoriteToggle: () => wallet.toggleDocumentFavorite(doc.id),
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => DocumentPreviewScreen(document: doc),
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (_) => const CardsScreen(openAddDialog: true)),
+                                    );
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(AppRadius.md),
                                     ),
-                                  );
-                                },
-                              );
-                            }).toList(),
+                                  ),
+                                  child: const Text('Add Card to Studio'),
+                                ),
+                              ],
+                            ),
                           ),
-                  ),
-
-                  // Section 4: Favourites (if any)
-                  if (favoriteCards.isNotEmpty || favoriteDocs.isNotEmpty) ...[
-                    const SizedBox(height: 24),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Text('Starred Favourites', style: AppTextStyles.heading3),
-                    ),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: GlassContainer(
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          children: [
-                            if (favoriteCards.isNotEmpty) ...[
-                              ListTile(
-                                leading: const Icon(Icons.star, color: Colors.amber),
-                                title: Text('${favoriteCards.length} Favourite Card(s)'),
-                                subtitle: Text(favoriteCards.map((c) => c.nickname).join(', ')),
-                                trailing: const Icon(Icons.chevron_right, color: Colors.white54),
-                                onTap: () => Navigator.push(
+                        ),
+                      )
+                    else
+                      SizedBox(
+                        height: 220,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                          itemCount: cards.length,
+                          itemBuilder: (context, index) {
+                            final card = cards[index];
+                            return WalletCardWidget(
+                              card: card,
+                              onFavoriteToggle: () => wallet.toggleCardFavorite(card.id),
+                              onTap: () {
+                                Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (_) => const CardsScreen()),
-                                ),
-                              ),
-                            ],
-                            if (favoriteDocs.isNotEmpty) ...[
-                              if (favoriteCards.isNotEmpty) const Divider(color: Colors.white10),
-                              ListTile(
-                                leading: const Icon(Icons.star, color: Colors.amber),
-                                title: Text('${favoriteDocs.length} Favourite Document(s)'),
-                                subtitle: Text(favoriteDocs.map((d) => d.documentName).join(', ')),
-                                trailing: const Icon(Icons.chevron_right, color: Colors.white54),
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => const DocumentsScreen()),
-                                ),
-                              ),
-                            ],
-                          ],
+                                  MaterialPageRoute(builder: (_) => CardDetailScreen(card: card)),
+                                );
+                              },
+                            );
+                          },
                         ),
                       ),
+
+                    const SizedBox(height: AppSpacing.xl),
+
+                    // Section 2: Document Vault Categories Grid
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                      child: SectionHeader(
+                        title: 'Document Vault',
+                        actionLabel: 'Open Vault',
+                        onActionPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const DocumentsScreen()),
+                          );
+                        },
+                      ),
                     ),
+                    const SizedBox(height: AppSpacing.sm),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                      child: _buildCategoryGrid(context, documents),
+                    ),
+
+                    const SizedBox(height: AppSpacing.xl),
+
+                    // Section 3: Recent Vault Documents
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                      child: SectionHeader(
+                        title: 'Recent Documents',
+                        actionLabel: 'See All',
+                        onActionPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const DocumentsScreen()),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                      child: documents.isEmpty
+                          ? EmptyState(
+                              icon: Icons.folder_open_outlined,
+                              title: 'Vault is Empty',
+                              subtitle: 'Tap Scan Doc or Import File to securely store your IDs and certificates.',
+                              actionLabel: 'Scan Document',
+                              onActionPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const DocumentScannerScreen()),
+                                );
+                              },
+                            )
+                          : Column(
+                              children: documents.take(3).map((doc) {
+                                return DocumentVaultTile(
+                                  document: doc,
+                                  onFavoriteToggle: () => wallet.toggleDocumentFavorite(doc.id),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => DocumentPreviewScreen(document: doc),
+                                      ),
+                                    );
+                                  },
+                                );
+                              }).toList(),
+                            ),
+                    ),
+
+                    // Section 4: Starred Favorites
+                    if (favoriteCards.isNotEmpty || favoriteDocs.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.xl),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                        child: SectionHeader(
+                          title: 'Starred Favourites',
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                        child: ReusableCard(
+                          padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                          child: Column(
+                            children: [
+                              if (favoriteCards.isNotEmpty)
+                                ListTile(
+                                  leading: const Icon(Icons.star_rounded, color: Colors.amber, size: 24),
+                                  title: Text(
+                                    '${favoriteCards.length} Favourite Card(s)',
+                                    style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w600),
+                                  ),
+                                  subtitle: Text(
+                                    favoriteCards.map((c) => c.nickname).join(', '),
+                                    style: AppTextStyles.bodySmall.copyWith(color: AppColors.getTextSecondary(context)),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  trailing: Icon(
+                                    Icons.chevron_right_rounded,
+                                    color: AppColors.getTextSecondary(context),
+                                  ),
+                                  onTap: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const CardsScreen()),
+                                  ),
+                                ),
+                              if (favoriteDocs.isNotEmpty) ...[
+                                if (favoriteCards.isNotEmpty)
+                                  Divider(height: 1, indent: 56, color: AppColors.getBorder(context)),
+                                ListTile(
+                                  leading: const Icon(Icons.star_rounded, color: Colors.amber, size: 24),
+                                  title: Text(
+                                    '${favoriteDocs.length} Favourite Document(s)',
+                                    style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w600),
+                                  ),
+                                  subtitle: Text(
+                                    favoriteDocs.map((d) => d.documentName).join(', '),
+                                    style: AppTextStyles.bodySmall.copyWith(color: AppColors.getTextSecondary(context)),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  trailing: Icon(
+                                    Icons.chevron_right_rounded,
+                                    color: AppColors.getTextSecondary(context),
+                                  ),
+                                  onTap: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const DocumentsScreen()),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             );
           },
@@ -543,35 +453,197 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     );
   }
 
+  Widget _buildHeader(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.xs),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    'Digital Wallet',
+                    style: AppTextStyles.headingMedium.copyWith(
+                      color: AppColors.getTextPrimary(context),
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withAlpha(25),
+                      borderRadius: BorderRadius.circular(AppRadius.xs),
+                      border: Border.all(color: AppColors.primary.withAlpha(60)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.shield_rounded, size: 10, color: AppColors.primary),
+                        const SizedBox(width: 4),
+                        Text(
+                          'AES-256 Vault',
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Card Studio • Smart Scanner • Secure Vault',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.getTextSecondary(context),
+                ),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const WalletSecuritySettingsScreen()),
+                  );
+                },
+                icon: Icon(
+                  Icons.security_rounded,
+                  color: AppColors.getTextSecondary(context),
+                  size: 22,
+                ),
+                tooltip: 'Security Settings',
+              ),
+              IconButton(
+                onPressed: () => _showAddOptions(context),
+                icon: Container(
+                  padding: const EdgeInsets.all(AppSpacing.xs + 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                  child: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExpiryBanner(BuildContext context, List<WalletDocumentModel> expiringDocs) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: AppColors.warning.withAlpha(20),
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          border: Border.all(color: AppColors.warning.withAlpha(70)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.event_busy_rounded, color: AppColors.warning, size: 24),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${expiringDocs.length} Document(s) Expiring Soon',
+                    style: AppTextStyles.labelMedium.copyWith(
+                      color: AppColors.warning,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${expiringDocs.first.documentName} needs renewal attention.',
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.getTextSecondary(context),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const DocumentsScreen()),
+                );
+              },
+              child: Text(
+                'Review',
+                style: AppTextStyles.labelMedium.copyWith(
+                  color: AppColors.warning,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _quickActionButton({
+    required BuildContext context,
     required IconData icon,
     required String label,
     required Color color,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withAlpha(60)),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 22),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
+    final surfaceColor = AppColors.getSurface(context);
+    final borderColor = AppColors.getBorder(context);
+    final textPrimary = AppColors.getTextPrimary(context);
+
+    return Material(
+      color: surfaceColor,
+      borderRadius: BorderRadius.circular(AppRadius.card),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.card),
+            border: Border.all(color: borderColor, width: 1),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.xs + 2),
+                decoration: BoxDecoration(
+                  color: color.withAlpha(25),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 20),
               ),
-            ),
-          ],
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                label,
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -589,6 +661,11 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
       {'id': 'certificate', 'label': 'Certificates', 'icon': Icons.workspace_premium_outlined},
     ];
 
+    final surfaceColor = AppColors.getSurface(context);
+    final borderColor = AppColors.getBorder(context);
+    final textPrimary = AppColors.getTextPrimary(context);
+    final textSecondary = AppColors.getTextSecondary(context);
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -596,57 +673,64 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 4,
         childAspectRatio: 0.85,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
+        crossAxisSpacing: AppSpacing.sm,
+        mainAxisSpacing: AppSpacing.sm,
       ),
       itemBuilder: (context, i) {
         final cat = categories[i];
         final catId = cat['id'] as String;
         final count = docs.where((d) => d.category.toLowerCase() == catId).length;
 
-        return InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const DocumentsScreen()),
-            );
-          },
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: count > 0 ? AppColors.primary.withAlpha(60) : Colors.white10,
+        return Material(
+          color: surfaceColor,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          child: InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const DocumentsScreen()),
+              );
+            },
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.xs + 2),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                border: Border.all(
+                  color: count > 0 ? AppColors.primary.withAlpha(70) : borderColor,
+                ),
               ),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  cat['icon'] as IconData,
-                  color: count > 0 ? AppColors.primary : Colors.white54,
-                  size: 24,
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  cat['label'] as String,
-                  style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.w500),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '$count item${count == 1 ? "" : "s"}',
-                  style: TextStyle(
-                    fontSize: 9,
-                    color: count > 0 ? AppColors.primary : Colors.white38,
-                    fontWeight: count > 0 ? FontWeight.bold : FontWeight.normal,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    cat['icon'] as IconData,
+                    color: count > 0 ? AppColors.primary : textSecondary,
+                    size: 22,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  Text(
+                    cat['label'] as String,
+                    style: AppTextStyles.caption.copyWith(
+                      color: textPrimary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 10,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '$count item${count == 1 ? "" : "s"}',
+                    style: AppTextStyles.caption.copyWith(
+                      fontSize: 9,
+                      color: count > 0 ? AppColors.primary : textSecondary.withAlpha(150),
+                      fontWeight: count > 0 ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );

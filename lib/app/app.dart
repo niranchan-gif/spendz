@@ -11,6 +11,7 @@ import '../providers/wallet_provider.dart';
 import '../providers/wallet_card_provider.dart';
 import '../providers/wallet_document_provider.dart';
 import '../providers/wallet_pass_provider.dart';
+import '../providers/theme_provider.dart';
 
 import 'theme/app_theme.dart';
 import 'routes/app_routes.dart';
@@ -64,6 +65,7 @@ class _SpendzAppState extends State<SpendzApp> with WidgetsBindingObserver {
         ChangeNotifierProvider(create: (_) => WalletCardProvider()),
         ChangeNotifierProvider(create: (_) => WalletDocumentProvider()),
         ChangeNotifierProvider(create: (_) => WalletPassProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProxyProvider<TransactionProvider, DashboardProvider>(
           create: (_) => DashboardProvider(),
           update: (_, txProvider, dashboardProvider) {
@@ -72,12 +74,18 @@ class _SpendzAppState extends State<SpendzApp> with WidgetsBindingObserver {
           },
         ),
       ],
-      child: MaterialApp(
-        title: 'Spendz',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        home: const SplashScreen(),
-        routes: AppRoutes.getRoutes(),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, _) {
+          return MaterialApp(
+            title: 'Spendz',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeProvider.themeMode,
+            home: const SplashScreen(),
+            routes: AppRoutes.getRoutes(),
+          );
+        },
       ),
     );
   }

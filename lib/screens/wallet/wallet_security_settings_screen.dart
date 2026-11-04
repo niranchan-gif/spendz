@@ -3,11 +3,14 @@ import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 
 import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_spacing.dart';
+import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../../features/wallet/security/wallet_auth_service.dart';
 import '../../features/wallet/security/wallet_key_service.dart';
 import '../../features/wallet/services/document_vault_service.dart';
-import '../../widgets/glass_container.dart';
+import '../../widgets/design_system/reusable_card.dart';
+import '../../widgets/design_system/app_bottom_sheet.dart';
 
 class WalletSecuritySettingsScreen extends StatefulWidget {
   const WalletSecuritySettingsScreen({super.key});
@@ -72,39 +75,49 @@ class _WalletSecuritySettingsScreenState extends State<WalletSecuritySettingsScr
   @override
   Widget build(BuildContext context) {
     final authService = context.watch<WalletAuthService>();
+    final textPrimary = AppColors.getTextPrimary(context);
+    final textSecondary = AppColors.getTextSecondary(context);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         title: const Text('Vault & Security Settings'),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
           : ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              physics: const BouncingScrollPhysics(),
               children: [
                 // Cryptographic Engine Card
-                GlassContainer(
-                  padding: const EdgeInsets.all(16),
-                  borderRadius: 20,
+                ReusableCard(
+                  padding: const EdgeInsets.all(AppSpacing.card),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.lock_outline, color: AppColors.primary, size: 24),
-                          const SizedBox(width: 12),
+                          Container(
+                            padding: const EdgeInsets.all(AppSpacing.xs + 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withAlpha(25),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.lock_rounded, color: AppColors.primary, size: 20),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('AES-256-GCM Cryptographic Vault', style: AppTextStyles.labelLarge),
+                                Text(
+                                  'AES-256-GCM Cryptographic Vault',
+                                  style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                                ),
                                 const SizedBox(height: 2),
                                 Text(
                                   'Authenticated encryption with 96-bit nonces',
-                                  style: AppTextStyles.bodySmall.copyWith(color: Colors.white60),
+                                  style: AppTextStyles.caption.copyWith(color: textSecondary),
                                 ),
                               ],
                             ),
@@ -112,95 +125,119 @@ class _WalletSecuritySettingsScreenState extends State<WalletSecuritySettingsScr
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withAlpha(30),
-                              borderRadius: BorderRadius.circular(8),
+                              color: AppColors.primary.withAlpha(25),
+                              borderRadius: BorderRadius.circular(AppRadius.xs),
                             ),
-                            child: const Text(
+                            child: Text(
                               'ACTIVE',
-                              style: TextStyle(fontSize: 10, color: AppColors.primary, fontWeight: FontWeight.bold),
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                              ),
                             ),
                           ),
                         ],
                       ),
-                      const Divider(height: 24, color: Colors.white12),
-                      _buildInfoRow('Cipher', 'AES-256 in Galois/Counter Mode (GCM)'),
-                      const SizedBox(height: 8),
-                      _buildInfoRow('Key Length', '256 bits (32 bytes)'),
-                      const SizedBox(height: 8),
-                      _buildInfoRow('Authentication Tag', '128 bits with AAD verification'),
+                      const SizedBox(height: AppSpacing.md),
+                      Divider(height: 1, color: AppColors.getBorder(context)),
+                      const SizedBox(height: AppSpacing.md),
+                      _buildInfoRow(context, 'Cipher', 'AES-256 in Galois/Counter Mode (GCM)'),
+                      const SizedBox(height: 6),
+                      _buildInfoRow(context, 'Key Length', '256 bits (32 bytes)'),
+                      const SizedBox(height: 6),
+                      _buildInfoRow(context, 'Authentication Tag', '128 bits with AAD verification'),
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
 
                 // Hardware Key Protection Card
-                GlassContainer(
-                  padding: const EdgeInsets.all(16),
-                  borderRadius: 20,
+                ReusableCard(
+                  padding: const EdgeInsets.all(AppSpacing.card),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.memory, color: AppColors.primary, size: 24),
-                          const SizedBox(width: 12),
+                          Container(
+                            padding: const EdgeInsets.all(AppSpacing.xs + 2),
+                            decoration: BoxDecoration(
+                              color: (_hasHardwareKey ? AppColors.success : AppColors.warning).withAlpha(25),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.memory_rounded,
+                              color: _hasHardwareKey ? AppColors.success : AppColors.warning,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Hardware Security Module', style: AppTextStyles.labelLarge),
+                                Text(
+                                  'Hardware Security Module',
+                                  style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                                ),
                                 const SizedBox(height: 2),
                                 Text(
                                   'Android Keystore / iOS Keychain',
-                                  style: AppTextStyles.bodySmall.copyWith(color: Colors.white60),
+                                  style: AppTextStyles.caption.copyWith(color: textSecondary),
                                 ),
                               ],
                             ),
                           ),
                           Icon(
-                            _hasHardwareKey ? Icons.check_circle : Icons.shield_outlined,
-                            color: _hasHardwareKey ? Colors.green : Colors.orange,
+                            _hasHardwareKey ? Icons.check_circle_rounded : Icons.shield_outlined,
+                            color: _hasHardwareKey ? AppColors.success : AppColors.warning,
                             size: 20,
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: AppSpacing.md),
                       Text(
                         _hasHardwareKey
                             ? 'Master vault key is protected by platform hardware-backed secure storage and never exposed in logs or plaintext.'
                             : 'Master key will be generated securely inside Keystore/Keychain upon importing your first document.',
-                        style: AppTextStyles.bodySmall.copyWith(color: Colors.white70),
+                        style: AppTextStyles.bodySmall.copyWith(color: textSecondary),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
 
                 // Biometrics & App Lock Section
-                GlassContainer(
-                  padding: const EdgeInsets.all(16),
-                  borderRadius: 20,
+                ReusableCard(
+                  padding: const EdgeInsets.all(AppSpacing.card),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Biometric & Access Controls', style: AppTextStyles.labelLarge),
-                      const SizedBox(height: 12),
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.fingerprint, color: AppColors.primary),
-                        title: const Text('Available Biometrics'),
-                        subtitle: Text(
-                          _formatBiometricList(),
-                          style: const TextStyle(fontSize: 12, color: Colors.white70),
+                      Text(
+                        'Biometric & Access Controls',
+                        style: AppTextStyles.labelLarge.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: textPrimary,
                         ),
                       ),
-                      const Divider(height: 16, color: Colors.white12),
+                      const SizedBox(height: AppSpacing.sm),
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.fingerprint_rounded, color: AppColors.primary),
+                        title: Text('Available Biometrics', style: AppTextStyles.labelLarge),
+                        subtitle: Text(
+                          _formatBiometricList(),
+                          style: AppTextStyles.caption.copyWith(color: textSecondary),
+                        ),
+                      ),
+                      Divider(height: 1, color: AppColors.getBorder(context)),
                       SwitchListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: const Text('Lock Vault on App Background'),
-                        subtitle: const Text(
+                        title: Text('Lock Vault on App Background', style: AppTextStyles.labelLarge),
+                        subtitle: Text(
                           'Requires authentication immediately when returning to the app',
-                          style: TextStyle(fontSize: 12, color: Colors.white70),
+                          style: AppTextStyles.caption.copyWith(color: textSecondary),
                         ),
                         value: authService.lockOnBackground,
                         activeThumbColor: AppColors.primary,
@@ -208,40 +245,41 @@ class _WalletSecuritySettingsScreenState extends State<WalletSecuritySettingsScr
                           authService.lockOnBackground = val;
                         },
                       ),
-                      const Divider(height: 16, color: Colors.white12),
+                      Divider(height: 1, color: AppColors.getBorder(context)),
                       ListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: const Text('Inactivity Timeout'),
+                        title: Text('Inactivity Timeout', style: AppTextStyles.labelLarge),
                         subtitle: Text(
                           _getTimeoutLabel(authService.inactivityTimeoutSeconds),
-                          style: const TextStyle(fontSize: 12, color: Colors.white70),
+                          style: AppTextStyles.caption.copyWith(color: textSecondary),
                         ),
-                        trailing: const Icon(Icons.chevron_right),
+                        trailing: Icon(Icons.chevron_right_rounded, color: textSecondary),
                         onTap: () => _showTimeoutPicker(context, authService),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
 
                 // Sandbox Sanitization Card
-                GlassContainer(
-                  padding: const EdgeInsets.all(16),
-                  borderRadius: 20,
+                ReusableCard(
+                  padding: const EdgeInsets.all(AppSpacing.card),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Sandbox & Cache Maintenance', style: AppTextStyles.labelLarge),
-                      const SizedBox(height: 8),
+                      Text(
+                        'Sandbox & Cache Maintenance',
+                        style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(
                         'Spendz clears temporary decrypted previews automatically. You can also manually wipe the preview cache at any time.',
-                        style: AppTextStyles.bodySmall.copyWith(color: Colors.white70),
+                        style: AppTextStyles.bodySmall.copyWith(color: textSecondary),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.md),
                       OutlinedButton.icon(
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          side: const BorderSide(color: Colors.white24),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
                         ),
                         icon: const Icon(Icons.cleaning_services_outlined, size: 18),
                         label: const Text('Wipe Temporary Preview Cache'),
@@ -249,7 +287,10 @@ class _WalletSecuritySettingsScreenState extends State<WalletSecuritySettingsScr
                           await _vaultService.cleanupAllTemporaryFiles();
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Temporary preview cache wiped clean.')),
+                              const SnackBar(
+                                content: Text('Temporary preview cache wiped clean.'),
+                                backgroundColor: AppColors.success,
+                              ),
                             );
                           }
                         },
@@ -257,17 +298,27 @@ class _WalletSecuritySettingsScreenState extends State<WalletSecuritySettingsScr
                     ],
                   ),
                 ),
+                const SizedBox(height: 60),
               ],
             ),
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
+  Widget _buildInfoRow(BuildContext context, String label, String value) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.white60)),
-        Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+        Text(
+          label,
+          style: AppTextStyles.caption.copyWith(color: AppColors.getTextSecondary(context)),
+        ),
+        Text(
+          value,
+          style: AppTextStyles.labelSmall.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppColors.getTextPrimary(context),
+          ),
+        ),
       ],
     );
   }
@@ -280,38 +331,27 @@ class _WalletSecuritySettingsScreenState extends State<WalletSecuritySettingsScr
   }
 
   void _showTimeoutPicker(BuildContext context, WalletAuthService authService) {
-    showModalBottomSheet(
+    AppBottomSheet.show(
       context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      title: 'Select Auto-Lock Timeout',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildTimeoutTile(context, authService, 0, 'Immediate (Always lock)'),
+          _buildTimeoutTile(context, authService, 30, '30 seconds'),
+          _buildTimeoutTile(context, authService, 60, '1 minute'),
+          _buildTimeoutTile(context, authService, 300, '5 minutes'),
+          const SizedBox(height: AppSpacing.sm),
+        ],
       ),
-      builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text('Select Auto-Lock Timeout', style: AppTextStyles.heading3),
-              ),
-              _buildTimeoutTile(ctx, authService, 0, 'Immediate'),
-              _buildTimeoutTile(ctx, authService, 30, '30 seconds'),
-              _buildTimeoutTile(ctx, authService, 60, '1 minute'),
-              _buildTimeoutTile(ctx, authService, 300, '5 minutes'),
-              const SizedBox(height: 12),
-            ],
-          ),
-        );
-      },
     );
   }
 
   Widget _buildTimeoutTile(BuildContext ctx, WalletAuthService authService, int seconds, String label) {
     final isSelected = authService.inactivityTimeoutSeconds == seconds;
     return ListTile(
-      title: Text(label),
-      trailing: isSelected ? const Icon(Icons.check, color: AppColors.primary) : null,
+      title: Text(label, style: AppTextStyles.labelMedium),
+      trailing: isSelected ? const Icon(Icons.check_rounded, color: AppColors.primary) : null,
       onTap: () {
         authService.inactivityTimeoutSeconds = seconds;
         Navigator.pop(ctx);

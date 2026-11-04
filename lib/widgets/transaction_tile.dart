@@ -26,9 +26,14 @@ class TransactionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isIncome = transaction.type == 'income';
+    final surfaceColor = AppColors.getSurface(context);
+    final borderColor = AppColors.getBorder(context);
+    final textPrimary = AppColors.getTextPrimary(context);
+    final textSecondary = AppColors.getTextSecondary(context);
+    final primaryColor = AppColors.getPrimary(context);
     
     // Parse color or use default
-    Color iconColor = AppColors.primary;
+    Color iconColor = primaryColor;
     if (category != null && category!.color.isNotEmpty) {
       try {
         iconColor = Color(int.parse(category!.color));
@@ -36,10 +41,12 @@ class TransactionTile extends StatelessWidget {
     }
 
     // Default icon
-    IconData iconData = isIncome ? Icons.arrow_downward : Icons.shopping_bag;
+    IconData iconData = isIncome ? Icons.arrow_downward_rounded : Icons.shopping_bag_outlined;
     if (category != null) {
       iconData = IconMapper.getIcon(category!.icon);
     }
+
+    final amountColor = isIncome ? AppColors.getSuccess(context) : textPrimary;
 
     return GestureDetector(
       onDoubleTap: () => _showCategoryPicker(context),
@@ -47,12 +54,14 @@ class TransactionTile extends StatelessWidget {
         showDialog(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text('Delete Transaction?'),
-            content: const Text('Are you sure you want to delete this transaction?'),
+            backgroundColor: surfaceColor,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Text('Delete Transaction?', style: TextStyle(color: textPrimary, fontWeight: FontWeight.bold)),
+            content: Text('Are you sure you want to delete this transaction?', style: TextStyle(color: textSecondary)),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Cancel'),
+                child: Text('Cancel', style: TextStyle(color: textSecondary)),
               ),
               TextButton(
                 onPressed: () {
@@ -62,16 +71,21 @@ class TransactionTile extends StatelessWidget {
                     const SnackBar(content: Text('Transaction deleted')),
                   );
                 },
-                child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                child: Text('Delete', style: TextStyle(color: AppColors.getError(context), fontWeight: FontWeight.bold)),
               ),
             ],
           ),
         );
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
+        margin: const EdgeInsets.only(bottom: 10),
+        decoration: BoxDecoration(
+          color: surfaceColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: borderColor, width: 1),
+        ),
         child: Material(
-          color: AppColors.surface,
+          color: Colors.transparent,
           borderRadius: BorderRadius.circular(16),
           child: ListTile(
             onTap: onTap ?? () => _showTransactionDetails(context),
@@ -189,19 +203,24 @@ class TransactionTile extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                Text(
-                  '${isIncome ? '+' : '-'}${CurrencyFormatter.format(transaction.amount)}',
-                  style: AppTextStyles.bodyLarge.copyWith(
-                    color: isIncome ? AppColors.success : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    '${isIncome ? '+' : '-'}${CurrencyFormatter.format(transaction.amount)}',
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      color: amountColor,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                    ),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 1),
                 Text(
                   DateFormatter.formatTime(transaction.date),
-                  style: AppTextStyles.bodySmall.copyWith(fontSize: 11),
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: textSecondary,
+                    fontSize: 10,
+                  ),
                 ),
               ],
             ),
