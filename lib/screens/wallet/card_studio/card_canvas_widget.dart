@@ -42,39 +42,33 @@ class CardCanvasWidget extends StatelessWidget {
             ? '•••• •••• •••• ${card.lastFour}'
             : card.maskedNumber);
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final maxW = isCompact ? 290.0 : 340.0;
-        final cardWidth = constraints.maxWidth < maxW
-            ? constraints.maxWidth
-            : maxW;
-        final cardHeight = cardWidth / 1.60;
-
-        return GestureDetector(
+    return Center(
+      child: AspectRatio(
+        // Authentic physical card standard ID-1 aspect ratio: 85.60 mm / 53.98 mm = 1.586
+        aspectRatio: 1.586,
+        child: GestureDetector(
           onTap: onTap,
           child: Container(
-            width: cardWidth,
-            height: cardHeight,
-            margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+            margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(16),
               gradient: theme.backgroundGradient,
               border: Border.all(color: theme.foilBorder, width: 1.2),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withAlpha(80),
-                  blurRadius: 18,
-                  offset: const Offset(0, 8),
+                  color: Colors.black.withAlpha(70),
+                  blurRadius: 16,
+                  offset: const Offset(0, 7),
                 ),
                 BoxShadow(
-                  color: theme.primaryAccent.withAlpha(25),
-                  blurRadius: 12,
+                  color: theme.primaryAccent.withAlpha(20),
+                  blurRadius: 10,
                   offset: const Offset(0, 2),
                 ),
               ],
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(16),
               child: Stack(
                 children: [
                   // 1. Custom Geometry / Texture from Theme
@@ -116,8 +110,8 @@ class CardCanvasWidget extends StatelessWidget {
               ),
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 

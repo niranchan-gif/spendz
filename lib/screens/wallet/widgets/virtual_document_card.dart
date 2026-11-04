@@ -103,6 +103,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
     final authenticated = await authService.authenticate(
       localizedReason:
           'Authenticate with biometrics to reveal private card number',
+      forceBiometrics: true,
     );
     if (!authenticated) {
       if (mounted) {
@@ -173,29 +174,24 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final cardWidth = constraints.maxWidth;
-        // Standard ID-1 card aspect ratio ~1.586 (85.60 mm × 53.98 mm)
-        final cardHeight = (cardWidth / 1.586).clamp(210.0, 245.0);
-
-        return Container(
-          width: cardWidth,
-          height: cardHeight,
-          margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+    return Center(
+      child: AspectRatio(
+        // Authentic physical card standard ID-1 aspect ratio: 85.60 mm / 53.98 mm = 1.586
+        aspectRatio: 1.586,
+        child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.card + 4),
+            borderRadius: BorderRadius.circular(16),
             boxShadow: widget.showShadow
                 ? [
                     BoxShadow(
-                      color: Colors.black.withAlpha(55),
-                      blurRadius: 18,
-                      offset: const Offset(0, 8),
+                      color: Colors.black.withAlpha(50),
+                      blurRadius: 16,
+                      offset: const Offset(0, 7),
                       spreadRadius: -2,
                     ),
                     BoxShadow(
-                      color: Colors.black.withAlpha(25),
-                      blurRadius: 6,
+                      color: Colors.black.withAlpha(20),
+                      blurRadius: 5,
                       offset: const Offset(0, 2),
                     ),
                   ]
@@ -203,18 +199,18 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
           ),
           child: Material(
             color: Colors.transparent,
-            borderRadius: BorderRadius.circular(AppRadius.card + 4),
+            borderRadius: BorderRadius.circular(16),
             child: InkWell(
               onTap: widget.onTap,
-              borderRadius: BorderRadius.circular(AppRadius.card + 4),
+              borderRadius: BorderRadius.circular(16),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(AppRadius.card + 4),
+                borderRadius: BorderRadius.circular(16),
                 child: _buildCardContent(context),
               ),
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -228,6 +224,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
       case 'pan':
         return _buildPanCard(context);
       case 'driving_license':
+      case 'driving_licence':
         return _buildDrivingLicenceCard(context);
       case 'passport':
         return _buildPassportCard(context);
@@ -823,12 +820,12 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                           const SizedBox(width: 6),
                           Icon(
                             _isRevealed
-                                ? Icons.lock_open_rounded
-                                : Icons.shield_outlined,
+                                ? Icons.visibility_rounded
+                                : Icons.visibility_off_rounded,
                             color: _isRevealed
                                 ? const Color(0xFF16A34A)
                                 : const Color(0xFF0284C7),
-                            size: 14,
+                            size: 15,
                           ),
                         ],
                       ),
@@ -1043,12 +1040,12 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'Indian Union Driving Licence',
+                          'Driving Licence',
                           style: TextStyle(
                             color: Color(0xFF0F172A),
                             fontWeight: FontWeight.w800,
-                            fontSize: 10.5,
-                            letterSpacing: 0.2,
+                            fontSize: 11,
+                            letterSpacing: 0.4,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -1112,12 +1109,12 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                         const SizedBox(width: 4),
                         Icon(
                           _isRevealed
-                              ? Icons.lock_open_rounded
-                              : Icons.lock_outline_rounded,
+                              ? Icons.visibility_rounded
+                              : Icons.visibility_off_rounded,
                           color: _isRevealed
                               ? const Color(0xFF16A34A)
                               : const Color(0xFF0284C7),
-                          size: 13,
+                          size: 14,
                         ),
                       ],
                     ),
@@ -1908,9 +1905,9 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                           ),
                           Icon(
                             _isRevealed
-                                ? Icons.lock_open_rounded
-                                : Icons.shield_outlined,
-                            size: 12,
+                                ? Icons.visibility_rounded
+                                : Icons.visibility_off_rounded,
+                            size: 13,
                             color: _isRevealed
                                 ? const Color(0xFF16A34A)
                                 : const Color(0xFF0284C7),

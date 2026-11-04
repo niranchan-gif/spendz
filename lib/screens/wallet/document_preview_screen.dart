@@ -17,6 +17,7 @@ import '../../features/wallet/services/document_export_service.dart';
 import '../../features/wallet/services/document_scanner_service.dart';
 import '../../models/wallet_document_model.dart';
 import '../../providers/wallet_document_provider.dart';
+import '../../providers/wallet_provider.dart';
 import '../../utils/date_formatter.dart';
 import '../../widgets/design_system/reusable_card.dart';
 import '../../widgets/design_system/secure_protected_field.dart';
@@ -342,6 +343,10 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
       if (_currentDocument.hasAttachment) {
         _authenticateAndDecrypt();
       }
+      await context.read<WalletDocumentProvider>().loadDocuments();
+      try {
+        await context.read<WalletProvider>().loadWallet();
+      } catch (_) {}
     }
   }
 
@@ -415,6 +420,9 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
       setState(() => _currentDocument = updated);
       if (mounted) {
         await context.read<WalletDocumentProvider>().loadDocuments();
+        try {
+          await context.read<WalletProvider>().loadWallet();
+        } catch (_) {}
         if (!mounted) return;
         _authenticateAndDecrypt();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -450,6 +458,9 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
       });
       if (!mounted) return;
       await context.read<WalletDocumentProvider>().loadDocuments();
+      try {
+        await context.read<WalletProvider>().loadWallet();
+      } catch (_) {}
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -473,6 +484,9 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
       await _vaultService.deleteDocument(_currentDocument.id);
       if (!mounted) return;
       await context.read<WalletDocumentProvider>().loadDocuments();
+      try {
+        await context.read<WalletProvider>().loadWallet();
+      } catch (_) {}
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -590,8 +604,10 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
               ),
 
               // 3. Biometric Protected Number Field (Biometric authentication required to reveal)
-              if (doc.maskedIdentifier != null ||
-                  _secureDocumentNumber != null) ...[
+              // (For Aadhaar, the card face already directly presents the number; omit redundant field)
+              if (doc.category.toLowerCase() != 'aadhaar' &&
+                  (doc.maskedIdentifier != null ||
+                      _secureDocumentNumber != null)) ...[
                 const SizedBox(height: AppSpacing.sm),
                 SecureProtectedField(
                   label:

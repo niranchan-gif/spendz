@@ -10,9 +10,11 @@ import '../../models/wallet_card_model.dart';
 import '../../models/wallet_document_model.dart';
 import '../../models/wallet_pass_model.dart';
 import '../../presentation/widgets/spendz_app_bar.dart';
+import '../../presentation/widgets/spendz_button.dart';
 import '../../presentation/widgets/spendz_section_header.dart';
 import '../../presentation/widgets/spendz_surface.dart';
 import '../../providers/wallet_provider.dart';
+import '../../providers/wallet_document_provider.dart';
 import 'card_detail_screen.dart';
 import 'cards_screen.dart';
 import 'document_creation_screen.dart';
@@ -205,10 +207,16 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
       ),
       body: Consumer<WalletProvider>(
         builder: (context, wallet, _) {
+          final docProvider = context.watch<WalletDocumentProvider>();
           final cards = wallet.cards;
-          final documents = wallet.documents;
+          // Use authoritative live vault documents list
+          final documents = docProvider.documents.isNotEmpty
+              ? docProvider.documents
+              : wallet.documents;
           final passes = wallet.passes;
-          final expiringDocs = wallet.expiringDocuments;
+          final expiringDocs = docProvider.expiringDocuments.isNotEmpty
+              ? docProvider.expiringDocuments
+              : wallet.expiringDocuments;
 
           return RefreshIndicator(
             color: SpendzColors.primaryAccent(context),
@@ -336,13 +344,18 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     for (final doc in documents) {
       cardWidgets.add(
         GestureDetector(
-          onTap: () {
-            Navigator.push(
+          onTap: () async {
+            await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (_) => DocumentPreviewScreen(document: doc),
               ),
             );
+            if (context.mounted) {
+              await context.read<WalletProvider>().loadWallet();
+              await context.read<WalletDocumentProvider>().loadDocuments();
+              setState(() {});
+            }
           },
           child: VirtualDocumentCard(
             document: doc,
@@ -437,8 +450,8 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
           child: VirtualDocumentCard(
             document: WalletDocumentModel(
               id: 'template_dl',
-              documentName: 'Indian Union Driving Licence',
-              category: 'driving_licence',
+              documentName: 'Driving Licence',
+              category: 'driving_license',
               holderName: 'MOTOR VEHICLE DEPT',
               maskedIdentifier: '••••••••••••••',
               description: 'Holder: USER RECORD\nNumber: ••••••••••••••',
@@ -492,23 +505,28 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         const SizedBox(height: SpendzSpacing.xs),
 
         // Clean Horizontal Swipe Carousel - ZERO 3D STACK / ZERO OVERLAPPING PEEKS
-        SizedBox(
-          height: 228,
-          child: PageView.builder(
-            controller: _cardPageController,
-            itemCount: cardWidgets.length,
-            physics: const BouncingScrollPhysics(),
-            onPageChanged: (index) {
-              setState(() => _currentCardIndex = index);
-              HapticFeedback.selectionClick();
-            },
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: cardWidgets[index],
-              );
-            },
-          ),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final cardHeight = constraints.maxWidth / 1.586;
+            return SizedBox(
+              height: cardHeight,
+              child: PageView.builder(
+                controller: _cardPageController,
+                itemCount: cardWidgets.length,
+                physics: const BouncingScrollPhysics(),
+                onPageChanged: (index) {
+                  setState(() => _currentCardIndex = index);
+                  HapticFeedback.selectionClick();
+                },
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: cardWidgets[index],
+                  );
+                },
+              ),
+            );
+          },
         ),
 
         const SizedBox(height: SpendzSpacing.sm),
@@ -582,13 +600,21 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     );
   }
 
-  void _openCreateDoc(BuildContext context, String category) {
-    Navigator.push(
+  Future<void> _openCreateDoc(BuildContext context, String category) async {
+    final normalized = (category == 'driving_licence')
+        ? 'driving_license'
+        : category;
+    await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => DocumentCreationScreen(initialCategory: category),
+        builder: (_) => DocumentCreationScreen(initialCategory: normalized),
       ),
     );
+    if (context.mounted) {
+      await context.read<WalletProvider>().loadWallet();
+      await context.read<WalletDocumentProvider>().loadDocuments();
+      setState(() {});
+    }
   }
 
   // ─── 3. DOCUMENT VAULT CATEGORIES ───────────────────────────────────────────
@@ -641,13 +667,24 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
           itemBuilder: (context, index) {
             final cat = categories[index];
             final catId = cat['id'] as String;
-            final count = docs.where((d) => d.category == catId).length;
+            final count = docs.where((d) {
+              final c = d.category.toLowerCase();
+              if (catId == 'driving_licence' || catId == 'driving_license') {
+                return c == 'driving_licence' || c == 'driving_license';
+              }
+              return c == catId;
+            }).length;
 
             return SpendzSurface(
               onTap: () {
-                final matchingDocs = docs
-                    .where((d) => d.category == catId)
-                    .toList();
+                final matchingDocs = docs.where((d) {
+                  final c = d.category.toLowerCase();
+                  if (catId == 'driving_licence' ||
+                      catId == 'driving_license') {
+                    return c == 'driving_licence' || c == 'driving_license';
+                  }
+                  return c == catId;
+                }).toList();
                 if (matchingDocs.length == 1) {
                   Navigator.push(
                     context,
@@ -767,42 +804,62 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
             }).toList(),
           )
         else
-          // Interactive Full Green Transit Ticket with upload action & confirmed details
-          TransitTicketCard(
-            pnrNumber: '8421-950-231',
-            seatNumber: 'B3 • Berth 42',
-            travelDate: DateTime.now().add(const Duration(days: 3)),
-            travelTime: '06:30 AM',
-            carrier: 'INDIAN RAILWAYS / IRCTC',
-            onDocUploaded: (path) async {
-              final newPass = WalletPassModel(
-                id: const Uuid().v4(),
-                title: 'Indian Railways Express',
-                passType: 'transit_ticket',
-                encryptedCodePath: path,
-                codeFormat: 'QR_CODE',
-                issuer: 'INDIAN RAILWAYS / IRCTC',
-                validUntil: DateTime.now().add(const Duration(days: 3)),
-                notes:
-                    'PNR: 8421-950-231\nSeat: B3 • Berth 42\nTime: 06:30 AM\nDoc: $path',
-                isFavorite: true,
-                createdAt: DateTime.now(),
-                updatedAt: DateTime.now(),
-              );
-              await context.read<WalletProvider>().addPass(newPass);
-            },
-            onEdit: () => _showAddTransitTicketModal(context),
+          SpendzSurface(
+            padding: const EdgeInsets.symmetric(
+              horizontal: SpendzSpacing.lg,
+              vertical: SpendzSpacing.xl,
+            ),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF047857).withAlpha(20),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.airplane_ticket_outlined,
+                      size: 28,
+                      color: Color(0xFF10B981),
+                    ),
+                  ),
+                  const SizedBox(height: SpendzSpacing.sm),
+                  Text(
+                    'No Digital Tickets Added',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: SpendzColors.textPrimary(context),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Add your train, bus, or flight tickets with PNR, seat & document upload',
+                    textAlign: TextAlign.center,
+                    style: SpendzTypography.caption(context),
+                  ),
+                  const SizedBox(height: SpendzSpacing.md),
+                  SpendzButton(
+                    label: '+ Add Ticket',
+                    icon: Icons.add_rounded,
+                    isFullWidth: false,
+                    height: 38,
+                    onPressed: () => _showAddTransitTicketModal(context),
+                  ),
+                ],
+              ),
+            ),
           ),
       ],
     );
   }
 
   void _showAddTransitTicketModal(BuildContext context) {
-    final carrierController = TextEditingController(
-      text: 'INDIAN RAILWAYS / IRCTC',
-    );
-    final pnrController = TextEditingController(text: '8421-950-231');
-    final seatController = TextEditingController(text: 'B3 • Berth 42');
+    final carrierController = TextEditingController();
+    final pnrController = TextEditingController();
+    final seatController = TextEditingController();
     DateTime selectedDate = DateTime.now().add(const Duration(days: 3));
     TimeOfDay selectedTime = const TimeOfDay(hour: 6, minute: 30);
     String? pickedDocPath;
@@ -886,6 +943,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                         controller: carrierController,
                         decoration: InputDecoration(
                           labelText: 'Carrier / Transport Authority',
+                          hintText: 'e.g. Indian Railways / Air India',
                           prefixIcon: const Icon(
                             Icons.directions_transit_rounded,
                           ),
@@ -905,6 +963,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                         controller: pnrController,
                         decoration: InputDecoration(
                           labelText: 'PNR Number',
+                          hintText: 'e.g. 8421-950-231',
                           prefixIcon: const Icon(
                             Icons.confirmation_number_outlined,
                           ),
@@ -924,6 +983,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                         controller: seatController,
                         decoration: InputDecoration(
                           labelText: 'Seat / Berth Number',
+                          hintText: 'e.g. B3 • Berth 42',
                           prefixIcon: const Icon(Icons.event_seat_rounded),
                           filled: true,
                           fillColor: SpendzColors.surface(context),

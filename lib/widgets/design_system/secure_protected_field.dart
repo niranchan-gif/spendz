@@ -93,6 +93,7 @@ class _SecureProtectedFieldState extends State<SecureProtectedField>
       final success = await authService.authenticate(
         localizedReason:
             'Authenticate with biometrics or passcode to reveal ${widget.label}',
+        forceBiometrics: true,
       );
 
       if (!mounted) return;

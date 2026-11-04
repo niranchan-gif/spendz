@@ -26,6 +26,7 @@ class FakeWalletAuthService extends WalletAuthService {
   @override
   Future<bool> authenticate({
     String localizedReason = 'Unlock Spendz Vault',
+    bool forceBiometrics = false,
   }) async {
     authenticateCallCount++;
     lastReason = localizedReason;

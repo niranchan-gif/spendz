@@ -348,8 +348,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildPreferencesSection(BuildContext context) {
-    final accent = SpendzColors.primaryAccent(context);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

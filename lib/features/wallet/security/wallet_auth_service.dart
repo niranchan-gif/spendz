@@ -66,12 +66,16 @@ class WalletAuthService extends ChangeNotifier {
   }
 
   /// Authenticates the user using biometric or device PIN/passcode fallback.
+  /// If [forceBiometrics] is true, requires biometric authentication even if the vault
+  /// is currently unlocked (e.g. for viewing private card numbers or sharing).
   Future<bool> authenticate({
     String localizedReason =
         'Unlock Spendz Vault to access encrypted documents',
+    bool forceBiometrics = false,
   }) async {
-    // If already unlocked and within timeout, record activity and return true
-    if (isUnlocked && !hasTimedOut()) {
+    // If already unlocked and within timeout, and biometrics are not explicitly forced,
+    // record activity and return true
+    if (!forceBiometrics && isUnlocked && !hasTimedOut()) {
       recordActivity();
       return true;
     }

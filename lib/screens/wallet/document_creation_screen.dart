@@ -13,6 +13,7 @@ import '../../features/wallet/services/document_scanner_service.dart';
 import '../../features/wallet/services/document_vault_service.dart';
 import '../../models/wallet_document_model.dart';
 import '../../providers/wallet_document_provider.dart';
+import '../../providers/wallet_provider.dart';
 import 'document_attachment_scanner_screen.dart';
 import 'widgets/virtual_document_card.dart';
 
@@ -504,6 +505,9 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
 
       if (!mounted) return;
       await context.read<WalletDocumentProvider>().loadDocuments();
+      try {
+        await context.read<WalletProvider>().loadWallet();
+      } catch (_) {}
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -745,14 +749,23 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           // Render specific fields
           if (_selectedCategory == 'aadhaar') ..._buildAadhaarFields(),
           if (_selectedCategory == 'pan') ..._buildPanFields(),
-          if (_selectedCategory == 'driving_license')
+          if (_selectedCategory == 'driving_license' ||
+              _selectedCategory == 'driving_licence')
             ..._buildDrivingLicenceFields(),
           if (_selectedCategory == 'passport') ..._buildPassportFields(),
           if (_selectedCategory == 'debit_card' ||
               _selectedCategory == 'credit_card')
             ..._buildPaymentCardFields(),
           if (_selectedCategory == 'insurance') ..._buildInsuranceFields(),
-          if (_selectedCategory == 'other') ..._buildOtherDocumentFields(),
+          if (_selectedCategory != 'aadhaar' &&
+              _selectedCategory != 'pan' &&
+              _selectedCategory != 'driving_license' &&
+              _selectedCategory != 'driving_licence' &&
+              _selectedCategory != 'passport' &&
+              _selectedCategory != 'debit_card' &&
+              _selectedCategory != 'credit_card' &&
+              _selectedCategory != 'insurance')
+            ..._buildOtherDocumentFields(),
 
           const SizedBox(height: AppSpacing.md),
           const Divider(),
@@ -905,7 +918,8 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
         textCapitalization: TextCapitalization.characters,
         inputFormatters: [
           LengthLimitingTextInputFormatter(10),
-          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
+          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9•]')),
+          _UpperCaseTextFormatter(),
         ],
         decoration: const InputDecoration(
           labelText: 'PAN Number (10 Characters) *',
@@ -913,8 +927,17 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           prefixIcon: Icon(Icons.credit_card_rounded),
         ),
         validator: (v) {
-          final pan = v?.trim().toUpperCase() ?? '';
-          if (!RegExp(r'^[A-Z]{5}[0-9]{4}[A-Z]$').hasMatch(pan)) {
+          final pan = v?.replaceAll(RegExp(r'\s+'), '').toUpperCase() ?? '';
+          if (pan.isEmpty) {
+            return 'PAN number is required';
+          }
+          if (pan.contains('•')) {
+            return null; // Preserving existing masked PAN identifier
+          }
+          if (pan.length != 10) {
+            return 'PAN number must be exactly 10 characters';
+          }
+          if (!RegExp(r'^[A-Z0-9]{10}$').hasMatch(pan)) {
             return 'Enter a valid 10-character PAN (e.g. ABCDE1234F)';
           }
           return null;
@@ -1852,6 +1875,19 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _UpperCaseTextFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    return TextEditingValue(
+      text: newValue.text.toUpperCase(),
+      selection: newValue.selection,
     );
   }
 }
