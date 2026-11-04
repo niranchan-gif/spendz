@@ -87,6 +87,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
   final _contactController = TextEditingController();
 
   // Attachment State
+  final DocumentScannerService _scannerService = DocumentScannerService();
   DocumentAttachmentPayload? _attachmentPayload;
   bool _isSaving = false;
 
@@ -147,8 +148,11 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
     super.initState();
     _selectedCategory = widget.initialCategory ?? widget.documentToEdit?.category ?? 'aadhaar';
 
-    if (widget.documentToEdit != null) {
+    if (widget.initialCategory != null || widget.documentToEdit != null) {
       _currentStep = 1;
+    }
+
+    if (widget.documentToEdit != null) {
       _populateFromExisting(widget.documentToEdit!);
     }
   }
@@ -262,6 +266,8 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => DocumentAttachmentScannerScreen(
+          category: _selectedCategory,
+          suggestedTitle: _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : null,
           initialPayload: _attachmentPayload,
         ),
       ),
@@ -269,6 +275,21 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
 
     if (result != null) {
       setState(() => _attachmentPayload = result);
+    }
+  }
+
+  Future<void> _attachExistingPdf() async {
+    final payload = await _scannerService.pickExistingDocument();
+    if (payload != null) {
+      setState(() => _attachmentPayload = payload);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Attached "${payload.fileName}" (${payload.pageCount} page(s), ${DocumentScannerService.formatFileSize(payload.calculatedSize)})'),
+            backgroundColor: AppColors.primary,
+          ),
+        );
+      }
     }
   }
 
@@ -1270,29 +1291,77 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           const SizedBox(height: AppSpacing.md),
           if (hasAttachment) ...[
             Container(
-              padding: const EdgeInsets.all(AppSpacing.sm),
+              padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: AppColors.primary.withAlpha(15),
                 borderRadius: BorderRadius.circular(AppRadius.md),
+                border: Border.all(color: AppColors.primary.withAlpha(60)),
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    _attachmentPayload!.isPdf ? Icons.picture_as_pdf_rounded : Icons.photo_rounded,
-                    color: AppColors.primary,
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: (_attachmentPayload!.isPdf ? Colors.redAccent : AppColors.primary).withAlpha(25),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          _attachmentPayload!.isPdf ? Icons.picture_as_pdf_rounded : Icons.photo_rounded,
+                          color: _attachmentPayload!.isPdf ? Colors.redAccent : AppColors.primary,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _attachmentPayload!.fileName,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '${_attachmentPayload!.pageCount} Page(s) • ${DocumentScannerService.formatFileSize(_attachmentPayload!.calculatedSize)} • Ready to encrypt',
+                              style: TextStyle(fontSize: 11, color: AppColors.getTextSecondary(context)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Text(
-                      _attachmentPayload!.fileName,
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  OutlinedButton(
-                    onPressed: _openAttachmentScanner,
-                    style: OutlinedButton.styleFrom(visualDensity: VisualDensity.compact),
-                    child: const Text('Edit / Replace'),
+                  const SizedBox(height: AppSpacing.sm),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton.icon(
+                        onPressed: _openAttachmentScanner,
+                        icon: const Icon(Icons.edit_note_rounded, size: 16),
+                        label: const Text('Edit / Replace', style: TextStyle(fontSize: 12)),
+                      ),
+                      if (_attachmentPayload!.pdfBytes != null) ...[
+                        const SizedBox(width: 4),
+                        TextButton.icon(
+                          onPressed: () async {
+                            final saved = await _scannerService.savePdfToPhoneStorage(
+                              pdfBytes: _attachmentPayload!.pdfBytes!,
+                              fileName: _attachmentPayload!.fileName,
+                            );
+                            if (saved != null && mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Saved copy to: $saved'), backgroundColor: AppColors.success),
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.download_rounded, size: 16),
+                          label: const Text('Save to Phone', style: TextStyle(fontSize: 12)),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),
@@ -1301,10 +1370,26 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton.icon(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                    ),
                     onPressed: _openAttachmentScanner,
-                    icon: const Icon(Icons.document_scanner_outlined, size: 18),
-                    label: const Text('Scan / Upload Copy'),
+                    icon: const Icon(Icons.document_scanner_rounded, size: 18),
+                    label: const Text('Scan Document'),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                    ),
+                    onPressed: _attachExistingPdf,
+                    icon: const Icon(Icons.folder_open_rounded, size: 18),
+                    label: const Text('Attach PDF'),
                   ),
                 ),
               ],

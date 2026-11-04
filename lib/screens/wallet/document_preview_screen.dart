@@ -188,24 +188,44 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
     setState(() => _isExporting = true);
     try {
       final bytes = _decryptedImageBytes ?? await _stagedPdfFile!.readAsBytes();
-      final savedFile = await _exportService.downloadOriginalToDevice(
-        document: _currentDocument,
-        decryptedBytes: bytes,
+      final defaultName = DocumentScannerService.getDefaultPdfFileName(_currentDocument.category);
+
+      final savedPath = await DocumentScannerService().savePdfToPhoneStorage(
+        pdfBytes: bytes,
+        fileName: defaultName,
       );
 
       if (mounted) {
         setState(() => _isExporting = false);
-        if (savedFile != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Saved to Downloads: ${savedFile.path.split(Platform.pathSeparator).last}'),
-              backgroundColor: AppColors.success,
-              behavior: SnackBarBehavior.floating,
+        if (savedPath != null) {
+          showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Row(
+                children: [
+                  Icon(Icons.check_circle_rounded, color: AppColors.success),
+                  SizedBox(width: 8),
+                  Text('Document Downloaded'),
+                ],
+              ),
+              content: Text('Saved to phone storage:\n\n$savedPath\n\nYou can access it using your phone\'s Files or Downloads app.'),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                  icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                  label: const Text('Open File', style: TextStyle(color: Colors.white)),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    OpenFilex.open(savedPath);
+                  },
+                ),
+              ],
             ),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to save file'), backgroundColor: AppColors.error),
+            const SnackBar(content: Text('Save was cancelled or file unchanged.')),
           );
         }
       }
@@ -322,27 +342,65 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
   }
 
   Future<void> _attachOrReplaceCopy() async {
-    final payload = await Navigator.push<DocumentAttachmentPayload?>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const DocumentAttachmentScannerScreen(),
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.document_scanner_rounded, color: AppColors.primary),
+              title: const Text('Scan Document (Multi-Page)', style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: const Text('Capture front & back with boundary detection & PDF generation'),
+              onTap: () async {
+                Navigator.pop(ctx);
+                final payload = await Navigator.push<DocumentAttachmentPayload?>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => DocumentAttachmentScannerScreen(
+                      category: _currentDocument.category,
+                      suggestedTitle: _currentDocument.documentName,
+                    ),
+                  ),
+                );
+                if (payload != null) _processNewAttachment(payload);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.folder_open_rounded, color: AppColors.primary),
+              title: const Text('Attach Existing PDF from Phone', style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: const Text('Select a pre-existing PDF from device storage'),
+              onTap: () async {
+                Navigator.pop(ctx);
+                final payload = await DocumentScannerService().pickExistingDocument();
+                if (payload != null) _processNewAttachment(payload);
+              },
+            ),
+          ],
+        ),
       ),
     );
+  }
 
-    if (payload != null && mounted) {
-      final bytes = payload.primaryBytes;
-      if (bytes.isNotEmpty) {
-        final updated = await _vaultService.attachFileToDocument(
-          document: _currentDocument,
-          fileBytes: bytes,
-          mimeType: payload.mimeType,
-          attachmentType: payload.attachmentType,
+  Future<void> _processNewAttachment(DocumentAttachmentPayload payload) async {
+    final bytes = payload.primaryBytes;
+    if (bytes.isNotEmpty) {
+      final updated = await _vaultService.attachFileToDocument(
+        document: _currentDocument,
+        fileBytes: bytes,
+        mimeType: payload.mimeType,
+        attachmentType: payload.attachmentType,
+      );
+      setState(() => _currentDocument = updated);
+      if (mounted) {
+        await context.read<WalletDocumentProvider>().loadDocuments();
+        if (!mounted) return;
+        _authenticateAndDecrypt();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Attachment updated: ${payload.fileName}'),
+            backgroundColor: AppColors.success,
+          ),
         );
-        setState(() => _currentDocument = updated);
-        if (mounted) {
-          await context.read<WalletDocumentProvider>().loadDocuments();
-          _authenticateAndDecrypt();
-        }
       }
     }
   }
@@ -551,34 +609,168 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Original Attached Copy',
+                    'Original Copy',
                     style: AppTextStyles.headingSmall.copyWith(color: textPrimary, fontWeight: FontWeight.bold),
                   ),
                   if (doc.hasAttachment)
-                    PopupMenuButton<String>(
-                      icon: const Icon(Icons.more_vert_rounded),
-                      onSelected: (val) {
-                        if (val == 'replace') _attachOrReplaceCopy();
-                        if (val == 'remove') _removeAttachment();
-                      },
-                      itemBuilder: (ctx) => [
-                        const PopupMenuItem(value: 'replace', child: Text('Replace Attachment')),
-                        const PopupMenuItem(value: 'remove', child: Text('Remove Attachment', style: TextStyle(color: Colors.redAccent))),
+                    Row(
+                      children: [
+                        TextButton.icon(
+                          onPressed: _attachOrReplaceCopy,
+                          icon: const Icon(Icons.refresh_rounded, size: 14),
+                          label: const Text('Replace', style: TextStyle(fontSize: 12)),
+                        ),
+                        TextButton.icon(
+                          onPressed: _removeAttachment,
+                          icon: const Icon(Icons.delete_outline_rounded, size: 14, color: Colors.redAccent),
+                          label: const Text('Remove', style: TextStyle(fontSize: 12, color: Colors.redAccent)),
+                        ),
                       ],
                     ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: AppSpacing.xs),
 
-              Container(
-                height: 320,
-                decoration: BoxDecoration(
-                  color: surfaceColor,
-                  borderRadius: BorderRadius.circular(AppRadius.card),
-                  border: Border.all(color: AppColors.getBorder(context)),
+              if (doc.hasAttachment) ...[
+                // Details badge: Filename, Page count, File size, Date added
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: surfaceColor,
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    border: Border.all(color: AppColors.getBorder(context)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: (doc.isPdf ? Colors.redAccent : AppColors.primary).withAlpha(20),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          doc.isPdf ? Icons.picture_as_pdf_rounded : Icons.photo_rounded,
+                          color: doc.isPdf ? Colors.redAccent : AppColors.primary,
+                          size: 26,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              DocumentScannerService.getDefaultPdfFileName(doc.category),
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '${doc.isPdf ? 'PDF Document' : 'Image'} • ${DocumentScannerService.formatFileSize(doc.fileSize)} • Added ${DateFormatter.formatShortDate(doc.createdAt)}',
+                              style: TextStyle(fontSize: 11, color: AppColors.getTextSecondary(context)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                child: _buildPreviewBody(),
-              ),
+                const SizedBox(height: AppSpacing.sm),
+
+                Container(
+                  height: 320,
+                  decoration: BoxDecoration(
+                    color: surfaceColor,
+                    borderRadius: BorderRadius.circular(AppRadius.card),
+                    border: Border.all(color: AppColors.getBorder(context)),
+                  ),
+                  child: _buildPreviewBody(),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+
+                // Dedicated Actions for Original Copy
+                Row(
+                  children: [
+                    if (doc.isPdf) ...[
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _openPdfWithExternalApp,
+                          icon: const Icon(Icons.visibility_outlined, size: 16),
+                          label: const Text('View PDF', style: TextStyle(fontSize: 12)),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: !_isExporting ? _downloadOriginal : null,
+                        icon: const Icon(Icons.download_rounded, size: 16),
+                        label: const Text('Save to Phone', style: TextStyle(fontSize: 12)),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton.outlined(
+                      onPressed: !_isExporting ? _shareDocument : null,
+                      icon: const Icon(Icons.share_rounded, size: 18),
+                      tooltip: 'Share Document',
+                    ),
+                  ],
+                ),
+              ] else ...[
+                // No attachment: Add Original Copy Card
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.xl),
+                  decoration: BoxDecoration(
+                    color: surfaceColor,
+                    borderRadius: BorderRadius.circular(AppRadius.card),
+                    border: Border.all(color: AppColors.getBorder(context)),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(Icons.attachment_outlined, size: 48, color: AppColors.getTextSecondary(context).withAlpha(120)),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        'Add Original Copy',
+                        style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Attach a multi-page camera scan or an existing PDF from your phone.',
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.getTextSecondary(context)),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                            ),
+                            onPressed: _attachOrReplaceCopy,
+                            icon: const Icon(Icons.document_scanner_rounded, size: 16),
+                            label: const Text('Scan Document'),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          OutlinedButton.icon(
+                            onPressed: () async {
+                              final payload = await DocumentScannerService().pickExistingDocument();
+                              if (payload != null) _processNewAttachment(payload);
+                            },
+                            icon: const Icon(Icons.folder_open_rounded, size: 16),
+                            label: const Text('Attach PDF'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: AppSpacing.md),
 
               // 6. Extracted Notes & Description
