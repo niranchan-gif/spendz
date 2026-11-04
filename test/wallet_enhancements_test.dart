@@ -199,5 +199,100 @@ void main() {
       expect(find.text('Card 2 of 2'), findsOneWidget);
       expect(find.text('ICICI Coral'), findsWidgets);
     });
+
+    testWidgets('CardsScreen unifies payment cards AND government ID cards in stacked deck', (tester) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      // Seed 1 payment card and 2 govt documents (Aadhaar and PAN)
+      final paymentCard = WalletCardModel(
+        id: 'credit_1',
+        nickname: 'HDFC Regalia',
+        issuerName: 'HDFC Bank',
+        cardholderName: 'Kunal Sharma',
+        maskedNumber: '•••• •••• •••• 1234',
+        lastFour: '1234',
+        expiryMonth: 5,
+        expiryYear: 28,
+        cardType: 'credit',
+        cardNetwork: 'visa',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      final aadhaarDoc = WalletDocumentModel(
+        id: 'aadhaar_1',
+        documentName: 'My Aadhaar',
+        category: 'aadhaar',
+        holderName: 'Kunal Sharma',
+        maskedIdentifier: '•••• •••• 9988',
+        description: 'Holder: Kunal Sharma\nNumber: •••• •••• 9988',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      final panDoc = WalletDocumentModel(
+        id: 'pan_1',
+        documentName: 'Income Tax PAN',
+        category: 'pan',
+        holderName: 'Kunal Sharma',
+        maskedIdentifier: 'ABCDE••••F',
+        description: 'Holder: Kunal Sharma\nNumber: ABCDE••••F',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      await tester.runAsync(() async {
+        final db = await DatabaseHelper.instance.database;
+        await db.delete('wallet_cards');
+        await db.delete('wallet_documents');
+
+        await cardRepo.insert(paymentCard);
+        await docRepo.insert(aadhaarDoc);
+        await docRepo.insert(panDoc);
+        await walletProvider.loadWallet();
+      });
+
+      await tester.pumpWidget(buildTestHarness(
+        const CardsScreen(),
+      ));
+      await tester.pumpAndSettle();
+
+      // Verify all 3 cards are in studio together
+      expect(find.text('All Cards (3)'), findsOneWidget);
+      expect(find.text('Card 1 of 3'), findsOneWidget);
+      expect(find.text('Cards in Deck (3)'), findsOneWidget);
+
+      // Verify both payment cards and documents appear in list/stack
+      expect(find.text('HDFC Regalia'), findsWidgets);
+      expect(find.text('My Aadhaar'), findsWidgets);
+      expect(find.text('Income Tax PAN'), findsWidgets);
+
+      // Filter by Govt IDs
+      final govtChip = find.text('Govt IDs');
+      expect(govtChip, findsOneWidget);
+      await tester.tap(govtChip);
+      await tester.pumpAndSettle();
+
+      // Only Aadhaar and PAN should remain (2 cards)
+      expect(find.text('Card 1 of 2'), findsOneWidget);
+      expect(find.text('Cards in Deck (2)'), findsOneWidget);
+      expect(find.text('My Aadhaar'), findsWidgets);
+      expect(find.text('Income Tax PAN'), findsWidgets);
+
+      // Filter by Payment Cards
+      final paymentChip = find.text('Payment Cards');
+      expect(paymentChip, findsOneWidget);
+      await tester.tap(paymentChip);
+      await tester.pumpAndSettle();
+
+      // Only 1 card remains
+      expect(find.text('Card 1 of 1'), findsOneWidget);
+      expect(find.text('HDFC Regalia'), findsWidgets);
+    });
   });
 }
