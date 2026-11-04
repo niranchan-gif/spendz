@@ -105,6 +105,10 @@ void main() {
         issue_date TEXT,
         expiry_date TEXT,
         is_favorite INTEGER NOT NULL DEFAULT 0,
+        masked_identifier TEXT,
+        holder_name TEXT,
+        encrypted_fields TEXT,
+        attachment_type TEXT DEFAULT 'none',
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       )

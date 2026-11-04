@@ -332,14 +332,20 @@ class VirtualDocumentCard extends StatelessWidget {
           const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'आयकर विभाग\nINCOME TAX DEPARTMENT',
-                style: TextStyle(color: Color(0xFF1E293B), fontWeight: FontWeight.bold, fontSize: 10),
+              Expanded(
+                child: Text(
+                  'आयकर विभाग\nINCOME TAX DEPARTMENT',
+                  style: TextStyle(color: Color(0xFF1E293B), fontWeight: FontWeight.bold, fontSize: 10),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              Text(
-                'भारत सरकार\nGOVT. OF INDIA',
-                textAlign: TextAlign.end,
-                style: TextStyle(color: Color(0xFF1E293B), fontWeight: FontWeight.bold, fontSize: 10),
+              Expanded(
+                child: Text(
+                  'भारत सरकार\nGOVT. OF INDIA',
+                  textAlign: TextAlign.end,
+                  style: TextStyle(color: Color(0xFF1E293B), fontWeight: FontWeight.bold, fontSize: 10),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),
@@ -407,18 +413,24 @@ class VirtualDocumentCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
-                children: [
-                  Icon(Icons.directions_car_rounded, color: Colors.amber, size: 18),
-                  SizedBox(width: 6),
-                  Text(
-                    'UNION OF INDIA DRIVING LICENCE',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11, letterSpacing: 0.5),
-                  ),
-                ],
+              const Expanded(
+                child: Row(
+                  children: [
+                    Icon(Icons.directions_car_rounded, color: Colors.amber, size: 18),
+                    SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'UNION OF INDIA DRIVING LICENCE',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11, letterSpacing: 0.5),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               ),
               if (document.expiryDate != null)
                 Container(
+                  margin: const EdgeInsets.only(left: 6),
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: document.isExpired ? Colors.red : Colors.green,
@@ -446,17 +458,21 @@ class VirtualDocumentCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('LICENCE HOLDER', style: TextStyle(color: Colors.white54, fontSize: 8)),
-                  Text(
-                    holder.isNotEmpty ? holder.toUpperCase() : document.documentName.toUpperCase(),
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                  ),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('LICENCE HOLDER', style: TextStyle(color: Colors.white54, fontSize: 8)),
+                    Text(
+                      holder.isNotEmpty ? holder.toUpperCase() : document.documentName.toUpperCase(),
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
-              if (document.expiryDate != null)
+              if (document.expiryDate != null) ...[
+                const SizedBox(width: 8),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -467,6 +483,7 @@ class VirtualDocumentCard extends StatelessWidget {
                     ),
                   ],
                 ),
+              ],
             ],
           ),
         ],
@@ -577,10 +594,14 @@ class VirtualDocumentCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                provider.isNotEmpty ? provider.toUpperCase() : 'INSURANCE POLICY',
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+              Expanded(
+                child: Text(
+                  provider.isNotEmpty ? provider.toUpperCase() : 'INSURANCE POLICY',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
+              const SizedBox(width: 8),
               const Icon(Icons.health_and_safety_rounded, color: Colors.white, size: 20),
             ],
           ),
@@ -598,6 +619,7 @@ class VirtualDocumentCard extends StatelessWidget {
                   letterSpacing: 1.5,
                   fontFamily: 'monospace',
                 ),
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
@@ -605,15 +627,20 @@ class VirtualDocumentCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                holder.isNotEmpty ? holder : document.documentName,
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+              Expanded(
+                child: Text(
+                  holder.isNotEmpty ? holder : document.documentName,
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              if (document.expiryDate != null)
+              if (document.expiryDate != null) ...[
+                const SizedBox(width: 8),
                 Text(
                   'Exp: ${DateFormat('dd MMM yy').format(document.expiryDate!)}',
                   style: const TextStyle(color: Colors.white70, fontSize: 11),
                 ),
+              ],
             ],
           ),
         ],
@@ -830,17 +857,17 @@ class VirtualDocumentCard extends StatelessWidget {
   }
 
   (String holder, String number, String issuer, String network) _parseCardMetadata() {
-    String holder = '';
-    String number = '';
+    String holder = document.holderName ?? '';
+    String number = document.maskedIdentifier ?? '';
     String issuer = '';
     String network = '';
 
     if (document.description != null) {
       final lines = document.description!.split('\n');
       for (final line in lines) {
-        if (line.startsWith('Holder:')) {
+        if (holder.isEmpty && line.startsWith('Holder:')) {
           holder = line.replaceFirst('Holder:', '').trim();
-        } else if (line.startsWith('Number:')) {
+        } else if (number.isEmpty && line.startsWith('Number:')) {
           number = line.replaceFirst('Number:', '').trim();
         } else if (line.startsWith('Issuer:') || line.startsWith('Bank:')) {
           issuer = line.replaceFirst(RegExp(r'^(Issuer|Bank):'), '').trim();

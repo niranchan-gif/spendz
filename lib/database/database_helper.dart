@@ -28,7 +28,15 @@ class DatabaseHelper {
       version: 4,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
+      onOpen: _onOpenDB,
     );
+  }
+
+  Future<void> _onOpenDB(Database db) async {
+    await _addColumnIfNotExists(db, 'wallet_documents', 'masked_identifier', 'TEXT');
+    await _addColumnIfNotExists(db, 'wallet_documents', 'holder_name', 'TEXT');
+    await _addColumnIfNotExists(db, 'wallet_documents', 'encrypted_fields', 'TEXT');
+    await _addColumnIfNotExists(db, 'wallet_documents', 'attachment_type', "TEXT DEFAULT 'none'");
   }
 
   Future<void> _addColumnIfNotExists(
@@ -98,6 +106,10 @@ class DatabaseHelper {
           issue_date TEXT,
           expiry_date TEXT,
           is_favorite INTEGER NOT NULL DEFAULT 0,
+          masked_identifier TEXT,
+          holder_name TEXT,
+          encrypted_fields TEXT,
+          attachment_type TEXT DEFAULT 'none',
           created_at TEXT NOT NULL,
           updated_at TEXT NOT NULL
         )
@@ -130,6 +142,12 @@ class DatabaseHelper {
           value TEXT NOT NULL
         )
       ''');
+
+      // Ensure document table has enhanced wallet columns idempotently
+      await _addColumnIfNotExists(db, 'wallet_documents', 'masked_identifier', 'TEXT');
+      await _addColumnIfNotExists(db, 'wallet_documents', 'holder_name', 'TEXT');
+      await _addColumnIfNotExists(db, 'wallet_documents', 'encrypted_fields', 'TEXT');
+      await _addColumnIfNotExists(db, 'wallet_documents', 'attachment_type', "TEXT DEFAULT 'none'");
     }
   }
 
@@ -211,6 +229,10 @@ class DatabaseHelper {
         issue_date TEXT,
         expiry_date TEXT,
         is_favorite INTEGER NOT NULL DEFAULT 0,
+        masked_identifier TEXT,
+        holder_name TEXT,
+        encrypted_fields TEXT,
+        attachment_type TEXT DEFAULT 'none',
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       )

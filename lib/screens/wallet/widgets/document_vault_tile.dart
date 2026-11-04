@@ -162,7 +162,9 @@ class DocumentVaultTile extends StatelessWidget {
             children: [
               const SizedBox(height: 3),
               Text(
-                document.description ?? document.category.replaceAll('_', ' ').toUpperCase(),
+                document.holderName != null && document.maskedIdentifier != null
+                    ? '${document.holderName} • ${document.maskedIdentifier}'
+                    : (document.maskedIdentifier ?? document.holderName ?? (document.description ?? document.category.replaceAll('_', ' ').toUpperCase())),
                 style: AppTextStyles.bodySmall.copyWith(
                   color: textSecondary,
                   fontSize: 11,

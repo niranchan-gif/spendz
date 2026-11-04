@@ -24,18 +24,12 @@ class DocumentCategoryChips extends StatelessWidget {
 
   static const List<DocumentCategoryItem> categories = [
     DocumentCategoryItem(key: 'all', label: 'All', icon: Icons.grid_view_rounded),
-    DocumentCategoryItem(key: 'debit_card', label: 'Debit Cards', icon: Icons.credit_card_rounded),
-    DocumentCategoryItem(key: 'credit_card', label: 'Credit Cards', icon: Icons.credit_score_rounded),
-    DocumentCategoryItem(key: 'aadhaar', label: 'Aadhaar', icon: Icons.fingerprint_rounded),
-    DocumentCategoryItem(key: 'pan', label: 'PAN', icon: Icons.badge_outlined),
-    DocumentCategoryItem(key: 'driving_license', label: 'Licence', icon: Icons.drive_eta_outlined),
-    DocumentCategoryItem(key: 'passport', label: 'Passport', icon: Icons.flight_takeoff_rounded),
-    DocumentCategoryItem(key: 'voter_id', label: 'Voter ID', icon: Icons.how_to_vote_rounded),
-    DocumentCategoryItem(key: 'rc', label: 'Vehicle RC', icon: Icons.directions_car_filled_outlined),
-    DocumentCategoryItem(key: 'insurance', label: 'Insurance', icon: Icons.verified_user_outlined),
-    DocumentCategoryItem(key: 'bank_document', label: 'Bank', icon: Icons.account_balance_outlined),
-    DocumentCategoryItem(key: 'college_id', label: 'ID Card', icon: Icons.school_outlined),
-    DocumentCategoryItem(key: 'certificate', label: 'Certificates', icon: Icons.workspace_premium_outlined),
+    DocumentCategoryItem(key: 'identity', label: 'Identity', icon: Icons.badge_outlined),
+    DocumentCategoryItem(key: 'banking', label: 'Banking', icon: Icons.payment_rounded),
+    DocumentCategoryItem(key: 'driving', label: 'Driving', icon: Icons.directions_car_outlined),
+    DocumentCategoryItem(key: 'travel', label: 'Travel', icon: Icons.flight_takeoff_rounded),
+    DocumentCategoryItem(key: 'insurance', label: 'Insurance', icon: Icons.health_and_safety_outlined),
+    DocumentCategoryItem(key: 'others', label: 'Others', icon: Icons.folder_open_outlined),
   ];
 
   @override
@@ -58,24 +52,27 @@ class DocumentCategoryChips extends StatelessWidget {
           return ChoiceChip(
             showCheckmark: false,
             selected: isSelected,
-            avatar: Icon(
-              item.icon,
-              size: 16,
-              color: isSelected ? Colors.white : AppColors.primary,
-            ),
-            label: Text(item.label),
-            labelStyle: AppTextStyles.labelSmall.copyWith(
-              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              color: isSelected ? Colors.white : textSecondary,
-            ),
-            backgroundColor: surfaceColor,
             selectedColor: AppColors.primary,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+            backgroundColor: surfaceColor,
+            elevation: isSelected ? 2 : 0,
+            pressElevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.full),
               side: BorderSide(
                 color: isSelected ? AppColors.primary : borderColor,
                 width: 1,
+              ),
+            ),
+            avatar: Icon(
+              item.icon,
+              size: 16,
+              color: isSelected ? Colors.white : textSecondary,
+            ),
+            label: Text(
+              item.label,
+              style: AppTextStyles.labelMedium.copyWith(
+                color: isSelected ? Colors.white : textSecondary,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
               ),
             ),
             onSelected: (_) => onSelected(item.key),

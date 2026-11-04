@@ -1,35 +1,44 @@
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
-import 'package:google_mlkit_document_scanner/google_mlkit_document_scanner.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 import 'image_processing_service.dart';
 
-/// Represents the output of a document scanning or capture session.
-class ScannedDocumentBatch {
-  final List<Uint8List> pageImages;
-  final List<String> originalPaths;
+/// Represents a captured or attached document payload.
+class DocumentAttachmentPayload {
+  final List<Uint8List> pages;
   final Uint8List? pdfBytes;
-  final String? pdfPath;
+  final String mimeType;
+  final String fileName;
+  final String attachmentType; // 'image', 'pdf', 'scanned_pdf'
 
-  const ScannedDocumentBatch({
-    required this.pageImages,
-    required this.originalPaths,
+  const DocumentAttachmentPayload({
+    required this.pages,
     this.pdfBytes,
-    this.pdfPath,
+    required this.mimeType,
+    required this.fileName,
+    required this.attachmentType,
   });
 
-  int get pageCount => pageImages.length;
-  bool get isEmpty => pageImages.isEmpty;
+  int get pageCount => pages.isNotEmpty ? pages.length : (pdfBytes != null ? 1 : 0);
+  bool get isPdf => mimeType.contains('pdf') || pdfBytes != null;
+  Uint8List get primaryBytes => pdfBytes ?? (pages.isNotEmpty ? pages.first : Uint8List(0));
 }
 
-/// Production-quality document scanner service with multi-modal capture:
-/// 1. Native ML Kit Document Scanner (edge detection, perspective correction, auto-crop)
-/// 2. Camera Capture via ImagePicker
-/// 3. Photo Gallery Selection via ImagePicker
-/// 4. Ephemeral caching and safe path verification
+/// Backwards compatibility alias for existing consumers.
+typedef ScannedDocumentBatch = DocumentAttachmentPayload;
+
+/// Service managing document scanning and original attachment capture.
+///
+/// Pure offline, multi-page capture with:
+/// - Camera capture
+/// - Multi-image gallery selection
+/// - PDF file import
+/// - Page rotation, cropping, enhancement
+/// - Multi-page PDF generation via Syncfusion
+/// - ZERO OCR dependencies
 class DocumentScannerService {
   final ImageProcessingService _imageProcessor;
   final ImagePicker _imagePicker;
@@ -40,191 +49,145 @@ class DocumentScannerService {
   })  : _imageProcessor = imageProcessor ?? ImageProcessingService(),
         _imagePicker = imagePicker ?? ImagePicker();
 
-  /// Starts the Google Play Services native document scanner session.
-  ///
-  /// Features:
-  /// - Real-time edge detection overlay
-  /// - Automatic perspective correction & warping
-  /// - Manual corner handle adjustment
-  /// - Multi-page scanning (up to [pageLimit])
-  /// - Rotation & filters
-  ///
-  /// Returns `null` if the user cancels scanning or if the native scanner is unavailable.
-  Future<ScannedDocumentBatch?> startScanSession({
-    int pageLimit = 10,
-    bool allowGalleryImport = true,
-  }) async {
+  ImageProcessingService get imageProcessor => _imageProcessor;
+
+  /// Captures a single page via device camera.
+  Future<Uint8List?> capturePageFromCamera() async {
     try {
-      final options = DocumentScannerOptions(
-        documentFormats: const {DocumentFormat.jpeg, DocumentFormat.pdf},
-        mode: ScannerMode.full,
-        isGalleryImport: allowGalleryImport,
-        pageLimit: pageLimit,
-      );
-
-      final scanner = DocumentScanner(options: options);
-      final DocumentScanningResult result = await scanner.scanDocument();
-      await scanner.close();
-
-      final rawImagePaths = result.images;
-      if (rawImagePaths == null || rawImagePaths.isEmpty) {
-        return null;
-      }
-
-      final pageImages = <Uint8List>[];
-      final verifiedPaths = <String>[];
-
-      for (final rawPath in rawImagePaths) {
-        final localFile = await _resolveAndVerifyPath(rawPath);
-        if (localFile != null && await localFile.exists()) {
-          final bytes = await localFile.readAsBytes();
-          if (bytes.isNotEmpty) {
-            pageImages.add(bytes);
-            verifiedPaths.add(localFile.path);
-          }
-        }
-      }
-
-      if (pageImages.isEmpty) {
-        return null;
-      }
-
-      // Check if native PDF was generated
-      Uint8List? pdfBytes;
-      String? pdfPath;
-      final rawPdfUri = result.pdf?.uri;
-      if (rawPdfUri != null) {
-        final pdfFile = await _resolveAndVerifyPath(rawPdfUri);
-        if (pdfFile != null && await pdfFile.exists()) {
-          pdfPath = pdfFile.path;
-          pdfBytes = await pdfFile.readAsBytes();
-        }
-      }
-
-      // If multi-page scan without native PDF, generate high-quality PDF using Syncfusion engine
-      if (pdfBytes == null && pageImages.length > 1) {
-        pdfBytes = _imageProcessor.createPdfFromImages(pageImages);
-      }
-
-      return ScannedDocumentBatch(
-        pageImages: pageImages,
-        originalPaths: verifiedPaths,
-        pdfBytes: pdfBytes,
-        pdfPath: pdfPath,
-      );
-    } on PlatformException catch (e) {
-      if (e.code == 'CANCELED' || e.message?.toLowerCase().contains('cancel') == true) {
-        debugPrint('[DocumentScannerService] Scanner cancelled by user');
-        return null;
-      }
-      debugPrint('[DocumentScannerService] Scanner platform exception: ${e.message}');
-      return null;
-    } catch (e) {
-      debugPrint('[DocumentScannerService] Scanner error: $e');
-      return null;
-    }
-  }
-
-  /// Captures a single document photo directly via Camera with high resolution.
-  Future<ScannedDocumentBatch?> captureFromCamera() async {
-    try {
-      final XFile? photo = await _imagePicker.pickImage(
+      final picked = await _imagePicker.pickImage(
         source: ImageSource.camera,
-        imageQuality: 95,
-        preferredCameraDevice: CameraDevice.rear,
+        imageQuality: 92,
+        maxWidth: 2400,
+        maxHeight: 2400,
       );
-
-      if (photo == null) return null;
-
-      final file = File(photo.path);
-      if (!await file.exists() || await file.length() == 0) return null;
-
-      final bytes = await file.readAsBytes();
-      return ScannedDocumentBatch(
-        pageImages: [bytes],
-        originalPaths: [file.path],
-      );
+      if (picked == null) return null;
+      return await picked.readAsBytes();
     } catch (e) {
       debugPrint('[DocumentScannerService] Camera capture error: $e');
       return null;
     }
   }
 
-  /// Imports an image directly from the photo gallery.
-  Future<ScannedDocumentBatch?> pickFromGallery() async {
+  /// Picks one or more images from device photo gallery.
+  Future<List<Uint8List>> pickPagesFromGallery() async {
     try {
-      final XFile? image = await _imagePicker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 95,
+      final pickedFiles = await _imagePicker.pickMultiImage(
+        imageQuality: 92,
+        maxWidth: 2400,
+        maxHeight: 2400,
       );
+      if (pickedFiles.isEmpty) return [];
 
-      if (image == null) return null;
-
-      final file = File(image.path);
-      if (!await file.exists() || await file.length() == 0) return null;
-
-      final bytes = await file.readAsBytes();
-      return ScannedDocumentBatch(
-        pageImages: [bytes],
-        originalPaths: [file.path],
-      );
+      final results = <Uint8List>[];
+      for (final file in pickedFiles) {
+        final bytes = await file.readAsBytes();
+        if (bytes.isNotEmpty) {
+          results.add(bytes);
+        }
+      }
+      return results;
     } catch (e) {
       debugPrint('[DocumentScannerService] Gallery pick error: $e');
+      return [];
+    }
+  }
+
+  /// Picks a PDF file from device storage.
+  Future<DocumentAttachmentPayload?> pickPdfFile() async {
+    try {
+      final result = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+      );
+
+      if (result.isEmpty) return null;
+      final file = result.first;
+      final bytes = await file.readAsBytes();
+
+      if (bytes.isEmpty) return null;
+
+      return DocumentAttachmentPayload(
+        pages: const [],
+        pdfBytes: bytes,
+        mimeType: 'application/pdf',
+        fileName: file.name,
+        attachmentType: 'pdf',
+      );
+    } catch (e) {
+      debugPrint('[DocumentScannerService] PDF pick error: $e');
       return null;
     }
   }
 
-  /// Resolves raw path strings, stripping file:// schemes and verifying local accessibility.
-  Future<File?> _resolveAndVerifyPath(String rawPath) async {
+  /// Generates a high-quality PDF from captured page images.
+  Uint8List generatePdfFromPages(List<Uint8List> pages, {String title = 'Spendz Document'}) {
+    return _imageProcessor.createPdfFromImages(pages, title: title);
+  }
+
+  /// Rotates a page image 90 degrees clockwise.
+  Uint8List rotatePage(Uint8List imageBytes, [int angle = 90]) {
+    return _imageProcessor.rotateImage(imageBytes, angle);
+  }
+
+  /// Crops a page image.
+  Uint8List cropPage(
+    Uint8List imageBytes, {
+    required int x,
+    required int y,
+    required int width,
+    required int height,
+  }) {
+    return _imageProcessor.cropImage(
+      imageBytes,
+      x: x,
+      y: y,
+      width: width,
+      height: height,
+    );
+  }
+
+  /// Enhances page readability (contrast + sharpening).
+  Uint8List enhancePage(Uint8List imageBytes) {
+    return _imageProcessor.enhanceDocument(imageBytes);
+  }
+
+  /// Stages bytes to a verified temporary file.
+  Future<File?> stageBytesToCache(Uint8List bytes, {String extension = 'jpg'}) async {
     try {
-      String clean = rawPath.trim();
-      if (clean.startsWith('file://')) {
-        try {
-          clean = Uri.parse(clean).toFilePath();
-        } catch (_) {
-          clean = clean.replaceFirst('file://', '');
-        }
+      final tempDir = await getTemporaryDirectory();
+      final targetFile = File('${tempDir.path}/attachment_${const Uuid().v4()}.$extension');
+      await targetFile.writeAsBytes(bytes, flush: true);
+      if (await targetFile.exists() && await targetFile.length() > 0) {
+        return targetFile;
       }
-
-      final file = File(clean);
-      if (await file.exists()) {
-        return file;
-      }
-
-      // If the file cannot be accessed directly (e.g. URI artifact), attempt copy via bytes if possible
       return null;
     } catch (e) {
-      debugPrint('[DocumentScannerService] Error resolving path $rawPath: $e');
+      debugPrint('[DocumentScannerService] Cache staging error: $e');
       return null;
     }
   }
 
-  /// Writes arbitrary bytes to a verified staging file in app cache.
-  Future<String> stageBytesToCache(Uint8List bytes, {String extension = 'jpg'}) async {
-    final tempDir = await getTemporaryDirectory();
-    final stagingFile = File('${tempDir.path}/scan_stage_${const Uuid().v4()}.$extension');
-    await stagingFile.writeAsBytes(bytes, flush: true);
-    return stagingFile.path;
+  /// Legacy helper for starting scan session.
+  Future<DocumentAttachmentPayload?> captureFromCamera() async {
+    final bytes = await capturePageFromCamera();
+    if (bytes == null) return null;
+    return DocumentAttachmentPayload(
+      pages: [bytes],
+      mimeType: 'image/jpeg',
+      fileName: 'camera_capture.jpg',
+      attachmentType: 'image',
+    );
   }
 
-  /// Ephemeral staging cleanup for scanned image batches.
-  Future<void> cleanupBatchFiles(ScannedDocumentBatch batch) async {
-    for (final path in batch.originalPaths) {
-      try {
-        final file = File(path);
-        if (await file.exists()) {
-          await file.delete();
-        }
-      } catch (_) {}
-    }
-
-    if (batch.pdfPath != null) {
-      try {
-        final pdfFile = File(batch.pdfPath!);
-        if (await pdfFile.exists()) {
-          await pdfFile.delete();
-        }
-      } catch (_) {}
-    }
+  /// Legacy helper for picking from gallery.
+  Future<DocumentAttachmentPayload?> pickFromGallery() async {
+    final pages = await pickPagesFromGallery();
+    if (pages.isEmpty) return null;
+    return DocumentAttachmentPayload(
+      pages: pages,
+      mimeType: 'image/jpeg',
+      fileName: 'gallery_import.jpg',
+      attachmentType: pages.length > 1 ? 'scanned_pdf' : 'image',
+    );
   }
 }

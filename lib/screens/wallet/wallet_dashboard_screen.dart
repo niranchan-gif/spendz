@@ -14,7 +14,7 @@ import '../../widgets/design_system/app_bottom_sheet.dart';
 import 'card_detail_screen.dart';
 import 'cards_screen.dart';
 import 'document_preview_screen.dart';
-import 'document_scanner_screen.dart';
+import 'document_creation_screen.dart';
 import 'documents_screen.dart';
 import 'passes_screen.dart';
 import 'wallet_security_settings_screen.dart';
@@ -38,14 +38,14 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         children: [
           _buildAddOptionTile(
             context: context,
-            icon: Icons.document_scanner_outlined,
-            title: 'Scan Document (OCR)',
-            subtitle: 'Auto edge detection, crop, OCR & encryption',
+            icon: Icons.badge_outlined,
+            title: 'Add Document',
+            subtitle: 'Manual entry, virtual ID card & attachment copy',
             onTap: () {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const DocumentScannerScreen()),
+                MaterialPageRoute(builder: (_) => const DocumentCreationScreen()),
               );
             },
           ),
@@ -168,13 +168,13 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                           Expanded(
                             child: _quickActionButton(
                               context: context,
-                              icon: Icons.document_scanner_outlined,
-                              label: 'Scan Doc',
+                              icon: Icons.add_circle_outline_rounded,
+                              label: 'Add Doc',
                               color: AppColors.primary,
                               onTap: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (_) => const DocumentScannerScreen()),
+                                  MaterialPageRoute(builder: (_) => const DocumentCreationScreen()),
                                 );
                               },
                             ),
@@ -348,12 +348,12 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                           ? EmptyState(
                               icon: Icons.folder_open_outlined,
                               title: 'Vault is Empty',
-                              subtitle: 'Tap Scan Doc or Import File to securely store your IDs and certificates.',
-                              actionLabel: 'Scan Document',
+                              subtitle: 'Tap Add Doc to securely store your personal IDs and documents.',
+                              actionLabel: 'Add Document',
                               onActionPressed: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (_) => const DocumentScannerScreen()),
+                                  MaterialPageRoute(builder: (_) => const DocumentCreationScreen()),
                                 );
                               },
                             )

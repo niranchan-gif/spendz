@@ -1,7 +1,7 @@
 class WalletDocumentModel {
   final String id;
   final String documentName;
-  final String category; // 'aadhaar', 'pan', 'driving_license', 'passport', 'rc', 'insurance', 'college_id', 'certificate', 'other'
+  final String category; // 'aadhaar', 'pan', 'driving_license', 'passport', 'debit_card', 'credit_card', 'insurance', 'rc', 'college_id', 'certificate', 'other'
   final String? description;
   final String encryptedFilePath;
   final String? thumbnailPath;
@@ -10,6 +10,10 @@ class WalletDocumentModel {
   final DateTime? issueDate;
   final DateTime? expiryDate;
   final bool isFavorite;
+  final String? maskedIdentifier;
+  final String? holderName;
+  final String? encryptedFields;
+  final String attachmentType; // 'none', 'image', 'pdf', 'scanned_pdf'
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -18,16 +22,28 @@ class WalletDocumentModel {
     required this.documentName,
     required this.category,
     this.description,
-    required this.encryptedFilePath,
+    this.encryptedFilePath = '',
     this.thumbnailPath,
-    required this.mimeType,
+    this.mimeType = 'image/jpeg',
     this.fileSize = 0,
     this.issueDate,
     this.expiryDate,
     this.isFavorite = false,
+    this.maskedIdentifier,
+    this.holderName,
+    this.encryptedFields,
+    this.attachmentType = 'none',
     required this.createdAt,
     required this.updatedAt,
   });
+
+  bool get hasAttachment => encryptedFilePath.isNotEmpty;
+
+  String get documentTitle => documentName;
+  String get documentType => category;
+
+  bool get isPdf => mimeType.toLowerCase().contains('pdf');
+  bool get isImage => mimeType.toLowerCase().contains('image');
 
   bool get isExpired {
     if (expiryDate == null) return false;
@@ -54,6 +70,10 @@ class WalletDocumentModel {
       'issue_date': issueDate?.toIso8601String(),
       'expiry_date': expiryDate?.toIso8601String(),
       'is_favorite': isFavorite ? 1 : 0,
+      'masked_identifier': maskedIdentifier,
+      'holder_name': holderName,
+      'encrypted_fields': encryptedFields,
+      'attachment_type': attachmentType,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -61,7 +81,7 @@ class WalletDocumentModel {
 
   factory WalletDocumentModel.fromMap(Map<String, dynamic> map) {
     return WalletDocumentModel(
-      id: map['id'],
+      id: map['id'] ?? '',
       documentName: map['document_name'] ?? '',
       category: map['category'] ?? 'other',
       description: map['description'],
@@ -72,8 +92,12 @@ class WalletDocumentModel {
       issueDate: map['issue_date'] != null ? DateTime.tryParse(map['issue_date']) : null,
       expiryDate: map['expiry_date'] != null ? DateTime.tryParse(map['expiry_date']) : null,
       isFavorite: map['is_favorite'] == 1,
-      createdAt: DateTime.parse(map['created_at']),
-      updatedAt: DateTime.parse(map['updated_at']),
+      maskedIdentifier: map['masked_identifier'],
+      holderName: map['holder_name'],
+      encryptedFields: map['encrypted_fields'],
+      attachmentType: map['attachment_type'] ?? (map['encrypted_file_path'] != null && (map['encrypted_file_path'] as String).isNotEmpty ? 'image' : 'none'),
+      createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : DateTime.now(),
+      updatedAt: map['updated_at'] != null ? DateTime.parse(map['updated_at']) : DateTime.now(),
     );
   }
 
@@ -89,6 +113,10 @@ class WalletDocumentModel {
     DateTime? issueDate,
     DateTime? expiryDate,
     bool? isFavorite,
+    String? maskedIdentifier,
+    String? holderName,
+    String? encryptedFields,
+    String? attachmentType,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -104,6 +132,10 @@ class WalletDocumentModel {
       issueDate: issueDate ?? this.issueDate,
       expiryDate: expiryDate ?? this.expiryDate,
       isFavorite: isFavorite ?? this.isFavorite,
+      maskedIdentifier: maskedIdentifier ?? this.maskedIdentifier,
+      holderName: holderName ?? this.holderName,
+      encryptedFields: encryptedFields ?? this.encryptedFields,
+      attachmentType: attachmentType ?? this.attachmentType,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -111,4 +143,3 @@ class WalletDocumentModel {
 }
 
 typedef WalletDocument = WalletDocumentModel;
-
