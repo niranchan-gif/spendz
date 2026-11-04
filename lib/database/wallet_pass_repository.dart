@@ -1,3 +1,4 @@
+import 'dart:io';
 import '../models/wallet_pass_model.dart';
 import 'database_helper.dart';
 
@@ -10,7 +11,84 @@ class WalletPassRepository {
     return pass;
   }
 
+  /// Purges sample tickets and automatically deletes any travel tickets
+  /// whose journey time was more than 24 hours ago (including attached user documents).
+  Future<int> purgeExpiredAndSampleTransitTickets() async {
+    try {
+      final db = await dbHelper.database;
+      final maps = await db.query('wallet_passes');
+      final passes = maps.map((m) => WalletPassModel.fromMap(m)).toList();
+      final now = DateTime.now();
+      int deletedCount = 0;
+
+      for (final pass in passes) {
+        bool shouldDelete = false;
+
+        // 1. Remove default sample ticket (PNR 8421-950-231 or dummy sample tickets)
+        if (pass.notes?.contains('8421-950-231') == true ||
+            pass.encryptedCodePath == '8421-950-231' ||
+            pass.id == 'sample_transit_pass' ||
+            (pass.title.toLowerCase().contains('indian railways') &&
+                pass.notes?.contains('8421-950-231') == true)) {
+          shouldDelete = true;
+        }
+
+        // 2. Automatically delete transit tickets & boarding passes 24 hours after journey time
+        if (!shouldDelete &&
+            (pass.passType == 'transit_ticket' ||
+                pass.passType == 'boarding_pass')) {
+          final journeyTime = pass.validUntil ?? pass.createdAt;
+          final cutoff = journeyTime.add(const Duration(hours: 24));
+          if (now.isAfter(cutoff)) {
+            shouldDelete = true;
+          }
+        }
+
+        if (shouldDelete) {
+          _cleanupPassFiles(pass);
+          await db.delete(
+            'wallet_passes',
+            where: 'id = ?',
+            whereArgs: [pass.id],
+          );
+          deletedCount++;
+        }
+      }
+
+      return deletedCount;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  void _cleanupPassFiles(WalletPassModel pass) {
+    try {
+      // 1. If encryptedCodePath points to an uploaded file on disk, delete it
+      if (pass.encryptedCodePath.isNotEmpty) {
+        final f = File(pass.encryptedCodePath);
+        if (f.existsSync()) {
+          f.deleteSync();
+        }
+      }
+
+      // 2. If notes has a Doc: <path> pointer, delete it from storage as well
+      if (pass.notes != null) {
+        final match = RegExp(r'Doc:\s*([^\n]+)').firstMatch(pass.notes!);
+        if (match != null) {
+          final docPath = match.group(1)?.trim();
+          if (docPath != null && docPath.isNotEmpty) {
+            final docFile = File(docPath);
+            if (docFile.existsSync()) {
+              docFile.deleteSync();
+            }
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
   Future<List<WalletPassModel>> getAllPasses() async {
+    await purgeExpiredAndSampleTransitTickets();
     final db = await dbHelper.database;
     final maps = await db.query(
       'wallet_passes',
@@ -92,6 +170,10 @@ class WalletPassRepository {
   }
 
   Future<int> delete(String id) async {
+    final existing = await getPassById(id);
+    if (existing != null) {
+      _cleanupPassFiles(existing);
+    }
     final db = await dbHelper.database;
     return await db.delete('wallet_passes', where: 'id = ?', whereArgs: [id]);
   }

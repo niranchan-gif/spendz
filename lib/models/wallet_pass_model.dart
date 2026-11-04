@@ -38,6 +38,7 @@ class WalletPassModel {
       'code_format': codeFormat,
       'issuer': issuer,
       'valid_until': validUntil?.toIso8601String(),
+      'notes': notes,
       'is_favorite': isFavorite ? 1 : 0,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),

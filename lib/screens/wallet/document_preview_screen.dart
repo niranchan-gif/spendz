@@ -603,35 +603,9 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
                 ),
               ),
 
-              // 3. Biometric Protected Number Field (Biometric authentication required to reveal)
-              // (For Aadhaar, the card face already directly presents the number; omit redundant field)
-              if (doc.category.toLowerCase() != 'aadhaar' &&
-                  (doc.maskedIdentifier != null ||
-                      _secureDocumentNumber != null)) ...[
-                const SizedBox(height: AppSpacing.sm),
-                SecureProtectedField(
-                  label:
-                      '${doc.category.toUpperCase().replaceAll("_", " ")} NUMBER',
-                  maskedValue:
-                      doc.maskedIdentifier ??
-                      (_secureDocumentNumber != null &&
-                              _secureDocumentNumber!.length > 4
-                          ? '•••• •••• ${_secureDocumentNumber!.substring(_secureDocumentNumber!.length - 4)}'
-                          : '••••••••'),
-                  showCopyButton: true,
-                  onRetrieveProtectedValue: () async {
-                    final num = await _secureNumberService
-                        .getDocumentFullNumber(doc.id);
-                    if (num != null && num.isNotEmpty) {
-                      return num;
-                    }
-                    return doc.maskedIdentifier;
-                  },
-                ),
-              ],
               const SizedBox(height: AppSpacing.md),
 
-              // 4. Primary Actions Row (Unified, Non-Repeating)
+              // 3. Primary Actions Row (Unified, Non-Repeating)
               Row(
                 children: [
                   Expanded(
@@ -942,6 +916,15 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
 
     final Map<String, String> fields = {};
     String? additionalNotes;
+
+    // 0. Holder Name and Card/ID Number
+    if (doc.holderName != null && doc.holderName!.trim().isNotEmpty) {
+      fields['Holder Name'] = doc.holderName!.trim();
+    }
+    if (doc.maskedIdentifier != null &&
+        doc.maskedIdentifier!.trim().isNotEmpty) {
+      fields['ID / Card Number'] = doc.maskedIdentifier!.trim();
+    }
 
     // 1. Core model dates
     if (doc.issueDate != null) {

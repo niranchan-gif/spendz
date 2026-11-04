@@ -312,35 +312,60 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'भारत सरकार',
-                          style: TextStyle(
-                            color: Color(0xFF0F172A),
-                            fontWeight: FontWeight.w800,
-                            fontSize: 11,
-                            letterSpacing: 0.3,
-                            height: 1.1,
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 1.5,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFF97316), Color(0xFFFB923C)],
+                            ),
+                            borderRadius: BorderRadius.circular(2.5),
+                          ),
+                          child: const Text(
+                            'भारत सरकार',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 9.5,
+                              letterSpacing: 0.4,
+                              height: 1.1,
+                            ),
                           ),
                         ),
-                        Text(
-                          'Government of India',
-                          style: TextStyle(
-                            color: Color(0xFF334155),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 8.5,
-                            letterSpacing: 0.8,
-                            height: 1.1,
+                        const SizedBox(height: 2),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 1.5,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF15803D), Color(0xFF22C55E)],
+                            ),
+                            borderRadius: BorderRadius.circular(2.5),
+                          ),
+                          child: const Text(
+                            'GOVERNMENT OF INDIA',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 8.5,
+                              letterSpacing: 0.6,
+                              height: 1.1,
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
 
-                  // UIDAI Sunburst Logo + UIDAI Text
+                  // UIDAI Sunburst Logo + AADHAAR Text matching Image 1
                   const Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -351,12 +376,21 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                       ),
                       SizedBox(height: 1),
                       Text(
-                        'UIDAI',
+                        'AADHAAR',
                         style: TextStyle(
                           color: Color(0xFFDC2626),
                           fontWeight: FontWeight.w900,
-                          fontSize: 7.5,
+                          fontSize: 7,
                           letterSpacing: 0.8,
+                        ),
+                      ),
+                      Text(
+                        'UIDAI',
+                        style: TextStyle(
+                          color: Color(0xFFB91C1C),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 5,
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ],
@@ -426,47 +460,73 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
 
                     const SizedBox(width: 10),
 
-                    // Holder Details
+                    // Holder Details matching Image 1
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
+                          const Text(
+                            'नाम / Name',
+                            style: TextStyle(
+                              color: Color(0xFF64748B),
+                              fontSize: 7,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                           Text(
                             holder,
                             style: const TextStyle(
                               color: Color(0xFF0F172A),
-                              fontWeight: FontWeight.w800,
-                              fontSize: 13,
-                              height: 1.15,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            meta.dob.isNotEmpty
-                                ? 'DOB / जन्म: ${meta.dob}'
-                                : (widget.document.issueDate != null
-                                      ? 'Issue: ${DateFormat('dd/MM/yyyy').format(widget.document.issueDate!)}'
-                                      : 'DOB: ••/••/••••'),
-                            style: const TextStyle(
-                              color: Color(0xFF475569),
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 11.5,
+                              height: 1.1,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 2),
+                          const Text(
+                            'जन्म तिथि / DOB',
+                            style: TextStyle(
+                              color: Color(0xFF64748B),
+                              fontSize: 7,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            meta.dob.isNotEmpty
+                                ? meta.dob
+                                : (widget.document.issueDate != null
+                                      ? DateFormat(
+                                          'dd/MM/yyyy',
+                                        ).format(widget.document.issueDate!)
+                                      : '01/01/1990'),
+                            style: const TextStyle(
+                              color: Color(0xFF0F172A),
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          const Text(
+                            'लिंग / Gender',
+                            style: TextStyle(
+                              color: Color(0xFF64748B),
+                              fontSize: 7,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                           Text(
                             meta.gender.isNotEmpty
-                                ? 'Gender / लिंग: ${meta.gender.toUpperCase()}'
-                                : 'Gender / लिंग: VERIFIED',
+                                ? meta.gender.toUpperCase()
+                                : 'पुरुष / MALE',
                             style: const TextStyle(
-                              color: Color(0xFF475569),
+                              color: Color(0xFF0F172A),
                               fontSize: 9,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.w700,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -1183,34 +1243,34 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
 
                   const SizedBox(width: 6),
 
-                  // Photo Portrait Frame with Yellow Security Tint on Right
+                  // Photo Portrait Frame with Authentic Red Background matching Image 3
                   Container(
-                    width: 42,
-                    height: 50,
+                    width: 44,
+                    height: 52,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFEF9C3),
+                      color: const Color(0xFFDC2626),
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(
-                        color: const Color(0xFFCA8A04),
+                        color: const Color(0xFFB91C1C),
                         width: 0.8,
                       ),
                     ),
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        const Icon(
-                          Icons.person,
-                          color: Color(0xFF854D0E),
-                          size: 30,
-                        ),
+                        const Icon(Icons.person, color: Colors.white, size: 32),
                         Positioned(
                           bottom: 1,
-                          child: Text(
-                            'LICENCE',
-                            style: TextStyle(
-                              fontSize: 5.5,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF854D0E).withAlpha(180),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 2),
+                            color: Colors.black45,
+                            child: const Text(
+                              'TN DLR',
+                              style: TextStyle(
+                                fontSize: 5,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
@@ -1969,6 +2029,18 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                     ],
                   ),
                 ],
+              ),
+
+              const SizedBox(height: 2),
+
+              // Bottom Accent Bar matching Image 4
+              Container(
+                width: double.infinity,
+                height: 3.5,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFCA5A5).withAlpha(150),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ],
           ),

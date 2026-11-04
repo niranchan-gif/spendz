@@ -42,39 +42,50 @@ class TransitTicketCard extends StatelessWidget {
     if (pnrNumber != null && pnrNumber!.isNotEmpty) return pnrNumber!;
     if (pass != null && pass!.notes != null) {
       final pnrMatch = RegExp(r'PNR:\s*([^\n,]+)').firstMatch(pass!.notes!);
-      if (pnrMatch != null) return pnrMatch.group(1)?.trim() ?? '8421-950-231';
+      if (pnrMatch != null) {
+        return pnrMatch.group(1)?.trim() ??
+            (pass!.encryptedCodePath.isNotEmpty
+                ? pass!.encryptedCodePath
+                : '—');
+      }
     }
-    return '8421-950-231';
+    return pass?.encryptedCodePath.isNotEmpty == true
+        ? pass!.encryptedCodePath
+        : '—';
   }
 
   String get _effectiveSeat {
     if (seatNumber != null && seatNumber!.isNotEmpty) return seatNumber!;
     if (pass != null && pass!.notes != null) {
       final seatMatch = RegExp(r'Seat:\s*([^\n,]+)').firstMatch(pass!.notes!);
-      if (seatMatch != null) return seatMatch.group(1)?.trim() ?? 'B3 • 42';
+      if (seatMatch != null) return seatMatch.group(1)?.trim() ?? 'Confirmed';
     }
-    return 'B3 • Berth 42';
+    return 'Confirmed';
   }
 
   DateTime get _effectiveDate {
     if (travelDate != null) return travelDate!;
     if (pass?.validUntil != null) return pass!.validUntil!;
-    return DateTime.now().add(const Duration(days: 3));
+    return DateTime.now();
   }
 
   String get _effectiveTime {
     if (travelTime != null && travelTime!.isNotEmpty) return travelTime!;
     if (pass != null && pass!.notes != null) {
       final timeMatch = RegExp(r'Time:\s*([^\n,]+)').firstMatch(pass!.notes!);
-      if (timeMatch != null) return timeMatch.group(1)?.trim() ?? '06:30 AM';
+      if (timeMatch != null) return timeMatch.group(1)?.trim() ?? '—';
     }
-    return '06:30 AM';
+    if (pass?.validUntil != null) {
+      return DateFormat('hh:mm a').format(pass!.validUntil!);
+    }
+    return '—';
   }
 
   String get _effectiveCarrier {
     if (carrier != null && carrier!.isNotEmpty) return carrier!;
     if (pass?.issuer != null && pass!.issuer!.isNotEmpty) return pass!.issuer!;
-    return 'INDIAN RAILWAYS / IRCTC';
+    if (pass?.title != null && pass!.title.isNotEmpty) return pass!.title;
+    return 'Transit Ticket';
   }
 
   String? get _effectiveDocPath {
@@ -161,6 +172,60 @@ class TransitTicketCard extends StatelessWidget {
         );
       }
     }
+  }
+
+  void _showDeleteConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: SpendzColors.surface(context),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(
+              Icons.delete_forever_rounded,
+              color: Color(0xFFEF4444),
+              size: 24,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Delete Ticket?',
+              style: TextStyle(
+                color: SpendzColors.textPrimary(context),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to delete this travel ticket? Any uploaded document copy will also be deleted from storage.',
+          style: TextStyle(
+            color: SpendzColors.textSecondary(context),
+            fontSize: 13,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onPressed: () {
+              Navigator.pop(dialogCtx);
+              onDelete?.call();
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -286,16 +351,29 @@ class TransitTicketCard extends StatelessWidget {
                         ),
                       ),
                       if (onDelete != null) ...[
-                        const SizedBox(width: 4),
-                        IconButton(
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          icon: const Icon(
-                            Icons.more_vert_rounded,
-                            color: Colors.white70,
-                            size: 18,
+                        const SizedBox(width: 6),
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () => _showDeleteConfirmation(context),
+                            child: Container(
+                              padding: const EdgeInsets.all(5),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withAlpha(50),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white.withAlpha(30),
+                                  width: 0.6,
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.delete_outline_rounded,
+                                color: Color(0xFFFCA5A5),
+                                size: 16,
+                              ),
+                            ),
                           ),
-                          onPressed: onEdit,
                         ),
                       ],
                     ],

@@ -23,6 +23,7 @@ import 'documents_screen.dart';
 import 'dart:io';
 import 'package:uuid/uuid.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'passes_screen.dart';
 import 'widgets/wallet_card_widget.dart';
@@ -38,14 +39,53 @@ class WalletDashboardScreen extends StatefulWidget {
   State<WalletDashboardScreen> createState() => _WalletDashboardScreenState();
 }
 
+class _CardDeckItem {
+  final String id;
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final Widget widget;
+
+  const _CardDeckItem({
+    required this.id,
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.widget,
+  });
+}
+
 class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
   late final PageController _cardPageController;
   int _currentCardIndex = 0;
+  List<String> _customCardOrder = [];
 
   @override
   void initState() {
     super.initState();
     _cardPageController = PageController(viewportFraction: 0.88);
+    _loadCardOrder();
+  }
+
+  Future<void> _loadCardOrder() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getStringList('spendz_wallet_card_order');
+      if (saved != null && mounted) {
+        setState(() {
+          _customCardOrder = saved;
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveCardOrder(List<String> order) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList('spendz_wallet_card_order', order);
+    } catch (_) {}
   }
 
   @override
@@ -332,37 +372,44 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     );
   }
 
-  // ─── 2. ALL CARDS & VAULT COLLECTION (SEAMLESS SWIPE) ────────────────────────
+  // ─── 2. ALL CARDS & VAULT COLLECTION (SEAMLESS SWIPE & REARRANGE) ─────────
   Widget _buildCardsSection(
     BuildContext context,
     List<WalletCardModel> cards,
     List<WalletDocumentModel> documents,
   ) {
-    final List<Widget> cardWidgets = [];
+    final List<_CardDeckItem> deckItems = [];
 
     // 1. All saved vault documents (Aadhaar, PAN, DL, Insurance, Passport, etc.)
     for (final doc in documents) {
-      cardWidgets.add(
-        GestureDetector(
-          onTap: () async {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => DocumentPreviewScreen(document: doc),
-              ),
-            );
-            if (context.mounted) {
+      deckItems.add(
+        _CardDeckItem(
+          id: 'doc_${doc.id}',
+          title: doc.documentName,
+          subtitle: doc.category.replaceAll('_', ' ').toUpperCase(),
+          icon: _getCategoryIcon(doc.category),
+          color: _getCategoryColor(doc.category),
+          widget: GestureDetector(
+            onTap: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => DocumentPreviewScreen(document: doc),
+                ),
+              );
+              if (!mounted) return;
               await context.read<WalletProvider>().loadWallet();
+              if (!mounted) return;
               await context.read<WalletDocumentProvider>().loadDocuments();
-              setState(() {});
-            }
-          },
-          child: VirtualDocumentCard(
-            document: doc,
-            allowReveal: true,
-            onFavoriteToggle: () {
-              context.read<WalletProvider>().toggleDocumentFavorite(doc.id);
+              if (mounted) setState(() {});
             },
+            child: VirtualDocumentCard(
+              document: doc,
+              allowReveal: true,
+              onFavoriteToggle: () {
+                context.read<WalletProvider>().toggleDocumentFavorite(doc.id);
+              },
+            ),
           ),
         ),
       );
@@ -370,18 +417,27 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
 
     // 2. All payment cards
     for (final card in cards) {
-      cardWidgets.add(
-        GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => CardDetailScreen(card: card)),
-            );
-          },
-          child: WalletCardWidget(
-            card: card,
-            isCompact: false,
-            allowReveal: true,
+      deckItems.add(
+        _CardDeckItem(
+          id: 'card_${card.id}',
+          title: card.nickname.isNotEmpty
+              ? card.nickname
+              : '${card.issuerName} ${card.cardType}',
+          subtitle: '•••• ${card.lastFour}',
+          icon: Icons.credit_card_rounded,
+          color: const Color(0xFF10B981),
+          widget: GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => CardDetailScreen(card: card)),
+              );
+            },
+            child: WalletCardWidget(
+              card: card,
+              isCompact: false,
+              allowReveal: true,
+            ),
           ),
         ),
       );
@@ -402,89 +458,131 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     );
 
     if (!hasAadhaar) {
-      cardWidgets.add(
-        GestureDetector(
-          onTap: () => _openCreateDoc(context, 'aadhaar'),
-          child: VirtualDocumentCard(
-            document: WalletDocumentModel(
-              id: 'template_aadhaar',
-              documentName: 'Aadhaar Card',
-              category: 'aadhaar',
-              holderName: 'GOVERNMENT OF INDIA',
-              maskedIdentifier: '•••• •••• ••••',
-              description: 'Holder: USER RECORD\nNumber: •••• •••• ••••',
-              createdAt: DateTime.now(),
-              updatedAt: DateTime.now(),
+      deckItems.add(
+        _CardDeckItem(
+          id: 'template_aadhaar',
+          title: 'Aadhaar Card',
+          subtitle: 'UIDAI Government ID',
+          icon: Icons.badge_outlined,
+          color: const Color(0xFFFF9933),
+          widget: GestureDetector(
+            onTap: () => _openCreateDoc(context, 'aadhaar'),
+            child: VirtualDocumentCard(
+              document: WalletDocumentModel(
+                id: 'template_aadhaar',
+                documentName: 'Aadhaar Card',
+                category: 'aadhaar',
+                holderName: 'GOVERNMENT OF INDIA',
+                maskedIdentifier: '•••• •••• ••••',
+                description: 'Holder: USER RECORD\nNumber: •••• •••• ••••',
+                createdAt: DateTime.now(),
+                updatedAt: DateTime.now(),
+              ),
+              allowReveal: true,
             ),
-            allowReveal: true,
           ),
         ),
       );
     }
 
     if (!hasPan) {
-      cardWidgets.add(
-        GestureDetector(
-          onTap: () => _openCreateDoc(context, 'pan'),
-          child: VirtualDocumentCard(
-            document: WalletDocumentModel(
-              id: 'template_pan',
-              documentName: 'Permanent Account Number',
-              category: 'pan',
-              holderName: 'INCOME TAX DEPT',
-              maskedIdentifier: '••••••••••',
-              description: 'Holder: USER RECORD\nNumber: ••••••••••',
-              createdAt: DateTime.now(),
-              updatedAt: DateTime.now(),
+      deckItems.add(
+        _CardDeckItem(
+          id: 'template_pan',
+          title: 'Permanent Account Number',
+          subtitle: 'Income Tax Dept Card',
+          icon: Icons.credit_card_rounded,
+          color: const Color(0xFF0284C7),
+          widget: GestureDetector(
+            onTap: () => _openCreateDoc(context, 'pan'),
+            child: VirtualDocumentCard(
+              document: WalletDocumentModel(
+                id: 'template_pan',
+                documentName: 'Permanent Account Number',
+                category: 'pan',
+                holderName: 'INCOME TAX DEPT',
+                maskedIdentifier: '••••••••••',
+                description: 'Holder: USER RECORD\nNumber: ••••••••••',
+                createdAt: DateTime.now(),
+                updatedAt: DateTime.now(),
+              ),
+              allowReveal: true,
             ),
-            allowReveal: true,
           ),
         ),
       );
     }
 
     if (!hasDl) {
-      cardWidgets.add(
-        GestureDetector(
-          onTap: () => _openCreateDoc(context, 'driving_licence'),
-          child: VirtualDocumentCard(
-            document: WalletDocumentModel(
-              id: 'template_dl',
-              documentName: 'Driving Licence',
-              category: 'driving_license',
-              holderName: 'MOTOR VEHICLE DEPT',
-              maskedIdentifier: '••••••••••••••',
-              description: 'Holder: USER RECORD\nNumber: ••••••••••••••',
-              createdAt: DateTime.now(),
-              updatedAt: DateTime.now(),
+      deckItems.add(
+        _CardDeckItem(
+          id: 'template_dl',
+          title: 'Driving Licence',
+          subtitle: 'Tamil Nadu Transport Dept',
+          icon: Icons.directions_car_rounded,
+          color: const Color(0xFFEA580C),
+          widget: GestureDetector(
+            onTap: () => _openCreateDoc(context, 'driving_licence'),
+            child: VirtualDocumentCard(
+              document: WalletDocumentModel(
+                id: 'template_dl',
+                documentName: 'Driving Licence',
+                category: 'driving_license',
+                holderName: 'MOTOR VEHICLE DEPT',
+                maskedIdentifier: '••••••••••••••',
+                description: 'Holder: USER RECORD\nNumber: ••••••••••••••',
+                createdAt: DateTime.now(),
+                updatedAt: DateTime.now(),
+              ),
+              allowReveal: true,
             ),
-            allowReveal: true,
           ),
         ),
       );
     }
 
     if (!hasInsurance) {
-      cardWidgets.add(
-        GestureDetector(
-          onTap: () => _openCreateDoc(context, 'insurance'),
-          child: VirtualDocumentCard(
-            document: WalletDocumentModel(
-              id: 'template_insurance',
-              documentName: 'Health Insurance Card',
-              category: 'insurance',
-              holderName: 'POLICY HOLDER',
-              maskedIdentifier: '•••••••••••••',
-              description:
-                  'Holder: USER RECORD\nNumber: •••••••••••••\nProvider: HEALTH SHIELD',
-              createdAt: DateTime.now(),
-              updatedAt: DateTime.now(),
+      deckItems.add(
+        _CardDeckItem(
+          id: 'template_insurance',
+          title: 'Health Insurance Card',
+          subtitle: 'Group Medical Shield',
+          icon: Icons.health_and_safety_rounded,
+          color: const Color(0xFFFA7070),
+          widget: GestureDetector(
+            onTap: () => _openCreateDoc(context, 'insurance'),
+            child: VirtualDocumentCard(
+              document: WalletDocumentModel(
+                id: 'template_insurance',
+                documentName: 'Health Insurance Card',
+                category: 'insurance',
+                holderName: 'POLICY HOLDER',
+                maskedIdentifier: '•••••••••••••',
+                description:
+                    'Holder: USER RECORD\nNumber: •••••••••••••\nProvider: HEALTH SHIELD',
+                createdAt: DateTime.now(),
+                updatedAt: DateTime.now(),
+              ),
+              allowReveal: true,
             ),
-            allowReveal: true,
           ),
         ),
       );
     }
+
+    // Sort according to custom card order if set
+    if (_customCardOrder.isNotEmpty) {
+      deckItems.sort((a, b) {
+        final idxA = _customCardOrder.indexOf(a.id);
+        final idxB = _customCardOrder.indexOf(b.id);
+        if (idxA != -1 && idxB != -1) return idxA.compareTo(idxB);
+        if (idxA != -1) return -1;
+        if (idxB != -1) return 1;
+        return 0;
+      });
+    }
+
+    final cardWidgets = deckItems.map((e) => e.widget).toList();
 
     if (_currentCardIndex >= cardWidgets.length) {
       _currentCardIndex = cardWidgets.length - 1;
@@ -499,8 +597,78 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         SpendzSectionHeader(
           title: 'Card Collection & Vault',
           count: cardWidgets.length,
-          actionLabel: 'Add Card / Doc',
-          onAction: () => _showAddOptions(context),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              InkWell(
+                onTap: () => _showRearrangeCardsModal(context, deckItems),
+                borderRadius: BorderRadius.circular(SpendzSpacing.radiusSm),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: SpendzColors.primaryAccent(context).withAlpha(20),
+                    borderRadius: BorderRadius.circular(SpendzSpacing.radiusSm),
+                    border: Border.all(
+                      color: SpendzColors.primaryAccent(context).withAlpha(60),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.swap_vert_rounded,
+                        size: 15,
+                        color: SpendzColors.primaryAccent(context),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Rearrange',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: SpendzColors.primaryAccent(context),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              InkWell(
+                onTap: () => _showAddOptions(context),
+                borderRadius: BorderRadius.circular(SpendzSpacing.radiusSm),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: SpendzColors.primaryAccent(context),
+                    borderRadius: BorderRadius.circular(SpendzSpacing.radiusSm),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.add_rounded, size: 15, color: Colors.black),
+                      SizedBox(width: 2),
+                      Text(
+                        'Add',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: SpendzSpacing.xs),
 
@@ -600,6 +768,245 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     );
   }
 
+  IconData _getCategoryIcon(String category) {
+    switch (category.toLowerCase()) {
+      case 'aadhaar':
+        return Icons.badge_outlined;
+      case 'pan':
+        return Icons.credit_card_rounded;
+      case 'driving_licence':
+      case 'driving_license':
+        return Icons.directions_car_rounded;
+      case 'insurance':
+        return Icons.health_and_safety_rounded;
+      case 'passport':
+        return Icons.menu_book_rounded;
+      case 'voter_id':
+        return Icons.how_to_vote_rounded;
+      case 'rc':
+        return Icons.directions_car_filled_rounded;
+      default:
+        return Icons.description_rounded;
+    }
+  }
+
+  Color _getCategoryColor(String category) {
+    switch (category.toLowerCase()) {
+      case 'aadhaar':
+        return const Color(0xFFFF9933);
+      case 'pan':
+        return const Color(0xFF0284C7);
+      case 'driving_licence':
+      case 'driving_license':
+        return const Color(0xFFEA580C);
+      case 'insurance':
+        return const Color(0xFFFA7070);
+      case 'passport':
+        return const Color(0xFF1E3A8A);
+      case 'voter_id':
+        return const Color(0xFF7C3AED);
+      default:
+        return const Color(0xFF10B981);
+    }
+  }
+
+  void _showRearrangeCardsModal(
+    BuildContext context,
+    List<_CardDeckItem> items,
+  ) {
+    final reorderList = List<_CardDeckItem>.from(items);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: SpendzColors.surface(context),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(SpendzSpacing.radiusXl),
+        ),
+      ),
+      builder: (modalCtx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            return SafeArea(
+              child: Container(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.75,
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: SpendzSpacing.lg,
+                  vertical: SpendzSpacing.md,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: SpendzColors.textSecondary(
+                            context,
+                          ).withAlpha(80),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: SpendzSpacing.md),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Rearrange Cards',
+                              style: SpendzTypography.headingMedium(context),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Drag handles to reorder your wallet carousel',
+                              style: SpendzTypography.caption(context),
+                            ),
+                          ],
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded),
+                          onPressed: () => Navigator.pop(modalCtx),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: SpendzSpacing.md),
+                    Expanded(
+                      child: ReorderableListView.builder(
+                        itemCount: reorderList.length,
+                        onReorder: (oldIndex, newIndex) {
+                          setModalState(() {
+                            if (newIndex > oldIndex) {
+                              newIndex -= 1;
+                            }
+                            final item = reorderList.removeAt(oldIndex);
+                            reorderList.insert(newIndex, item);
+                          });
+                          final updatedOrder = reorderList
+                              .map((i) => i.id)
+                              .toList();
+                          setState(() {
+                            _customCardOrder = updatedOrder;
+                          });
+                          _saveCardOrder(updatedOrder);
+                        },
+                        itemBuilder: (ctx, idx) {
+                          final item = reorderList[idx];
+                          return Container(
+                            key: ValueKey(item.id),
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: SpendzColors.background(context),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: SpendzColors.border(context),
+                                width: 0.8,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 38,
+                                  height: 38,
+                                  decoration: BoxDecoration(
+                                    color: item.color.withAlpha(25),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    item.icon,
+                                    color: item.color,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        item.title,
+                                        style: TextStyle(
+                                          fontSize: 13.5,
+                                          fontWeight: FontWeight.bold,
+                                          color: SpendzColors.textPrimary(
+                                            context,
+                                          ),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        item.subtitle,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: SpendzColors.textSecondary(
+                                            context,
+                                          ),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                ReorderableDragStartListener(
+                                  index: idx,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Icon(
+                                      Icons.drag_handle_rounded,
+                                      color: SpendzColors.textSecondary(
+                                        context,
+                                      ),
+                                      size: 22,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: SpendzSpacing.sm),
+                    SpendzButton(
+                      label: 'Done',
+                      icon: Icons.check_rounded,
+                      isFullWidth: true,
+                      onPressed: () {
+                        if (_cardPageController.hasClients) {
+                          _cardPageController.jumpToPage(0);
+                        }
+                        setState(() {
+                          _currentCardIndex = 0;
+                        });
+                        Navigator.pop(modalCtx);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   Future<void> _openCreateDoc(BuildContext context, String category) async {
     final normalized = (category == 'driving_licence')
         ? 'driving_license'
@@ -610,11 +1017,11 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         builder: (_) => DocumentCreationScreen(initialCategory: normalized),
       ),
     );
-    if (context.mounted) {
-      await context.read<WalletProvider>().loadWallet();
-      await context.read<WalletDocumentProvider>().loadDocuments();
-      setState(() {});
-    }
+    if (!mounted) return;
+    await context.read<WalletProvider>().loadWallet();
+    if (!mounted) return;
+    await context.read<WalletDocumentProvider>().loadDocuments();
+    if (mounted) setState(() {});
   }
 
   // ─── 3. DOCUMENT VAULT CATEGORIES ───────────────────────────────────────────
@@ -761,21 +1168,22 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     BuildContext context,
     List<WalletPassModel> passes,
   ) {
-    final transitPasses = passes
-        .where(
-          (p) =>
-              p.passType == 'transit_ticket' || p.passType == 'boarding_pass',
-        )
-        .toList();
+    // Filter valid user transit passes, excluding any dummy sample passes
+    final transitPasses = passes.where((p) {
+      if (p.notes?.contains('8421-950-231') == true ||
+          p.encryptedCodePath == '8421-950-231' ||
+          p.id == 'sample_transit_pass') {
+        return false;
+      }
+      return p.passType == 'transit_ticket' || p.passType == 'boarding_pass';
+    }).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SpendzSectionHeader(
           title: 'Digital Passes & Transit',
-          count: transitPasses.isNotEmpty
-              ? transitPasses.length
-              : passes.length,
+          count: transitPasses.length,
           actionLabel: 'Add Ticket',
           onAction: () => _showAddTransitTicketModal(context),
         ),
@@ -796,8 +1204,16 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                     );
                     await context.read<WalletProvider>().updatePass(updated);
                   },
-                  onDelete: () {
-                    context.read<WalletProvider>().deletePass(pass.id);
+                  onDelete: () async {
+                    await context.read<WalletProvider>().deletePass(pass.id);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Ticket deleted successfully'),
+                          backgroundColor: SpendzColors.expense,
+                        ),
+                      );
+                    }
                   },
                 ),
               );
@@ -827,7 +1243,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                   ),
                   const SizedBox(height: SpendzSpacing.sm),
                   Text(
-                    'No Digital Tickets Added',
+                    'No tickets available',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -1178,14 +1594,14 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                           onPressed: () {
                             final pnr = pnrController.text.trim().isNotEmpty
                                 ? pnrController.text.trim()
-                                : '8421-950-231';
+                                : 'PNR-${const Uuid().v4().substring(0, 8).toUpperCase()}';
                             final seat = seatController.text.trim().isNotEmpty
                                 ? seatController.text.trim()
-                                : 'B3 • Berth 42';
+                                : 'Confirmed';
                             final carrier =
                                 carrierController.text.trim().isNotEmpty
                                 ? carrierController.text.trim()
-                                : 'INDIAN RAILWAYS / IRCTC';
+                                : 'Travel Ticket';
                             final timeStr = selectedTime.format(modalCtx);
 
                             final newPass = WalletPassModel(

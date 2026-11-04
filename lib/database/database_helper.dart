@@ -187,6 +187,7 @@ class DatabaseHelper {
           code_format TEXT NOT NULL,
           issuer TEXT,
           valid_until TEXT,
+          notes TEXT,
           is_favorite INTEGER NOT NULL DEFAULT 0,
           created_at TEXT NOT NULL,
           updated_at TEXT NOT NULL
@@ -229,6 +230,7 @@ class DatabaseHelper {
         'attachment_type',
         "TEXT DEFAULT 'none'",
       );
+      await _addColumnIfNotExists(db, 'wallet_passes', 'notes', 'TEXT');
     }
   }
 
@@ -352,6 +354,7 @@ class DatabaseHelper {
         code_format TEXT NOT NULL,
         issuer TEXT,
         valid_until TEXT,
+        notes TEXT,
         is_favorite INTEGER NOT NULL DEFAULT 0,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
