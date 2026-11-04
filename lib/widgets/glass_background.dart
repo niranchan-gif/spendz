@@ -34,23 +34,27 @@ class _GlassBackgroundState extends State<GlassBackground>
   @override
   Widget build(BuildContext context) {
     final bgColor = AppColors.background;
-    
+
     return Stack(
       children: [
         // Base solid color
         Container(color: bgColor),
-        
+
         // Animated Orbs with ImageFiltered instead of BackdropFilter
         Positioned.fill(
           child: ImageFiltered(
-            imageFilter: ImageFilter.blur(sigmaX: 80, sigmaY: 80, tileMode: TileMode.decal),
+            imageFilter: ImageFilter.blur(
+              sigmaX: 80,
+              sigmaY: 80,
+              tileMode: TileMode.decal,
+            ),
             child: AnimatedBuilder(
               animation: _controller,
               builder: (context, child) {
                 final t = _controller.value;
                 final width = MediaQuery.of(context).size.width;
                 final height = MediaQuery.of(context).size.height;
-                
+
                 return Stack(
                   children: [
                     // Top Right Orb
@@ -66,7 +70,7 @@ class _GlassBackgroundState extends State<GlassBackground>
                         ),
                       ),
                     ),
-                    
+
                     // Bottom Left Orb
                     Positioned(
                       bottom: height * 0.05 + cos(t * pi * 2) * 60,
@@ -80,7 +84,7 @@ class _GlassBackgroundState extends State<GlassBackground>
                         ),
                       ),
                     ),
-                    
+
                     // Center Subtle Orb
                     Positioned(
                       top: height * 0.4 + sin(t * pi * 4) * 30,
@@ -100,7 +104,7 @@ class _GlassBackgroundState extends State<GlassBackground>
             ),
           ),
         ),
-        
+
         // Actual content
         Positioned.fill(child: widget.child),
       ],

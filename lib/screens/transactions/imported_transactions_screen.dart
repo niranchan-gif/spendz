@@ -39,10 +39,8 @@ class ImportedTransactionsScreen extends StatelessWidget {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: categories.length,
-        separatorBuilder: (context, index) => Divider(
-          height: 1,
-          color: AppColors.getBorder(context),
-        ),
+        separatorBuilder: (context, index) =>
+            Divider(height: 1, color: AppColors.getBorder(context)),
         itemBuilder: (ctx, index) {
           final cat = categories[index];
           return ListTile(
@@ -60,7 +58,9 @@ class ImportedTransactionsScreen extends StatelessWidget {
             ),
             title: Text(
               cat.name,
-              style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w600),
+              style: AppTextStyles.labelLarge.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
             onTap: () {
               importProvider.updateCategory(tx.reference, cat.id);
@@ -83,14 +83,17 @@ class ImportedTransactionsScreen extends StatelessWidget {
         actions: [
           Consumer2<GmailImportProvider, TransactionProvider>(
             builder: (context, importProvider, txProvider, child) {
-              if (importProvider.newTransactions.isEmpty) return const SizedBox.shrink();
+              if (importProvider.newTransactions.isEmpty)
+                return const SizedBox.shrink();
               return TextButton(
                 onPressed: () async {
                   final added = await importProvider.approveAll(txProvider);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Successfully added $added transactions!'),
+                        content: Text(
+                          'Successfully added $added transactions!',
+                        ),
                         backgroundColor: AppColors.success,
                       ),
                     );
@@ -106,7 +109,7 @@ class ImportedTransactionsScreen extends StatelessWidget {
                 ),
               );
             },
-          )
+          ),
         ],
       ),
       body: Consumer3<GmailImportProvider, TransactionProvider, CategoryProvider>(
@@ -121,7 +124,8 @@ class ImportedTransactionsScreen extends StatelessWidget {
             return ErrorState(
               title: 'Gmail Sync Failed',
               message: importProvider.error!,
-              onRetry: () => importProvider.reloadTransactions(categoryProvider),
+              onRetry: () =>
+                  importProvider.reloadTransactions(categoryProvider),
             );
           }
 
@@ -132,7 +136,8 @@ class ImportedTransactionsScreen extends StatelessWidget {
               child: EmptyState(
                 icon: Icons.check_circle_outline_rounded,
                 title: 'All Caught Up!',
-                subtitle: 'No new unapproved transactions found in your Gmail inbox.',
+                subtitle:
+                    'No new unapproved transactions found in your Gmail inbox.',
                 actionLabel: 'Check Activity',
                 onActionPressed: () => Navigator.pop(context),
               ),
@@ -140,7 +145,9 @@ class ImportedTransactionsScreen extends StatelessWidget {
           }
 
           final dateFormat = DateFormat('MMM d');
-          final rangeStr = (importProvider.syncRangeStart != null && importProvider.syncRangeEnd != null)
+          final rangeStr =
+              (importProvider.syncRangeStart != null &&
+                  importProvider.syncRangeEnd != null)
               ? '${dateFormat.format(importProvider.syncRangeStart!)} - ${dateFormat.format(importProvider.syncRangeEnd!)}'
               : 'Recent Period';
 
@@ -148,10 +155,17 @@ class ImportedTransactionsScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.sm,
+                ),
                 child: Row(
                   children: [
-                    Icon(Icons.calendar_today_rounded, size: 14, color: textSecondary),
+                    Icon(
+                      Icons.calendar_today_rounded,
+                      size: 14,
+                      color: textSecondary,
+                    ),
                     const SizedBox(width: AppSpacing.xs),
                     Text(
                       'Transactions from $rangeStr',
@@ -175,13 +189,17 @@ class ImportedTransactionsScreen extends StatelessWidget {
 
                     CategoryModel? category;
                     if (tx.suggestedCategoryId != null) {
-                      category = categoryProvider.getCategoryById(tx.suggestedCategoryId!);
+                      category = categoryProvider.getCategoryById(
+                        tx.suggestedCategoryId!,
+                      );
                     }
 
                     final amountColor = isParent
                         ? AppColors.info
                         : (isExpense ? AppColors.error : AppColors.success);
-                    final amountPrefix = isParent ? '+' : (isExpense ? '-' : '+');
+                    final amountPrefix = isParent
+                        ? '+'
+                        : (isExpense ? '-' : '+');
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -217,15 +235,21 @@ class ImportedTransactionsScreen extends StatelessWidget {
                             Row(
                               children: [
                                 Icon(
-                                  category != null ? IconMapper.getIcon(category.icon) : Icons.help_outline_rounded,
+                                  category != null
+                                      ? IconMapper.getIcon(category.icon)
+                                      : Icons.help_outline_rounded,
                                   size: 14,
-                                  color: category != null ? Color(int.parse(category.color)) : textSecondary,
+                                  color: category != null
+                                      ? Color(int.parse(category.color))
+                                      : textSecondary,
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
                                   category?.name ?? 'Unknown Category',
                                   style: AppTextStyles.bodySmall.copyWith(
-                                    color: category != null ? Color(int.parse(category.color)) : textSecondary,
+                                    color: category != null
+                                        ? Color(int.parse(category.color))
+                                        : textSecondary,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -236,11 +260,16 @@ class ImportedTransactionsScreen extends StatelessWidget {
                               children: [
                                 if (isParent)
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
                                     margin: const EdgeInsets.only(right: 8),
                                     decoration: BoxDecoration(
                                       color: AppColors.info.withAlpha(25),
-                                      borderRadius: BorderRadius.circular(AppRadius.xs),
+                                      borderRadius: BorderRadius.circular(
+                                        AppRadius.xs,
+                                      ),
                                     ),
                                     child: Text(
                                       'PARENT TRANSFER',
@@ -253,25 +282,40 @@ class ImportedTransactionsScreen extends StatelessWidget {
                                   ),
                                 Text(
                                   '${DateFormat('dd MMM yyyy').format(tx.date)} • ${tx.type.toUpperCase()}',
-                                  style: AppTextStyles.caption.copyWith(color: textSecondary),
+                                  style: AppTextStyles.caption.copyWith(
+                                    color: textSecondary,
+                                  ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 2),
                             Text(
                               'Ref: ${tx.reference} • Source: ${tx.source}',
-                              style: AppTextStyles.caption.copyWith(color: textSecondary.withAlpha(140), fontSize: 10),
+                              style: AppTextStyles.caption.copyWith(
+                                color: textSecondary.withAlpha(140),
+                                fontSize: 10,
+                              ),
                             ),
                             const SizedBox(height: AppSpacing.md),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
                                 OutlinedButton(
-                                  onPressed: () => _showCategoryPicker(context, tx, categoryProvider, importProvider),
+                                  onPressed: () => _showCategoryPicker(
+                                    context,
+                                    tx,
+                                    categoryProvider,
+                                    importProvider,
+                                  ),
                                   style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: AppSpacing.md,
+                                      vertical: AppSpacing.xs,
+                                    ),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                                      borderRadius: BorderRadius.circular(
+                                        AppRadius.sm,
+                                      ),
                                     ),
                                   ),
                                   child: const Text('Change Category'),
@@ -279,11 +323,18 @@ class ImportedTransactionsScreen extends StatelessWidget {
                                 const SizedBox(width: AppSpacing.sm),
                                 ElevatedButton(
                                   onPressed: () async {
-                                    await importProvider.approveTransaction(tx.reference, txProvider);
+                                    await importProvider.approveTransaction(
+                                      tx.reference,
+                                      txProvider,
+                                    );
                                     if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
                                         const SnackBar(
-                                          content: Text('Transaction approved!'),
+                                          content: Text(
+                                            'Transaction approved!',
+                                          ),
                                           backgroundColor: AppColors.success,
                                         ),
                                       );
@@ -292,9 +343,14 @@ class ImportedTransactionsScreen extends StatelessWidget {
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: AppColors.primary,
                                     foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: AppSpacing.md,
+                                      vertical: AppSpacing.xs,
+                                    ),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                                      borderRadius: BorderRadius.circular(
+                                        AppRadius.sm,
+                                      ),
                                     ),
                                   ),
                                   child: const Text('Approve'),

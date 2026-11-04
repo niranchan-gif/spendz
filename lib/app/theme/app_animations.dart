@@ -20,4 +20,3 @@ class AppAnimations {
   static const Curve bounce = Curves.elasticOut;
   static const Curve standardCurve = Curves.easeInOutCubic;
 }
-

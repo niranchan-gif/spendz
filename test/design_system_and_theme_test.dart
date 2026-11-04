@@ -56,91 +56,108 @@ void main() {
       expect(dark.scaffoldBackgroundColor, AppColors.backgroundDarkMode);
     });
 
-    test('ThemeProvider initializes with system mode and persists choices', () async {
-      SharedPreferences.setMockInitialValues({});
-      final provider = ThemeProvider();
+    test(
+      'ThemeProvider initializes with system mode and persists choices',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        final provider = ThemeProvider();
 
-      expect(provider.themeMode, ThemeMode.system);
-      expect(provider.isDarkMode, false);
+        expect(provider.themeMode, ThemeMode.system);
+        expect(provider.isDarkMode, false);
 
-      await provider.setThemeMode(ThemeMode.dark);
-      expect(provider.themeMode, ThemeMode.dark);
-      expect(provider.isDarkMode, true);
+        await provider.setThemeMode(ThemeMode.dark);
+        expect(provider.themeMode, ThemeMode.dark);
+        expect(provider.isDarkMode, true);
 
-      // Verify persistence
-      final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString('spendz_theme_mode'), 'dark');
+        // Verify persistence
+        final prefs = await SharedPreferences.getInstance();
+        expect(prefs.getString('spendz_theme_mode'), 'dark');
 
-      await provider.setThemeMode(ThemeMode.light);
-      expect(provider.themeMode, ThemeMode.light);
-      expect(provider.isDarkMode, false);
-      expect(prefs.getString('spendz_theme_mode'), 'light');
-    });
+        await provider.setThemeMode(ThemeMode.light);
+        expect(provider.themeMode, ThemeMode.light);
+        expect(provider.isDarkMode, false);
+        expect(prefs.getString('spendz_theme_mode'), 'light');
+      },
+    );
   });
 
   group('Secure Number & Biometric Masking Tests', () {
-    test('SecureNumberService formatCardNumber formats 16 digits correctly', () {
-      const raw = '4532015092834821';
-      final formatted = SecureNumberService.formatCardNumber(raw);
-      expect(formatted, '4532 0150 9283 4821');
-    });
+    test(
+      'SecureNumberService formatCardNumber formats 16 digits correctly',
+      () {
+        const raw = '4532015092834821';
+        final formatted = SecureNumberService.formatCardNumber(raw);
+        expect(formatted, '4532 0150 9283 4821');
+      },
+    );
 
     test('SecureNumberService formats irregular card numbers gracefully', () {
-      expect(SecureNumberService.formatCardNumber('378282246310005'), '3782 8224 6310 005');
+      expect(
+        SecureNumberService.formatCardNumber('378282246310005'),
+        '3782 8224 6310 005',
+      );
       expect(SecureNumberService.formatCardNumber(''), '');
     });
 
-    testWidgets('SecureProtectedField renders masked state initially without plaintext leak', (tester) async {
-      bool retrieverCalled = false;
+    testWidgets(
+      'SecureProtectedField renders masked state initially without plaintext leak',
+      (tester) async {
+        bool retrieverCalled = false;
 
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.lightTheme,
-          home: Scaffold(
-            body: SecureProtectedField(
-              maskedValue: '•••• •••• •••• 4821',
-              onRetrieveProtectedValue: () async {
-                retrieverCalled = true;
-                return '4532015092834821';
-              },
-            ),
-          ),
-        ),
-      );
-
-      // Verify masked text is shown
-      expect(find.text('•••• •••• •••• 4821'), findsOneWidget);
-      // Verify raw full plaintext number is NOT present in the widget tree
-      expect(find.text('4532015092834821'), findsNothing);
-      expect(retrieverCalled, false);
-    });
-  });
-
-  group('Design System Reusable Widget Rendering Tests', () {
-    testWidgets('FinancialSummaryCard renders without overflows in Light mode', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.lightTheme,
-          home: const Scaffold(
-            body: SingleChildScrollView(
-              child: FinancialSummaryCard(
-                netBalance: 24500.50,
-                income: 65000.00,
-                expenses: 40499.50,
-                owedToMe: 3200.00,
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: Scaffold(
+              body: SecureProtectedField(
+                maskedValue: '•••• •••• •••• 4821',
+                onRetrieveProtectedValue: () async {
+                  retrieverCalled = true;
+                  return '4532015092834821';
+                },
               ),
             ),
           ),
-        ),
-      );
+        );
 
-      expect(find.text('Total Outflow'), findsOneWidget);
-      expect(find.text('Income'), findsOneWidget);
-      expect(find.text('Net Balance'), findsOneWidget);
-      expect(find.text('Owed Back'), findsOneWidget);
-    });
+        // Verify masked text is shown
+        expect(find.text('•••• •••• •••• 4821'), findsOneWidget);
+        // Verify raw full plaintext number is NOT present in the widget tree
+        expect(find.text('4532015092834821'), findsNothing);
+        expect(retrieverCalled, false);
+      },
+    );
+  });
 
-    testWidgets('FinancialSummaryCard renders without overflows in Dark mode', (tester) async {
+  group('Design System Reusable Widget Rendering Tests', () {
+    testWidgets(
+      'FinancialSummaryCard renders without overflows in Light mode',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: const Scaffold(
+              body: SingleChildScrollView(
+                child: FinancialSummaryCard(
+                  netBalance: 24500.50,
+                  income: 65000.00,
+                  expenses: 40499.50,
+                  owedToMe: 3200.00,
+                ),
+              ),
+            ),
+          ),
+        );
+
+        expect(find.text('Total Outflow'), findsOneWidget);
+        expect(find.text('Income'), findsOneWidget);
+        expect(find.text('Net Balance'), findsOneWidget);
+        expect(find.text('Owed Back'), findsOneWidget);
+      },
+    );
+
+    testWidgets('FinancialSummaryCard renders without overflows in Dark mode', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.darkTheme,
@@ -160,7 +177,9 @@ void main() {
       expect(find.text('Total Outflow'), findsOneWidget);
     });
 
-    testWidgets('EmptyState renders icon, title, message and action button', (tester) async {
+    testWidgets('EmptyState renders icon, title, message and action button', (
+      tester,
+    ) async {
       bool actionTapped = false;
 
       await tester.pumpWidget(
@@ -179,14 +198,19 @@ void main() {
       );
 
       expect(find.text('No Cards Found'), findsOneWidget);
-      expect(find.text('Add payment cards to your Card Studio.'), findsOneWidget);
+      expect(
+        find.text('Add payment cards to your Card Studio.'),
+        findsOneWidget,
+      );
       expect(find.text('Add Card'), findsOneWidget);
 
       await tester.tap(find.text('Add Card'));
       expect(actionTapped, true);
     });
 
-    testWidgets('PrimaryButton renders loading state and responds to taps', (tester) async {
+    testWidgets('PrimaryButton renders loading state and responds to taps', (
+      tester,
+    ) async {
       bool tapped = false;
 
       await tester.pumpWidget(

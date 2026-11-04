@@ -28,7 +28,10 @@ class MlKitOcrEngine implements DocumentOcrEngine {
   }
 
   @override
-  Future<OcrResult> processImageBytes(Uint8List imageBytes, {String? mimeType}) async {
+  Future<OcrResult> processImageBytes(
+    Uint8List imageBytes, {
+    String? mimeType,
+  }) async {
     if (imageBytes.isEmpty) {
       return OcrResult.failure('Provided document image bytes are empty');
     }
@@ -44,26 +47,30 @@ class MockOcrEngine implements DocumentOcrEngine {
   final String? predefinedText;
   bool shouldFail;
 
-  MockOcrEngine({
-    this.predefinedText,
-    this.shouldFail = false,
-  });
+  MockOcrEngine({this.predefinedText, this.shouldFail = false});
 
   @override
   Future<OcrResult> processImagePath(String filePath) async {
     if (shouldFail) {
       return OcrResult.failure('Simulated OCR Engine Failure');
     }
-    final text = predefinedText ?? 'MOCK EXTRACTED DOCUMENT TEXT\nNAME: JOHN DOE\nID: 1234567890';
+    final text =
+        predefinedText ??
+        'MOCK EXTRACTED DOCUMENT TEXT\nNAME: JOHN DOE\nID: 1234567890';
     return OcrResult.fromText(text);
   }
 
   @override
-  Future<OcrResult> processImageBytes(Uint8List imageBytes, {String? mimeType}) async {
+  Future<OcrResult> processImageBytes(
+    Uint8List imageBytes, {
+    String? mimeType,
+  }) async {
     if (shouldFail) {
       return OcrResult.failure('Simulated OCR Engine Failure');
     }
-    final text = predefinedText ?? 'MOCK EXTRACTED DOCUMENT TEXT\nNAME: JOHN DOE\nID: 1234567890';
+    final text =
+        predefinedText ??
+        'MOCK EXTRACTED DOCUMENT TEXT\nNAME: JOHN DOE\nID: 1234567890';
     return OcrResult.fromText(text);
   }
 

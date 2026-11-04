@@ -27,10 +27,19 @@ class AppSpacing {
   static const double xxl = 48.0;
 
   // ─── CONVENIENCE INSETS ──────────────────────────────────────────────────────
-  static const EdgeInsets screenPadding = EdgeInsets.symmetric(horizontal: lg, vertical: md);
+  static const EdgeInsets screenPadding = EdgeInsets.symmetric(
+    horizontal: lg,
+    vertical: md,
+  );
   static const EdgeInsets cardPadding = EdgeInsets.all(card);
   static const EdgeInsets compactCardPadding = EdgeInsets.all(md);
-  static const EdgeInsets modalPadding = EdgeInsets.fromLTRB(card, lg, card, card);
-  static const EdgeInsets horizontalScreen = EdgeInsets.symmetric(horizontal: lg);
+  static const EdgeInsets modalPadding = EdgeInsets.fromLTRB(
+    card,
+    lg,
+    card,
+    card,
+  );
+  static const EdgeInsets horizontalScreen = EdgeInsets.symmetric(
+    horizontal: lg,
+  );
 }
-

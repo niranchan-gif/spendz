@@ -31,9 +31,9 @@ void main() {
     tempDir = await Directory.systemTemp.createTemp('spendz_test_docs_');
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-      const MethodChannel('plugins.flutter.io/path_provider'),
-      (MethodCall methodCall) async => tempDir.path,
-    );
+          const MethodChannel('plugins.flutter.io/path_provider'),
+          (MethodCall methodCall) async => tempDir.path,
+        );
   });
 
   tearDownAll(() async {
@@ -43,12 +43,17 @@ void main() {
   });
 
   group('Document OCR Engine & Error Handling Tests', () {
-    test('Handles non-existent image file path gracefully without crashing', () async {
-      final engine = MlKitOcrEngine();
-      final result = await engine.processImagePath('/path/to/non_existent_file.jpg');
-      expect(result.isSuccess, isFalse);
-      expect(result.errorMessage, contains('does not exist'));
-    });
+    test(
+      'Handles non-existent image file path gracefully without crashing',
+      () async {
+        final engine = MlKitOcrEngine();
+        final result = await engine.processImagePath(
+          '/path/to/non_existent_file.jpg',
+        );
+        expect(result.isSuccess, isFalse);
+        expect(result.errorMessage, contains('does not exist'));
+      },
+    );
 
     test('Handles empty image bytes gracefully', () async {
       final engine = MlKitOcrEngine();
@@ -57,27 +62,41 @@ void main() {
       expect(result.errorMessage, contains('empty'));
     });
 
-    test('Detects PDF magic bytes and avoids invalid bitmap decoding', () async {
-      final engine = MlKitOcrEngine();
-      // Dummy PDF starting with %PDF-1.4
-      final dummyPdfBytes = Uint8List.fromList([
-        0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34, 0x0A,
-        ...List.filled(50, 0x20),
-      ]);
-      final result = await engine.processImageBytes(dummyPdfBytes);
-      expect(result.isSuccess, isTrue);
-    });
+    test(
+      'Detects PDF magic bytes and avoids invalid bitmap decoding',
+      () async {
+        final engine = MlKitOcrEngine();
+        // Dummy PDF starting with %PDF-1.4
+        final dummyPdfBytes = Uint8List.fromList([
+          0x25,
+          0x50,
+          0x44,
+          0x46,
+          0x2D,
+          0x31,
+          0x2E,
+          0x34,
+          0x0A,
+          ...List.filled(50, 0x20),
+        ]);
+        final result = await engine.processImageBytes(dummyPdfBytes);
+        expect(result.isSuccess, isTrue);
+      },
+    );
 
-    test('MockOcrEngine handles failure and success modes deterministically', () async {
-      final mock = MockOcrEngine(predefinedText: 'TEST DOCUMENT TEXT');
-      final res = await mock.processImagePath('any.jpg');
-      expect(res.isSuccess, isTrue);
-      expect(res.fullText, 'TEST DOCUMENT TEXT');
+    test(
+      'MockOcrEngine handles failure and success modes deterministically',
+      () async {
+        final mock = MockOcrEngine(predefinedText: 'TEST DOCUMENT TEXT');
+        final res = await mock.processImagePath('any.jpg');
+        expect(res.isSuccess, isTrue);
+        expect(res.fullText, 'TEST DOCUMENT TEXT');
 
-      mock.shouldFail = true;
-      final failRes = await mock.processImagePath('any.jpg');
-      expect(failRes.isSuccess, isFalse);
-    });
+        mock.shouldFail = true;
+        final failRes = await mock.processImagePath('any.jpg');
+        expect(failRes.isSuccess, isFalse);
+      },
+    );
   });
 
   group('Document Classification Tests Across All Categories', () {
@@ -242,8 +261,10 @@ PERIOD OF INSURANCE: 01/01/2024 TO 31/12/2025
       extractor = DocumentFieldExtractor();
     });
 
-    test('Extracts Debit Card fields accurately with masked card number and no CVV', () {
-      const text = '''
+    test(
+      'Extracts Debit Card fields accurately with masked card number and no CVV',
+      () {
+        const text = '''
 HDFC BANK DEBIT CARD
 4111 2222 3333 4444
 VALID THRU 08/29
@@ -251,18 +272,19 @@ VISA PLATINUM
 ROHIT SHARMA
 CVV 123
 ''';
-      final fields = extractor.extract(rawText: text, category: 'debit_card');
-      expect(fields.documentNumber, '•••• •••• •••• 4444');
-      expect(fields.rawDocumentNumber, '4111222233334444');
-      expect(fields.cardNetwork, 'Visa');
-      expect(fields.issuingBank, 'HDFC Bank');
-      expect(fields.expiryDate?.month, 8);
-      expect(fields.expiryDate?.year, 2029);
-      expect(fields.holderName, 'ROHIT SHARMA');
-      // Ensure CVV is NEVER extracted into any field
-      expect(fields.documentNumber, isNot(contains('123')));
-      expect(fields.holderName, isNot(contains('123')));
-    });
+        final fields = extractor.extract(rawText: text, category: 'debit_card');
+        expect(fields.documentNumber, '•••• •••• •••• 4444');
+        expect(fields.rawDocumentNumber, '4111222233334444');
+        expect(fields.cardNetwork, 'Visa');
+        expect(fields.issuingBank, 'HDFC Bank');
+        expect(fields.expiryDate?.month, 8);
+        expect(fields.expiryDate?.year, 2029);
+        expect(fields.holderName, 'ROHIT SHARMA');
+        // Ensure CVV is NEVER extracted into any field
+        expect(fields.documentNumber, isNot(contains('123')));
+        expect(fields.holderName, isNot(contains('123')));
+      },
+    );
 
     test('Extracts Aadhaar fields with masked 12-digit number and address', () {
       const text = '''
@@ -309,7 +331,10 @@ NAME: KARAN JOSHI
 AUTHORISATION TO DRIVE: LMV, MCWG
 VALID TILL: 25/12/2032
 ''';
-      final fields = extractor.extract(rawText: text, category: 'driving_license');
+      final fields = extractor.extract(
+        rawText: text,
+        category: 'driving_license',
+      );
       expect(fields.documentNumber, 'DL-0420110012345');
       expect(fields.vehicleCategories, contains('LMV'));
       expect(fields.vehicleCategories, contains('MCWG'));
@@ -340,7 +365,12 @@ MISCELLANEOUS STAMP 9988
 ''';
       final fields = extractor.extract(rawText: text, category: 'pan');
       expect(fields.unclassifiedLines.isNotEmpty, isTrue);
-      expect(fields.unclassifiedLines.any((l) => l.contains('UNRECOGNIZED SPECIAL CLAUSE')), isTrue);
+      expect(
+        fields.unclassifiedLines.any(
+          (l) => l.contains('UNRECOGNIZED SPECIAL CLAUSE'),
+        ),
+        isTrue,
+      );
     });
   });
 
@@ -350,7 +380,8 @@ MISCELLANEOUS STAMP 9988
         id: 'doc-1',
         documentName: 'HDFC Millennia Debit Card',
         category: 'debit_card',
-        description: 'Holder: ROHIT SHARMA\nNumber: •••• •••• •••• 4444\nBank: HDFC Bank\nNetwork: Visa',
+        description:
+            'Holder: ROHIT SHARMA\nNumber: •••• •••• •••• 4444\nBank: HDFC Bank\nNetwork: Visa',
         encryptedFilePath: '/fake/path.enc',
         mimeType: 'image/jpeg',
         createdAt: DateTime.now(),
@@ -376,7 +407,9 @@ MISCELLANEOUS STAMP 9988
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('Renders Aadhaar Card with tricolor and UIDAI badge', (tester) async {
+    testWidgets('Renders Aadhaar Card with tricolor and UIDAI badge', (
+      tester,
+    ) async {
       final doc = WalletDocumentModel(
         id: 'doc-2',
         documentName: 'Aadhaar Card',
@@ -412,7 +445,8 @@ MISCELLANEOUS STAMP 9988
         id: 'doc-3',
         documentName: 'Indian Passport',
         category: 'passport',
-        description: 'Holder: Aditya Roy\nNumber: K1234567\nNationality: INDIAN',
+        description:
+            'Holder: Aditya Roy\nNumber: K1234567\nNationality: INDIAN',
         encryptedFilePath: '/fake/path.enc',
         mimeType: 'image/jpeg',
         createdAt: DateTime.now(),
@@ -448,7 +482,8 @@ MISCELLANEOUS STAMP 9988
         id: 'test-export-doc',
         documentName: 'Passport Scan',
         category: 'passport',
-        description: 'Holder: Priya Sharma\nNumber: M1234567\nIssuer: Ministry of External Affairs',
+        description:
+            'Holder: Priya Sharma\nNumber: M1234567\nIssuer: Ministry of External Affairs',
         encryptedFilePath: '/fake/enc.bin',
         mimeType: 'image/jpeg',
         issueDate: DateTime(2022, 1, 15),
@@ -465,7 +500,10 @@ MISCELLANEOUS STAMP 9988
 
       expect(await pdfFile.exists(), isTrue);
       final fileSize = await pdfFile.length();
-      expect(fileSize, greaterThan(500)); // PDF header + metadata + embedded bitmap
+      expect(
+        fileSize,
+        greaterThan(500),
+      ); // PDF header + metadata + embedded bitmap
 
       // Clean up
       try {

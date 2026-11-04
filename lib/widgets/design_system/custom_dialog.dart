@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../app/theme/app_colors.dart';
-import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_spacing.dart';
-import '../../app/theme/app_text_styles.dart';
-import 'primary_button.dart';
-import 'secondary_button.dart';
+import '../glass/glass_dialog.dart';
+import '../glass/glass_button.dart';
 
-/// Standardized Fintech Dialog with clear action hierarchy.
+/// Standardized Fintech Dialog with clear action hierarchy,
+/// built on the Spendz 2.0 GlassDialog component.
 class CustomDialog extends StatelessWidget {
   final String title;
   final String message;
@@ -40,92 +39,103 @@ class CustomDialog extends StatelessWidget {
     bool isDestructive = false,
     IconData? icon,
   }) {
-    return showDialog<bool>(
+    return GlassDialog.show<bool>(
       context: context,
-      builder: (ctx) => CustomDialog(
-        title: title,
-        message: message,
-        icon: icon,
-        primaryActionLabel: confirmLabel,
-        isDestructive: isDestructive,
-        onPrimaryAction: () => Navigator.pop(ctx, true),
-        secondaryActionLabel: cancelLabel,
-        onSecondaryAction: () => Navigator.pop(ctx, false),
+      title: title,
+      icon: icon != null
+          ? Icon(
+              icon,
+              size: 28,
+              color: isDestructive
+                  ? AppColors.getError(context)
+                  : AppColors.getPrimary(context),
+            )
+          : null,
+      actions: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(
+                cancelLabel,
+                style: TextStyle(
+                  color: AppColors.getTextSecondary(context),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            GlassButton(
+              label: confirmLabel,
+              onPressed: () => Navigator.pop(context, true),
+              color: isDestructive ? AppColors.getError(context) : null,
+              variant: GlassButtonVariant.primary,
+              height: 42.0,
+            ),
+          ],
+        ),
+      ],
+      child: Text(
+        message,
+        style: TextStyle(
+          color: AppColors.getTextSecondary(context),
+          fontSize: 13.5,
+          height: 1.45,
+        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: AppColors.getSurface(context),
-      shape: RoundedRectangleBorder(
-        borderRadius: AppRadius.roundedLg,
-        side: BorderSide(color: AppColors.getBorder(context), width: 1),
-      ),
-      insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.card),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return GlassDialog(
+      title: title,
+      icon: icon != null
+          ? Icon(
+              icon,
+              size: 28,
+              color:
+                  iconColor ??
+                  (isDestructive
+                      ? AppColors.getError(context)
+                      : AppColors.getPrimary(context)),
+            )
+          : null,
+      actions: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            if (icon != null) ...[
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: (iconColor ?? AppColors.getPrimary(context)).withAlpha(20),
-                  borderRadius: AppRadius.roundedSm,
-                ),
-                child: Icon(
-                  icon,
-                  color: iconColor ?? AppColors.getPrimary(context),
-                  size: 22,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-            ],
-            Text(
-              title,
-              style: AppTextStyles.getHeading3(context).copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              message,
-              style: AppTextStyles.getBodyMedium(context).copyWith(
-                color: AppColors.getTextSecondary(context),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            Row(
-              children: [
-                if (secondaryActionLabel != null) ...[
-                  Expanded(
-                    child: SecondaryButton(
-                      label: secondaryActionLabel!,
-                      onPressed: onSecondaryAction ?? () => Navigator.pop(context),
-                      height: 44,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                ],
-                Expanded(
-                  child: PrimaryButton(
-                    label: primaryActionLabel,
-                    onPressed: onPrimaryAction,
-                    isDestructive: isDestructive,
-                    height: 44,
+            if (secondaryActionLabel != null)
+              TextButton(
+                onPressed: onSecondaryAction ?? () => Navigator.pop(context),
+                child: Text(
+                  secondaryActionLabel!,
+                  style: TextStyle(
+                    color: AppColors.getTextSecondary(context),
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-              ],
+              ),
+            const SizedBox(width: AppSpacing.sm),
+            GlassButton(
+              label: primaryActionLabel,
+              onPressed: onPrimaryAction,
+              color: isDestructive ? AppColors.getError(context) : null,
+              variant: GlassButtonVariant.primary,
+              height: 42.0,
             ),
           ],
+        ),
+      ],
+      child: Text(
+        message,
+        style: TextStyle(
+          color: AppColors.getTextSecondary(context),
+          fontSize: 13.5,
+          height: 1.45,
         ),
       ),
     );
   }
 }
-

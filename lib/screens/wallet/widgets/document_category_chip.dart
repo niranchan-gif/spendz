@@ -9,7 +9,11 @@ class DocumentCategoryItem {
   final String label;
   final IconData icon;
 
-  const DocumentCategoryItem({required this.key, required this.label, required this.icon});
+  const DocumentCategoryItem({
+    required this.key,
+    required this.label,
+    required this.icon,
+  });
 }
 
 class DocumentCategoryChips extends StatelessWidget {
@@ -23,13 +27,41 @@ class DocumentCategoryChips extends StatelessWidget {
   });
 
   static const List<DocumentCategoryItem> categories = [
-    DocumentCategoryItem(key: 'all', label: 'All', icon: Icons.grid_view_rounded),
-    DocumentCategoryItem(key: 'identity', label: 'Identity', icon: Icons.badge_outlined),
-    DocumentCategoryItem(key: 'banking', label: 'Banking', icon: Icons.payment_rounded),
-    DocumentCategoryItem(key: 'driving', label: 'Driving', icon: Icons.directions_car_outlined),
-    DocumentCategoryItem(key: 'travel', label: 'Travel', icon: Icons.flight_takeoff_rounded),
-    DocumentCategoryItem(key: 'insurance', label: 'Insurance', icon: Icons.health_and_safety_outlined),
-    DocumentCategoryItem(key: 'others', label: 'Others', icon: Icons.folder_open_outlined),
+    DocumentCategoryItem(
+      key: 'all',
+      label: 'All',
+      icon: Icons.grid_view_rounded,
+    ),
+    DocumentCategoryItem(
+      key: 'identity',
+      label: 'Identity',
+      icon: Icons.badge_outlined,
+    ),
+    DocumentCategoryItem(
+      key: 'banking',
+      label: 'Banking',
+      icon: Icons.payment_rounded,
+    ),
+    DocumentCategoryItem(
+      key: 'driving',
+      label: 'Driving',
+      icon: Icons.directions_car_outlined,
+    ),
+    DocumentCategoryItem(
+      key: 'travel',
+      label: 'Travel',
+      icon: Icons.flight_takeoff_rounded,
+    ),
+    DocumentCategoryItem(
+      key: 'insurance',
+      label: 'Insurance',
+      icon: Icons.health_and_safety_outlined,
+    ),
+    DocumentCategoryItem(
+      key: 'others',
+      label: 'Others',
+      icon: Icons.folder_open_outlined,
+    ),
   ];
 
   @override
@@ -44,10 +76,12 @@ class DocumentCategoryChips extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
         itemCount: categories.length,
-        separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.sm),
+        separatorBuilder: (context, index) =>
+            const SizedBox(width: AppSpacing.sm),
         itemBuilder: (context, index) {
           final item = categories[index];
-          final isSelected = selectedCategory.toLowerCase() == item.key.toLowerCase();
+          final isSelected =
+              selectedCategory.toLowerCase() == item.key.toLowerCase();
 
           return ChoiceChip(
             showCheckmark: false,

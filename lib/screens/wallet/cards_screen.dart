@@ -30,10 +30,7 @@ import 'widgets/virtual_document_card.dart';
 import 'widgets/wallet_card_widget.dart';
 
 /// Unified Studio Card Item representing either a payment card or an identity document.
-enum StudioCardType {
-  payment,
-  document,
-}
+enum StudioCardType { payment, document }
 
 class StudioCardItem {
   final String id;
@@ -48,28 +45,32 @@ class StudioCardItem {
   final DateTime updatedAt;
 
   StudioCardItem.fromCard(WalletCardModel c)
-      : id = c.id,
-        title = c.nickname.isNotEmpty ? c.nickname : c.issuerName,
-        subtitle = '${c.issuerName} • ${c.cardType.toUpperCase()} •••• ${c.lastFour}',
-        category = c.cardType.toLowerCase(),
-        type = StudioCardType.payment,
-        paymentCard = c,
-        document = null,
-        isFavorite = c.isFavorite,
-        maskedNumber = c.lastFour.isNotEmpty ? '•••• •••• •••• ${c.lastFour}' : c.maskedNumber,
-        updatedAt = c.updatedAt;
+    : id = c.id,
+      title = c.nickname.isNotEmpty ? c.nickname : c.issuerName,
+      subtitle =
+          '${c.issuerName} • ${c.cardType.toUpperCase()} •••• ${c.lastFour}',
+      category = c.cardType.toLowerCase(),
+      type = StudioCardType.payment,
+      paymentCard = c,
+      document = null,
+      isFavorite = c.isFavorite,
+      maskedNumber = c.lastFour.isNotEmpty
+          ? '•••• •••• •••• ${c.lastFour}'
+          : c.maskedNumber,
+      updatedAt = c.updatedAt;
 
   StudioCardItem.fromDocument(WalletDocumentModel d)
-      : id = d.id,
-        title = d.documentName,
-        subtitle = '${d.category.replaceAll('_', ' ').toUpperCase()} • ${d.holderName ?? ''}',
-        category = d.category.toLowerCase(),
-        type = StudioCardType.document,
-        paymentCard = null,
-        document = d,
-        isFavorite = d.isFavorite,
-        maskedNumber = d.maskedIdentifier ?? '',
-        updatedAt = d.updatedAt;
+    : id = d.id,
+      title = d.documentName,
+      subtitle =
+          '${d.category.replaceAll('_', ' ').toUpperCase()} • ${d.holderName ?? ''}',
+      category = d.category.toLowerCase(),
+      type = StudioCardType.document,
+      paymentCard = null,
+      document = d,
+      isFavorite = d.isFavorite,
+      maskedNumber = d.maskedIdentifier ?? '',
+      updatedAt = d.updatedAt;
 }
 
 class CardsScreen extends StatefulWidget {
@@ -153,7 +154,10 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(authService.lastErrorMessage ?? 'Biometric authentication required to reveal card number.'),
+            content: Text(
+              authService.lastErrorMessage ??
+                  'Biometric authentication required to reveal card number.',
+            ),
             backgroundColor: AppColors.error,
           ),
         );
@@ -206,7 +210,10 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(authService.lastErrorMessage ?? 'Biometric authentication required to access private number.'),
+            content: Text(
+              authService.lastErrorMessage ??
+                  'Biometric authentication required to access private number.',
+            ),
             backgroundColor: AppColors.error,
           ),
         );
@@ -246,7 +253,10 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
       builder: (ctx) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.md,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -254,8 +264,16 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Add to Card Studio', style: AppTextStyles.getHeading2(context).copyWith(fontWeight: FontWeight.bold)),
-                    IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+                    Text(
+                      'Add to Card Studio',
+                      style: AppTextStyles.getHeading2(
+                        context,
+                      ).copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.sm),
@@ -266,10 +284,18 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                       color: AppColors.primary.withAlpha(25),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(Icons.credit_card_rounded, color: AppColors.primary),
+                    child: Icon(
+                      Icons.credit_card_rounded,
+                      color: AppColors.primary,
+                    ),
                   ),
-                  title: const Text('Add Payment Card', style: TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: const Text('Debit, Credit, ATM or Membership Card with Custom Themes'),
+                  title: const Text(
+                    'Add Payment Card',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: const Text(
+                    'Debit, Credit, ATM or Membership Card with Custom Themes',
+                  ),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () {
                     Navigator.pop(ctx);
@@ -284,15 +310,25 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                       color: const Color(0xFF138808).withAlpha(25),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(Icons.badge_outlined, color: Color(0xFF138808)),
+                    child: const Icon(
+                      Icons.badge_outlined,
+                      color: Color(0xFF138808),
+                    ),
                   ),
-                  title: const Text('Add Identity or Document Card', style: TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: const Text('Aadhaar, PAN, Driving Licence, Passport, RC, Insurance'),
+                  title: const Text(
+                    'Add Identity or Document Card',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: const Text(
+                    'Aadhaar, PAN, Driving Licence, Passport, RC, Insurance',
+                  ),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () {
                     Navigator.pop(ctx);
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const DocumentCreationScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const DocumentCreationScreen(),
+                      ),
                     );
                   },
                 ),
@@ -318,7 +354,14 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
     String themeGradient = 'midnight_emerald';
     String cardLayoutId = 'minimal_luxury';
 
-    final cardTypes = ['credit', 'debit', 'atm', 'membership', 'loyalty', 'custom'];
+    final cardTypes = [
+      'credit',
+      'debit',
+      'atm',
+      'membership',
+      'loyalty',
+      'custom',
+    ];
     final networks = ['visa', 'mastercard', 'rupay', 'amex'];
 
     showModalBottomSheet(
@@ -349,7 +392,9 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                         children: [
                           Text(
                             'Add Card to Studio',
-                            style: AppTextStyles.getHeading2(context).copyWith(fontWeight: FontWeight.w700),
+                            style: AppTextStyles.getHeading2(
+                              context,
+                            ).copyWith(fontWeight: FontWeight.w700),
                           ),
                           IconButton(
                             icon: const Icon(Icons.close),
@@ -363,16 +408,24 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                         decoration: BoxDecoration(
                           color: AppColors.getPrimary(context).withAlpha(15),
                           borderRadius: AppRadius.roundedMd,
-                          border: Border.all(color: AppColors.getPrimary(context).withAlpha(35)),
+                          border: Border.all(
+                            color: AppColors.getPrimary(context).withAlpha(35),
+                          ),
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.shield_outlined, color: AppColors.getPrimary(context), size: 18),
+                            Icon(
+                              Icons.shield_outlined,
+                              color: AppColors.getPrimary(context),
+                              size: 18,
+                            ),
                             const SizedBox(width: AppSpacing.sm),
                             Expanded(
                               child: Text(
                                 'Spendz never stores CVVs or PINs. Stored full numbers are AES-256-GCM encrypted and revealed only via biometrics.',
-                                style: AppTextStyles.getBodySmall(context).copyWith(fontSize: 11),
+                                style: AppTextStyles.getBodySmall(
+                                  context,
+                                ).copyWith(fontSize: 11),
                               ),
                             ),
                           ],
@@ -385,7 +438,8 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                           labelText: 'Card Nickname (e.g. Daily Spender)',
                           prefixIcon: Icon(Icons.label_outline, size: 18),
                         ),
-                        validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                        validator: (v) =>
+                            v == null || v.isEmpty ? 'Required' : null,
                       ),
                       const SizedBox(height: AppSpacing.md),
                       Row(
@@ -395,21 +449,31 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                               controller: issuerController,
                               decoration: const InputDecoration(
                                 labelText: 'Bank / Issuer (e.g. HDFC)',
-                                prefixIcon: Icon(Icons.account_balance_outlined, size: 18),
+                                prefixIcon: Icon(
+                                  Icons.account_balance_outlined,
+                                  size: 18,
+                                ),
                               ),
-                              validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                              validator: (v) =>
+                                  v == null || v.isEmpty ? 'Required' : null,
                             ),
                           ),
                           const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: DropdownButtonFormField<String>(
                               initialValue: cardType,
-                              decoration: const InputDecoration(labelText: 'Card Type'),
+                              decoration: const InputDecoration(
+                                labelText: 'Card Type',
+                              ),
                               items: cardTypes.map((t) {
-                                return DropdownMenuItem(value: t, child: Text(t.toUpperCase()));
+                                return DropdownMenuItem(
+                                  value: t,
+                                  child: Text(t.toUpperCase()),
+                                );
                               }).toList(),
                               onChanged: (val) {
-                                if (val != null) setModalState(() => cardType = val);
+                                if (val != null)
+                                  setModalState(() => cardType = val);
                               },
                             ),
                           ),
@@ -422,7 +486,8 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                           labelText: 'Cardholder Name',
                           prefixIcon: Icon(Icons.person_outline, size: 18),
                         ),
-                        validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                        validator: (v) =>
+                            v == null || v.isEmpty ? 'Required' : null,
                       ),
                       const SizedBox(height: AppSpacing.md),
                       Row(
@@ -438,7 +503,8 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                               keyboardType: TextInputType.number,
                               maxLength: 4,
                               validator: (v) {
-                                if (v == null || v.length != 4) return 'Enter 4 digits';
+                                if (v == null || v.length != 4)
+                                  return 'Enter 4 digits';
                                 return null;
                               },
                             ),
@@ -447,12 +513,18 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                           Expanded(
                             child: DropdownButtonFormField<String>(
                               initialValue: cardNetwork,
-                              decoration: const InputDecoration(labelText: 'Network'),
+                              decoration: const InputDecoration(
+                                labelText: 'Network',
+                              ),
                               items: networks.map((net) {
-                                return DropdownMenuItem(value: net, child: Text(net.toUpperCase()));
+                                return DropdownMenuItem(
+                                  value: net,
+                                  child: Text(net.toUpperCase()),
+                                );
                               }).toList(),
                               onChanged: (val) {
-                                if (val != null) setModalState(() => cardNetwork = val);
+                                if (val != null)
+                                  setModalState(() => cardNetwork = val);
                               },
                             ),
                           ),
@@ -462,9 +534,13 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                       TextFormField(
                         controller: fullNumberController,
                         decoration: const InputDecoration(
-                          labelText: 'Full Card Number (Encrypted Hardware Storage)',
+                          labelText:
+                              'Full Card Number (Encrypted Hardware Storage)',
                           hintText: 'Optional — for biometric tap reveal',
-                          prefixIcon: Icon(Icons.lock_outline_rounded, size: 18),
+                          prefixIcon: Icon(
+                            Icons.lock_outline_rounded,
+                            size: 18,
+                          ),
                         ),
                         keyboardType: TextInputType.number,
                       ),
@@ -474,12 +550,18 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                           Expanded(
                             child: DropdownButtonFormField<int>(
                               initialValue: expiryMonth,
-                              decoration: const InputDecoration(labelText: 'Exp Month'),
+                              decoration: const InputDecoration(
+                                labelText: 'Exp Month',
+                              ),
                               items: List.generate(12, (i) => i + 1).map((m) {
-                                return DropdownMenuItem(value: m, child: Text(m.toString().padLeft(2, '0')));
+                                return DropdownMenuItem(
+                                  value: m,
+                                  child: Text(m.toString().padLeft(2, '0')),
+                                );
                               }).toList(),
                               onChanged: (val) {
-                                if (val != null) setModalState(() => expiryMonth = val);
+                                if (val != null)
+                                  setModalState(() => expiryMonth = val);
                               },
                             ),
                           ),
@@ -487,12 +569,18 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                           Expanded(
                             child: DropdownButtonFormField<int>(
                               initialValue: expiryYear,
-                              decoration: const InputDecoration(labelText: 'Exp Year'),
+                              decoration: const InputDecoration(
+                                labelText: 'Exp Year',
+                              ),
                               items: List.generate(15, (i) => 24 + i).map((y) {
-                                return DropdownMenuItem(value: y, child: Text('20$y'));
+                                return DropdownMenuItem(
+                                  value: y,
+                                  child: Text('20$y'),
+                                );
                               }).toList(),
                               onChanged: (val) {
-                                if (val != null) setModalState(() => expiryYear = val);
+                                if (val != null)
+                                  setModalState(() => expiryYear = val);
                               },
                             ),
                           ),
@@ -515,7 +603,8 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                               backgroundColor: th.primaryAccent,
                               radius: 6,
                             ),
-                            onSelected: (_) => setModalState(() => themeGradient = th.id),
+                            onSelected: (_) =>
+                                setModalState(() => themeGradient = th.id),
                           );
                         }).toList(),
                       ),
@@ -533,7 +622,8 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                           return ChoiceChip(
                             label: Text(lo.name),
                             selected: isSelected,
-                            onSelected: (_) => setModalState(() => cardLayoutId = lo.id),
+                            onSelected: (_) =>
+                                setModalState(() => cardLayoutId = lo.id),
                           );
                         }).toList(),
                       ),
@@ -543,8 +633,10 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                         label: 'Save Card to Wallet',
                         onPressed: () async {
                           if (formKey.currentState!.validate()) {
-                            final cardProvider = context.read<WalletCardProvider>();
-                            final walletProvider = context.read<WalletProvider>();
+                            final cardProvider = context
+                                .read<WalletCardProvider>();
+                            final walletProvider = context
+                                .read<WalletProvider>();
                             final messenger = ScaffoldMessenger.of(context);
 
                             final last4 = lastFourController.text.trim();
@@ -553,12 +645,19 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                             final rawFull = fullNumberController.text.trim();
                             if (rawFull.isNotEmpty) {
                               try {
-                                await _secureNumberService.saveCardFullNumber(cardId, rawFull);
+                                await _secureNumberService.saveCardFullNumber(
+                                  cardId,
+                                  rawFull,
+                                );
                               } catch (_) {
                                 try {
                                   final keyService = WalletKeyService();
-                                  await keyService.resetAndRegenerateMasterKey();
-                                  await _secureNumberService.saveCardFullNumber(cardId, rawFull);
+                                  await keyService
+                                      .resetAndRegenerateMasterKey();
+                                  await _secureNumberService.saveCardFullNumber(
+                                    cardId,
+                                    rawFull,
+                                  );
                                 } catch (_) {}
                               }
                             }
@@ -611,11 +710,15 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
   void _openCardItem(BuildContext context, StudioCardItem item) {
     if (item.type == StudioCardType.payment && item.paymentCard != null) {
       Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => CardDetailScreen(card: item.paymentCard!)),
+        MaterialPageRoute(
+          builder: (_) => CardDetailScreen(card: item.paymentCard!),
+        ),
       );
     } else if (item.type == StudioCardType.document && item.document != null) {
       Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => DocumentPreviewScreen(document: item.document!)),
+        MaterialPageRoute(
+          builder: (_) => DocumentPreviewScreen(document: item.document!),
+        ),
       );
     }
   }
@@ -647,7 +750,12 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Card Studio', style: AppTextStyles.getHeading2(context).copyWith(fontWeight: FontWeight.bold)),
+            Text(
+              'Card Studio',
+              style: AppTextStyles.getHeading2(
+                context,
+              ).copyWith(fontWeight: FontWeight.bold),
+            ),
             Text(
               'Premium Cards · Your Collection',
               style: AppTextStyles.caption.copyWith(
@@ -670,14 +778,22 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
           ),
           IconButton(
             icon: Icon(
-              _isStackedDeckView ? Icons.view_agenda_outlined : Icons.style_rounded,
+              _isStackedDeckView
+                  ? Icons.view_agenda_outlined
+                  : Icons.style_rounded,
               color: AppColors.getTextSecondary(context),
             ),
-            tooltip: _isStackedDeckView ? 'Switch to List View' : 'Switch to Stacked Deck',
-            onPressed: () => setState(() => _isStackedDeckView = !_isStackedDeckView),
+            tooltip: _isStackedDeckView
+                ? 'Switch to List View'
+                : 'Switch to Stacked Deck',
+            onPressed: () =>
+                setState(() => _isStackedDeckView = !_isStackedDeckView),
           ),
           IconButton(
-            icon: Icon(Icons.add_circle_outline, color: AppColors.getPrimary(context)),
+            icon: Icon(
+              Icons.add_circle_outline,
+              color: AppColors.getPrimary(context),
+            ),
             tooltip: 'Add Card',
             onPressed: () => _showAddOptions(context),
           ),
@@ -685,23 +801,39 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
       ),
       body: Consumer<WalletProvider>(
         builder: (context, wallet, child) {
-          final paymentItems = wallet.cards.map((c) => StudioCardItem.fromCard(c)).toList();
-          final documentItems = wallet.documents.map((d) => StudioCardItem.fromDocument(d)).toList();
+          final paymentItems = wallet.cards
+              .map((c) => StudioCardItem.fromCard(c))
+              .toList();
+          final documentItems = wallet.documents
+              .map((d) => StudioCardItem.fromDocument(d))
+              .toList();
           final allCards = [...paymentItems, ...documentItems];
 
-          final govtCategories = {'aadhaar', 'pan', 'driving_license', 'passport', 'voter_id'};
+          final govtCategories = {
+            'aadhaar',
+            'pan',
+            'driving_license',
+            'passport',
+            'voter_id',
+          };
           final rcInsuranceCategories = {'rc', 'insurance'};
 
           List<StudioCardItem> filteredCards;
           switch (_selectedFilter) {
             case 'govt_id':
-              filteredCards = allCards.where((c) => govtCategories.contains(c.category)).toList();
+              filteredCards = allCards
+                  .where((c) => govtCategories.contains(c.category))
+                  .toList();
               break;
             case 'payment':
-              filteredCards = allCards.where((c) => c.type == StudioCardType.payment).toList();
+              filteredCards = allCards
+                  .where((c) => c.type == StudioCardType.payment)
+                  .toList();
               break;
             case 'rc_insurance':
-              filteredCards = allCards.where((c) => rcInsuranceCategories.contains(c.category)).toList();
+              filteredCards = allCards
+                  .where((c) => rcInsuranceCategories.contains(c.category))
+                  .toList();
               break;
             case 'favorite':
               filteredCards = allCards.where((c) => c.isFavorite).toList();
@@ -717,7 +849,10 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
               // Filter Chips Row
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.sm,
+                ),
                 child: Row(
                   children: [
                     _buildFilterChip('all', 'All Cards (${allCards.length})'),
@@ -739,25 +874,31 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                     ? EmptyState(
                         icon: Icons.credit_card_off_rounded,
                         title: 'No Cards in Studio',
-                        message: 'Add payment cards, Aadhaar, PAN, DL, or Passport for unified tracking.',
+                        message:
+                            'Add payment cards, Aadhaar, PAN, DL, or Passport for unified tracking.',
                         actionLabel: 'Add Your First Card',
                         onAction: () => _showAddOptions(context),
                       )
                     : (_isStackedDeckView
-                        ? _buildStackedCardDeck(context, filteredCards)
-                        : ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
-                            itemCount: filteredCards.length,
-                            itemBuilder: (context, index) {
-                              final item = filteredCards[index];
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                                child: Center(
-                                  child: _buildCardItemWidget(item),
-                                ),
-                              );
-                            },
-                          )),
+                          ? _buildStackedCardDeck(context, filteredCards)
+                          : ListView.builder(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.lg,
+                                vertical: AppSpacing.md,
+                              ),
+                              itemCount: filteredCards.length,
+                              itemBuilder: (context, index) {
+                                final item = filteredCards[index];
+                                return Padding(
+                                  padding: const EdgeInsets.only(
+                                    bottom: AppSpacing.md,
+                                  ),
+                                  child: Center(
+                                    child: _buildCardItemWidget(item),
+                                  ),
+                                );
+                              },
+                            )),
               ),
             ],
           );
@@ -777,7 +918,9 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
       }),
       selectedColor: AppColors.getPrimary(context).withAlpha(40),
       labelStyle: TextStyle(
-        color: isSelected ? AppColors.getPrimary(context) : AppColors.getTextSecondary(context),
+        color: isSelected
+            ? AppColors.getPrimary(context)
+            : AppColors.getTextSecondary(context),
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
         fontSize: 12,
       ),
@@ -804,7 +947,9 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
         document: item.document!,
         onTap: onTap ?? () => _openCardItem(context, item),
         onFavoriteToggle: () {
-          context.read<WalletDocumentProvider>().toggleDocumentFavorite(item.id);
+          context.read<WalletDocumentProvider>().toggleDocumentFavorite(
+            item.id,
+          );
           context.read<WalletProvider>().loadWallet();
         },
       );
@@ -812,7 +957,10 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
     return const SizedBox.shrink();
   }
 
-  Widget _buildStackedCardDeck(BuildContext context, List<StudioCardItem> cards) {
+  Widget _buildStackedCardDeck(
+    BuildContext context,
+    List<StudioCardItem> cards,
+  ) {
     if (_currentCardIndex >= cards.length) {
       _currentCardIndex = cards.length - 1;
     }
@@ -846,9 +994,14 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                         curve: Curves.easeOutCubic,
                         height: 54,
                         decoration: BoxDecoration(
-                          color: _getPeekCardColor(cards[_currentCardIndex + offset]),
+                          color: _getPeekCardColor(
+                            cards[_currentCardIndex + offset],
+                          ),
                           borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: Colors.white.withAlpha(45), width: 1.0),
+                          border: Border.all(
+                            color: Colors.white.withAlpha(45),
+                            width: 1.0,
+                          ),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withAlpha(50),
@@ -861,11 +1014,18 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                           color: Colors.transparent,
                           child: InkWell(
                             borderRadius: BorderRadius.circular(18),
-                            onTap: () => _goToCard(_currentCardIndex + offset, cards.length),
+                            onTap: () => _goToCard(
+                              _currentCardIndex + offset,
+                              cards.length,
+                            ),
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Expanded(
                                     child: Text(
@@ -879,7 +1039,9 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                                     ),
                                   ),
                                   Text(
-                                    cards[_currentCardIndex + offset].category.replaceAll('_', ' ').toUpperCase(),
+                                    cards[_currentCardIndex + offset].category
+                                        .replaceAll('_', ' ')
+                                        .toUpperCase(),
                                     style: TextStyle(
                                       color: Colors.white.withAlpha(190),
                                       fontWeight: FontWeight.w700,
@@ -919,16 +1081,26 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                           if (_pageController.hasClients &&
                               _pageController.positions.length == 1 &&
                               _pageController.position.haveDimensions) {
-                            pageOffset = (_pageController.page ?? _pageController.initialPage.toDouble()) - index;
+                            pageOffset =
+                                (_pageController.page ??
+                                    _pageController.initialPage.toDouble()) -
+                                index;
                           } else {
                             pageOffset = (_currentCardIndex - index).toDouble();
                           }
 
                           // Tactile Stack transformation: smooth scale, rotation, translation & opacity
-                          final scale = (1.0 - (pageOffset.abs() * 0.08)).clamp(0.86, 1.0);
-                          final opacity = (1.0 - (pageOffset.abs() * 0.25)).clamp(0.40, 1.0);
+                          final scale = (1.0 - (pageOffset.abs() * 0.08)).clamp(
+                            0.86,
+                            1.0,
+                          );
+                          final opacity = (1.0 - (pageOffset.abs() * 0.25))
+                              .clamp(0.40, 1.0);
                           final translateY = pageOffset.abs() * 10.0;
-                          final rotation = (pageOffset * -0.04).clamp(-0.06, 0.06);
+                          final rotation = (pageOffset * -0.04).clamp(
+                            -0.06,
+                            0.06,
+                          );
 
                           return Transform.translate(
                             offset: Offset(0, translateY),
@@ -936,10 +1108,7 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                               angle: rotation,
                               child: Transform.scale(
                                 scale: scale,
-                                child: Opacity(
-                                  opacity: opacity,
-                                  child: child,
-                                ),
+                                child: Opacity(opacity: opacity, child: child),
                               ),
                             ),
                           );
@@ -996,7 +1165,9 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                           decoration: BoxDecoration(
                             color: isActive
                                 ? AppColors.primary
-                                : AppColors.getTextSecondary(context).withAlpha(60),
+                                : AppColors.getTextSecondary(
+                                    context,
+                                  ).withAlpha(60),
                             borderRadius: BorderRadius.circular(3),
                           ),
                         );
@@ -1028,13 +1199,17 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Cards in Deck (${cards.length})',
-                  style: AppTextStyles.labelLarge.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.getTextPrimary(context),
+                Expanded(
+                  child: Text(
+                    'Cards in Deck (${cards.length})',
+                    style: AppTextStyles.labelLarge.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.getTextPrimary(context),
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                const SizedBox(width: 8),
                 Text(
                   'Swipe or tap to switch',
                   style: AppTextStyles.caption.copyWith(
@@ -1049,7 +1224,10 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.xs,
+            ),
             itemCount: cards.length,
             separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.xs),
             itemBuilder: (context, idx) {
@@ -1060,7 +1238,10 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                 borderRadius: BorderRadius.circular(12),
                 onTap: () => _goToCard(idx, cards.length),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: isCurrent
                         ? AppColors.getPrimary(context).withAlpha(20)
@@ -1080,11 +1261,15 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                         height: 10,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: isCurrent ? AppColors.getPrimary(context) : Colors.transparent,
+                          color: isCurrent
+                              ? AppColors.getPrimary(context)
+                              : Colors.transparent,
                           border: Border.all(
                             color: isCurrent
                                 ? AppColors.getPrimary(context)
-                                : AppColors.getTextSecondary(context).withAlpha(100),
+                                : AppColors.getTextSecondary(
+                                    context,
+                                  ).withAlpha(100),
                             width: 1.5,
                           ),
                         ),
@@ -1097,7 +1282,9 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                             Text(
                               cardItem.title,
                               style: TextStyle(
-                                fontWeight: isCurrent ? FontWeight.bold : FontWeight.w600,
+                                fontWeight: isCurrent
+                                    ? FontWeight.bold
+                                    : FontWeight.w600,
                                 color: isCurrent
                                     ? AppColors.getPrimary(context)
                                     : AppColors.getTextPrimary(context),
@@ -1115,7 +1302,11 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                         ),
                       ),
                       if (cardItem.isFavorite)
-                        const Icon(Icons.star_rounded, color: Colors.amber, size: 18),
+                        const Icon(
+                          Icons.star_rounded,
+                          color: Colors.amber,
+                          size: 18,
+                        ),
                       const SizedBox(width: 6),
                       const Icon(Icons.chevron_right_rounded, size: 18),
                     ],
@@ -1134,11 +1325,20 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
   // ==========================================
   // ACTIVE CARD INFORMATION PANEL (Requirement 7)
   // ==========================================
-  Widget _buildActiveCardInfoPanel(BuildContext context, StudioCardItem activeCard) {
-    final isPayment = activeCard.type == StudioCardType.payment && activeCard.paymentCard != null;
+  Widget _buildActiveCardInfoPanel(
+    BuildContext context,
+    StudioCardItem activeCard,
+  ) {
+    final isPayment =
+        activeCard.type == StudioCardType.payment &&
+        activeCard.paymentCard != null;
     final paymentCard = activeCard.paymentCard;
-    final currentTheme = isPayment ? CardStudioTheme.getTheme(paymentCard!.themeGradient) : null;
-    final currentLayout = isPayment ? CardStudioLayout.getLayout(paymentCard!.cardLayoutId) : null;
+    final currentTheme = isPayment
+        ? CardStudioTheme.getTheme(paymentCard!.themeGradient)
+        : null;
+    final currentLayout = isPayment
+        ? CardStudioLayout.getLayout(paymentCard!.cardLayoutId)
+        : null;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -1169,10 +1369,9 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                     children: [
                       Text(
                         activeCard.title,
-                        style: AppTextStyles.getBodyLarge(context).copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
+                        style: AppTextStyles.getBodyLarge(
+                          context,
+                        ).copyWith(fontWeight: FontWeight.bold, fontSize: 16),
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 2),
@@ -1188,16 +1387,22 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                 ),
                 IconButton(
                   icon: Icon(
-                    activeCard.isFavorite ? Icons.star_rounded : Icons.star_outline_rounded,
+                    activeCard.isFavorite
+                        ? Icons.star_rounded
+                        : Icons.star_outline_rounded,
                     color: activeCard.isFavorite ? Colors.amber : null,
                     size: 24,
                   ),
                   tooltip: 'Toggle Favorite',
                   onPressed: () {
                     if (activeCard.type == StudioCardType.payment) {
-                      context.read<WalletCardProvider>().toggleCardFavorite(activeCard.id);
+                      context.read<WalletCardProvider>().toggleCardFavorite(
+                        activeCard.id,
+                      );
                     } else {
-                      context.read<WalletDocumentProvider>().toggleDocumentFavorite(activeCard.id);
+                      context
+                          .read<WalletDocumentProvider>()
+                          .toggleDocumentFavorite(activeCard.id);
                     }
                     context.read<WalletProvider>().loadWallet();
                   },
@@ -1208,18 +1413,25 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
             // Theme & Layout Badges for Payment Cards
             if (isPayment && currentTheme != null && currentLayout != null) ...[
               const SizedBox(height: AppSpacing.sm),
-              Row(
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
                 children: [
                   // Theme Selector Pill
                   InkWell(
                     borderRadius: BorderRadius.circular(8),
                     onTap: () => CardThemeSheet.show(context, paymentCard!),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
                       decoration: BoxDecoration(
                         color: currentTheme.primaryAccent.withAlpha(25),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: currentTheme.primaryAccent.withAlpha(70)),
+                        border: Border.all(
+                          color: currentTheme.primaryAccent.withAlpha(70),
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -1242,19 +1454,25 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                             ),
                           ),
                           const SizedBox(width: 4),
-                          Icon(Icons.palette_outlined, size: 12, color: currentTheme.primaryAccent),
+                          Icon(
+                            Icons.palette_outlined,
+                            size: 12,
+                            color: currentTheme.primaryAccent,
+                          ),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
 
                   // Layout Selector Pill
                   InkWell(
                     borderRadius: BorderRadius.circular(8),
                     onTap: () => CardLayoutSheet.show(context, paymentCard!),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.getBackground(context),
                         borderRadius: BorderRadius.circular(8),
@@ -1263,7 +1481,11 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(currentLayout.icon, size: 12, color: AppColors.getTextSecondary(context)),
+                          Icon(
+                            currentLayout.icon,
+                            size: 12,
+                            color: AppColors.getTextSecondary(context),
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             currentLayout.name,
@@ -1286,49 +1508,63 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
             const Divider(height: 20),
 
             // Actions Dock
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildDeckActionButton(
-                  context,
-                  icon: Icons.info_outline_rounded,
-                  label: 'Card Details',
-                  onTap: () => _openCardItem(context, activeCard),
-                ),
-                if (isPayment) ...[
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
                   _buildDeckActionButton(
                     context,
-                    icon: Icons.palette_outlined,
-                    label: 'Change Theme',
-                    onTap: () => CardThemeSheet.show(context, paymentCard!),
+                    icon: Icons.info_outline_rounded,
+                    label: 'Card Details',
+                    onTap: () => _openCardItem(context, activeCard),
                   ),
+                  const SizedBox(width: 8),
+                  if (isPayment) ...[
+                    _buildDeckActionButton(
+                      context,
+                      icon: Icons.palette_outlined,
+                      label: 'Change Theme',
+                      onTap: () => CardThemeSheet.show(context, paymentCard!),
+                    ),
+                    const SizedBox(width: 8),
+                    _buildDeckActionButton(
+                      context,
+                      icon: Icons.view_quilt_outlined,
+                      label: 'Change Layout',
+                      onTap: () => CardLayoutSheet.show(context, paymentCard!),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
                   _buildDeckActionButton(
                     context,
-                    icon: Icons.view_quilt_outlined,
-                    label: 'Change Layout',
-                    onTap: () => CardLayoutSheet.show(context, paymentCard!),
+                    icon: _revealedCardId == activeCard.id
+                        ? Icons.lock_open_rounded
+                        : Icons.lock_outline_rounded,
+                    label: _revealedCardId == activeCard.id
+                        ? 'Hide Number'
+                        : 'Secure Reveal',
+                    color: _revealedCardId == activeCard.id
+                        ? AppColors.primary
+                        : null,
+                    onTap: () {
+                      if (_revealedCardId == activeCard.id) {
+                        _remaskNumber();
+                      } else {
+                        _revealActiveCardNumber(activeCard);
+                      }
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  _buildDeckActionButton(
+                    context,
+                    icon: Icons.copy_rounded,
+                    label: 'Copy Number',
+                    onTap: () => _copyActiveCardNumber(activeCard),
                   ),
                 ],
-                _buildDeckActionButton(
-                  context,
-                  icon: _revealedCardId == activeCard.id ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
-                  label: _revealedCardId == activeCard.id ? 'Hide Number' : 'Secure Reveal',
-                  color: _revealedCardId == activeCard.id ? AppColors.primary : null,
-                  onTap: () {
-                    if (_revealedCardId == activeCard.id) {
-                      _remaskNumber();
-                    } else {
-                      _revealActiveCardNumber(activeCard);
-                    }
-                  },
-                ),
-                _buildDeckActionButton(
-                  context,
-                  icon: Icons.copy_rounded,
-                  label: 'Copy Number',
-                  onTap: () => _copyActiveCardNumber(activeCard),
-                ),
-              ],
+              ),
             ),
           ],
         ),

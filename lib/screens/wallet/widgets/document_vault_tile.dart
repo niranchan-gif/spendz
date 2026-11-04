@@ -67,7 +67,9 @@ class DocumentVaultTile extends StatelessWidget {
     final surfaceColor = AppColors.getSurface(context);
     final borderColor = isExpired
         ? AppColors.error.withAlpha(120)
-        : (isExpiringSoon ? AppColors.warning.withAlpha(120) : AppColors.getBorder(context));
+        : (isExpiringSoon
+              ? AppColors.warning.withAlpha(120)
+              : AppColors.getBorder(context));
     final textPrimary = AppColors.getTextPrimary(context);
     final textSecondary = AppColors.getTextSecondary(context);
 
@@ -140,7 +142,10 @@ class DocumentVaultTile extends StatelessWidget {
               if (document.mimeType.contains('pdf'))
                 Container(
                   margin: const EdgeInsets.only(left: 6),
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.error.withAlpha(25),
                     borderRadius: BorderRadius.circular(AppRadius.xs),
@@ -164,7 +169,12 @@ class DocumentVaultTile extends StatelessWidget {
               Text(
                 document.holderName != null && document.maskedIdentifier != null
                     ? '${document.holderName} • ${document.maskedIdentifier}'
-                    : (document.maskedIdentifier ?? document.holderName ?? (document.description ?? document.category.replaceAll('_', ' ').toUpperCase())),
+                    : (document.maskedIdentifier ??
+                          document.holderName ??
+                          (document.description ??
+                              document.category
+                                  .replaceAll('_', ' ')
+                                  .toUpperCase())),
                 style: AppTextStyles.bodySmall.copyWith(
                   color: textSecondary,
                   fontSize: 11,
@@ -191,25 +201,32 @@ class DocumentVaultTile extends StatelessWidget {
                   if (document.expiryDate != null)
                     Flexible(
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: isExpired
                               ? AppColors.error.withAlpha(25)
-                              : (isExpiringSoon ? AppColors.warning.withAlpha(25) : AppColors.primary.withAlpha(15)),
+                              : (isExpiringSoon
+                                    ? AppColors.warning.withAlpha(25)
+                                    : AppColors.primary.withAlpha(15)),
                           borderRadius: BorderRadius.circular(AppRadius.xs),
                         ),
                         child: Text(
                           isExpired
                               ? 'Expired (${DateFormat('dd MMM yy').format(document.expiryDate!)})'
                               : (isExpiringSoon
-                                  ? 'Expires in ${document.expiryDate!.difference(DateTime.now()).inDays}d'
-                                  : 'Exp: ${DateFormat('dd MMM yy').format(document.expiryDate!)}'),
+                                    ? 'Expires in ${document.expiryDate!.difference(DateTime.now()).inDays}d'
+                                    : 'Exp: ${DateFormat('dd MMM yy').format(document.expiryDate!)}'),
                           style: AppTextStyles.caption.copyWith(
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
                             color: isExpired
                                 ? AppColors.error
-                                : (isExpiringSoon ? AppColors.warning : AppColors.primary),
+                                : (isExpiringSoon
+                                      ? AppColors.warning
+                                      : AppColors.primary),
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -233,8 +250,12 @@ class DocumentVaultTile extends StatelessWidget {
               if (onFavoriteToggle != null)
                 IconButton(
                   icon: Icon(
-                    document.isFavorite ? Icons.star_rounded : Icons.star_outline_rounded,
-                    color: document.isFavorite ? Colors.amber : textSecondary.withAlpha(120),
+                    document.isFavorite
+                        ? Icons.star_rounded
+                        : Icons.star_outline_rounded,
+                    color: document.isFavorite
+                        ? Colors.amber
+                        : textSecondary.withAlpha(120),
                     size: 20,
                   ),
                   onPressed: onFavoriteToggle,

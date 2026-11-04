@@ -119,22 +119,31 @@ Future<void> _createV4Tables(Database db) async {
     )
   ''');
   await db.execute('CREATE INDEX idx_transactions_date ON transactions (date)');
-  await db.execute('CREATE INDEX idx_transactions_card_id ON transactions (card_id)');
+  await db.execute(
+    'CREATE INDEX idx_transactions_card_id ON transactions (card_id)',
+  );
   await _createWalletTables(db);
 }
 
 Future<void> _migrateToV4(Database db, int oldVersion) async {
   if (oldVersion < 2) {
-    await db.execute('ALTER TABLE transactions ADD COLUMN owed_amount REAL DEFAULT 0.0');
+    await db.execute(
+      'ALTER TABLE transactions ADD COLUMN owed_amount REAL DEFAULT 0.0',
+    );
   }
   if (oldVersion < 3) {
-    await db.execute('ALTER TABLE transactions ADD COLUMN expected_payments INTEGER DEFAULT 0');
-    await db.execute('ALTER TABLE transactions ADD COLUMN linked_payments INTEGER DEFAULT 0');
+    await db.execute(
+      'ALTER TABLE transactions ADD COLUMN expected_payments INTEGER DEFAULT 0',
+    );
+    await db.execute(
+      'ALTER TABLE transactions ADD COLUMN linked_payments INTEGER DEFAULT 0',
+    );
   }
   if (oldVersion < 4) {
     await db.execute('ALTER TABLE transactions ADD COLUMN card_id TEXT');
     await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_transactions_card_id ON transactions (card_id)');
+      'CREATE INDEX IF NOT EXISTS idx_transactions_card_id ON transactions (card_id)',
+    );
     await _createWalletTables(db);
   }
 }
@@ -199,64 +208,66 @@ Future<void> _createWalletTables(Database db) async {
 
 // ─── Sample data factories ───────────────────────────────────────────────────
 
-Map<String, dynamic> _sampleCard({String id = 'card-1', bool favorite = false}) => {
-      'id': id,
-      'nickname': 'My HDFC Card',
-      'issuer_name': 'HDFC Bank',
-      'cardholder_name': 'Test User',
-      'masked_number': '**** **** **** 1234',
-      'last_four': '1234',
-      'expiry_month': 12,
-      'expiry_year': 2027,
-      'card_type': 'debit',
-      'card_network': 'Visa',
-      'theme_gradient': 'blue,darkBlue',
-      'is_favorite': favorite ? 1 : 0,
-      'created_at': '2024-01-01T00:00:00.000',
-      'updated_at': '2024-01-01T00:00:00.000',
-    };
+Map<String, dynamic> _sampleCard({
+  String id = 'card-1',
+  bool favorite = false,
+}) => {
+  'id': id,
+  'nickname': 'My HDFC Card',
+  'issuer_name': 'HDFC Bank',
+  'cardholder_name': 'Test User',
+  'masked_number': '**** **** **** 1234',
+  'last_four': '1234',
+  'expiry_month': 12,
+  'expiry_year': 2027,
+  'card_type': 'debit',
+  'card_network': 'Visa',
+  'theme_gradient': 'blue,darkBlue',
+  'is_favorite': favorite ? 1 : 0,
+  'created_at': '2024-01-01T00:00:00.000',
+  'updated_at': '2024-01-01T00:00:00.000',
+};
 
 Map<String, dynamic> _sampleDoc({
   String id = 'doc-1',
   String category = 'identity',
   String? expiryDate,
   bool favorite = false,
-}) =>
-    {
-      'id': id,
-      'document_name': 'Aadhaar Card',
-      'category': category,
-      'description': 'Government ID',
-      'encrypted_file_path': '/secure/aadhaar.enc',
-      'thumbnail_path': null,
-      'mime_type': 'application/pdf',
-      'file_size': 102400,
-      'issue_date': '2020-01-01',
-      'expiry_date': expiryDate,
-      'is_favorite': favorite ? 1 : 0,
-      'created_at': '2024-01-01T00:00:00.000',
-      'updated_at': '2024-01-01T00:00:00.000',
-    };
+}) => {
+  'id': id,
+  'document_name': 'Aadhaar Card',
+  'category': category,
+  'description': 'Government ID',
+  'encrypted_file_path': '/secure/aadhaar.enc',
+  'thumbnail_path': null,
+  'mime_type': 'application/pdf',
+  'file_size': 102400,
+  'issue_date': '2020-01-01',
+  'expiry_date': expiryDate,
+  'is_favorite': favorite ? 1 : 0,
+  'created_at': '2024-01-01T00:00:00.000',
+  'updated_at': '2024-01-01T00:00:00.000',
+};
 
 Map<String, dynamic> _samplePass({
   String id = 'pass-1',
   String? validUntil,
   bool favorite = false,
-}) =>
-    {
-      'id': id,
-      'title': 'Gym Membership',
-      'pass_type': 'membership',
-      'encrypted_code_path': 'GYM123456',
-      'code_format': 'QR_CODE',
-      'issuer': 'FitLife Gym',
-      'valid_until': validUntil,
-      'is_favorite': favorite ? 1 : 0,
-      'created_at': '2024-01-01T00:00:00.000',
-      'updated_at': '2024-01-01T00:00:00.000',
-    };
+}) => {
+  'id': id,
+  'title': 'Gym Membership',
+  'pass_type': 'membership',
+  'encrypted_code_path': 'GYM123456',
+  'code_format': 'QR_CODE',
+  'issuer': 'FitLife Gym',
+  'valid_until': validUntil,
+  'is_favorite': favorite ? 1 : 0,
+  'created_at': '2024-01-01T00:00:00.000',
+  'updated_at': '2024-01-01T00:00:00.000',
+};
 
-Map<String, dynamic> _sampleTransaction({String id = 'tx-1', String? cardId}) => {
+Map<String, dynamic> _sampleTransaction({String id = 'tx-1', String? cardId}) =>
+    {
       'id': id,
       'amount': 500.0,
       'type': 'expense',
@@ -330,9 +341,18 @@ void main() {
 
       // Wallet tables must exist
       final tables = await v4db.rawQuery(
-          "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name");
+        "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name",
+      );
       final names = tables.map((r) => r['name'] as String).toSet();
-      expect(names, containsAll(['wallet_cards', 'wallet_documents', 'wallet_passes', 'wallet_preferences']));
+      expect(
+        names,
+        containsAll([
+          'wallet_cards',
+          'wallet_documents',
+          'wallet_passes',
+          'wallet_preferences',
+        ]),
+      );
 
       // card_id column must exist on transactions
       final cols = await v4db.rawQuery('PRAGMA table_info(transactions)');
@@ -359,16 +379,20 @@ void main() {
     test('all 6 tables are created', () async {
       final db = await _openV4(inMemoryDatabasePath);
       final tables = await db.rawQuery(
-          "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name");
+        "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name",
+      );
       final names = tables.map((r) => r['name'] as String).toSet();
-      expect(names, containsAll([
-        'categories',
-        'transactions',
-        'wallet_cards',
-        'wallet_documents',
-        'wallet_passes',
-        'wallet_preferences',
-      ]));
+      expect(
+        names,
+        containsAll([
+          'categories',
+          'transactions',
+          'wallet_cards',
+          'wallet_documents',
+          'wallet_passes',
+          'wallet_preferences',
+        ]),
+      );
       await db.close();
     });
 
@@ -376,7 +400,10 @@ void main() {
       final db = await _openV4(inMemoryDatabasePath);
       final cols = await db.rawQuery('PRAGMA table_info(transactions)');
       final colNames = cols.map((c) => c['name'] as String).toSet();
-      expect(colNames, containsAll(['card_id', 'amount', 'type', 'date', 'source']));
+      expect(
+        colNames,
+        containsAll(['card_id', 'amount', 'type', 'date', 'source']),
+      );
       await db.close();
     });
   });
@@ -390,7 +417,11 @@ void main() {
 
     test('insert and read by id', () async {
       await db.insert('wallet_cards', _sampleCard());
-      final rows = await db.query('wallet_cards', where: 'id = ?', whereArgs: ['card-1']);
+      final rows = await db.query(
+        'wallet_cards',
+        where: 'id = ?',
+        whereArgs: ['card-1'],
+      );
       expect(rows.length, 1);
       expect(rows.first['nickname'], 'My HDFC Card');
       expect(rows.first['last_four'], '1234');
@@ -404,7 +435,11 @@ void main() {
         where: 'id = ?',
         whereArgs: ['card-1'],
       );
-      final rows = await db.query('wallet_cards', where: 'id = ?', whereArgs: ['card-1']);
+      final rows = await db.query(
+        'wallet_cards',
+        where: 'id = ?',
+        whereArgs: ['card-1'],
+      );
       expect(rows.first['nickname'], 'HDFC Platinum');
     });
 
@@ -424,8 +459,10 @@ void main() {
 
     test('search cards by nickname', () async {
       await db.insert('wallet_cards', _sampleCard(id: 'card-1'));
-      await db.insert('wallet_cards', _sampleCard(id: 'card-2')
-        ..['nickname'] = 'SBI Savings');
+      await db.insert(
+        'wallet_cards',
+        _sampleCard(id: 'card-2')..['nickname'] = 'SBI Savings',
+      );
       final results = await db.query(
         'wallet_cards',
         where: 'nickname LIKE ?',
@@ -435,8 +472,14 @@ void main() {
     });
 
     test('favorite filtering', () async {
-      await db.insert('wallet_cards', _sampleCard(id: 'card-1', favorite: true));
-      await db.insert('wallet_cards', _sampleCard(id: 'card-2', favorite: false));
+      await db.insert(
+        'wallet_cards',
+        _sampleCard(id: 'card-1', favorite: true),
+      );
+      await db.insert(
+        'wallet_cards',
+        _sampleCard(id: 'card-2', favorite: false),
+      );
       final favs = await db.query('wallet_cards', where: 'is_favorite = 1');
       expect(favs.length, 1);
       expect(favs.first['id'], 'card-1');
@@ -450,7 +493,11 @@ void main() {
         where: 'id = ?',
         whereArgs: ['card-1'],
       );
-      final row = await db.query('wallet_cards', where: 'id = ?', whereArgs: ['card-1']);
+      final row = await db.query(
+        'wallet_cards',
+        where: 'id = ?',
+        whereArgs: ['card-1'],
+      );
       expect(row.first['is_favorite'], 1);
     });
   });
@@ -470,22 +517,46 @@ void main() {
     });
 
     test('category filter', () async {
-      await db.insert('wallet_documents', _sampleDoc(id: 'doc-1', category: 'identity'));
-      await db.insert('wallet_documents', _sampleDoc(id: 'doc-2', category: 'financial'));
-      final identity = await db.query('wallet_documents',
-          where: 'category = ?', whereArgs: ['identity']);
+      await db.insert(
+        'wallet_documents',
+        _sampleDoc(id: 'doc-1', category: 'identity'),
+      );
+      await db.insert(
+        'wallet_documents',
+        _sampleDoc(id: 'doc-2', category: 'financial'),
+      );
+      final identity = await db.query(
+        'wallet_documents',
+        where: 'category = ?',
+        whereArgs: ['identity'],
+      );
       expect(identity.length, 1);
       expect(identity.first['id'], 'doc-1');
     });
 
     test('expiry filter — expiring within 30 days', () async {
-      final soon = DateTime.now().add(const Duration(days: 15)).toIso8601String().substring(0, 10);
-      final later = DateTime.now().add(const Duration(days: 90)).toIso8601String().substring(0, 10);
-      await db.insert('wallet_documents', _sampleDoc(id: 'doc-soon', expiryDate: soon));
-      await db.insert('wallet_documents', _sampleDoc(id: 'doc-later', expiryDate: later));
+      final soon = DateTime.now()
+          .add(const Duration(days: 15))
+          .toIso8601String()
+          .substring(0, 10);
+      final later = DateTime.now()
+          .add(const Duration(days: 90))
+          .toIso8601String()
+          .substring(0, 10);
+      await db.insert(
+        'wallet_documents',
+        _sampleDoc(id: 'doc-soon', expiryDate: soon),
+      );
+      await db.insert(
+        'wallet_documents',
+        _sampleDoc(id: 'doc-later', expiryDate: later),
+      );
       await db.insert('wallet_documents', _sampleDoc(id: 'doc-null'));
 
-      final cutoff = DateTime.now().add(const Duration(days: 30)).toIso8601String().substring(0, 10);
+      final cutoff = DateTime.now()
+          .add(const Duration(days: 30))
+          .toIso8601String()
+          .substring(0, 10);
       final expiring = await db.query(
         'wallet_documents',
         where: 'expiry_date IS NOT NULL AND expiry_date <= ?',
@@ -496,20 +567,38 @@ void main() {
     });
 
     test('favorite filtering', () async {
-      await db.insert('wallet_documents', _sampleDoc(id: 'doc-1', favorite: true));
-      await db.insert('wallet_documents', _sampleDoc(id: 'doc-2', favorite: false));
+      await db.insert(
+        'wallet_documents',
+        _sampleDoc(id: 'doc-1', favorite: true),
+      );
+      await db.insert(
+        'wallet_documents',
+        _sampleDoc(id: 'doc-2', favorite: false),
+      );
       final favs = await db.query('wallet_documents', where: 'is_favorite = 1');
       expect(favs.length, 1);
     });
 
     test('update and delete', () async {
       await db.insert('wallet_documents', _sampleDoc());
-      await db.update('wallet_documents', {'document_name': 'PAN Card'},
-          where: 'id = ?', whereArgs: ['doc-1']);
-      final row = await db.query('wallet_documents', where: 'id = ?', whereArgs: ['doc-1']);
+      await db.update(
+        'wallet_documents',
+        {'document_name': 'PAN Card'},
+        where: 'id = ?',
+        whereArgs: ['doc-1'],
+      );
+      final row = await db.query(
+        'wallet_documents',
+        where: 'id = ?',
+        whereArgs: ['doc-1'],
+      );
       expect(row.first['document_name'], 'PAN Card');
 
-      await db.delete('wallet_documents', where: 'id = ?', whereArgs: ['doc-1']);
+      await db.delete(
+        'wallet_documents',
+        where: 'id = ?',
+        whereArgs: ['doc-1'],
+      );
       expect(await db.query('wallet_documents'), isEmpty);
     });
   });
@@ -530,10 +619,20 @@ void main() {
     });
 
     test('active passes filter (valid_until > now or null)', () async {
-      final future = DateTime.now().add(const Duration(days: 30)).toIso8601String();
-      final past = DateTime.now().subtract(const Duration(days: 1)).toIso8601String();
-      await db.insert('wallet_passes', _samplePass(id: 'pass-future', validUntil: future));
-      await db.insert('wallet_passes', _samplePass(id: 'pass-past', validUntil: past));
+      final future = DateTime.now()
+          .add(const Duration(days: 30))
+          .toIso8601String();
+      final past = DateTime.now()
+          .subtract(const Duration(days: 1))
+          .toIso8601String();
+      await db.insert(
+        'wallet_passes',
+        _samplePass(id: 'pass-future', validUntil: future),
+      );
+      await db.insert(
+        'wallet_passes',
+        _samplePass(id: 'pass-past', validUntil: past),
+      );
       await db.insert('wallet_passes', _samplePass(id: 'pass-null'));
 
       final now = DateTime.now().toIso8601String();
@@ -549,18 +648,31 @@ void main() {
 
     test('search passes by title', () async {
       await db.insert('wallet_passes', _samplePass(id: 'pass-1'));
-      await db.insert('wallet_passes',
-          {..._samplePass(id: 'pass-2'), 'title': 'Movie Ticket'});
-      final results = await db.query('wallet_passes',
-          where: 'title LIKE ?', whereArgs: ['%Gym%']);
+      await db.insert('wallet_passes', {
+        ..._samplePass(id: 'pass-2'),
+        'title': 'Movie Ticket',
+      });
+      final results = await db.query(
+        'wallet_passes',
+        where: 'title LIKE ?',
+        whereArgs: ['%Gym%'],
+      );
       expect(results.length, 1);
     });
 
     test('favorite toggle', () async {
       await db.insert('wallet_passes', _samplePass());
-      await db.update('wallet_passes', {'is_favorite': 1},
-          where: 'id = ?', whereArgs: ['pass-1']);
-      final row = await db.query('wallet_passes', where: 'id = ?', whereArgs: ['pass-1']);
+      await db.update(
+        'wallet_passes',
+        {'is_favorite': 1},
+        where: 'id = ?',
+        whereArgs: ['pass-1'],
+      );
+      final row = await db.query(
+        'wallet_passes',
+        where: 'id = ?',
+        whereArgs: ['pass-1'],
+      );
       expect(row.first['is_favorite'], 1);
     });
   });
@@ -573,37 +685,58 @@ void main() {
     tearDown(() async => db.close());
 
     test('set and get preference', () async {
-      await db.insert('wallet_preferences', {'key': 'theme', 'value': 'dark'},
-          conflictAlgorithm: ConflictAlgorithm.replace);
-      final rows = await db.query('wallet_preferences',
-          where: 'key = ?', whereArgs: ['theme']);
+      await db.insert('wallet_preferences', {
+        'key': 'theme',
+        'value': 'dark',
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      final rows = await db.query(
+        'wallet_preferences',
+        where: 'key = ?',
+        whereArgs: ['theme'],
+      );
       expect(rows.first['value'], 'dark');
     });
 
     test('update preference via replace', () async {
-      await db.insert('wallet_preferences', {'key': 'theme', 'value': 'dark'},
-          conflictAlgorithm: ConflictAlgorithm.replace);
-      await db.insert('wallet_preferences', {'key': 'theme', 'value': 'light'},
-          conflictAlgorithm: ConflictAlgorithm.replace);
+      await db.insert('wallet_preferences', {
+        'key': 'theme',
+        'value': 'dark',
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      await db.insert('wallet_preferences', {
+        'key': 'theme',
+        'value': 'light',
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
       final rows = await db.query('wallet_preferences');
       expect(rows.length, 1);
       expect(rows.first['value'], 'light');
     });
 
     test('delete preference', () async {
-      await db.insert('wallet_preferences', {'key': 'key1', 'value': 'val1'},
-          conflictAlgorithm: ConflictAlgorithm.replace);
-      await db.delete('wallet_preferences', where: 'key = ?', whereArgs: ['key1']);
+      await db.insert('wallet_preferences', {
+        'key': 'key1',
+        'value': 'val1',
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      await db.delete(
+        'wallet_preferences',
+        where: 'key = ?',
+        whereArgs: ['key1'],
+      );
       expect(await db.query('wallet_preferences'), isEmpty);
     });
 
     test('get all preferences returns map', () async {
-      await db.insert('wallet_preferences', {'key': 'a', 'value': '1'},
-          conflictAlgorithm: ConflictAlgorithm.replace);
-      await db.insert('wallet_preferences', {'key': 'b', 'value': '2'},
-          conflictAlgorithm: ConflictAlgorithm.replace);
+      await db.insert('wallet_preferences', {
+        'key': 'a',
+        'value': '1',
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      await db.insert('wallet_preferences', {
+        'key': 'b',
+        'value': '2',
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
       final rows = await db.query('wallet_preferences');
-      final map = {for (var r in rows) r['key'] as String: r['value'] as String};
+      final map = {
+        for (var r in rows) r['key'] as String: r['value'] as String,
+      };
       expect(map, {'a': '1', 'b': '2'});
     });
   });
@@ -619,55 +752,100 @@ void main() {
       await db.insert('wallet_cards', _sampleCard());
       await db.insert('transactions', _sampleTransaction(id: 'tx-1'));
 
-      await db.update('transactions', {'card_id': 'card-1'},
-          where: 'id = ?', whereArgs: ['tx-1']);
-      final tx = await db.query('transactions', where: 'id = ?', whereArgs: ['tx-1']);
+      await db.update(
+        'transactions',
+        {'card_id': 'card-1'},
+        where: 'id = ?',
+        whereArgs: ['tx-1'],
+      );
+      final tx = await db.query(
+        'transactions',
+        where: 'id = ?',
+        whereArgs: ['tx-1'],
+      );
       expect(tx.first['card_id'], 'card-1');
     });
 
     test('get transactions by card_id', () async {
       await db.insert('wallet_cards', _sampleCard());
-      await db.insert('transactions', _sampleTransaction(id: 'tx-1', cardId: 'card-1'));
+      await db.insert(
+        'transactions',
+        _sampleTransaction(id: 'tx-1', cardId: 'card-1'),
+      );
       await db.insert('transactions', _sampleTransaction(id: 'tx-2'));
 
-      final byCard =
-          await db.query('transactions', where: 'card_id = ?', whereArgs: ['card-1']);
+      final byCard = await db.query(
+        'transactions',
+        where: 'card_id = ?',
+        whereArgs: ['card-1'],
+      );
       expect(byCard.length, 1);
       expect(byCard.first['id'], 'tx-1');
     });
 
-    test('safe delete: card deletion nullifies card_id on transactions', () async {
-      await db.insert('wallet_cards', _sampleCard());
-      await db.insert('transactions', _sampleTransaction(id: 'tx-1', cardId: 'card-1'));
+    test(
+      'safe delete: card deletion nullifies card_id on transactions',
+      () async {
+        await db.insert('wallet_cards', _sampleCard());
+        await db.insert(
+          'transactions',
+          _sampleTransaction(id: 'tx-1', cardId: 'card-1'),
+        );
 
-      // Simulate WalletCardRepository safe delete
-      await db.update('transactions', {'card_id': null},
-          where: 'card_id = ?', whereArgs: ['card-1']);
-      await db.delete('wallet_cards', where: 'id = ?', whereArgs: ['card-1']);
+        // Simulate WalletCardRepository safe delete
+        await db.update(
+          'transactions',
+          {'card_id': null},
+          where: 'card_id = ?',
+          whereArgs: ['card-1'],
+        );
+        await db.delete('wallet_cards', where: 'id = ?', whereArgs: ['card-1']);
 
-      final tx = await db.query('transactions', where: 'id = ?', whereArgs: ['tx-1']);
-      expect(tx.first['card_id'], isNull);
-      expect(await db.query('wallet_cards'), isEmpty);
-    });
+        final tx = await db.query(
+          'transactions',
+          where: 'id = ?',
+          whereArgs: ['tx-1'],
+        );
+        expect(tx.first['card_id'], isNull);
+        expect(await db.query('wallet_cards'), isEmpty);
+      },
+    );
 
     test('existing transactions without card_id load correctly', () async {
       await db.insert('transactions', _sampleTransaction(id: 'tx-legacy'));
-      final tx = await db.query('transactions', where: 'id = ?', whereArgs: ['tx-legacy']);
+      final tx = await db.query(
+        'transactions',
+        where: 'id = ?',
+        whereArgs: ['tx-legacy'],
+      );
       expect(tx.first['card_id'], isNull);
       expect(tx.first['amount'], 500.0);
     });
 
     test('unlink card from all transactions', () async {
       await db.insert('wallet_cards', _sampleCard());
-      await db.insert('transactions', _sampleTransaction(id: 'tx-a', cardId: 'card-1'));
-      await db.insert('transactions', _sampleTransaction(id: 'tx-b', cardId: 'card-1'));
+      await db.insert(
+        'transactions',
+        _sampleTransaction(id: 'tx-a', cardId: 'card-1'),
+      );
+      await db.insert(
+        'transactions',
+        _sampleTransaction(id: 'tx-b', cardId: 'card-1'),
+      );
       await db.insert('transactions', _sampleTransaction(id: 'tx-c'));
 
-      await db.update('transactions', {'card_id': null},
-          where: 'card_id = ?', whereArgs: ['card-1']);
+      await db.update(
+        'transactions',
+        {'card_id': null},
+        where: 'card_id = ?',
+        whereArgs: ['card-1'],
+      );
 
-      final linked =
-          await db.query('transactions', where: 'card_id = ?', whereArgs: ['card-1']);
+      final linked = await db.query(
+        'transactions',
+        where: 'card_id = ?',
+        whereArgs: ['card-1'],
+      );
       expect(linked, isEmpty);
 
       final all = await db.query('transactions');
@@ -703,15 +881,23 @@ void main() {
     });
 
     test('querying non-existent id returns empty list', () async {
-      final rows = await db.query('wallet_cards', where: 'id = ?', whereArgs: ['no-such-id']);
+      final rows = await db.query(
+        'wallet_cards',
+        where: 'id = ?',
+        whereArgs: ['no-such-id'],
+      );
       expect(rows, isEmpty);
     });
 
     test('preference key is unique — no duplicates', () async {
-      await db.insert('wallet_preferences', {'key': 'k', 'value': 'v1'},
-          conflictAlgorithm: ConflictAlgorithm.replace);
-      await db.insert('wallet_preferences', {'key': 'k', 'value': 'v2'},
-          conflictAlgorithm: ConflictAlgorithm.replace);
+      await db.insert('wallet_preferences', {
+        'key': 'k',
+        'value': 'v1',
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      await db.insert('wallet_preferences', {
+        'key': 'k',
+        'value': 'v2',
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
       final rows = await db.query('wallet_preferences');
       expect(rows.length, 1);
       expect(rows.first['value'], 'v2');

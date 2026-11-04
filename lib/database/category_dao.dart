@@ -18,11 +18,7 @@ class CategoryDao {
 
   Future<CategoryModel?> getCategoryById(String id) async {
     final db = await dbHelper.database;
-    final maps = await db.query(
-      'categories',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    final maps = await db.query('categories', where: 'id = ?', whereArgs: [id]);
 
     if (maps.isNotEmpty) {
       return CategoryModel.fromMap(maps.first);
@@ -42,10 +38,6 @@ class CategoryDao {
 
   Future<int> delete(String id) async {
     final db = await dbHelper.database;
-    return await db.delete(
-      'categories',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('categories', where: 'id = ?', whereArgs: [id]);
   }
 }

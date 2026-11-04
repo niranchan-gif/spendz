@@ -111,9 +111,12 @@ class AppTextStyles {
     return heading3.copyWith(color: AppColors.getTextPrimary(context));
   }
 
-  static TextStyle getHeadingLarge(BuildContext context) => getHeading1(context);
-  static TextStyle getHeadingMedium(BuildContext context) => getHeading2(context);
-  static TextStyle getHeadingSmall(BuildContext context) => getHeading3(context);
+  static TextStyle getHeadingLarge(BuildContext context) =>
+      getHeading1(context);
+  static TextStyle getHeadingMedium(BuildContext context) =>
+      getHeading2(context);
+  static TextStyle getHeadingSmall(BuildContext context) =>
+      getHeading3(context);
   static TextStyle getCaption(BuildContext context) => getBodySmall(context);
 
   static TextStyle getBodyLarge(BuildContext context) {

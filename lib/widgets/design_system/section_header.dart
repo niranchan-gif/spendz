@@ -39,16 +39,13 @@ class SectionHeader extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: AppTextStyles.getHeading3(context).copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: AppTextStyles.getHeading3(
+                    context,
+                  ).copyWith(fontWeight: FontWeight.w700),
                 ),
                 if (subtitle != null) ...[
                   const SizedBox(height: 2),
-                  Text(
-                    subtitle!,
-                    style: AppTextStyles.getBodySmall(context),
-                  ),
+                  Text(subtitle!, style: AppTextStyles.getBodySmall(context)),
                 ],
               ],
             ),
@@ -59,7 +56,10 @@ class SectionHeader extends StatelessWidget {
             TextButton(
               onPressed: _effectiveAction,
               style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                  vertical: AppSpacing.xs,
+                ),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),

@@ -28,10 +28,7 @@ import 'widgets/virtual_document_card.dart';
 class DocumentPreviewScreen extends StatefulWidget {
   final WalletDocumentModel document;
 
-  const DocumentPreviewScreen({
-    super.key,
-    required this.document,
-  });
+  const DocumentPreviewScreen({super.key, required this.document});
 
   @override
   State<DocumentPreviewScreen> createState() => _DocumentPreviewScreenState();
@@ -64,7 +61,9 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
   }
 
   Future<void> _loadSecureDocNumber() async {
-    final num = await _secureNumberService.getDocumentFullNumber(_currentDocument.id);
+    final num = await _secureNumberService.getDocumentFullNumber(
+      _currentDocument.id,
+    );
     if (mounted && num != null) {
       setState(() => _secureDocumentNumber = num);
     }
@@ -95,7 +94,8 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
 
     final authService = context.read<WalletAuthService>();
     final authenticated = await authService.authenticate(
-      localizedReason: 'Authenticate to view "${_currentDocument.documentName}"',
+      localizedReason:
+          'Authenticate to view "${_currentDocument.documentName}"',
     );
 
     if (!mounted) return;
@@ -103,7 +103,9 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
     if (!authenticated) {
       setState(() {
         _isAuthenticating = false;
-        _errorMessage = authService.lastErrorMessage ?? 'Authentication required to preview this document.';
+        _errorMessage =
+            authService.lastErrorMessage ??
+            'Authentication required to preview this document.';
       });
       return;
     }
@@ -115,7 +117,9 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
 
     try {
       if (_currentDocument.mimeType.contains('pdf')) {
-        final file = await _vaultService.stageDecryptedPreviewFile(_currentDocument);
+        final file = await _vaultService.stageDecryptedPreviewFile(
+          _currentDocument,
+        );
         if (!mounted) {
           await _vaultService.cleanupPreviewFile(file);
           return;
@@ -125,7 +129,9 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
           _isDecrypting = false;
         });
       } else {
-        final bytes = await _vaultService.decryptDocumentBytes(_currentDocument);
+        final bytes = await _vaultService.decryptDocumentBytes(
+          _currentDocument,
+        );
         if (!mounted) return;
         setState(() {
           _decryptedImageBytes = bytes;
@@ -137,7 +143,8 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
       setState(() {
         _isDecrypting = false;
         if (e is DecryptionAuthenticationException) {
-          _errorMessage = 'Decryption failed: Document integrity check failed or master key mismatch.';
+          _errorMessage =
+              'Decryption failed: Document integrity check failed or master key mismatch.';
         } else if (e is VaultSecurityException) {
           _errorMessage = e.message;
         } else {
@@ -168,7 +175,10 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
         } catch (e) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error opening PDF: $e'), backgroundColor: AppColors.error),
+              SnackBar(
+                content: Text('Error opening PDF: $e'),
+                backgroundColor: AppColors.error,
+              ),
             );
           }
         }
@@ -232,7 +242,10 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
       if (mounted) {
         setState(() => _isExporting = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not open document: $e'), backgroundColor: AppColors.error),
+          SnackBar(
+            content: Text('Could not open document: $e'),
+            backgroundColor: AppColors.error,
+          ),
         );
       }
     }
@@ -254,10 +267,9 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
         if (_stagedPdfFile != null) {
           bytes = await _stagedPdfFile!.readAsBytes();
         } else if (_decryptedImageBytes != null) {
-          bytes = DocumentScannerService().generatePdfFromPages(
-            [_decryptedImageBytes!],
-            title: _currentDocument.documentName,
-          );
+          bytes = DocumentScannerService().generatePdfFromPages([
+            _decryptedImageBytes!,
+          ], title: _currentDocument.documentName);
         } else {
           final pdfFile = await _exportService.generateDocumentPdf(
             document: _currentDocument,
@@ -275,7 +287,9 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
         bytes = await pdfFile.readAsBytes();
       }
 
-      final defaultName = DocumentScannerService.getDefaultPdfFileName(_currentDocument.category);
+      final defaultName = DocumentScannerService.getDefaultPdfFileName(
+        _currentDocument.category,
+      );
       final savedPath = await DocumentScannerService().savePdfToPhoneStorage(
         pdfBytes: bytes,
         fileName: defaultName,
@@ -294,13 +308,23 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
                   Text('Saved to Device'),
                 ],
               ),
-              content: Text('Document successfully saved to phone storage:\n\n$savedPath\n\nYou can access it using your phone\'s Files or Downloads app.'),
+              content: Text(
+                'Document successfully saved to phone storage:\n\n$savedPath\n\nYou can access it using your phone\'s Files or Downloads app.',
+              ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Close'),
+                ),
                 ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                  ),
                   icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                  label: const Text('Open File', style: TextStyle(color: Colors.white)),
+                  label: const Text(
+                    'Open File',
+                    style: TextStyle(color: Colors.white),
+                  ),
                   onPressed: () {
                     Navigator.pop(ctx);
                     OpenFilex.open(savedPath);
@@ -311,7 +335,9 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Save was cancelled or file unchanged.')),
+            const SnackBar(
+              content: Text('Save was cancelled or file unchanged.'),
+            ),
           );
         }
       }
@@ -319,7 +345,10 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
       if (mounted) {
         setState(() => _isExporting = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Save error: $e'), backgroundColor: AppColors.error),
+          SnackBar(
+            content: Text('Save error: $e'),
+            backgroundColor: AppColors.error,
+          ),
         );
       }
     }
@@ -330,7 +359,8 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
     final proceed = await CustomDialog.showConfirmation(
       context: context,
       title: 'Share Document?',
-      message: 'You are about to share a copy of "${_currentDocument.documentName}". Anyone you send this to will be able to view its contents.',
+      message:
+          'You are about to share a copy of "${_currentDocument.documentName}". Anyone you send this to will be able to view its contents.',
       confirmLabel: 'Proceed & Share',
       cancelLabel: 'Cancel',
       icon: Icons.share_rounded,
@@ -341,7 +371,8 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
     // Strict biometric authentication required to share any document
     final authService = context.read<WalletAuthService>();
     final authenticated = await authService.authenticate(
-      localizedReason: 'Authenticate with biometrics to share "${_currentDocument.documentName}"',
+      localizedReason:
+          'Authenticate with biometrics to share "${_currentDocument.documentName}"',
     );
 
     if (!mounted) return;
@@ -349,7 +380,10 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
     if (!authenticated) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authService.lastErrorMessage ?? 'Biometric authentication is required to share documents.'),
+          content: Text(
+            authService.lastErrorMessage ??
+                'Biometric authentication is required to share documents.',
+          ),
           backgroundColor: AppColors.error,
         ),
       );
@@ -384,7 +418,10 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
       if (mounted) {
         setState(() => _isExporting = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Share error: $e'), backgroundColor: AppColors.error),
+          SnackBar(
+            content: Text('Share error: $e'),
+            backgroundColor: AppColors.error,
+          ),
         );
       }
     }
@@ -394,13 +431,14 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => DocumentCreationScreen(
-          documentToEdit: _currentDocument,
-        ),
+        builder: (_) =>
+            DocumentCreationScreen(documentToEdit: _currentDocument),
       ),
     );
 
-    final updated = await WalletDocumentRepository().getDocumentById(_currentDocument.id);
+    final updated = await WalletDocumentRepository().getDocumentById(
+      _currentDocument.id,
+    );
     if (updated != null && mounted) {
       setState(() => _currentDocument = updated);
       _loadSecureDocNumber();
@@ -417,30 +455,48 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
         child: Wrap(
           children: [
             ListTile(
-              leading: const Icon(Icons.document_scanner_rounded, color: AppColors.primary),
-              title: const Text('Scan Document (Multi-Page)', style: TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: const Text('Capture front & back with boundary detection & PDF generation'),
+              leading: const Icon(
+                Icons.document_scanner_rounded,
+                color: AppColors.primary,
+              ),
+              title: const Text(
+                'Scan Document (Multi-Page)',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: const Text(
+                'Capture front & back with boundary detection & PDF generation',
+              ),
               onTap: () async {
                 Navigator.pop(ctx);
-                final payload = await Navigator.push<DocumentAttachmentPayload?>(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => DocumentAttachmentScannerScreen(
-                      category: _currentDocument.category,
-                      suggestedTitle: _currentDocument.documentName,
-                    ),
-                  ),
-                );
+                final payload =
+                    await Navigator.push<DocumentAttachmentPayload?>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => DocumentAttachmentScannerScreen(
+                          category: _currentDocument.category,
+                          suggestedTitle: _currentDocument.documentName,
+                        ),
+                      ),
+                    );
                 if (payload != null) _processNewAttachment(payload);
               },
             ),
             ListTile(
-              leading: const Icon(Icons.folder_open_rounded, color: AppColors.primary),
-              title: const Text('Attach Existing PDF from Phone', style: TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: const Text('Select a pre-existing PDF from device storage'),
+              leading: const Icon(
+                Icons.folder_open_rounded,
+                color: AppColors.primary,
+              ),
+              title: const Text(
+                'Attach Existing PDF from Phone',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: const Text(
+                'Select a pre-existing PDF from device storage',
+              ),
               onTap: () async {
                 Navigator.pop(ctx);
-                final payload = await DocumentScannerService().pickExistingDocument();
+                final payload = await DocumentScannerService()
+                    .pickExistingDocument();
                 if (payload != null) _processNewAttachment(payload);
               },
             ),
@@ -478,7 +534,8 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
     final confirmed = await CustomDialog.showConfirmation(
       context: context,
       title: 'Remove Attachment Copy?',
-      message: 'This will delete the attached file copy from vault storage while preserving all your entered card/document details.',
+      message:
+          'This will delete the attached file copy from vault storage while preserving all your entered card/document details.',
       confirmLabel: 'Remove Attachment',
       cancelLabel: 'Cancel',
       isDestructive: true,
@@ -486,7 +543,9 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
     );
 
     if (confirmed == true && mounted) {
-      final updated = await _vaultService.removeAttachmentFromDocument(_currentDocument);
+      final updated = await _vaultService.removeAttachmentFromDocument(
+        _currentDocument,
+      );
       setState(() {
         _currentDocument = updated;
         _decryptedImageBytes = null;
@@ -495,9 +554,9 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
       if (!mounted) return;
       await context.read<WalletDocumentProvider>().loadDocuments();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Attachment copy removed')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Attachment copy removed')));
     }
   }
 
@@ -505,7 +564,8 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
     final confirmed = await CustomDialog.showConfirmation(
       context: context,
       title: 'Delete Document?',
-      message: 'This will permanently delete "${_currentDocument.documentName}" and securely wipe its encrypted data from disk.',
+      message:
+          'This will permanently delete "${_currentDocument.documentName}" and securely wipe its encrypted data from disk.',
       confirmLabel: 'Delete Permanently',
       cancelLabel: 'Cancel',
       isDestructive: true,
@@ -517,9 +577,9 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
       if (!mounted) return;
       await context.read<WalletDocumentProvider>().loadDocuments();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Document deleted')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Document deleted')));
       Navigator.of(context).pop();
     }
   }
@@ -537,7 +597,9 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
       appBar: AppBar(
         title: Text(
           doc.documentName,
-          style: AppTextStyles.headingSmall.copyWith(fontWeight: FontWeight.bold),
+          style: AppTextStyles.headingSmall.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         actions: [
           IconButton(
@@ -547,7 +609,9 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
               color: doc.isFavorite ? Colors.amber : textSecondary,
             ),
             onPressed: () async {
-              await context.read<WalletDocumentProvider>().toggleDocumentFavorite(doc.id);
+              await context
+                  .read<WalletDocumentProvider>()
+                  .toggleDocumentFavorite(doc.id);
               setState(() {
                 _currentDocument = doc.copyWith(isFavorite: !doc.isFavorite);
               });
@@ -555,27 +619,33 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
           ),
           IconButton(
             tooltip: 'Delete Document',
-            icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error),
+            icon: const Icon(
+              Icons.delete_outline_rounded,
+              color: AppColors.error,
+            ),
             onPressed: _deleteDocument,
           ),
         ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.sm,
+          ),
           physics: const BouncingScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // 1. Virtual Document Card Presentation
-              VirtualDocumentCard(
-                document: doc,
-                showShadow: true,
-              ),
+              VirtualDocumentCard(document: doc, showShadow: true),
 
               // 2. Hardware Keystore Banner
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm,
+                ),
                 decoration: BoxDecoration(
                   color: surfaceColor,
                   borderRadius: BorderRadius.circular(AppRadius.md),
@@ -583,7 +653,11 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.shield_rounded, color: AppColors.primary, size: 18),
+                    const Icon(
+                      Icons.shield_rounded,
+                      color: AppColors.primary,
+                      size: 18,
+                    ),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(
@@ -595,13 +669,18 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withAlpha(20),
                         borderRadius: BorderRadius.circular(AppRadius.xs),
                       ),
                       child: Text(
-                        doc.hasAttachment ? (isPdf ? 'PDF' : 'IMAGE') : 'MANUAL',
+                        doc.hasAttachment
+                            ? (isPdf ? 'PDF' : 'IMAGE')
+                            : 'MANUAL',
                         style: AppTextStyles.caption.copyWith(
                           fontSize: 10,
                           color: AppColors.primary,
@@ -614,16 +693,22 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
               ),
 
               // 3. Biometric Protected Number Field (Biometric authentication required to reveal)
-              if (doc.maskedIdentifier != null || _secureDocumentNumber != null) ...[
+              if (doc.maskedIdentifier != null ||
+                  _secureDocumentNumber != null) ...[
                 const SizedBox(height: AppSpacing.sm),
                 SecureProtectedField(
-                  label: '${doc.category.toUpperCase().replaceAll("_", " ")} NUMBER',
-                  maskedValue: doc.maskedIdentifier ?? (_secureDocumentNumber != null && _secureDocumentNumber!.length > 4
-                      ? '•••• •••• ${_secureDocumentNumber!.substring(_secureDocumentNumber!.length - 4)}'
-                      : '••••••••'),
+                  label:
+                      '${doc.category.toUpperCase().replaceAll("_", " ")} NUMBER',
+                  maskedValue:
+                      doc.maskedIdentifier ??
+                      (_secureDocumentNumber != null &&
+                              _secureDocumentNumber!.length > 4
+                          ? '•••• •••• ${_secureDocumentNumber!.substring(_secureDocumentNumber!.length - 4)}'
+                          : '••••••••'),
                   showCopyButton: true,
                   onRetrieveProtectedValue: () async {
-                    final num = await _secureNumberService.getDocumentFullNumber(doc.id);
+                    final num = await _secureNumberService
+                        .getDocumentFullNumber(doc.id);
                     if (num != null && num.isNotEmpty) {
                       return num;
                     }
@@ -681,7 +766,10 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
                 children: [
                   Text(
                     'Original Copy',
-                    style: AppTextStyles.headingSmall.copyWith(color: textPrimary, fontWeight: FontWeight.bold),
+                    style: AppTextStyles.headingSmall.copyWith(
+                      color: textPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   if (doc.hasAttachment)
                     Row(
@@ -689,12 +777,25 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
                         TextButton.icon(
                           onPressed: _attachOrReplaceCopy,
                           icon: const Icon(Icons.refresh_rounded, size: 14),
-                          label: const Text('Replace', style: TextStyle(fontSize: 12)),
+                          label: const Text(
+                            'Replace',
+                            style: TextStyle(fontSize: 12),
+                          ),
                         ),
                         TextButton.icon(
                           onPressed: _removeAttachment,
-                          icon: const Icon(Icons.delete_outline_rounded, size: 14, color: Colors.redAccent),
-                          label: const Text('Remove', style: TextStyle(fontSize: 12, color: Colors.redAccent)),
+                          icon: const Icon(
+                            Icons.delete_outline_rounded,
+                            size: 14,
+                            color: Colors.redAccent,
+                          ),
+                          label: const Text(
+                            'Remove',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.redAccent,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -716,12 +817,18 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: (doc.isPdf ? Colors.redAccent : AppColors.primary).withAlpha(20),
+                          color:
+                              (doc.isPdf ? Colors.redAccent : AppColors.primary)
+                                  .withAlpha(20),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
-                          doc.isPdf ? Icons.picture_as_pdf_rounded : Icons.photo_rounded,
-                          color: doc.isPdf ? Colors.redAccent : AppColors.primary,
+                          doc.isPdf
+                              ? Icons.picture_as_pdf_rounded
+                              : Icons.photo_rounded,
+                          color: doc.isPdf
+                              ? Colors.redAccent
+                              : AppColors.primary,
                           size: 26,
                         ),
                       ),
@@ -731,14 +838,22 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              DocumentScannerService.getDefaultPdfFileName(doc.category),
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                              DocumentScannerService.getDefaultPdfFileName(
+                                doc.category,
+                              ),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 2),
                             Text(
                               '${doc.isPdf ? 'PDF Document' : 'Image'} • ${DocumentScannerService.formatFileSize(doc.fileSize)} • Added ${DateFormatter.formatShortDate(doc.createdAt)}',
-                              style: TextStyle(fontSize: 11, color: AppColors.getTextSecondary(context)),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: AppColors.getTextSecondary(context),
+                              ),
                             ),
                           ],
                         ),
@@ -753,7 +868,7 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
                   onTap: _openDocument,
                   borderRadius: BorderRadius.circular(AppRadius.card),
                   child: Container(
-                    height: 320,
+                    height: (_decryptedImageBytes != null) ? 320 : 220,
                     decoration: BoxDecoration(
                       color: surfaceColor,
                       borderRadius: BorderRadius.circular(AppRadius.card),
@@ -773,17 +888,27 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
                   ),
                   child: Column(
                     children: [
-                      Icon(Icons.attachment_outlined, size: 48, color: AppColors.getTextSecondary(context).withAlpha(120)),
+                      Icon(
+                        Icons.attachment_outlined,
+                        size: 48,
+                        color: AppColors.getTextSecondary(
+                          context,
+                        ).withAlpha(120),
+                      ),
                       const SizedBox(height: AppSpacing.sm),
                       Text(
                         'Add Original Copy',
-                        style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
+                        style: AppTextStyles.bodyLarge.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'Attach a multi-page camera scan or an existing PDF from your phone.',
                         textAlign: TextAlign.center,
-                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.getTextSecondary(context)),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.getTextSecondary(context),
+                        ),
                       ),
                       const SizedBox(height: AppSpacing.md),
                       Row(
@@ -795,16 +920,25 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
                               foregroundColor: Colors.white,
                             ),
                             onPressed: _attachOrReplaceCopy,
-                            icon: const Icon(Icons.document_scanner_rounded, size: 16),
+                            icon: const Icon(
+                              Icons.document_scanner_rounded,
+                              size: 16,
+                            ),
                             label: const Text('Scan Document'),
                           ),
                           const SizedBox(width: AppSpacing.sm),
                           OutlinedButton.icon(
                             onPressed: () async {
-                              final payload = await DocumentScannerService().pickExistingDocument();
-                              if (payload != null) _processNewAttachment(payload);
+                              final payload = await DocumentScannerService()
+                                  .pickExistingDocument();
+                              if (payload != null) {
+                                _processNewAttachment(payload);
+                              }
                             },
-                            icon: const Icon(Icons.folder_open_rounded, size: 16),
+                            icon: const Icon(
+                              Icons.folder_open_rounded,
+                              size: 16,
+                            ),
                             label: const Text('Attach PDF'),
                           ),
                         ],
@@ -815,26 +949,8 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
               ],
               const SizedBox(height: AppSpacing.md),
 
-              // 6. Extracted Notes & Description
-              if (doc.description != null && doc.description!.isNotEmpty) ...[
-                Text(
-                  'Document Information',
-                  style: AppTextStyles.headingSmall.copyWith(color: textPrimary, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                ReusableCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        doc.description!,
-                        style: AppTextStyles.bodyMedium.copyWith(color: textPrimary, height: 1.5),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-              ],
+              // 6. Extracted Notes & Document Information (Structured Labeled Fields)
+              _buildDocumentInformation(doc, context),
 
               // 7. Metadata Footer Card
               ReusableCard(
@@ -842,11 +958,21 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildMetaItem('CATEGORY', doc.category.replaceAll('_', ' ').toUpperCase()),
-                    _buildMetaItem('FILE SIZE', doc.hasAttachment ? '${(doc.fileSize / 1024).toStringAsFixed(0)} KB' : 'None'),
+                    _buildMetaItem(
+                      'CATEGORY',
+                      doc.category.replaceAll('_', ' ').toUpperCase(),
+                    ),
+                    _buildMetaItem(
+                      'FILE SIZE',
+                      doc.hasAttachment
+                          ? '${(doc.fileSize / 1024).toStringAsFixed(0)} KB'
+                          : 'None',
+                    ),
                     _buildMetaItem(
                       'EXPIRY DATE',
-                      doc.expiryDate != null ? DateFormatter.formatShortDate(doc.expiryDate!) : 'No Expiry',
+                      doc.expiryDate != null
+                          ? DateFormatter.formatShortDate(doc.expiryDate!)
+                          : 'No Expiry',
                     ),
                   ],
                 ),
@@ -881,7 +1007,11 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
         ),
         child: Column(
           children: [
-            Icon(icon, color: isEnabled ? AppColors.primary : Colors.grey, size: 20),
+            Icon(
+              icon,
+              color: isEnabled ? AppColors.primary : Colors.grey,
+              size: 20,
+            ),
             const SizedBox(height: 4),
             Text(
               label,
@@ -896,6 +1026,201 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
     );
   }
 
+  Widget _buildDocumentInformation(
+    WalletDocumentModel doc,
+    BuildContext context,
+  ) {
+    final textPrimary = AppColors.getTextPrimary(context);
+    final textSecondary = AppColors.getTextSecondary(context);
+    final emerald = AppColors.getEmeraldAccent(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final Map<String, String> fields = {};
+    String? additionalNotes;
+
+    // 1. Core model dates
+    if (doc.issueDate != null) {
+      fields['Issue Date'] = DateFormatter.formatShortDate(doc.issueDate!);
+    }
+    if (doc.expiryDate != null) {
+      fields['Expiry Date'] = DateFormatter.formatShortDate(doc.expiryDate!);
+    }
+
+    // 2. From structured description
+    if (doc.description != null && doc.description!.trim().isNotEmpty) {
+      final lines = doc.description!.split('\n');
+      for (final rawLine in lines) {
+        final line = rawLine.trim();
+        if (line.isEmpty) continue;
+        final colonIdx = line.indexOf(':');
+        if (colonIdx > 0 && colonIdx < line.length - 1) {
+          final key = line.substring(0, colonIdx).trim();
+          final val = line.substring(colonIdx + 1).trim();
+          if (val.isNotEmpty) {
+            if (key.toLowerCase() == 'notes') {
+              additionalNotes = (additionalNotes != null
+                  ? '$additionalNotes\n$val'
+                  : val);
+            } else {
+              fields[_formatFieldLabel(key)] = val;
+            }
+          }
+        } else {
+          additionalNotes = (additionalNotes != null
+              ? '$additionalNotes\n$line'
+              : line);
+        }
+      }
+    }
+
+    if (fields.isEmpty && additionalNotes == null) {
+      return const SizedBox.shrink();
+    }
+
+    final fieldEntries = fields.entries.toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Document Information',
+              style: AppTextStyles.headingSmall.copyWith(
+                color: textPrimary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: emerald.withAlpha(20),
+                borderRadius: BorderRadius.circular(AppRadius.full),
+              ),
+              child: Text(
+                '${fieldEntries.length} Details',
+                style: TextStyle(
+                  color: emerald,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        if (fieldEntries.isNotEmpty)
+          ReusableCard(
+            padding: EdgeInsets.zero,
+            child: ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: fieldEntries.length,
+              separatorBuilder: (_, _) => Divider(
+                height: 1,
+                thickness: 0.5,
+                indent: AppSpacing.md,
+                endIndent: AppSpacing.md,
+                color: isDark
+                    ? Colors.white.withAlpha(15)
+                    : AppColors.getBorder(context).withAlpha(120),
+              ),
+              itemBuilder: (context, index) {
+                final entry = fieldEntries[index];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        entry.key.toUpperCase(),
+                        style: TextStyle(
+                          color: textSecondary,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Flexible(
+                        child: Text(
+                          entry.value,
+                          textAlign: TextAlign.end,
+                          style: TextStyle(
+                            color: textPrimary,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        if (additionalNotes != null && additionalNotes.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.sm),
+          ReusableCard(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'NOTES',
+                  style: TextStyle(
+                    color: textSecondary,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  additionalNotes,
+                  style: TextStyle(
+                    color: textPrimary,
+                    fontSize: 12.5,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+        const SizedBox(height: AppSpacing.md),
+      ],
+    );
+  }
+
+  String _formatFieldLabel(String key) {
+    switch (key.toLowerCase()) {
+      case 'dob':
+        return 'Date of Birth';
+      case 'father_name':
+        return 'Father / Guardian';
+      case 'address':
+        return 'Address';
+      case 'bank_name':
+        return 'Bank';
+      case 'card_network':
+        return 'Network';
+      case 'policy_type':
+        return 'Policy Type';
+      case 'policy_provider':
+        return 'Provider';
+      case 'vehicle_classes':
+        return 'Vehicle Class';
+      default:
+        return key.replaceAll('_', ' ');
+    }
+  }
+
   Widget _buildPreviewBody() {
     if (!_currentDocument.hasAttachment) {
       return Center(
@@ -904,17 +1229,25 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.attachment_outlined, size: 48, color: AppColors.getTextSecondary(context).withAlpha(120)),
+              Icon(
+                Icons.attachment_outlined,
+                size: 48,
+                color: AppColors.getTextSecondary(context).withAlpha(120),
+              ),
               const SizedBox(height: AppSpacing.sm),
               Text(
                 'No Physical Copy Attached',
-                style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
+                style: AppTextStyles.bodyLarge.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
                 'This document was saved as a manual entry without an attached physical copy.',
                 textAlign: TextAlign.center,
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.getTextSecondary(context)),
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.getTextSecondary(context),
+                ),
               ),
               const SizedBox(height: AppSpacing.md),
               OutlinedButton.icon(
@@ -933,11 +1266,17 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.fingerprint_rounded, size: 56, color: AppColors.primary),
+            const Icon(
+              Icons.fingerprint_rounded,
+              size: 56,
+              color: AppColors.primary,
+            ),
             const SizedBox(height: AppSpacing.md),
             Text(
               'Waiting for authentication...',
-              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.getTextPrimary(context)),
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.getTextPrimary(context),
+              ),
             ),
           ],
         ),
@@ -953,7 +1292,9 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
             const SizedBox(height: AppSpacing.md),
             Text(
               'Decrypting vault document...',
-              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.getTextPrimary(context)),
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.getTextPrimary(context),
+              ),
             ),
           ],
         ),
@@ -967,17 +1308,25 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.lock_clock_rounded, size: 48, color: AppColors.error),
+              const Icon(
+                Icons.lock_clock_rounded,
+                size: 48,
+                color: AppColors.error,
+              ),
               const SizedBox(height: AppSpacing.sm),
               Text(
                 'Document Locked',
-                style: AppTextStyles.headingSmall.copyWith(color: AppColors.error),
+                style: AppTextStyles.headingSmall.copyWith(
+                  color: AppColors.error,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
                 _errorMessage!,
                 textAlign: TextAlign.center,
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.getTextSecondary(context)),
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.getTextSecondary(context),
+                ),
               ),
               const SizedBox(height: AppSpacing.md),
               ElevatedButton.icon(
@@ -1000,16 +1349,24 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.picture_as_pdf_rounded, size: 64, color: AppColors.error),
+            const Icon(
+              Icons.picture_as_pdf_rounded,
+              size: 64,
+              color: AppColors.error,
+            ),
             const SizedBox(height: AppSpacing.md),
             Text(
               'PDF Document Staged Decrypted',
-              style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
+              style: AppTextStyles.bodyLarge.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
               'PDF will be safely wiped from cache upon screen exit.',
-              style: AppTextStyles.caption.copyWith(color: AppColors.getTextSecondary(context)),
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.getTextSecondary(context),
+              ),
             ),
             const SizedBox(height: AppSpacing.lg),
             ElevatedButton.icon(

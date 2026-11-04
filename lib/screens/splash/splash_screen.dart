@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../app/theme/app_colors.dart';
-import '../../app/theme/app_text_styles.dart';
 import '../main_navigation_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -10,24 +8,25 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   bool _hasNavigated = false;
 
   late Animation<double> _bgGlowAnimation;
   late Animation<double> _logoOpacity;
   late Animation<double> _logoScale;
-  
+
   late Animation<double> _wordmarkOpacity;
   late Animation<Offset> _wordmarkSlide;
-  
+
   late Animation<double> _taglineOpacity;
   late Animation<Offset> _taglineSlide;
 
   @override
   void initState() {
     super.initState();
-    
+
     // Clean, elegant 2.5 second entry animation
     _controller = AnimationController(
       vsync: this,
@@ -36,32 +35,55 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
     // 1. Background glow fades in (0ms - 800ms)
     _bgGlowAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.3, curve: Curves.easeOut)),
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.3, curve: Curves.easeOut),
+      ),
     );
 
     // 2. Logo fades and scales in (200ms - 1200ms)
     _logoOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.1, 0.5, curve: Curves.easeOut)),
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.1, 0.5, curve: Curves.easeOut),
+      ),
     );
     _logoScale = Tween<double>(begin: 0.9, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.1, 0.5, curve: Curves.easeOutCubic)),
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.1, 0.5, curve: Curves.easeOutCubic),
+      ),
     );
 
     // 3. Wordmark gracefully slides up and fades in (800ms - 1800ms)
     _wordmarkOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.3, 0.7, curve: Curves.easeOut)),
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.3, 0.7, curve: Curves.easeOut),
+      ),
     );
-    _wordmarkSlide = Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.3, 0.7, curve: Curves.easeOutCubic)),
-    );
+    _wordmarkSlide =
+        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: const Interval(0.3, 0.7, curve: Curves.easeOutCubic),
+          ),
+        );
 
     // 4. Tagline softly fades in (1500ms - 2500ms)
     _taglineOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.6, 1.0, curve: Curves.easeOut)),
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.6, 1.0, curve: Curves.easeOut),
+      ),
     );
-    _taglineSlide = Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.6, 1.0, curve: Curves.easeOutCubic)),
-    );
+    _taglineSlide = Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: const Interval(0.6, 1.0, curve: Curves.easeOutCubic),
+          ),
+        );
 
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
@@ -78,11 +100,14 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => const MainNavigationScreen(),
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const MainNavigationScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(opacity: animation, child: child);
           },
-          transitionDuration: const Duration(milliseconds: 600), // Smooth crossfade
+          transitionDuration: const Duration(
+            milliseconds: 600,
+          ), // Smooth crossfade
         ),
       );
     }
@@ -101,115 +126,178 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         behavior: HitTestBehavior.opaque,
         onTap: _navigateToApp,
         child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, child) {
-          return Stack(
-            fit: StackFit.expand,
-            children: [
-              // Background
-              Container(
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
-                  gradient: RadialGradient(
-                    center: Alignment.center,
-                    radius: 1.2,
-                    colors: [
-                      Color.lerp(AppColors.primary, AppColors.primaryLight, _bgGlowAnimation.value) ?? AppColors.primaryLight,
-                      AppColors.primary,
-                    ],
+          animation: _controller,
+          builder: (context, child) {
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                // Background: Deep Midnight Obsidian with Animated Subtle Emerald Glow
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF070E0A),
+                    gradient: RadialGradient(
+                      center: const Alignment(0.0, -0.15),
+                      radius: 0.9,
+                      colors: [
+                        Color.lerp(
+                              const Color(0xFF070E0A),
+                              const Color(0xFF0F261B),
+                              _bgGlowAnimation.value,
+                            ) ??
+                            const Color(0xFF0F261B),
+                        const Color(0xFF070E0A),
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-              // Decorative Leaves
-              Positioned(
-                top: -50, right: -50,
-                child: Icon(Icons.eco, size: 200, color: AppColors.background.withAlpha(10)),
-              ),
-              Positioned(
-                bottom: -50, left: -50,
-                child: Icon(Icons.eco, size: 250, color: AppColors.background.withAlpha(10)),
-              ),
+                // Subtle Ambient Light Flares
+                Positioned(
+                  top: -80,
+                  right: -80,
+                  child: Container(
+                    width: 260,
+                    height: 260,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          const Color(0xFF10B981).withAlpha(35),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: -80,
+                  left: -80,
+                  child: Container(
+                    width: 280,
+                    height: 280,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          const Color(0xFF047857).withAlpha(25),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
 
-              // Content
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Logo
-                    Transform.scale(
-                      scale: _logoScale.value,
-                      child: Opacity(
-                        opacity: _logoOpacity.value,
-                        child: Container(
-                          width: 140,
-                          height: 140,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(36),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.background.withAlpha(30),
-                                blurRadius: 30,
-                                offset: const Offset(0, 10),
+                // Content
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Logo in Frosted Glass Surface
+                      Transform.scale(
+                        scale: _logoScale.value,
+                        child: Opacity(
+                          opacity: _logoOpacity.value,
+                          child: Container(
+                            width: 120,
+                            height: 120,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(32),
+                              border: Border.all(
+                                color: const Color(0xFF10B981).withAlpha(60),
+                                width: 1.5,
                               ),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(36),
-                            child: Image.asset(
-                              'assets/icon.jpg',
-                              fit: BoxFit.cover,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF10B981).withAlpha(50),
+                                  blurRadius: 36,
+                                  spreadRadius: 2,
+                                  offset: const Offset(0, 8),
+                                ),
+                                BoxShadow(
+                                  color: Colors.black.withAlpha(120),
+                                  blurRadius: 24,
+                                  offset: const Offset(0, 12),
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(30),
+                              child: Image.asset(
+                                'assets/icon.jpg',
+                                fit: BoxFit.cover,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    
-                    const SizedBox(height: 32),
-                    
-                    // Wordmark
-                    SlideTransition(
-                      position: _wordmarkSlide,
-                      child: Opacity(
-                        opacity: _wordmarkOpacity.value,
-                        child: Text(
-                          'Spendz',
-                          style: AppTextStyles.heading1.copyWith(
-                            color: AppColors.background,
-                            fontSize: 44,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -1.5,
+
+                      const SizedBox(height: 28),
+
+                      // Wordmark
+                      SlideTransition(
+                        position: _wordmarkSlide,
+                        child: Opacity(
+                          opacity: _wordmarkOpacity.value,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF10B981),
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Color(0xFF10B981),
+                                      blurRadius: 8,
+                                      spreadRadius: 2,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              const Text(
+                                'SPENDZ',
+                                style: TextStyle(
+                                  fontFamily: 'monospace',
+                                  color: Colors.white,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 6.0,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                    ),
-                    
-                    const SizedBox(height: 12),
-                    
-                    // Tagline
-                    SlideTransition(
-                      position: _taglineSlide,
-                      child: Opacity(
-                        opacity: _taglineOpacity.value,
-                        child: Text(
-                          'TRACK • PLAN • LIVE BETTER',
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.background.withAlpha(180),
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 3.0,
-                            fontSize: 11,
+
+                      const SizedBox(height: 10),
+
+                      // Tagline
+                      SlideTransition(
+                        position: _taglineSlide,
+                        child: Opacity(
+                          opacity: _taglineOpacity.value,
+                          child: const Text(
+                            'ENCRYPTED FINANCE & DIGITAL WALLET',
+                            style: TextStyle(
+                              color: Color(0xFF6EE7B7),
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 2.2,
+                              fontSize: 10,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 }

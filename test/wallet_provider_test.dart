@@ -96,7 +96,10 @@ void main() {
       expect(expiringDoc.isExpired, false);
 
       await wallet.addDocument(expiringDoc);
-      expect(wallet.expiringDocuments.any((d) => d.id == 'test-expiring-doc'), true);
+      expect(
+        wallet.expiringDocuments.any((d) => d.id == 'test-expiring-doc'),
+        true,
+      );
 
       final passportDocs = wallet.getDocumentsByCategory('passport');
       expect(passportDocs.any((d) => d.id == 'test-expiring-doc'), true);

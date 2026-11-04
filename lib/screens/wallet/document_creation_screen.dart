@@ -43,7 +43,8 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
   final DocumentVaultService _vaultService = DocumentVaultService();
   final SecureNumberService _secureNumberService = SecureNumberService();
 
-  int _currentStep = 0; // 0: Select Category, 1: Enter Details, 2: Preview & Save
+  int _currentStep =
+      0; // 0: Select Category, 1: Enter Details, 2: Preview & Save
   late String _selectedCategory;
 
   // Common Form Fields
@@ -146,7 +147,8 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedCategory = widget.initialCategory ?? widget.documentToEdit?.category ?? 'aadhaar';
+    _selectedCategory =
+        widget.initialCategory ?? widget.documentToEdit?.category ?? 'aadhaar';
 
     if (widget.initialCategory != null || widget.documentToEdit != null) {
       _currentStep = 1;
@@ -170,7 +172,9 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
 
     // Decrypt extra fields if present
     if (doc.encryptedFields != null && doc.encryptedFields!.isNotEmpty) {
-      final extra = await _vaultService.decryptMetadataFields(doc.encryptedFields!);
+      final extra = await _vaultService.decryptMetadataFields(
+        doc.encryptedFields!,
+      );
       _fatherNameController.text = extra['father_name'] ?? '';
       _addressController.text = extra['address'] ?? '';
       _mobileController.text = extra['mobile'] ?? '';
@@ -181,7 +185,9 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
       _stateController.text = extra['state'] ?? '';
       if (extra['vehicle_classes'] != null) {
         _selectedVehicleClasses.clear();
-        _selectedVehicleClasses.addAll(List<String>.from(extra['vehicle_classes']));
+        _selectedVehicleClasses.addAll(
+          List<String>.from(extra['vehicle_classes']),
+        );
       }
 
       _nationalityController.text = extra['nationality'] ?? 'Indian';
@@ -238,26 +244,38 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
         if (clean.length == 10) {
           return '${clean.substring(0, 5)}••••${clean.substring(9)}';
         }
-        return clean.length > 4 ? '••••••${clean.substring(clean.length - 4)}' : clean;
+        return clean.length > 4
+            ? '••••••${clean.substring(clean.length - 4)}'
+            : clean;
 
       case 'driving_license':
-        return clean.length > 4 ? 'DL-••••${clean.substring(clean.length - 4)}' : clean;
+        return clean.length > 4
+            ? 'DL-••••${clean.substring(clean.length - 4)}'
+            : clean;
 
       case 'passport':
-        return clean.length > 3 ? '${clean.substring(0, 1)}••••${clean.substring(clean.length - 3)}' : clean;
+        return clean.length > 3
+            ? '${clean.substring(0, 1)}••••${clean.substring(clean.length - 3)}'
+            : clean;
 
       case 'debit_card':
       case 'credit_card':
         if (clean.length >= 12) {
           return '•••• •••• •••• ${clean.substring(clean.length - 4)}';
         }
-        return clean.length > 4 ? '•••• ${clean.substring(clean.length - 4)}' : clean;
+        return clean.length > 4
+            ? '•••• ${clean.substring(clean.length - 4)}'
+            : clean;
 
       case 'insurance':
-        return clean.length > 4 ? 'POL-••••${clean.substring(clean.length - 4)}' : clean;
+        return clean.length > 4
+            ? 'POL-••••${clean.substring(clean.length - 4)}'
+            : clean;
 
       default:
-        return clean.length > 4 ? '••••${clean.substring(clean.length - 4)}' : clean;
+        return clean.length > 4
+            ? '••••${clean.substring(clean.length - 4)}'
+            : clean;
     }
   }
 
@@ -267,7 +285,9 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
       MaterialPageRoute(
         builder: (_) => DocumentAttachmentScannerScreen(
           category: _selectedCategory,
-          suggestedTitle: _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : null,
+          suggestedTitle: _nameController.text.trim().isNotEmpty
+              ? _nameController.text.trim()
+              : null,
           initialPayload: _attachmentPayload,
         ),
       ),
@@ -285,7 +305,9 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Attached "${payload.fileName}" (${payload.pageCount} page(s), ${DocumentScannerService.formatFileSize(payload.calculatedSize)})'),
+            content: Text(
+              'Attached "${payload.fileName}" (${payload.pageCount} page(s), ${DocumentScannerService.formatFileSize(payload.calculatedSize)})',
+            ),
             backgroundColor: AppColors.primary,
           ),
         );
@@ -293,7 +315,11 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
     }
   }
 
-  Future<void> _selectDate(BuildContext context, {required DateTime? initial, required ValueChanged<DateTime> onSelected}) async {
+  Future<void> _selectDate(
+    BuildContext context, {
+    required DateTime? initial,
+    required ValueChanged<DateTime> onSelected,
+  }) async {
     final picked = await showDatePicker(
       context: context,
       initialDate: initial ?? DateTime.now(),
@@ -308,25 +334,39 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
   void _proceedToPreview() {
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please correct the highlighted form errors before proceeding.')),
+        const SnackBar(
+          content: Text(
+            'Please correct the highlighted form errors before proceeding.',
+          ),
+        ),
       );
       return;
     }
 
     // Specific business validations
-    if (_selectedCategory == 'driving_license' && _issueDate != null && _expiryDate != null) {
+    if (_selectedCategory == 'driving_license' &&
+        _issueDate != null &&
+        _expiryDate != null) {
       if (_expiryDate!.isBefore(_issueDate!)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Licence expiry date cannot precede the issue date.')),
+          const SnackBar(
+            content: Text('Licence expiry date cannot precede the issue date.'),
+          ),
         );
         return;
       }
     }
 
-    if (_selectedCategory == 'passport' && _issueDate != null && _expiryDate != null) {
+    if (_selectedCategory == 'passport' &&
+        _issueDate != null &&
+        _expiryDate != null) {
       if (_expiryDate!.isBefore(_issueDate!)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Passport expiry date cannot precede the issue date.')),
+          const SnackBar(
+            content: Text(
+              'Passport expiry date cannot precede the issue date.',
+            ),
+          ),
         );
         return;
       }
@@ -342,45 +382,69 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           ? _nameController.text.trim()
           : '${_selectedCategory.replaceAll('_', ' ').toUpperCase()} Document';
 
-      final holder = _holderController.text.trim().isNotEmpty ? _holderController.text.trim() : null;
+      final holder = _holderController.text.trim().isNotEmpty
+          ? _holderController.text.trim()
+          : null;
       final rawNumber = _numberController.text.trim();
       final masked = _computeMaskedIdentifier(rawNumber);
 
       // Pack extra metadata map for AES-256-GCM encryption
       final extraMap = <String, dynamic>{
-        if (_fatherNameController.text.isNotEmpty) 'father_name': _fatherNameController.text.trim(),
-        if (_addressController.text.isNotEmpty) 'address': _addressController.text.trim(),
-        if (_mobileController.text.isNotEmpty) 'mobile': _mobileController.text.trim(),
+        if (_fatherNameController.text.isNotEmpty)
+          'father_name': _fatherNameController.text.trim(),
+        if (_addressController.text.isNotEmpty)
+          'address': _addressController.text.trim(),
+        if (_mobileController.text.isNotEmpty)
+          'mobile': _mobileController.text.trim(),
         if (_gender.isNotEmpty) 'gender': _gender,
         if (_dob != null) 'dob': _dob!.toIso8601String(),
-        if (_authorityController.text.isNotEmpty) 'issuing_authority': _authorityController.text.trim(),
-        if (_stateController.text.isNotEmpty) 'state': _stateController.text.trim(),
-        if (_selectedVehicleClasses.isNotEmpty) 'vehicle_classes': _selectedVehicleClasses.toList(),
-        if (_nationalityController.text.isNotEmpty) 'nationality': _nationalityController.text.trim(),
-        if (_pobController.text.isNotEmpty) 'place_of_birth': _pobController.text.trim(),
-        if (_poiController.text.isNotEmpty) 'place_of_issue': _poiController.text.trim(),
-        if (_bankController.text.isNotEmpty) 'bank_name': _bankController.text.trim(),
+        if (_authorityController.text.isNotEmpty)
+          'issuing_authority': _authorityController.text.trim(),
+        if (_stateController.text.isNotEmpty)
+          'state': _stateController.text.trim(),
+        if (_selectedVehicleClasses.isNotEmpty)
+          'vehicle_classes': _selectedVehicleClasses.toList(),
+        if (_nationalityController.text.isNotEmpty)
+          'nationality': _nationalityController.text.trim(),
+        if (_pobController.text.isNotEmpty)
+          'place_of_birth': _pobController.text.trim(),
+        if (_poiController.text.isNotEmpty)
+          'place_of_issue': _poiController.text.trim(),
+        if (_bankController.text.isNotEmpty)
+          'bank_name': _bankController.text.trim(),
         if (_cardNetwork.isNotEmpty) 'card_network': _cardNetwork,
         if (_cardType.isNotEmpty) 'card_type': _cardType,
-        if (_providerController.text.isNotEmpty) 'provider_name': _providerController.text.trim(),
+        if (_providerController.text.isNotEmpty)
+          'provider_name': _providerController.text.trim(),
         if (_policyType.isNotEmpty) 'policy_type': _policyType,
-        if (_coverageController.text.isNotEmpty) 'coverage_amount': _coverageController.text.trim(),
-        if (_contactController.text.isNotEmpty) 'contact_info': _contactController.text.trim(),
+        if (_coverageController.text.isNotEmpty)
+          'coverage_amount': _coverageController.text.trim(),
+        if (_contactController.text.isNotEmpty)
+          'contact_info': _contactController.text.trim(),
       };
 
       // Construct description lines for backward compatible view rendering
       final descBuffer = StringBuffer();
       if (holder != null) descBuffer.writeln('Holder: $holder');
       if (masked.isNotEmpty) descBuffer.writeln('Number: $masked');
-      if (_fatherNameController.text.isNotEmpty) descBuffer.writeln('Father: ${_fatherNameController.text.trim()}');
-      if (_dob != null) descBuffer.writeln('DOB: ${DateFormat('dd/MM/yyyy').format(_dob!)}');
-      if (_addressController.text.isNotEmpty) descBuffer.writeln('Address: ${_addressController.text.trim()}');
-      if (_bankController.text.isNotEmpty) descBuffer.writeln('Bank: ${_bankController.text.trim()}');
+      if (_fatherNameController.text.isNotEmpty)
+        descBuffer.writeln('Father: ${_fatherNameController.text.trim()}');
+      if (_dob != null)
+        descBuffer.writeln('DOB: ${DateFormat('dd/MM/yyyy').format(_dob!)}');
+      if (_addressController.text.isNotEmpty)
+        descBuffer.writeln('Address: ${_addressController.text.trim()}');
+      if (_bankController.text.isNotEmpty)
+        descBuffer.writeln('Bank: ${_bankController.text.trim()}');
       if (_cardNetwork.isNotEmpty) descBuffer.writeln('Network: $_cardNetwork');
-      if (_providerController.text.isNotEmpty) descBuffer.writeln('Provider: ${_providerController.text.trim()}');
+      if (_providerController.text.isNotEmpty)
+        descBuffer.writeln('Provider: ${_providerController.text.trim()}');
       if (_policyType.isNotEmpty) descBuffer.writeln('Type: $_policyType');
-      if (_selectedVehicleClasses.isNotEmpty) descBuffer.writeln('Vehicle Class: ${_selectedVehicleClasses.join(', ')}');
-      if (_notesController.text.isNotEmpty) descBuffer.writeln('Notes: ${_notesController.text.trim()}');
+      if (_selectedVehicleClasses.isNotEmpty)
+        descBuffer.writeln(
+          'Vehicle Class: ${_selectedVehicleClasses.join(', ')}',
+        );
+      if (_notesController.text.isNotEmpty)
+        descBuffer.writeln('Notes: ${_notesController.text.trim()}');
 
       if (widget.documentToEdit != null) {
         // Updating existing document
@@ -443,18 +507,26 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(widget.documentToEdit != null ? 'Document updated successfully' : 'Document securely stored in vault'),
+          content: Text(
+            widget.documentToEdit != null
+                ? 'Document updated successfully'
+                : 'Document securely stored in vault',
+          ),
           backgroundColor: AppColors.primary,
         ),
       );
       Navigator.pop(context);
     } catch (e) {
       if (mounted) {
-        if (e is MasterKeyLostException || e.toString().contains('MasterKeyLostException')) {
+        if (e is MasterKeyLostException ||
+            e.toString().contains('MasterKeyLostException')) {
           _showMasterKeyLostRecoveryDialog();
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to save document: $e'), backgroundColor: Colors.redAccent),
+            SnackBar(
+              content: Text('Failed to save document: $e'),
+              backgroundColor: Colors.redAccent,
+            ),
           );
         }
       }
@@ -472,7 +544,12 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
             SizedBox(width: 8),
-            Expanded(child: Text('Encryption Key Missing', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
+            Expanded(
+              child: Text(
+                'Encryption Key Missing',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
           ],
         ),
         content: const Text(
@@ -489,7 +566,10 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Reset Keys & Save Card', style: TextStyle(color: Colors.white)),
+            child: const Text(
+              'Reset Keys & Save Card',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -505,7 +585,10 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
       } catch (err) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Vault reset failed: $err'), backgroundColor: Colors.redAccent),
+            SnackBar(
+              content: Text('Vault reset failed: $err'),
+              backgroundColor: Colors.redAccent,
+            ),
           );
         }
       } finally {
@@ -523,8 +606,10 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           widget.documentToEdit != null
               ? 'Edit Document'
               : (_currentStep == 0
-                  ? 'Select Document Category'
-                  : (_currentStep == 1 ? 'Enter Document Details' : 'Preview & Save')),
+                    ? 'Select Document Category'
+                    : (_currentStep == 1
+                          ? 'Enter Document Details'
+                          : 'Preview & Save')),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
@@ -540,8 +625,8 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
       body: _isSaving
           ? const Center(child: CircularProgressIndicator())
           : (_currentStep == 0
-              ? _buildCategorySelector()
-              : (_currentStep == 1 ? _buildFormStep() : _buildPreviewStep())),
+                ? _buildCategorySelector()
+                : (_currentStep == 1 ? _buildFormStep() : _buildPreviewStep())),
     );
   }
 
@@ -552,12 +637,16 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
       children: [
         Text(
           'Choose Document Type',
-          style: AppTextStyles.headingSmall.copyWith(fontWeight: FontWeight.bold),
+          style: AppTextStyles.headingSmall.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
           'Select the kind of document you want to add to your private encrypted vault.',
-          style: AppTextStyles.bodyMedium.copyWith(color: AppColors.getTextSecondary(context)),
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: AppColors.getTextSecondary(context),
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
         ..._categories.map((cat) {
@@ -573,17 +662,34 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
               ),
             ),
             child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.xs,
+              ),
               leading: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: (cat['color'] as Color).withAlpha(25),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(cat['icon'] as IconData, color: cat['color'] as Color, size: 24),
+                child: Icon(
+                  cat['icon'] as IconData,
+                  color: cat['color'] as Color,
+                  size: 24,
+                ),
               ),
-              title: Text(cat['title'] as String, style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold)),
-              subtitle: Text(cat['subtitle'] as String, style: AppTextStyles.bodySmall.copyWith(color: AppColors.getTextSecondary(context))),
+              title: Text(
+                cat['title'] as String,
+                style: AppTextStyles.bodyLarge.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              subtitle: Text(
+                cat['subtitle'] as String,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.getTextSecondary(context),
+                ),
+              ),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () {
                 setState(() {
@@ -609,14 +715,21 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withAlpha(20),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   _selectedCategory.replaceAll('_', ' ').toUpperCase(),
-                  style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 11),
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                  ),
                 ),
               ),
               const Spacer(),
@@ -632,9 +745,12 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           // Render specific fields
           if (_selectedCategory == 'aadhaar') ..._buildAadhaarFields(),
           if (_selectedCategory == 'pan') ..._buildPanFields(),
-          if (_selectedCategory == 'driving_license') ..._buildDrivingLicenceFields(),
+          if (_selectedCategory == 'driving_license')
+            ..._buildDrivingLicenceFields(),
           if (_selectedCategory == 'passport') ..._buildPassportFields(),
-          if (_selectedCategory == 'debit_card' || _selectedCategory == 'credit_card') ..._buildPaymentCardFields(),
+          if (_selectedCategory == 'debit_card' ||
+              _selectedCategory == 'credit_card')
+            ..._buildPaymentCardFields(),
           if (_selectedCategory == 'insurance') ..._buildInsuranceFields(),
           if (_selectedCategory == 'other') ..._buildOtherDocumentFields(),
 
@@ -652,9 +768,14 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+              ),
             ),
-            child: const Text('Preview Virtual Card', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            child: const Text(
+              'Preview Virtual Card',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
           ),
           const SizedBox(height: AppSpacing.xl),
         ],
@@ -672,7 +793,8 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           hintText: 'As per Aadhaar Card',
           prefixIcon: Icon(Icons.person_outline_rounded),
         ),
-        validator: (v) => v == null || v.trim().isEmpty ? 'Full name is required' : null,
+        validator: (v) =>
+            v == null || v.trim().isEmpty ? 'Full name is required' : null,
       ),
       const SizedBox(height: AppSpacing.sm),
       TextFormField(
@@ -689,7 +811,8 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
         ),
         validator: (v) {
           final digits = v?.replaceAll(RegExp(r'\s+'), '') ?? '';
-          if (digits.length != 12) return 'Aadhaar number must contain exactly 12 digits';
+          if (digits.length != 12)
+            return 'Aadhaar number must contain exactly 12 digits';
           return null;
         },
       ),
@@ -697,9 +820,17 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
       ListTile(
         contentPadding: EdgeInsets.zero,
         leading: const Icon(Icons.cake_outlined),
-        title: Text(_dob == null ? 'Select Date of Birth *' : 'DOB: ${DateFormat('dd MMM yyyy').format(_dob!)}'),
+        title: Text(
+          _dob == null
+              ? 'Select Date of Birth *'
+              : 'DOB: ${DateFormat('dd MMM yyyy').format(_dob!)}',
+        ),
         trailing: const Icon(Icons.calendar_today_rounded, size: 18),
-        onTap: () => _selectDate(context, initial: _dob ?? DateTime(1995, 1, 1), onSelected: (d) => setState(() => _dob = d)),
+        onTap: () => _selectDate(
+          context,
+          initial: _dob ?? DateTime(1995, 1, 1),
+          onSelected: (d) => setState(() => _dob = d),
+        ),
       ),
       const SizedBox(height: AppSpacing.xs),
       DropdownButtonFormField<String>(
@@ -755,7 +886,8 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           hintText: "As printed on PAN Card",
           prefixIcon: Icon(Icons.person_outline_rounded),
         ),
-        validator: (v) => v == null || v.trim().isEmpty ? 'Full name is required' : null,
+        validator: (v) =>
+            v == null || v.trim().isEmpty ? 'Full name is required' : null,
       ),
       const SizedBox(height: AppSpacing.sm),
       TextFormField(
@@ -764,7 +896,8 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           labelText: "Father's Name *",
           prefixIcon: Icon(Icons.family_restroom_rounded),
         ),
-        validator: (v) => v == null || v.trim().isEmpty ? "Father's name is required" : null,
+        validator: (v) =>
+            v == null || v.trim().isEmpty ? "Father's name is required" : null,
       ),
       const SizedBox(height: AppSpacing.sm),
       TextFormField(
@@ -791,9 +924,17 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
       ListTile(
         contentPadding: EdgeInsets.zero,
         leading: const Icon(Icons.cake_outlined),
-        title: Text(_dob == null ? 'Select Date of Birth *' : 'DOB: ${DateFormat('dd MMM yyyy').format(_dob!)}'),
+        title: Text(
+          _dob == null
+              ? 'Select Date of Birth *'
+              : 'DOB: ${DateFormat('dd MMM yyyy').format(_dob!)}',
+        ),
         trailing: const Icon(Icons.calendar_today_rounded, size: 18),
-        onTap: () => _selectDate(context, initial: _dob ?? DateTime(1995, 1, 1), onSelected: (d) => setState(() => _dob = d)),
+        onTap: () => _selectDate(
+          context,
+          initial: _dob ?? DateTime(1995, 1, 1),
+          onSelected: (d) => setState(() => _dob = d),
+        ),
       ),
     ];
   }
@@ -808,7 +949,8 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           hintText: 'Licence Holder Name',
           prefixIcon: Icon(Icons.person_outline_rounded),
         ),
-        validator: (v) => v == null || v.trim().isEmpty ? 'Holder name is required' : null,
+        validator: (v) =>
+            v == null || v.trim().isEmpty ? 'Holder name is required' : null,
       ),
       const SizedBox(height: AppSpacing.sm),
       TextFormField(
@@ -819,7 +961,8 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           hintText: 'e.g. DL-1420110012345',
           prefixIcon: Icon(Icons.badge_outlined),
         ),
-        validator: (v) => v == null || v.trim().isEmpty ? 'Licence number is required' : null,
+        validator: (v) =>
+            v == null || v.trim().isEmpty ? 'Licence number is required' : null,
       ),
       const SizedBox(height: AppSpacing.sm),
       Row(
@@ -828,16 +971,34 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
             child: ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.calendar_today_outlined),
-              title: Text(_issueDate == null ? 'Issue Date *' : DateFormat('dd/MM/yyyy').format(_issueDate!)),
-              onTap: () => _selectDate(context, initial: _issueDate ?? DateTime.now(), onSelected: (d) => setState(() => _issueDate = d)),
+              title: Text(
+                _issueDate == null
+                    ? 'Issue Date *'
+                    : DateFormat('dd/MM/yyyy').format(_issueDate!),
+              ),
+              onTap: () => _selectDate(
+                context,
+                initial: _issueDate ?? DateTime.now(),
+                onSelected: (d) => setState(() => _issueDate = d),
+              ),
             ),
           ),
           Expanded(
             child: ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.event_available_outlined),
-              title: Text(_expiryDate == null ? 'Valid Until *' : DateFormat('dd/MM/yyyy').format(_expiryDate!)),
-              onTap: () => _selectDate(context, initial: _expiryDate ?? DateTime.now().add(const Duration(days: 365 * 10)), onSelected: (d) => setState(() => _expiryDate = d)),
+              title: Text(
+                _expiryDate == null
+                    ? 'Valid Until *'
+                    : DateFormat('dd/MM/yyyy').format(_expiryDate!),
+              ),
+              onTap: () => _selectDate(
+                context,
+                initial:
+                    _expiryDate ??
+                    DateTime.now().add(const Duration(days: 365 * 10)),
+                onSelected: (d) => setState(() => _expiryDate = d),
+              ),
             ),
           ),
         ],
@@ -850,7 +1011,9 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           hintText: 'e.g. RTO Delhi Central',
           prefixIcon: Icon(Icons.account_balance_outlined),
         ),
-        validator: (v) => v == null || v.trim().isEmpty ? 'Issuing authority is required' : null,
+        validator: (v) => v == null || v.trim().isEmpty
+            ? 'Issuing authority is required'
+            : null,
       ),
       const SizedBox(height: AppSpacing.sm),
       TextFormField(
@@ -860,10 +1023,14 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           hintText: 'e.g. Delhi, Maharashtra',
           prefixIcon: Icon(Icons.map_outlined),
         ),
-        validator: (v) => v == null || v.trim().isEmpty ? 'State is required' : null,
+        validator: (v) =>
+            v == null || v.trim().isEmpty ? 'State is required' : null,
       ),
       const SizedBox(height: AppSpacing.sm),
-      const Text('Authorized Vehicle Classes:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+      const Text(
+        'Authorized Vehicle Classes:',
+        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+      ),
       Wrap(
         spacing: 8,
         children: ['MCWG', 'MCWOG', 'LMV', 'HMV', 'TRANS'].map((cls) {
@@ -896,15 +1063,14 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           hintText: 'Given name + Surname',
           prefixIcon: Icon(Icons.person_outline_rounded),
         ),
-        validator: (v) => v == null || v.trim().isEmpty ? 'Full name is required' : null,
+        validator: (v) =>
+            v == null || v.trim().isEmpty ? 'Full name is required' : null,
       ),
       const SizedBox(height: AppSpacing.sm),
       TextFormField(
         controller: _numberController,
         textCapitalization: TextCapitalization.characters,
-        inputFormatters: [
-          LengthLimitingTextInputFormatter(8),
-        ],
+        inputFormatters: [LengthLimitingTextInputFormatter(8)],
         decoration: const InputDecoration(
           labelText: 'Passport Number *',
           hintText: 'e.g. J1234567',
@@ -925,7 +1091,8 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           labelText: 'Nationality *',
           prefixIcon: Icon(Icons.flag_outlined),
         ),
-        validator: (v) => v == null || v.trim().isEmpty ? 'Nationality is required' : null,
+        validator: (v) =>
+            v == null || v.trim().isEmpty ? 'Nationality is required' : null,
       ),
       const SizedBox(height: AppSpacing.sm),
       Row(
@@ -934,16 +1101,34 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
             child: ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.calendar_today_outlined),
-              title: Text(_issueDate == null ? 'Issue Date *' : DateFormat('dd/MM/yyyy').format(_issueDate!)),
-              onTap: () => _selectDate(context, initial: _issueDate ?? DateTime.now(), onSelected: (d) => setState(() => _issueDate = d)),
+              title: Text(
+                _issueDate == null
+                    ? 'Issue Date *'
+                    : DateFormat('dd/MM/yyyy').format(_issueDate!),
+              ),
+              onTap: () => _selectDate(
+                context,
+                initial: _issueDate ?? DateTime.now(),
+                onSelected: (d) => setState(() => _issueDate = d),
+              ),
             ),
           ),
           Expanded(
             child: ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.event_available_outlined),
-              title: Text(_expiryDate == null ? 'Expiry Date *' : DateFormat('dd/MM/yyyy').format(_expiryDate!)),
-              onTap: () => _selectDate(context, initial: _expiryDate ?? DateTime.now().add(const Duration(days: 365 * 10)), onSelected: (d) => setState(() => _expiryDate = d)),
+              title: Text(
+                _expiryDate == null
+                    ? 'Expiry Date *'
+                    : DateFormat('dd/MM/yyyy').format(_expiryDate!),
+              ),
+              onTap: () => _selectDate(
+                context,
+                initial:
+                    _expiryDate ??
+                    DateTime.now().add(const Duration(days: 365 * 10)),
+                onSelected: (d) => setState(() => _expiryDate = d),
+              ),
             ),
           ),
         ],
@@ -956,7 +1141,8 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           hintText: 'City, State',
           prefixIcon: Icon(Icons.location_city_rounded),
         ),
-        validator: (v) => v == null || v.trim().isEmpty ? 'Place of birth is required' : null,
+        validator: (v) =>
+            v == null || v.trim().isEmpty ? 'Place of birth is required' : null,
       ),
       const SizedBox(height: AppSpacing.sm),
       TextFormField(
@@ -966,7 +1152,8 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           hintText: 'e.g. RPO Delhi',
           prefixIcon: Icon(Icons.apartment_rounded),
         ),
-        validator: (v) => v == null || v.trim().isEmpty ? 'Place of issue is required' : null,
+        validator: (v) =>
+            v == null || v.trim().isEmpty ? 'Place of issue is required' : null,
       ),
     ];
   }
@@ -1000,11 +1187,22 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
         width: double.infinity,
         child: SegmentedButton<String>(
           segments: const [
-            ButtonSegment(value: 'debit_card', label: Text('Debit Card'), icon: Icon(Icons.credit_card_rounded)),
-            ButtonSegment(value: 'credit_card', label: Text('Credit Card'), icon: Icon(Icons.credit_score_rounded)),
+            ButtonSegment(
+              value: 'debit_card',
+              label: Text('Debit Card'),
+              icon: Icon(Icons.credit_card_rounded),
+            ),
+            ButtonSegment(
+              value: 'credit_card',
+              label: Text('Credit Card'),
+              icon: Icon(Icons.credit_score_rounded),
+            ),
           ],
-          selected: {_selectedCategory == 'credit_card' ? 'credit_card' : 'debit_card'},
-          onSelectionChanged: (val) => setState(() => _selectedCategory = val.first),
+          selected: {
+            _selectedCategory == 'credit_card' ? 'credit_card' : 'debit_card',
+          },
+          onSelectionChanged: (val) =>
+              setState(() => _selectedCategory = val.first),
         ),
       ),
       const SizedBox(height: AppSpacing.sm),
@@ -1015,7 +1213,9 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           hintText: 'Name as on card',
           prefixIcon: Icon(Icons.person_outline_rounded),
         ),
-        validator: (v) => v == null || v.trim().isEmpty ? 'Cardholder name is required' : null,
+        validator: (v) => v == null || v.trim().isEmpty
+            ? 'Cardholder name is required'
+            : null,
       ),
       const SizedBox(height: AppSpacing.sm),
       TextFormField(
@@ -1025,7 +1225,8 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           hintText: 'e.g. HDFC Bank, SBI, ICICI',
           prefixIcon: Icon(Icons.account_balance_rounded),
         ),
-        validator: (v) => v == null || v.trim().isEmpty ? 'Bank name is required' : null,
+        validator: (v) =>
+            v == null || v.trim().isEmpty ? 'Bank name is required' : null,
       ),
       const SizedBox(height: AppSpacing.sm),
       DropdownButtonFormField<String>(
@@ -1038,7 +1239,10 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           DropdownMenuItem(value: 'Visa', child: Text('Visa')),
           DropdownMenuItem(value: 'Mastercard', child: Text('Mastercard')),
           DropdownMenuItem(value: 'RuPay', child: Text('RuPay')),
-          DropdownMenuItem(value: 'American Express', child: Text('American Express')),
+          DropdownMenuItem(
+            value: 'American Express',
+            child: Text('American Express'),
+          ),
           DropdownMenuItem(value: 'Diners Club', child: Text('Diners Club')),
         ],
         onChanged: (v) => setState(() => _cardNetwork = v ?? 'Visa'),
@@ -1072,7 +1276,10 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
               initialValue: _expiryMonth,
               decoration: const InputDecoration(labelText: 'Expiry Month *'),
               items: List.generate(12, (i) => i + 1).map((m) {
-                return DropdownMenuItem(value: m, child: Text(m.toString().padLeft(2, '0')));
+                return DropdownMenuItem(
+                  value: m,
+                  child: Text(m.toString().padLeft(2, '0')),
+                );
               }).toList(),
               onChanged: (v) => setState(() {
                 _expiryMonth = v ?? 1;
@@ -1109,7 +1316,8 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           hintText: 'e.g. Star Health, HDFC ERGO, LIC',
           prefixIcon: Icon(Icons.business_rounded),
         ),
-        validator: (v) => v == null || v.trim().isEmpty ? 'Provider name is required' : null,
+        validator: (v) =>
+            v == null || v.trim().isEmpty ? 'Provider name is required' : null,
       ),
       const SizedBox(height: AppSpacing.sm),
       TextFormField(
@@ -1119,7 +1327,9 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           hintText: 'Primary Insured Person',
           prefixIcon: Icon(Icons.person_outline_rounded),
         ),
-        validator: (v) => v == null || v.trim().isEmpty ? 'Policyholder name is required' : null,
+        validator: (v) => v == null || v.trim().isEmpty
+            ? 'Policyholder name is required'
+            : null,
       ),
       const SizedBox(height: AppSpacing.sm),
       TextFormField(
@@ -1129,7 +1339,8 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           hintText: 'e.g. POL-9876543210',
           prefixIcon: Icon(Icons.tag_rounded),
         ),
-        validator: (v) => v == null || v.trim().isEmpty ? 'Policy number is required' : null,
+        validator: (v) =>
+            v == null || v.trim().isEmpty ? 'Policy number is required' : null,
       ),
       const SizedBox(height: AppSpacing.sm),
       DropdownButtonFormField<String>(
@@ -1139,12 +1350,30 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           prefixIcon: Icon(Icons.shield_outlined),
         ),
         items: const [
-          DropdownMenuItem(value: 'Health Insurance', child: Text('Health Insurance')),
-          DropdownMenuItem(value: 'Motor Insurance', child: Text('Motor Insurance')),
-          DropdownMenuItem(value: 'Life Insurance', child: Text('Life Insurance')),
-          DropdownMenuItem(value: 'Term Insurance', child: Text('Term Insurance')),
-          DropdownMenuItem(value: 'Travel Insurance', child: Text('Travel Insurance')),
-          DropdownMenuItem(value: 'Home Insurance', child: Text('Home Insurance')),
+          DropdownMenuItem(
+            value: 'Health Insurance',
+            child: Text('Health Insurance'),
+          ),
+          DropdownMenuItem(
+            value: 'Motor Insurance',
+            child: Text('Motor Insurance'),
+          ),
+          DropdownMenuItem(
+            value: 'Life Insurance',
+            child: Text('Life Insurance'),
+          ),
+          DropdownMenuItem(
+            value: 'Term Insurance',
+            child: Text('Term Insurance'),
+          ),
+          DropdownMenuItem(
+            value: 'Travel Insurance',
+            child: Text('Travel Insurance'),
+          ),
+          DropdownMenuItem(
+            value: 'Home Insurance',
+            child: Text('Home Insurance'),
+          ),
         ],
         onChanged: (v) => setState(() => _policyType = v ?? 'Health Insurance'),
       ),
@@ -1155,16 +1384,34 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
             child: ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.calendar_today_outlined),
-              title: Text(_issueDate == null ? 'Start Date *' : DateFormat('dd/MM/yyyy').format(_issueDate!)),
-              onTap: () => _selectDate(context, initial: _issueDate ?? DateTime.now(), onSelected: (d) => setState(() => _issueDate = d)),
+              title: Text(
+                _issueDate == null
+                    ? 'Start Date *'
+                    : DateFormat('dd/MM/yyyy').format(_issueDate!),
+              ),
+              onTap: () => _selectDate(
+                context,
+                initial: _issueDate ?? DateTime.now(),
+                onSelected: (d) => setState(() => _issueDate = d),
+              ),
             ),
           ),
           Expanded(
             child: ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.event_available_outlined),
-              title: Text(_expiryDate == null ? 'Expiry Date *' : DateFormat('dd/MM/yyyy').format(_expiryDate!)),
-              onTap: () => _selectDate(context, initial: _expiryDate ?? DateTime.now().add(const Duration(days: 365)), onSelected: (d) => setState(() => _expiryDate = d)),
+              title: Text(
+                _expiryDate == null
+                    ? 'Expiry Date *'
+                    : DateFormat('dd/MM/yyyy').format(_expiryDate!),
+              ),
+              onTap: () => _selectDate(
+                context,
+                initial:
+                    _expiryDate ??
+                    DateTime.now().add(const Duration(days: 365)),
+                onSelected: (d) => setState(() => _expiryDate = d),
+              ),
             ),
           ),
         ],
@@ -1200,7 +1447,8 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           hintText: 'e.g. Vehicle RC, College ID, Birth Certificate',
           prefixIcon: Icon(Icons.title_rounded),
         ),
-        validator: (v) => v == null || v.trim().isEmpty ? 'Document title is required' : null,
+        validator: (v) =>
+            v == null || v.trim().isEmpty ? 'Document title is required' : null,
       ),
       const SizedBox(height: AppSpacing.sm),
       TextFormField(
@@ -1227,16 +1475,34 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
             child: ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.calendar_today_outlined),
-              title: Text(_issueDate == null ? 'Issue Date' : DateFormat('dd/MM/yyyy').format(_issueDate!)),
-              onTap: () => _selectDate(context, initial: _issueDate ?? DateTime.now(), onSelected: (d) => setState(() => _issueDate = d)),
+              title: Text(
+                _issueDate == null
+                    ? 'Issue Date'
+                    : DateFormat('dd/MM/yyyy').format(_issueDate!),
+              ),
+              onTap: () => _selectDate(
+                context,
+                initial: _issueDate ?? DateTime.now(),
+                onSelected: (d) => setState(() => _issueDate = d),
+              ),
             ),
           ),
           Expanded(
             child: ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.event_available_outlined),
-              title: Text(_expiryDate == null ? 'Expiry Date' : DateFormat('dd/MM/yyyy').format(_expiryDate!)),
-              onTap: () => _selectDate(context, initial: _expiryDate ?? DateTime.now().add(const Duration(days: 365)), onSelected: (d) => setState(() => _expiryDate = d)),
+              title: Text(
+                _expiryDate == null
+                    ? 'Expiry Date'
+                    : DateFormat('dd/MM/yyyy').format(_expiryDate!),
+              ),
+              onTap: () => _selectDate(
+                context,
+                initial:
+                    _expiryDate ??
+                    DateTime.now().add(const Duration(days: 365)),
+                onSelected: (d) => setState(() => _expiryDate = d),
+              ),
             ),
           ),
         ],
@@ -1272,13 +1538,22 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
             children: [
               Text(
                 'Original Document Attachment',
-                style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               if (hasAttachment)
                 TextButton.icon(
                   onPressed: () => setState(() => _attachmentPayload = null),
-                  icon: const Icon(Icons.close_rounded, size: 16, color: Colors.redAccent),
-                  label: const Text('Remove', style: TextStyle(color: Colors.redAccent, fontSize: 12)),
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    size: 16,
+                    color: Colors.redAccent,
+                  ),
+                  label: const Text(
+                    'Remove',
+                    style: TextStyle(color: Colors.redAccent, fontSize: 12),
+                  ),
                 ),
             ],
           ),
@@ -1287,7 +1562,9 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
             hasAttachment
                 ? 'Original scanned copy attached (${_attachmentPayload!.fileName}, ${_attachmentPayload!.pageCount} page(s)).'
                 : 'Attach a camera scan, photo, or PDF copy of the original physical document. (Optional)',
-            style: AppTextStyles.bodySmall.copyWith(color: AppColors.getTextSecondary(context)),
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.getTextSecondary(context),
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           if (hasAttachment) ...[
@@ -1306,12 +1583,20 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: (_attachmentPayload!.isPdf ? Colors.redAccent : AppColors.primary).withAlpha(25),
+                          color:
+                              (_attachmentPayload!.isPdf
+                                      ? Colors.redAccent
+                                      : AppColors.primary)
+                                  .withAlpha(25),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
-                          _attachmentPayload!.isPdf ? Icons.picture_as_pdf_rounded : Icons.photo_rounded,
-                          color: _attachmentPayload!.isPdf ? Colors.redAccent : AppColors.primary,
+                          _attachmentPayload!.isPdf
+                              ? Icons.picture_as_pdf_rounded
+                              : Icons.photo_rounded,
+                          color: _attachmentPayload!.isPdf
+                              ? Colors.redAccent
+                              : AppColors.primary,
                           size: 24,
                         ),
                       ),
@@ -1322,13 +1607,19 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
                           children: [
                             Text(
                               _attachmentPayload!.fileName,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 2),
                             Text(
                               '${_attachmentPayload!.pageCount} Page(s) • ${DocumentScannerService.formatFileSize(_attachmentPayload!.calculatedSize)} • Ready to encrypt',
-                              style: TextStyle(fontSize: 11, color: AppColors.getTextSecondary(context)),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: AppColors.getTextSecondary(context),
+                              ),
                             ),
                           ],
                         ),
@@ -1342,24 +1633,34 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
                       TextButton.icon(
                         onPressed: _openAttachmentScanner,
                         icon: const Icon(Icons.edit_note_rounded, size: 16),
-                        label: const Text('Edit / Replace', style: TextStyle(fontSize: 12)),
+                        label: const Text(
+                          'Edit / Replace',
+                          style: TextStyle(fontSize: 12),
+                        ),
                       ),
                       if (_attachmentPayload!.pdfBytes != null) ...[
                         const SizedBox(width: 4),
                         TextButton.icon(
                           onPressed: () async {
-                            final saved = await _scannerService.savePdfToPhoneStorage(
-                              pdfBytes: _attachmentPayload!.pdfBytes!,
-                              fileName: _attachmentPayload!.fileName,
-                            );
+                            final saved = await _scannerService
+                                .savePdfToPhoneStorage(
+                                  pdfBytes: _attachmentPayload!.pdfBytes!,
+                                  fileName: _attachmentPayload!.fileName,
+                                );
                             if (saved != null && mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Saved copy to: $saved'), backgroundColor: AppColors.success),
+                                SnackBar(
+                                  content: Text('Saved copy to: $saved'),
+                                  backgroundColor: AppColors.success,
+                                ),
                               );
                             }
                           },
                           icon: const Icon(Icons.download_rounded, size: 16),
-                          label: const Text('Save to Phone', style: TextStyle(fontSize: 12)),
+                          label: const Text(
+                            'Save to Phone',
+                            style: TextStyle(fontSize: 12),
+                          ),
                         ),
                       ],
                     ],
@@ -1375,7 +1676,9 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.md,
+                      ),
                     ),
                     onPressed: _openAttachmentScanner,
                     icon: const Icon(Icons.document_scanner_rounded, size: 18),
@@ -1386,7 +1689,9 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
                 Expanded(
                   child: OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.md,
+                      ),
                     ),
                     onPressed: _attachExistingPdf,
                     icon: const Icon(Icons.folder_open_rounded, size: 18),
@@ -1407,7 +1712,9 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
         ? _nameController.text.trim()
         : '${_selectedCategory.replaceAll('_', ' ').toUpperCase()} Document';
 
-    final holder = _holderController.text.trim().isNotEmpty ? _holderController.text.trim() : null;
+    final holder = _holderController.text.trim().isNotEmpty
+        ? _holderController.text.trim()
+        : null;
     final rawNumber = _numberController.text.trim();
     final masked = _computeMaskedIdentifier(rawNumber);
 
@@ -1421,9 +1728,14 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
       issueDate: _issueDate,
       expiryDate: _expiryDate,
       isFavorite: widget.documentToEdit?.isFavorite ?? false,
-      encryptedFilePath: _attachmentPayload != null ? 'has_attachment' : (widget.documentToEdit?.encryptedFilePath ?? ''),
-      mimeType: _attachmentPayload?.mimeType ?? (widget.documentToEdit?.mimeType ?? 'image/jpeg'),
-      description: 'Holder: ${holder ?? ''}\nNumber: $masked\nBank: ${_bankController.text.trim()}\nNetwork: $_cardNetwork\nProvider: ${_providerController.text.trim()}\nType: $_policyType',
+      encryptedFilePath: _attachmentPayload != null
+          ? 'has_attachment'
+          : (widget.documentToEdit?.encryptedFilePath ?? ''),
+      mimeType:
+          _attachmentPayload?.mimeType ??
+          (widget.documentToEdit?.mimeType ?? 'image/jpeg'),
+      description:
+          'Holder: ${holder ?? ''}\nNumber: $masked\nBank: ${_bankController.text.trim()}\nNetwork: $_cardNetwork\nProvider: ${_providerController.text.trim()}\nType: $_policyType',
       createdAt: widget.documentToEdit?.createdAt ?? DateTime.now(),
       updatedAt: DateTime.now(),
     );
@@ -1433,43 +1745,64 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
       children: [
         Text(
           'Virtual Card Preview',
-          style: AppTextStyles.headingSmall.copyWith(fontWeight: FontWeight.bold),
+          style: AppTextStyles.headingSmall.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
           'Review how your document appears in your Spendz Digital Wallet before saving.',
-          style: AppTextStyles.bodyMedium.copyWith(color: AppColors.getTextSecondary(context)),
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: AppColors.getTextSecondary(context),
+          ),
         ),
         const SizedBox(height: AppSpacing.lg),
 
         // Live Virtual Document Card
-        VirtualDocumentCard(
-          document: previewDoc,
-          showShadow: true,
-        ),
+        VirtualDocumentCard(document: previewDoc, showShadow: true),
         const SizedBox(height: AppSpacing.lg),
 
         // Summary Information Card
         Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.card)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.card),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Document Details', style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold)),
+                Text(
+                  'Document Details',
+                  style: AppTextStyles.bodyLarge.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const Divider(),
-                _summaryRow('Type', _selectedCategory.replaceAll('_', ' ').toUpperCase()),
+                _summaryRow(
+                  'Type',
+                  _selectedCategory.replaceAll('_', ' ').toUpperCase(),
+                ),
                 _summaryRow('Document Title', title),
                 if (holder != null) _summaryRow('Holder', holder),
                 if (masked.isNotEmpty) _summaryRow('Masked ID', masked),
-                if (_issueDate != null) _summaryRow('Issue Date', DateFormat('dd MMM yyyy').format(_issueDate!)),
-                if (_expiryDate != null) _summaryRow('Expiry Date', DateFormat('dd MMM yyyy').format(_expiryDate!)),
+                if (_issueDate != null)
+                  _summaryRow(
+                    'Issue Date',
+                    DateFormat('dd MMM yyyy').format(_issueDate!),
+                  ),
+                if (_expiryDate != null)
+                  _summaryRow(
+                    'Expiry Date',
+                    DateFormat('dd MMM yyyy').format(_expiryDate!),
+                  ),
                 _summaryRow(
                   'Attachment',
                   _attachmentPayload != null
                       ? 'Attached (${_attachmentPayload!.fileName})'
-                      : (widget.documentToEdit?.hasAttachment == true ? 'Retaining existing attachment' : 'No attachment copy'),
+                      : (widget.documentToEdit?.hasAttachment == true
+                            ? 'Retaining existing attachment'
+                            : 'No attachment copy'),
                 ),
               ],
             ),
@@ -1485,7 +1818,9 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
                 onPressed: () => setState(() => _currentStep = 1),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
                 ),
                 child: const Text('Back / Edit Form'),
               ),
@@ -1496,14 +1831,18 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
                 onPressed: _saveDocument,
                 icon: const Icon(Icons.lock_rounded, size: 18),
                 label: Text(
-                  widget.documentToEdit != null ? 'Update Vault' : 'Save to Vault',
+                  widget.documentToEdit != null
+                      ? 'Update Vault'
+                      : 'Save to Vault',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
                 ),
               ),
             ),
@@ -1520,8 +1859,18 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: AppTextStyles.bodySmall.copyWith(color: AppColors.getTextSecondary(context))),
-          Text(value, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
+          Text(
+            label,
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.getTextSecondary(context),
+            ),
+          ),
+          Text(
+            value,
+            style: AppTextStyles.bodyMedium.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );

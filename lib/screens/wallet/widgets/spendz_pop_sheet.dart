@@ -40,7 +40,9 @@ class SpendzPopSheet extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: surfaceColor.withAlpha(isDark ? 230 : 245),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.sheet)),
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(AppRadius.sheet),
+          ),
           border: Border.all(color: borderColor, width: 1),
           boxShadow: [
             BoxShadow(
@@ -53,12 +55,21 @@ class SpendzPopSheet extends StatelessWidget {
         child: SafeArea(
           child: Consumer<WalletProvider>(
             builder: (context, wallet, child) {
-              final favCards = wallet.favoriteCards.isNotEmpty ? wallet.favoriteCards : wallet.cards.take(2).toList();
-              final favDocs = wallet.favoriteDocuments.isNotEmpty ? wallet.favoriteDocuments : wallet.documents.take(3).toList();
-              final favPasses = wallet.favoritePasses.isNotEmpty ? wallet.favoritePasses : wallet.passes.take(1).toList();
+              final favCards = wallet.favoriteCards.isNotEmpty
+                  ? wallet.favoriteCards
+                  : wallet.cards.take(2).toList();
+              final favDocs = wallet.favoriteDocuments.isNotEmpty
+                  ? wallet.favoriteDocuments
+                  : wallet.documents.take(3).toList();
+              final favPasses = wallet.favoritePasses.isNotEmpty
+                  ? wallet.favoritePasses
+                  : wallet.passes.take(1).toList();
 
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.md,
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,10 +94,15 @@ class SpendzPopSheet extends StatelessWidget {
                         Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppColors.primary,
-                                borderRadius: BorderRadius.circular(AppRadius.xs),
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.xs,
+                                ),
                               ),
                               child: const Text(
                                 'POP WALLET',
@@ -128,7 +144,9 @@ class SpendzPopSheet extends StatelessWidget {
                               Navigator.pop(context);
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+                                MaterialPageRoute(
+                                  builder: (_) => const AddTransactionScreen(),
+                                ),
                               );
                             },
                           ),
@@ -143,7 +161,9 @@ class SpendzPopSheet extends StatelessWidget {
                               Navigator.pop(context);
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (_) => const CardsScreen()),
+                                MaterialPageRoute(
+                                  builder: (_) => const CardsScreen(),
+                                ),
                               );
                             },
                           ),
@@ -158,7 +178,9 @@ class SpendzPopSheet extends StatelessWidget {
                               Navigator.pop(context);
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (_) => const DocumentsScreen()),
+                                MaterialPageRoute(
+                                  builder: (_) => const DocumentsScreen(),
+                                ),
                               );
                             },
                           ),
@@ -172,10 +194,15 @@ class SpendzPopSheet extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Favourite Cards', style: AppTextStyles.labelLarge),
+                          Text(
+                            'Favourite Cards',
+                            style: AppTextStyles.labelLarge,
+                          ),
                           Text(
                             '${favCards.length} ready',
-                            style: AppTextStyles.caption.copyWith(color: textSecondary),
+                            style: AppTextStyles.caption.copyWith(
+                              color: textSecondary,
+                            ),
                           ),
                         ],
                       ),
@@ -195,10 +222,14 @@ class SpendzPopSheet extends StatelessWidget {
                                 Navigator.pop(context);
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (_) => CardDetailScreen(card: card)),
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        CardDetailScreen(card: card),
+                                  ),
                                 );
                               },
-                              onFavoriteToggle: () => wallet.toggleCardFavorite(card.id),
+                              onFavoriteToggle: () =>
+                                  wallet.toggleCardFavorite(card.id),
                             );
                           },
                         ),
@@ -213,7 +244,9 @@ class SpendzPopSheet extends StatelessWidget {
                       Column(
                         children: favDocs.map((doc) {
                           return Container(
-                            margin: const EdgeInsets.only(bottom: AppSpacing.xs + 2),
+                            margin: const EdgeInsets.only(
+                              bottom: AppSpacing.xs + 2,
+                            ),
                             decoration: BoxDecoration(
                               color: surfaceColor,
                               borderRadius: BorderRadius.circular(AppRadius.md),
@@ -225,9 +258,15 @@ class SpendzPopSheet extends StatelessWidget {
                               child: ListTile(
                                 dense: true,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(AppRadius.md),
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.md,
+                                  ),
                                 ),
-                                leading: const Icon(Icons.shield_outlined, color: AppColors.primary, size: 20),
+                                leading: const Icon(
+                                  Icons.shield_outlined,
+                                  color: AppColors.primary,
+                                  size: 20,
+                                ),
                                 title: Text(
                                   doc.documentName,
                                   style: AppTextStyles.bodyMedium.copyWith(
@@ -237,14 +276,24 @@ class SpendzPopSheet extends StatelessWidget {
                                 ),
                                 subtitle: Text(
                                   doc.category.toUpperCase(),
-                                  style: AppTextStyles.caption.copyWith(color: textSecondary, fontSize: 10),
+                                  style: AppTextStyles.caption.copyWith(
+                                    color: textSecondary,
+                                    fontSize: 10,
+                                  ),
                                 ),
-                                trailing: Icon(Icons.arrow_forward_ios_rounded, size: 12, color: textSecondary),
+                                trailing: Icon(
+                                  Icons.arrow_forward_ios_rounded,
+                                  size: 12,
+                                  color: textSecondary,
+                                ),
                                 onTap: () {
                                   Navigator.pop(context);
                                   Navigator.push(
                                     context,
-                                    MaterialPageRoute(builder: (_) => DocumentPreviewScreen(document: doc)),
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          DocumentPreviewScreen(document: doc),
+                                    ),
                                   );
                                 },
                               ),
@@ -262,7 +311,9 @@ class SpendzPopSheet extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: AppColors.primary.withAlpha(20),
                           borderRadius: BorderRadius.circular(AppRadius.card),
-                          border: Border.all(color: AppColors.primary.withAlpha(50)),
+                          border: Border.all(
+                            color: AppColors.primary.withAlpha(50),
+                          ),
                         ),
                         child: Row(
                           children: [
@@ -270,10 +321,14 @@ class SpendzPopSheet extends StatelessWidget {
                               padding: const EdgeInsets.all(4),
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(AppRadius.sm),
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.sm,
+                                ),
                               ),
                               child: QrImageView(
-                                data: favPasses.first.codeData.isNotEmpty ? favPasses.first.codeData : 'spendz-pass',
+                                data: favPasses.first.codeData.isNotEmpty
+                                    ? favPasses.first.codeData
+                                    : 'spendz-pass',
                                 version: QrVersions.auto,
                                 size: 36.0,
                               ),

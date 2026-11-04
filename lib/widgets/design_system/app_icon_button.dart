@@ -29,7 +29,9 @@ class AppIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final fgColor = color ?? AppColors.getTextPrimary(context);
     final bgColor = backgroundColor ?? AppColors.getSurfaceVariant(context);
-    final borderColor = hasBorder ? AppColors.getBorder(context) : Colors.transparent;
+    final borderColor = hasBorder
+        ? AppColors.getBorder(context)
+        : Colors.transparent;
 
     Widget button = Container(
       width: size,
@@ -57,4 +59,3 @@ class AppIconButton extends StatelessWidget {
     return button;
   }
 }
-

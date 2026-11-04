@@ -31,12 +31,11 @@ class GlassContainer extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(borderRadius),
             color: color ?? Colors.black.withAlpha(64),
-            border: border ?? Border.all(color: Colors.white.withAlpha(25), width: 1.2),
+            border:
+                border ??
+                Border.all(color: Colors.white.withAlpha(25), width: 1.2),
           ),
-          child: Padding(
-            padding: padding ?? EdgeInsets.zero,
-            child: child,
-          ),
+          child: Padding(padding: padding ?? EdgeInsets.zero, child: child),
         ),
       ),
     );
@@ -57,10 +56,7 @@ class GlassContainer extends StatelessWidget {
     );
 
     if (margin != null) {
-      content = Padding(
-        padding: margin!,
-        child: content,
-      );
+      content = Padding(padding: margin!, child: content);
     }
 
     return content;

@@ -15,7 +15,8 @@ class WalletDocumentProvider with ChangeNotifier {
   String? get error => _error;
   String get selectedCategory => _selectedCategory;
 
-  List<WalletDocumentModel> get favoriteDocuments => _documents.where((d) => d.isFavorite).toList();
+  List<WalletDocumentModel> get favoriteDocuments =>
+      _documents.where((d) => d.isFavorite).toList();
 
   List<WalletDocumentModel> get expiringDocuments =>
       _documents.where((d) => d.isExpiringSoon || d.isExpired).toList();
@@ -33,7 +34,9 @@ class WalletDocumentProvider with ChangeNotifier {
       if (_selectedCategory == 'all') {
         _documents = await _repository.getAllDocuments();
       } else {
-        _documents = await _repository.getDocumentsByCategory(_selectedCategory);
+        _documents = await _repository.getDocumentsByCategory(
+          _selectedCategory,
+        );
       }
     } catch (e) {
       _error = 'Failed to load documents: $e';
@@ -104,7 +107,9 @@ class WalletDocumentProvider with ChangeNotifier {
     }
   }
 
-  Future<List<WalletDocumentModel>> fetchExpiringDocuments({int days = 30}) async {
+  Future<List<WalletDocumentModel>> fetchExpiringDocuments({
+    int days = 30,
+  }) async {
     try {
       return await _repository.getExpiringDocuments(daysThreshold: days);
     } catch (e) {
@@ -121,4 +126,3 @@ class WalletDocumentProvider with ChangeNotifier {
     }
   }
 }
-

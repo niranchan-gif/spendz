@@ -16,7 +16,10 @@ class GlassSection extends StatelessWidget {
     this.subtitle,
     this.trailing,
     this.child,
-    this.padding = const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+    this.padding = const EdgeInsets.symmetric(
+      horizontal: AppSpacing.lg,
+      vertical: AppSpacing.sm,
+    ),
   });
 
   @override
@@ -59,10 +62,7 @@ class GlassSection extends StatelessWidget {
               ?trailing,
             ],
           ),
-          if (child != null) ...[
-            const SizedBox(height: AppSpacing.sm),
-            child!,
-          ],
+          if (child != null) ...[const SizedBox(height: AppSpacing.sm), child!],
         ],
       ),
     );

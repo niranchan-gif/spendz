@@ -40,7 +40,9 @@ class TransactionProvider with ChangeNotifier {
   }
 
   List<TransactionModel> getTransactionsForMonth(int year, int month) {
-    return _transactions.where((t) => t.date.year == year && t.date.month == month).toList();
+    return _transactions
+        .where((t) => t.date.year == year && t.date.month == month)
+        .toList();
   }
 
   List<TransactionModel> getRecentTransactions({int count = 5}) {
@@ -51,7 +53,10 @@ class TransactionProvider with ChangeNotifier {
     return _transactions.where((t) => t.cardId == cardId).toList();
   }
 
-  Future<void> associateCardWithTransaction(String transactionId, String? cardId) async {
+  Future<void> associateCardWithTransaction(
+    String transactionId,
+    String? cardId,
+  ) async {
     await _transactionDao.associateCard(transactionId, cardId);
     await loadTransactions();
   }

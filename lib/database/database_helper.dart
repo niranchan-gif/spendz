@@ -33,13 +33,43 @@ class DatabaseHelper {
   }
 
   Future<void> _onOpenDB(Database db) async {
-    await _addColumnIfNotExists(db, 'wallet_documents', 'masked_identifier', 'TEXT');
+    await _addColumnIfNotExists(
+      db,
+      'wallet_documents',
+      'masked_identifier',
+      'TEXT',
+    );
     await _addColumnIfNotExists(db, 'wallet_documents', 'holder_name', 'TEXT');
-    await _addColumnIfNotExists(db, 'wallet_documents', 'encrypted_fields', 'TEXT');
-    await _addColumnIfNotExists(db, 'wallet_documents', 'attachment_type', "TEXT DEFAULT 'none'");
-    await _addColumnIfNotExists(db, 'wallet_cards', 'card_layout_id', "TEXT DEFAULT 'minimal_luxury'");
-    await _addColumnIfNotExists(db, 'wallet_cards', 'display_order', "INTEGER DEFAULT 0");
-    await _addColumnIfNotExists(db, 'wallet_cards', 'is_default', "INTEGER DEFAULT 0");
+    await _addColumnIfNotExists(
+      db,
+      'wallet_documents',
+      'encrypted_fields',
+      'TEXT',
+    );
+    await _addColumnIfNotExists(
+      db,
+      'wallet_documents',
+      'attachment_type',
+      "TEXT DEFAULT 'none'",
+    );
+    await _addColumnIfNotExists(
+      db,
+      'wallet_cards',
+      'card_layout_id',
+      "TEXT DEFAULT 'minimal_luxury'",
+    );
+    await _addColumnIfNotExists(
+      db,
+      'wallet_cards',
+      'display_order',
+      "INTEGER DEFAULT 0",
+    );
+    await _addColumnIfNotExists(
+      db,
+      'wallet_cards',
+      'is_default',
+      "INTEGER DEFAULT 0",
+    );
   }
 
   Future<void> _addColumnIfNotExists(
@@ -51,7 +81,8 @@ class DatabaseHelper {
     try {
       final info = await db.rawQuery('PRAGMA table_info($table)');
       final columnExists = info.any(
-        (col) => (col['name'] as String?)?.toLowerCase() == column.toLowerCase(),
+        (col) =>
+            (col['name'] as String?)?.toLowerCase() == column.toLowerCase(),
       );
       if (!columnExists) {
         await db.execute('ALTER TABLE $table ADD COLUMN $column $columnDef');
@@ -63,16 +94,33 @@ class DatabaseHelper {
 
   Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      await _addColumnIfNotExists(db, 'transactions', 'owed_amount', 'REAL DEFAULT 0.0');
+      await _addColumnIfNotExists(
+        db,
+        'transactions',
+        'owed_amount',
+        'REAL DEFAULT 0.0',
+      );
     }
     if (oldVersion < 3) {
-      await _addColumnIfNotExists(db, 'transactions', 'expected_payments', 'INTEGER DEFAULT 0');
-      await _addColumnIfNotExists(db, 'transactions', 'linked_payments', 'INTEGER DEFAULT 0');
+      await _addColumnIfNotExists(
+        db,
+        'transactions',
+        'expected_payments',
+        'INTEGER DEFAULT 0',
+      );
+      await _addColumnIfNotExists(
+        db,
+        'transactions',
+        'linked_payments',
+        'INTEGER DEFAULT 0',
+      );
     }
     if (oldVersion < 4) {
       // 1. Add nullable card_id column to transactions idempotently
       await _addColumnIfNotExists(db, 'transactions', 'card_id', 'TEXT');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_transactions_card_id ON transactions (card_id)');
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_transactions_card_id ON transactions (card_id)',
+      );
 
       // 2. Create wallet_cards table
       await db.execute('''
@@ -93,7 +141,9 @@ class DatabaseHelper {
           updated_at TEXT NOT NULL
         )
       ''');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_wallet_cards_fav ON wallet_cards (is_favorite)');
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_wallet_cards_fav ON wallet_cards (is_favorite)',
+      );
 
       // 3. Create wallet_documents table
       await db.execute('''
@@ -117,9 +167,15 @@ class DatabaseHelper {
           updated_at TEXT NOT NULL
         )
       ''');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_wallet_docs_cat ON wallet_documents (category)');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_wallet_docs_fav ON wallet_documents (is_favorite)');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_wallet_docs_expiry ON wallet_documents (expiry_date)');
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_wallet_docs_cat ON wallet_documents (category)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_wallet_docs_fav ON wallet_documents (is_favorite)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_wallet_docs_expiry ON wallet_documents (expiry_date)',
+      );
 
       // 4. Create wallet_passes table
       await db.execute('''
@@ -136,7 +192,9 @@ class DatabaseHelper {
           updated_at TEXT NOT NULL
         )
       ''');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_wallet_passes_fav ON wallet_passes (is_favorite)');
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_wallet_passes_fav ON wallet_passes (is_favorite)',
+      );
 
       // 5. Create wallet_preferences table
       await db.execute('''
@@ -147,10 +205,30 @@ class DatabaseHelper {
       ''');
 
       // Ensure document table has enhanced wallet columns idempotently
-      await _addColumnIfNotExists(db, 'wallet_documents', 'masked_identifier', 'TEXT');
-      await _addColumnIfNotExists(db, 'wallet_documents', 'holder_name', 'TEXT');
-      await _addColumnIfNotExists(db, 'wallet_documents', 'encrypted_fields', 'TEXT');
-      await _addColumnIfNotExists(db, 'wallet_documents', 'attachment_type', "TEXT DEFAULT 'none'");
+      await _addColumnIfNotExists(
+        db,
+        'wallet_documents',
+        'masked_identifier',
+        'TEXT',
+      );
+      await _addColumnIfNotExists(
+        db,
+        'wallet_documents',
+        'holder_name',
+        'TEXT',
+      );
+      await _addColumnIfNotExists(
+        db,
+        'wallet_documents',
+        'encrypted_fields',
+        'TEXT',
+      );
+      await _addColumnIfNotExists(
+        db,
+        'wallet_documents',
+        'attachment_type',
+        "TEXT DEFAULT 'none'",
+      );
     }
   }
 
@@ -193,9 +271,15 @@ class DatabaseHelper {
       )
     ''');
 
-    await db.execute('CREATE INDEX idx_transactions_date ON transactions (date)');
-    await db.execute('CREATE INDEX idx_transactions_category_id ON transactions (category_id)');
-    await db.execute('CREATE INDEX idx_transactions_card_id ON transactions (card_id)');
+    await db.execute(
+      'CREATE INDEX idx_transactions_date ON transactions (date)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_transactions_category_id ON transactions (category_id)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_transactions_card_id ON transactions (card_id)',
+    );
 
     // 3. Wallet Cards
     await db.execute('''
@@ -219,8 +303,12 @@ class DatabaseHelper {
         updated_at TEXT NOT NULL
       )
     ''');
-    await db.execute('CREATE INDEX idx_wallet_cards_fav ON wallet_cards (is_favorite)');
-    await db.execute('CREATE INDEX idx_wallet_cards_order ON wallet_cards (display_order)');
+    await db.execute(
+      'CREATE INDEX idx_wallet_cards_fav ON wallet_cards (is_favorite)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_wallet_cards_order ON wallet_cards (display_order)',
+    );
 
     // 4. Wallet Documents
     await db.execute('''
@@ -244,9 +332,15 @@ class DatabaseHelper {
         updated_at TEXT NOT NULL
       )
     ''');
-    await db.execute('CREATE INDEX idx_wallet_docs_cat ON wallet_documents (category)');
-    await db.execute('CREATE INDEX idx_wallet_docs_fav ON wallet_documents (is_favorite)');
-    await db.execute('CREATE INDEX idx_wallet_docs_expiry ON wallet_documents (expiry_date)');
+    await db.execute(
+      'CREATE INDEX idx_wallet_docs_cat ON wallet_documents (category)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_wallet_docs_fav ON wallet_documents (is_favorite)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_wallet_docs_expiry ON wallet_documents (expiry_date)',
+    );
 
     // 5. Wallet Passes
     await db.execute('''
@@ -263,7 +357,9 @@ class DatabaseHelper {
         updated_at TEXT NOT NULL
       )
     ''');
-    await db.execute('CREATE INDEX idx_wallet_passes_fav ON wallet_passes (is_favorite)');
+    await db.execute(
+      'CREATE INDEX idx_wallet_passes_fav ON wallet_passes (is_favorite)',
+    );
 
     // 6. Wallet Preferences
     await db.execute('''
@@ -282,7 +378,11 @@ class DatabaseHelper {
 
     final expenseCategories = [
       {'name': 'Food & Dining', 'icon': 'restaurant', 'color': '0xFFE57373'},
-      {'name': 'Groceries', 'icon': 'local_grocery_store', 'color': '0xFF81C784'},
+      {
+        'name': 'Groceries',
+        'icon': 'local_grocery_store',
+        'color': '0xFF81C784',
+      },
       {'name': 'Transport', 'icon': 'directions_car', 'color': '0xFF64B5F6'},
       {'name': 'Rent & Housing', 'icon': 'house', 'color': '0xFFFFB74D'},
       {'name': 'Bills & Utilities', 'icon': 'receipt', 'color': '0xFF4DB6AC'},

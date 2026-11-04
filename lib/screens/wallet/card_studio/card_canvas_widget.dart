@@ -33,15 +33,21 @@ class CardCanvasWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = themeOverride ?? CardStudioTheme.getTheme(card.themeGradient);
-    final layout = layoutOverride ?? CardStudioLayout.getLayout(card.cardLayoutId);
+    final layout =
+        layoutOverride ?? CardStudioLayout.getLayout(card.cardLayoutId);
 
-    final displayMasked = revealedNumber ??
-        (card.lastFour.isNotEmpty ? '•••• •••• •••• ${card.lastFour}' : card.maskedNumber);
+    final displayMasked =
+        revealedNumber ??
+        (card.lastFour.isNotEmpty
+            ? '•••• •••• •••• ${card.lastFour}'
+            : card.maskedNumber);
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxW = isCompact ? 290.0 : 340.0;
-        final cardWidth = constraints.maxWidth < maxW ? constraints.maxWidth : maxW;
+        final cardWidth = constraints.maxWidth < maxW
+            ? constraints.maxWidth
+            : maxW;
         final cardHeight = cardWidth / 1.60;
 
         return GestureDetector(
@@ -74,9 +80,7 @@ class CardCanvasWidget extends StatelessWidget {
                   // 1. Custom Geometry / Texture from Theme
                   if (theme.backgroundPainter != null)
                     Positioned.fill(
-                      child: CustomPaint(
-                        painter: theme.backgroundPainter!(),
-                      ),
+                      child: CustomPaint(painter: theme.backgroundPainter!()),
                     ),
 
                   // 2. Metallic Specular Ambient Highlight
@@ -101,7 +105,12 @@ class CardCanvasWidget extends StatelessWidget {
                   // 3. Layout Content
                   Padding(
                     padding: EdgeInsets.all(isCompact ? 12.0 : 18.0),
-                    child: _buildLayoutContent(context, theme, layout, displayMasked),
+                    child: _buildLayoutContent(
+                      context,
+                      theme,
+                      layout,
+                      displayMasked,
+                    ),
                   ),
                 ],
               ),
@@ -136,7 +145,10 @@ class CardCanvasWidget extends StatelessWidget {
   // ==========================================
   // TEMPLATE 1: MINIMAL LUXURY
   // ==========================================
-  Widget _buildMinimalLuxuryLayout(CardStudioTheme theme, String displayMasked) {
+  Widget _buildMinimalLuxuryLayout(
+    CardStudioTheme theme,
+    String displayMasked,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -148,7 +160,10 @@ class CardCanvasWidget extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withAlpha(25),
                     borderRadius: BorderRadius.circular(6),
@@ -179,14 +194,22 @@ class CardCanvasWidget extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.contactless, color: theme.textColor.withAlpha(190), size: 18),
+                Icon(
+                  Icons.contactless,
+                  color: theme.textColor.withAlpha(190),
+                  size: 18,
+                ),
                 if (onFavoriteToggle != null) ...[
                   const SizedBox(width: 8),
                   GestureDetector(
                     onTap: onFavoriteToggle,
                     child: Icon(
-                      card.isFavorite ? Icons.star_rounded : Icons.star_outline_rounded,
-                      color: card.isFavorite ? Colors.amber : theme.textColor.withAlpha(140),
+                      card.isFavorite
+                          ? Icons.star_rounded
+                          : Icons.star_outline_rounded,
+                      color: card.isFavorite
+                          ? Colors.amber
+                          : theme.textColor.withAlpha(140),
                       size: 20,
                     ),
                   ),
@@ -324,11 +347,20 @@ class CardCanvasWidget extends StatelessWidget {
               children: [
                 _buildSmartChip(theme, compact: true),
                 const SizedBox(width: 8),
-                Icon(Icons.contactless, color: theme.primaryAccent.withAlpha(200), size: 16),
+                Icon(
+                  Icons.contactless,
+                  color: theme.primaryAccent.withAlpha(200),
+                  size: 16,
+                ),
               ],
             ),
             const SizedBox(height: 8),
-            _buildNumberDisplay(theme, displayMasked, fontSize: 16.5, bold: true),
+            _buildNumberDisplay(
+              theme,
+              displayMasked,
+              fontSize: 16.5,
+              bold: true,
+            ),
             const SizedBox(height: 4),
             Container(
               height: 2,
@@ -375,7 +407,10 @@ class CardCanvasWidget extends StatelessWidget {
   // ==========================================
   // TEMPLATE 3: METALLIC PREMIUM
   // ==========================================
-  Widget _buildMetallicPremiumLayout(CardStudioTheme theme, String displayMasked) {
+  Widget _buildMetallicPremiumLayout(
+    CardStudioTheme theme,
+    String displayMasked,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -393,7 +428,11 @@ class CardCanvasWidget extends StatelessWidget {
                 letterSpacing: 2.5,
               ),
             ),
-            Icon(Icons.contactless, color: theme.textColor.withAlpha(160), size: 16),
+            Icon(
+              Icons.contactless,
+              color: theme.textColor.withAlpha(160),
+              size: 16,
+            ),
           ],
         ),
 
@@ -403,7 +442,12 @@ class CardCanvasWidget extends StatelessWidget {
             children: [
               _buildSmartChip(theme),
               const SizedBox(height: 10),
-              _buildNumberDisplay(theme, displayMasked, fontSize: 15.5, letterSpacing: 2.2),
+              _buildNumberDisplay(
+                theme,
+                displayMasked,
+                fontSize: 15.5,
+                letterSpacing: 2.2,
+              ),
             ],
           ),
         ),
@@ -450,7 +494,10 @@ class CardCanvasWidget extends StatelessWidget {
   // ==========================================
   // TEMPLATE 4: MODERN GEOMETRIC
   // ==========================================
-  Widget _buildModernGeometricLayout(CardStudioTheme theme, String displayMasked) {
+  Widget _buildModernGeometricLayout(
+    CardStudioTheme theme,
+    String displayMasked,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -486,7 +533,12 @@ class CardCanvasWidget extends StatelessWidget {
             _buildSmartChip(theme),
             const SizedBox(width: 12),
             Expanded(
-              child: _buildNumberDisplay(theme, displayMasked, fontSize: 15, bold: true),
+              child: _buildNumberDisplay(
+                theme,
+                displayMasked,
+                fontSize: 15,
+                bold: true,
+              ),
             ),
           ],
         ),
@@ -531,7 +583,10 @@ class CardCanvasWidget extends StatelessWidget {
   Widget _buildDarkMinimalLayout(CardStudioTheme theme, String displayMasked) {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: theme.primaryAccent.withAlpha(40), width: 1.0),
+        border: Border.all(
+          color: theme.primaryAccent.withAlpha(40),
+          width: 1.0,
+        ),
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(10),
@@ -552,12 +607,21 @@ class CardCanvasWidget extends StatelessWidget {
                   letterSpacing: 1.5,
                 ),
               ),
-              Icon(Icons.fingerprint, color: theme.primaryAccent.withAlpha(180), size: 18),
+              Icon(
+                Icons.fingerprint,
+                color: theme.primaryAccent.withAlpha(180),
+                size: 18,
+              ),
             ],
           ),
 
           // Center: Minimalist Card Number
-          _buildNumberDisplay(theme, displayMasked, fontSize: 14.5, letterSpacing: 2.0),
+          _buildNumberDisplay(
+            theme,
+            displayMasked,
+            fontSize: 14.5,
+            letterSpacing: 2.0,
+          ),
 
           // Bottom: Monochromatic baseline
           Row(
@@ -625,11 +689,7 @@ class CardCanvasWidget extends StatelessWidget {
         fontWeight: bold ? FontWeight.w700 : FontWeight.w600,
         letterSpacing: letterSpacing,
         shadows: const [
-          Shadow(
-            color: Colors.black54,
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
+          Shadow(color: Colors.black54, blurRadius: 4, offset: Offset(0, 2)),
         ],
       ),
     );
@@ -667,7 +727,11 @@ class CardCanvasWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildNetworkBadge(String network, CardStudioTheme theme, {double scale = 1.0}) {
+  Widget _buildNetworkBadge(
+    String network,
+    CardStudioTheme theme, {
+    double scale = 1.0,
+  }) {
     final net = network.toLowerCase().trim();
 
     if (net == 'visa') {

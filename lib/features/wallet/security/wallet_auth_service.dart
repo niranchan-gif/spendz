@@ -2,12 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 
-enum AuthStatus {
-  locked,
-  unlocked,
-  authenticating,
-  error,
-}
+enum AuthStatus { locked, unlocked, authenticating, error }
 
 enum AuthFailureReason {
   userCanceled,
@@ -31,7 +26,7 @@ class WalletAuthService extends ChangeNotifier {
   AuthFailureReason? _lastFailureReason;
 
   WalletAuthService({LocalAuthentication? localAuth})
-      : _localAuth = localAuth ?? LocalAuthentication();
+    : _localAuth = localAuth ?? LocalAuthentication();
 
   AuthStatus get status => _status;
   bool get isUnlocked => _status == AuthStatus.unlocked;
@@ -72,7 +67,8 @@ class WalletAuthService extends ChangeNotifier {
 
   /// Authenticates the user using biometric or device PIN/passcode fallback.
   Future<bool> authenticate({
-    String localizedReason = 'Unlock Spendz Vault to access encrypted documents',
+    String localizedReason =
+        'Unlock Spendz Vault to access encrypted documents',
   }) async {
     // If already unlocked and within timeout, record activity and return true
     if (isUnlocked && !hasTimedOut()) {
@@ -90,7 +86,8 @@ class WalletAuthService extends ChangeNotifier {
       if (!isSupported) {
         _status = AuthStatus.locked;
         _lastFailureReason = AuthFailureReason.biometricsNotAvailable;
-        _lastErrorMessage = 'Biometric authentication is not supported or device passcode is not configured.';
+        _lastErrorMessage =
+            'Biometric authentication is not supported or device passcode is not configured.';
         notifyListeners();
         return false;
       }
@@ -127,12 +124,14 @@ class WalletAuthService extends ChangeNotifier {
           break;
         case LocalAuthExceptionCode.noCredentialsSet:
           _lastFailureReason = AuthFailureReason.passcodeNotSet;
-          _lastErrorMessage = 'Device passcode or screen lock has not been configured.';
+          _lastErrorMessage =
+              'Device passcode or screen lock has not been configured.';
           break;
         case LocalAuthExceptionCode.temporaryLockout:
         case LocalAuthExceptionCode.biometricLockout:
           _lastFailureReason = AuthFailureReason.tooManyAttempts;
-          _lastErrorMessage = 'Too many failed authentication attempts. Please try again later or use device passcode.';
+          _lastErrorMessage =
+              'Too many failed authentication attempts. Please try again later or use device passcode.';
           break;
         case LocalAuthExceptionCode.userCanceled:
           _lastFailureReason = AuthFailureReason.userCanceled;

@@ -8,15 +8,19 @@ void main() {
   test('CategoryEngine test', () async {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
-    
+
     final provider = CategoryProvider();
     await provider.loadCategories(); // wait for it to load
-    
+
     print('Expense categories loaded: ${provider.expenseCategories.length}');
-    
-    final catId = CategoryEngine.suggestCategoryId('KISHAN CAFE', 'DEBIT', provider);
+
+    final catId = CategoryEngine.suggestCategoryId(
+      'KISHAN CAFE',
+      'DEBIT',
+      provider,
+    );
     print('Suggested category ID for KISHAN CAFE: $catId');
-    
+
     if (catId != null) {
       final cat = provider.getCategoryById(catId);
       print('Category Name: ${cat?.name}');

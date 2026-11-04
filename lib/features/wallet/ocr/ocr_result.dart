@@ -63,12 +63,9 @@ class OcrResult {
 
     return OcrResult(
       fullText: text,
-      blocks: [
-        OcrBlock(text: text, lines: ocrLines),
-      ],
+      blocks: [OcrBlock(text: text, lines: ocrLines)],
       lines: ocrLines,
       isSuccess: true,
     );
   }
 }
-

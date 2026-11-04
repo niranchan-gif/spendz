@@ -13,7 +13,8 @@ class WalletCardProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  List<WalletCardModel> get favoriteCards => _cards.where((c) => c.isFavorite).toList();
+  List<WalletCardModel> get favoriteCards =>
+      _cards.where((c) => c.isFavorite).toList();
 
   WalletCardProvider() {
     loadCards();
@@ -146,4 +147,3 @@ class WalletCardProvider with ChangeNotifier {
     }
   }
 }
-

@@ -60,17 +60,24 @@ class GlassInputField extends StatelessWidget {
         fillColor: isDark
             ? const Color(0xFF1B3025).withAlpha(150)
             : const Color(0xFFE8F0E9).withAlpha(160),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: BorderSide(
-            color: isDark ? Colors.white.withAlpha(20) : AppColors.getBorder(context),
+            color: isDark
+                ? Colors.white.withAlpha(20)
+                : AppColors.getBorder(context),
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: BorderSide(
-            color: isDark ? Colors.white.withAlpha(20) : AppColors.getBorder(context),
+            color: isDark
+                ? Colors.white.withAlpha(20)
+                : AppColors.getBorder(context),
           ),
         ),
         focusedBorder: OutlineInputBorder(
@@ -88,4 +95,3 @@ class GlassInputField extends StatelessWidget {
     );
   }
 }
-

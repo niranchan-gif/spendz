@@ -71,7 +71,8 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
       _maskNumber();
     }
   }
@@ -100,13 +101,17 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
 
     if (authService != null) {
       final authenticated = await authService.authenticate(
-        localizedReason: 'Authenticate with biometrics to reveal private document number',
+        localizedReason:
+            'Authenticate with biometrics to reveal private document number',
       );
       if (!authenticated) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(authService.lastErrorMessage ?? 'Biometric authentication required to reveal private number.'),
+              content: Text(
+                authService.lastErrorMessage ??
+                    'Biometric authentication required to reveal private number.',
+              ),
               backgroundColor: AppColors.error,
             ),
           );
@@ -115,7 +120,9 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
       }
     }
 
-    final fullNumber = await _secureNumberService.getDocumentFullNumber(widget.document.id);
+    final fullNumber = await _secureNumberService.getDocumentFullNumber(
+      widget.document.id,
+    );
     if (!mounted) return;
 
     if (fullNumber != null && fullNumber.isNotEmpty) {
@@ -130,7 +137,9 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No unmasked number found in secure storage.')),
+        const SnackBar(
+          content: Text('No unmasked number found in secure storage.'),
+        ),
       );
     }
   }
@@ -233,8 +242,12 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
   // ==========================================
   Widget _buildAadhaarCard(BuildContext context) {
     final meta = _parseCardMetadata();
-    final holder = meta.holder.isNotEmpty ? meta.holder : widget.document.documentName;
-    final defaultNumber = meta.number.isNotEmpty ? meta.number : '•••• •••• 4567';
+    final holder = meta.holder.isNotEmpty
+        ? meta.holder
+        : widget.document.documentName;
+    final defaultNumber = meta.number.isNotEmpty
+        ? meta.number
+        : '•••• •••• 4567';
     final displayNumber = (_isRevealed && _unmaskedNumber != null)
         ? _formatRevealedNumber('aadhaar', _unmaskedNumber!)
         : defaultNumber;
@@ -291,7 +304,9 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                   const SizedBox(
                     width: 26,
                     height: 32,
-                    child: CustomPaint(painter: _AshokaEmblemPainter(color: Color(0xFF1E293B))),
+                    child: CustomPaint(
+                      painter: _AshokaEmblemPainter(color: Color(0xFF1E293B)),
+                    ),
                   ),
                   const SizedBox(width: 8),
                   const Expanded(
@@ -332,15 +347,23 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                           const SizedBox(
                             width: 14,
                             height: 14,
-                            child: CustomPaint(painter: _UidaiSunburstPainter()),
+                            child: CustomPaint(
+                              painter: _UidaiSunburstPainter(),
+                            ),
                           ),
                           const SizedBox(width: 4),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 5,
+                              vertical: 1.5,
+                            ),
                             decoration: BoxDecoration(
                               color: const Color(0xFF138808).withAlpha(20),
                               borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: const Color(0xFF138808).withAlpha(60), width: 0.8),
+                              border: Border.all(
+                                color: const Color(0xFF138808).withAlpha(60),
+                                width: 0.8,
+                              ),
                             ),
                             child: const Text(
                               'UIDAI',
@@ -383,7 +406,10 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                       decoration: BoxDecoration(
                         color: const Color(0xFFF1F5F9),
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: const Color(0xFFCBD5E1), width: 1.2),
+                        border: Border.all(
+                          color: const Color(0xFFCBD5E1),
+                          width: 1.2,
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withAlpha(20),
@@ -395,19 +421,30 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
-                          const Icon(Icons.person, color: Color(0xFF94A3B8), size: 34),
+                          const Icon(
+                            Icons.person,
+                            color: Color(0xFF94A3B8),
+                            size: 34,
+                          ),
                           Positioned(
                             bottom: 1,
                             right: 2,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 0.5),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 2,
+                                vertical: 0.5,
+                              ),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFFF9933).withAlpha(40),
                                 borderRadius: BorderRadius.circular(2),
                               ),
                               child: const Text(
                                 'UID',
-                                style: TextStyle(fontSize: 6, fontWeight: FontWeight.bold, color: Color(0xFFB45309)),
+                                style: TextStyle(
+                                  fontSize: 6,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFFB45309),
+                                ),
                               ),
                             ),
                           ),
@@ -436,15 +473,29 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            meta.dob.isNotEmpty ? 'DOB / जन्म: ${meta.dob}' : (widget.document.issueDate != null ? 'Issue: ${DateFormat('dd/MM/yyyy').format(widget.document.issueDate!)}' : 'DOB: ••/••/••••'),
-                            style: const TextStyle(color: Color(0xFF475569), fontSize: 9.5, fontWeight: FontWeight.w600),
+                            meta.dob.isNotEmpty
+                                ? 'DOB / जन्म: ${meta.dob}'
+                                : (widget.document.issueDate != null
+                                      ? 'Issue: ${DateFormat('dd/MM/yyyy').format(widget.document.issueDate!)}'
+                                      : 'DOB: ••/••/••••'),
+                            style: const TextStyle(
+                              color: Color(0xFF475569),
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w600,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            meta.gender.isNotEmpty ? 'Gender / लिंग: ${meta.gender.toUpperCase()}' : 'Gender / लिंग: VERIFIED',
-                            style: const TextStyle(color: Color(0xFF475569), fontSize: 9, fontWeight: FontWeight.w500),
+                            meta.gender.isNotEmpty
+                                ? 'Gender / लिंग: ${meta.gender.toUpperCase()}'
+                                : 'Gender / लिंग: VERIFIED',
+                            style: const TextStyle(
+                              color: Color(0xFF475569),
+                              fontSize: 9,
+                              fontWeight: FontWeight.w500,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -470,7 +521,10 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                   onTap: widget.allowReveal ? _toggleReveal : null,
                   borderRadius: BorderRadius.circular(6),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -478,8 +532,12 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              _isRevealed ? Icons.lock_open_rounded : Icons.fingerprint_rounded,
-                              color: _isRevealed ? const Color(0xFF16A34A) : const Color(0xFF15803D),
+                              _isRevealed
+                                  ? Icons.lock_open_rounded
+                                  : Icons.fingerprint_rounded,
+                              color: _isRevealed
+                                  ? const Color(0xFF16A34A)
+                                  : const Color(0xFF15803D),
                               size: 16,
                             ),
                             const SizedBox(width: 6),
@@ -495,8 +553,12 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                             ),
                             const SizedBox(width: 6),
                             Icon(
-                              _isRevealed ? Icons.visibility_rounded : Icons.visibility_off_rounded,
-                              color: _isRevealed ? const Color(0xFF0284C7) : const Color(0xFF94A3B8),
+                              _isRevealed
+                                  ? Icons.visibility_rounded
+                                  : Icons.visibility_off_rounded,
+                              color: _isRevealed
+                                  ? const Color(0xFF0284C7)
+                                  : const Color(0xFF94A3B8),
                               size: 14,
                             ),
                           ],
@@ -523,8 +585,22 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
               const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('UIDAI Helpline: 1947', style: TextStyle(color: Color(0xFF64748B), fontSize: 7.5, fontWeight: FontWeight.w500)),
-                  Text('help@uidai.gov.in', style: TextStyle(color: Color(0xFF64748B), fontSize: 7.5, fontWeight: FontWeight.w500)),
+                  Text(
+                    'UIDAI Helpline: 1947',
+                    style: TextStyle(
+                      color: Color(0xFF64748B),
+                      fontSize: 7.5,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    'help@uidai.gov.in',
+                    style: TextStyle(
+                      color: Color(0xFF64748B),
+                      fontSize: 7.5,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -547,12 +623,16 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
   // ==========================================
   Widget _buildPanCard(BuildContext context) {
     final meta = _parseCardMetadata();
-    final holder = meta.holder.isNotEmpty ? meta.holder.toUpperCase() : widget.document.documentName.toUpperCase();
+    final holder = meta.holder.isNotEmpty
+        ? meta.holder.toUpperCase()
+        : widget.document.documentName.toUpperCase();
     final defaultNumber = meta.number.isNotEmpty ? meta.number : 'ABCDE••••F';
     final displayNumber = (_isRevealed && _unmaskedNumber != null)
         ? _formatRevealedNumber('pan', _unmaskedNumber!)
         : defaultNumber;
-    final father = meta.father.isNotEmpty ? meta.father.toUpperCase() : 'GOVT RECORD';
+    final father = meta.father.isNotEmpty
+        ? meta.father.toUpperCase()
+        : 'GOVT RECORD';
 
     return Stack(
       children: [
@@ -597,12 +677,23 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                       children: [
                         Text(
                           'आयकर विभाग',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 8.5, height: 1.1),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 8.5,
+                            height: 1.1,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
                           'INCOME TAX DEPARTMENT',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 8.5, height: 1.1, letterSpacing: 0.3),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 8.5,
+                            height: 1.1,
+                            letterSpacing: 0.3,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
@@ -614,7 +705,9 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                   const SizedBox(
                     width: 18,
                     height: 22,
-                    child: CustomPaint(painter: _AshokaEmblemPainter(color: Color(0xFFFDE047))),
+                    child: CustomPaint(
+                      painter: _AshokaEmblemPainter(color: Color(0xFFFDE047)),
+                    ),
                   ),
 
                   const SizedBox(width: 4),
@@ -626,12 +719,23 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                       children: [
                         Text(
                           'भारत सरकार',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 8.5, height: 1.1),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 8.5,
+                            height: 1.1,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
                           'GOVT. OF INDIA',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 8.5, height: 1.1, letterSpacing: 0.3),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 8.5,
+                            height: 1.1,
+                            letterSpacing: 0.3,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
@@ -661,12 +765,19 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                               decoration: BoxDecoration(
                                 color: const Color(0xFFE2E8F0),
                                 borderRadius: BorderRadius.circular(4),
-                                border: Border.all(color: const Color(0xFF1E3A8A), width: 1.2),
+                                border: Border.all(
+                                  color: const Color(0xFF1E3A8A),
+                                  width: 1.2,
+                                ),
                               ),
                               child: Stack(
                                 alignment: Alignment.center,
                                 children: [
-                                  const Icon(Icons.person, color: Color(0xFF64748B), size: 30),
+                                  const Icon(
+                                    Icons.person,
+                                    color: Color(0xFF64748B),
+                                    size: 30,
+                                  ),
                                   Positioned(
                                     bottom: 0,
                                     right: 0,
@@ -675,9 +786,15 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                                       height: 12,
                                       decoration: const BoxDecoration(
                                         color: Color(0xFFF59E0B),
-                                        borderRadius: BorderRadius.only(topLeft: Radius.circular(3)),
+                                        borderRadius: BorderRadius.only(
+                                          topLeft: Radius.circular(3),
+                                        ),
                                       ),
-                                      child: const Icon(Icons.verified, size: 9, color: Colors.white),
+                                      child: const Icon(
+                                        Icons.verified,
+                                        size: 9,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -690,7 +807,10 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(2),
-                                border: Border.all(color: const Color(0xFF94A3B8), width: 0.6),
+                                border: Border.all(
+                                  color: const Color(0xFF94A3B8),
+                                  width: 0.6,
+                                ),
                               ),
                               alignment: Alignment.center,
                               child: const Text(
@@ -713,26 +833,65 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('नाम / Name', style: TextStyle(color: Color(0xFF475569), fontSize: 7.5, fontWeight: FontWeight.bold)),
+                              const Text(
+                                'नाम / Name',
+                                style: TextStyle(
+                                  color: Color(0xFF475569),
+                                  fontSize: 7.5,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                               Text(
                                 holder,
-                                style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800, fontSize: 11.5),
+                                style: const TextStyle(
+                                  color: Color(0xFF0F172A),
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 11.5,
+                                ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 3),
-                              const Text("पिता का नाम / Father's Name", style: TextStyle(color: Color(0xFF475569), fontSize: 7.5, fontWeight: FontWeight.bold)),
+                              const Text(
+                                "पिता का नाम / Father's Name",
+                                style: TextStyle(
+                                  color: Color(0xFF475569),
+                                  fontSize: 7.5,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                               Text(
                                 father,
-                                style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w700, fontSize: 10),
+                                style: const TextStyle(
+                                  color: Color(0xFF0F172A),
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 10,
+                                ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 3),
-                              const Text('जन्म की तारीख / Date of Birth', style: TextStyle(color: Color(0xFF475569), fontSize: 7.5, fontWeight: FontWeight.bold)),
+                              const Text(
+                                'जन्म की तारीख / Date of Birth',
+                                style: TextStyle(
+                                  color: Color(0xFF475569),
+                                  fontSize: 7.5,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                               Text(
-                                meta.dob.isNotEmpty ? meta.dob : (widget.document.issueDate != null ? DateFormat('dd/MM/yyyy').format(widget.document.issueDate!) : '••/••/••••'),
-                                style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w700, fontSize: 10),
+                                meta.dob.isNotEmpty
+                                    ? meta.dob
+                                    : (widget.document.issueDate != null
+                                          ? DateFormat(
+                                              'dd/MM/yyyy',
+                                            ).format(widget.document.issueDate!)
+                                          : '••/••/••••'),
+                                style: const TextStyle(
+                                  color: Color(0xFF0F172A),
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 10,
+                                ),
                               ),
                             ],
                           ),
@@ -742,7 +901,11 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                           children: [
                             _HologramSealWidget(size: 24),
                             SizedBox(height: 4),
-                            _QrMatrixWidget(label: 'ITD QR', size: 38, accentColor: Color(0xFF1E3A8A)),
+                            _QrMatrixWidget(
+                              label: 'ITD QR',
+                              size: 38,
+                              accentColor: Color(0xFF1E3A8A),
+                            ),
                           ],
                         ),
                       ],
@@ -753,11 +916,17 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                       onTap: widget.allowReveal ? _toggleReveal : null,
                       borderRadius: BorderRadius.circular(6),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withAlpha(200),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFF0284C7).withAlpha(80), width: 0.8),
+                          border: Border.all(
+                            color: const Color(0xFF0284C7).withAlpha(80),
+                            width: 0.8,
+                          ),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -768,7 +937,11 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                                 children: [
                                   const Text(
                                     'स्थायी लेखा संख्या / Permanent Account Number',
-                                    style: TextStyle(color: Color(0xFF334155), fontSize: 7.5, fontWeight: FontWeight.w800),
+                                    style: TextStyle(
+                                      color: Color(0xFF334155),
+                                      fontSize: 7.5,
+                                      fontWeight: FontWeight.w800,
+                                    ),
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   const SizedBox(height: 1),
@@ -788,8 +961,12 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                             ),
                             const SizedBox(width: 8),
                             Icon(
-                              _isRevealed ? Icons.lock_open_rounded : Icons.shield_outlined,
-                              color: _isRevealed ? const Color(0xFF16A34A) : const Color(0xFF0284C7),
+                              _isRevealed
+                                  ? Icons.lock_open_rounded
+                                  : Icons.shield_outlined,
+                              color: _isRevealed
+                                  ? const Color(0xFF16A34A)
+                                  : const Color(0xFF0284C7),
                               size: 18,
                             ),
                           ],
@@ -818,7 +995,9 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
   // ==========================================
   Widget _buildDrivingLicenceCard(BuildContext context) {
     final meta = _parseCardMetadata();
-    final holder = meta.holder.isNotEmpty ? meta.holder.toUpperCase() : widget.document.documentName.toUpperCase();
+    final holder = meta.holder.isNotEmpty
+        ? meta.holder.toUpperCase()
+        : widget.document.documentName.toUpperCase();
     final defaultNumber = meta.number.isNotEmpty ? meta.number : 'DL-••••4321';
     final displayNumber = (_isRevealed && _unmaskedNumber != null)
         ? _unmaskedNumber!
@@ -846,7 +1025,11 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
             height: 3,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFFFDE047), Color(0xFFD97706), Color(0xFFFDE047)],
+                colors: [
+                  Color(0xFFFDE047),
+                  Color(0xFFD97706),
+                  Color(0xFFFDE047),
+                ],
               ),
             ),
           ),
@@ -865,7 +1048,11 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                   Expanded(
                     child: Row(
                       children: [
-                        const Icon(Icons.directions_car_filled_rounded, color: Color(0xFFFDE047), size: 18),
+                        const Icon(
+                          Icons.directions_car_filled_rounded,
+                          color: Color(0xFFFDE047),
+                          size: 18,
+                        ),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Column(
@@ -899,19 +1086,30 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
-                      color: (widget.document.isExpired ? Colors.red : const Color(0xFF10B981)).withAlpha(40),
+                      color:
+                          (widget.document.isExpired
+                                  ? Colors.red
+                                  : const Color(0xFF10B981))
+                              .withAlpha(40),
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(
-                        color: widget.document.isExpired ? Colors.redAccent : const Color(0xFF34D399),
+                        color: widget.document.isExpired
+                            ? Colors.redAccent
+                            : const Color(0xFF34D399),
                         width: 0.8,
                       ),
                     ),
                     child: Text(
                       widget.document.isExpired ? 'EXPIRED' : 'ACTIVE',
                       style: TextStyle(
-                        color: widget.document.isExpired ? Colors.redAccent : const Color(0xFF34D399),
+                        color: widget.document.isExpired
+                            ? Colors.redAccent
+                            : const Color(0xFF34D399),
                         fontSize: 8.5,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 0.5,
@@ -935,9 +1133,16 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                         decoration: BoxDecoration(
                           color: Colors.white12,
                           borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: const Color(0xFFFDE047).withAlpha(100), width: 0.8),
+                          border: Border.all(
+                            color: const Color(0xFFFDE047).withAlpha(100),
+                            width: 0.8,
+                          ),
                         ),
-                        child: const Icon(Icons.person, color: Colors.white70, size: 24),
+                        child: const Icon(
+                          Icons.person,
+                          color: Colors.white70,
+                          size: 24,
+                        ),
                       ),
                     ],
                   ),
@@ -949,7 +1154,14 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('LICENCE NUMBER', style: TextStyle(color: Colors.white54, fontSize: 8, letterSpacing: 0.8)),
+                        const Text(
+                          'LICENCE NUMBER',
+                          style: TextStyle(
+                            color: Colors.white54,
+                            fontSize: 8,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
                         InkWell(
                           onTap: widget.allowReveal ? _toggleReveal : null,
                           borderRadius: BorderRadius.circular(4),
@@ -972,18 +1184,33 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                               ),
                               const SizedBox(width: 6),
                               Icon(
-                                _isRevealed ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
-                                color: _isRevealed ? Colors.greenAccent : const Color(0xFFFDE047).withAlpha(180),
+                                _isRevealed
+                                    ? Icons.lock_open_rounded
+                                    : Icons.lock_outline_rounded,
+                                color: _isRevealed
+                                    ? Colors.greenAccent
+                                    : const Color(0xFFFDE047).withAlpha(180),
                                 size: 14,
                               ),
                             ],
                           ),
                         ),
                         const SizedBox(height: 4),
-                        const Text('HOLDER NAME', style: TextStyle(color: Colors.white54, fontSize: 8, letterSpacing: 0.8)),
+                        const Text(
+                          'HOLDER NAME',
+                          style: TextStyle(
+                            color: Colors.white54,
+                            fontSize: 8,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
                         Text(
                           holder,
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 12,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -993,9 +1220,12 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                             _buildVehicleClassBadge('LMV'),
                             const SizedBox(width: 4),
                             _buildVehicleClassBadge('MCWG'),
-                            if (meta.vehicleClasses.isNotEmpty && !meta.vehicleClasses.contains('LMV')) ...[
+                            if (meta.vehicleClasses.isNotEmpty &&
+                                !meta.vehicleClasses.contains('LMV')) ...[
                               const SizedBox(width: 4),
-                              _buildVehicleClassBadge(meta.vehicleClasses.first),
+                              _buildVehicleClassBadge(
+                                meta.vehicleClasses.first,
+                              ),
                             ],
                           ],
                         ),
@@ -1015,20 +1245,42 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('ISSUED ON', style: TextStyle(color: Colors.white54, fontSize: 7.5)),
+                      const Text(
+                        'ISSUED ON',
+                        style: TextStyle(color: Colors.white54, fontSize: 7.5),
+                      ),
                       Text(
-                        widget.document.issueDate != null ? DateFormat('dd MMM yyyy').format(widget.document.issueDate!) : '•• ••• ••••',
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10),
+                        widget.document.issueDate != null
+                            ? DateFormat(
+                                'dd MMM yyyy',
+                              ).format(widget.document.issueDate!)
+                            : '•• ••• ••••',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                        ),
                       ),
                     ],
                   ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      const Text('VALID TILL (NT)', style: TextStyle(color: Colors.white54, fontSize: 7.5)),
+                      const Text(
+                        'VALID TILL (NT)',
+                        style: TextStyle(color: Colors.white54, fontSize: 7.5),
+                      ),
                       Text(
-                        widget.document.expiryDate != null ? DateFormat('dd MMM yyyy').format(widget.document.expiryDate!) : 'NON-TRANSPORT',
-                        style: const TextStyle(color: Color(0xFFFDE047), fontWeight: FontWeight.bold, fontSize: 10),
+                        widget.document.expiryDate != null
+                            ? DateFormat(
+                                'dd MMM yyyy',
+                              ).format(widget.document.expiryDate!)
+                            : 'NON-TRANSPORT',
+                        style: const TextStyle(
+                          color: Color(0xFFFDE047),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                        ),
                       ),
                     ],
                   ),
@@ -1054,11 +1306,18 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
       decoration: BoxDecoration(
         color: const Color(0xFFFDE047).withAlpha(30),
         borderRadius: BorderRadius.circular(3),
-        border: Border.all(color: const Color(0xFFFDE047).withAlpha(80), width: 0.6),
+        border: Border.all(
+          color: const Color(0xFFFDE047).withAlpha(80),
+          width: 0.6,
+        ),
       ),
       child: Text(
         label,
-        style: const TextStyle(color: Color(0xFFFDE047), fontSize: 8, fontWeight: FontWeight.w900),
+        style: const TextStyle(
+          color: Color(0xFFFDE047),
+          fontSize: 8,
+          fontWeight: FontWeight.w900,
+        ),
       ),
     );
   }
@@ -1068,7 +1327,9 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
   // ==========================================
   Widget _buildPassportCard(BuildContext context) {
     final meta = _parseCardMetadata();
-    final holder = meta.holder.isNotEmpty ? meta.holder.toUpperCase() : widget.document.documentName.toUpperCase();
+    final holder = meta.holder.isNotEmpty
+        ? meta.holder.toUpperCase()
+        : widget.document.documentName.toUpperCase();
     final defaultNumber = meta.number.isNotEmpty ? meta.number : 'J••••678';
     final displayNumber = (_isRevealed && _unmaskedNumber != null)
         ? _unmaskedNumber!
@@ -1092,7 +1353,10 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
             margin: const EdgeInsets.all(5),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppRadius.card - 2),
-              border: Border.all(color: const Color(0xFFD4AF37).withAlpha(120), width: 0.8),
+              border: Border.all(
+                color: const Color(0xFFD4AF37).withAlpha(120),
+                width: 0.8,
+              ),
             ),
           ),
         ),
@@ -1109,7 +1373,9 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                   const SizedBox(
                     width: 24,
                     height: 28,
-                    child: CustomPaint(painter: _AshokaEmblemPainter(color: Color(0xFFD4AF37))),
+                    child: CustomPaint(
+                      painter: _AshokaEmblemPainter(color: Color(0xFFD4AF37)),
+                    ),
                   ),
                   const SizedBox(width: 10),
                   const Expanded(
@@ -1138,14 +1404,21 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFD4AF37).withAlpha(30),
                       borderRadius: BorderRadius.circular(3),
                     ),
                     child: const Text(
                       'TYPE P',
-                      style: TextStyle(color: Color(0xFFD4AF37), fontSize: 8, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: Color(0xFFD4AF37),
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],
@@ -1158,7 +1431,14 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('PASSPORT NO.', style: TextStyle(color: Color(0xFFD4AF37), fontSize: 8, letterSpacing: 0.8)),
+                      const Text(
+                        'PASSPORT NO.',
+                        style: TextStyle(
+                          color: Color(0xFFD4AF37),
+                          fontSize: 8,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
                       InkWell(
                         onTap: widget.allowReveal ? _toggleReveal : null,
                         borderRadius: BorderRadius.circular(4),
@@ -1177,8 +1457,12 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                             ),
                             const SizedBox(width: 6),
                             Icon(
-                              _isRevealed ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
-                              color: _isRevealed ? Colors.greenAccent : const Color(0xFFD4AF37),
+                              _isRevealed
+                                  ? Icons.lock_open_rounded
+                                  : Icons.lock_outline_rounded,
+                              color: _isRevealed
+                                  ? Colors.greenAccent
+                                  : const Color(0xFFD4AF37),
                               size: 14,
                             ),
                           ],
@@ -1189,12 +1473,30 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      const Text('NATIONALITY', style: TextStyle(color: Color(0xFFD4AF37), fontSize: 8, letterSpacing: 0.8)),
+                      const Text(
+                        'NATIONALITY',
+                        style: TextStyle(
+                          color: Color(0xFFD4AF37),
+                          fontSize: 8,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
                       const Row(
                         children: [
-                          Icon(Icons.flag_rounded, color: Color(0xFFFF9933), size: 10),
+                          Icon(
+                            Icons.flag_rounded,
+                            color: Color(0xFFFF9933),
+                            size: 10,
+                          ),
                           SizedBox(width: 4),
-                          Text('INDIAN', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
+                          Text(
+                            'INDIAN',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11,
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -1210,10 +1512,20 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('GIVEN NAME(S) / SURNAME', style: TextStyle(color: Colors.white54, fontSize: 7.5)),
+                        const Text(
+                          'GIVEN NAME(S) / SURNAME',
+                          style: TextStyle(
+                            color: Colors.white54,
+                            fontSize: 7.5,
+                          ),
+                        ),
                         Text(
                           holder,
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 12,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
@@ -1223,10 +1535,22 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text('EXPIRY DATE', style: TextStyle(color: Colors.white54, fontSize: 7.5)),
+                        const Text(
+                          'EXPIRY DATE',
+                          style: TextStyle(
+                            color: Colors.white54,
+                            fontSize: 7.5,
+                          ),
+                        ),
                         Text(
-                          DateFormat('dd/MM/yyyy').format(widget.document.expiryDate!),
-                          style: const TextStyle(color: Color(0xFFD4AF37), fontWeight: FontWeight.bold, fontSize: 11),
+                          DateFormat(
+                            'dd/MM/yyyy',
+                          ).format(widget.document.expiryDate!),
+                          style: const TextStyle(
+                            color: Color(0xFFD4AF37),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                          ),
                         ),
                       ],
                     ),
@@ -1240,13 +1564,18 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                 decoration: BoxDecoration(
                   color: Colors.black.withAlpha(90),
                   borderRadius: BorderRadius.circular(3),
-                  border: Border.all(color: const Color(0xFFD4AF37).withAlpha(50), width: 0.5),
+                  border: Border.all(
+                    color: const Color(0xFFD4AF37).withAlpha(50),
+                    width: 0.5,
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'P<IND${holder.replaceAll(RegExp(r'[^A-Z]'), '<')}<<<<<<<<<<<<<<<<<<<<<<<<<<'.padRight(44, '<').substring(0, 36),
+                      'P<IND${holder.replaceAll(RegExp(r'[^A-Z]'), '<')}<<<<<<<<<<<<<<<<<<<<<<<<<<'
+                          .padRight(44, '<')
+                          .substring(0, 36),
                       style: const TextStyle(
                         color: Color(0xFFCBD5E1),
                         fontFamily: 'monospace',
@@ -1256,7 +1585,9 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                       ),
                     ),
                     Text(
-                      '${defaultNumber.replaceAll(RegExp(r'[^A-Z0-9]'), '')}<0IND9001015M3001014<<<<<<<<<<<<<<06'.padRight(44, '<').substring(0, 36),
+                      '${defaultNumber.replaceAll(RegExp(r'[^A-Z0-9]'), '')}<0IND9001015M3001014<<<<<<<<<<<<<<06'
+                          .padRight(44, '<')
+                          .substring(0, 36),
                       style: const TextStyle(
                         color: Color(0xFFCBD5E1),
                         fontFamily: 'monospace',
@@ -1287,8 +1618,12 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
   // ==========================================
   Widget _buildRcCard(BuildContext context) {
     final meta = _parseCardMetadata();
-    final holder = meta.holder.isNotEmpty ? meta.holder : widget.document.documentName;
-    final defaultNumber = meta.number.isNotEmpty ? meta.number : 'MH 02 AB 1234';
+    final holder = meta.holder.isNotEmpty
+        ? meta.holder
+        : widget.document.documentName;
+    final defaultNumber = meta.number.isNotEmpty
+        ? meta.number
+        : 'MH 02 AB 1234';
     final displayNumber = (_isRevealed && _unmaskedNumber != null)
         ? _unmaskedNumber!
         : defaultNumber;
@@ -1316,11 +1651,20 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.directions_car_rounded, color: Color(0xFFFDE047), size: 18),
+                      Icon(
+                        Icons.directions_car_rounded,
+                        color: Color(0xFFFDE047),
+                        size: 18,
+                      ),
                       SizedBox(width: 6),
                       Text(
                         'CERTIFICATE OF REGISTRATION',
-                        style: TextStyle(color: Color(0xFFFDE047), fontWeight: FontWeight.bold, fontSize: 10.5, letterSpacing: 0.6),
+                        style: TextStyle(
+                          color: Color(0xFFFDE047),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10.5,
+                          letterSpacing: 0.6,
+                        ),
                       ),
                     ],
                   ),
@@ -1334,20 +1678,30 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                   onTap: widget.allowReveal ? _toggleReveal : null,
                   borderRadius: BorderRadius.circular(4),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFEF08A),
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(color: Colors.black, width: 1.5),
                       boxShadow: [
-                        BoxShadow(color: Colors.black.withAlpha(60), blurRadius: 6, offset: const Offset(0, 3)),
+                        BoxShadow(
+                          color: Colors.black.withAlpha(60),
+                          blurRadius: 6,
+                          offset: const Offset(0, 3),
+                        ),
                       ],
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 3,
+                            vertical: 1,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFF1E3A8A),
                             borderRadius: BorderRadius.circular(2),
@@ -1355,7 +1709,14 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                           child: const Column(
                             children: [
                               Icon(Icons.circle, size: 4, color: Colors.amber),
-                              Text('IND', style: TextStyle(color: Colors.white, fontSize: 6.5, fontWeight: FontWeight.bold)),
+                              Text(
+                                'IND',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 6.5,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -1372,7 +1733,9 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                         ),
                         const SizedBox(width: 6),
                         Icon(
-                          _isRevealed ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
+                          _isRevealed
+                              ? Icons.lock_open_rounded
+                              : Icons.lock_outline_rounded,
                           color: _isRevealed ? Colors.green : Colors.black54,
                           size: 14,
                         ),
@@ -1389,10 +1752,20 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('REGISTERED OWNER', style: TextStyle(color: Colors.white54, fontSize: 7.5)),
+                        const Text(
+                          'REGISTERED OWNER',
+                          style: TextStyle(
+                            color: Colors.white54,
+                            fontSize: 7.5,
+                          ),
+                        ),
                         Text(
                           holder,
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
@@ -1402,10 +1775,22 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text('FITNESS UPTO', style: TextStyle(color: Colors.white54, fontSize: 7.5)),
+                        const Text(
+                          'FITNESS UPTO',
+                          style: TextStyle(
+                            color: Colors.white54,
+                            fontSize: 7.5,
+                          ),
+                        ),
                         Text(
-                          DateFormat('MM/yy').format(widget.document.expiryDate!),
-                          style: const TextStyle(color: Color(0xFFFDE047), fontWeight: FontWeight.bold, fontSize: 11),
+                          DateFormat(
+                            'MM/yy',
+                          ).format(widget.document.expiryDate!),
+                          style: const TextStyle(
+                            color: Color(0xFFFDE047),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                          ),
                         ),
                       ],
                     ),
@@ -1430,12 +1815,16 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
   // ==========================================
   Widget _buildInsuranceCard(BuildContext context) {
     final meta = _parseCardMetadata();
-    final holder = meta.holder.isNotEmpty ? meta.holder : widget.document.documentName;
+    final holder = meta.holder.isNotEmpty
+        ? meta.holder
+        : widget.document.documentName;
     final defaultNumber = meta.number.isNotEmpty ? meta.number : 'POL-••••1122';
     final displayNumber = (_isRevealed && _unmaskedNumber != null)
         ? _unmaskedNumber!
         : defaultNumber;
-    final provider = meta.issuer.isNotEmpty ? meta.issuer : (meta.provider.isNotEmpty ? meta.provider : 'INSURANCE POLICY');
+    final provider = meta.issuer.isNotEmpty
+        ? meta.issuer
+        : (meta.provider.isNotEmpty ? meta.provider : 'INSURANCE POLICY');
 
     return Stack(
       children: [
@@ -1460,23 +1849,45 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.health_and_safety_rounded, color: Color(0xFF2DD4BF), size: 20),
+                      const Icon(
+                        Icons.health_and_safety_rounded,
+                        color: Color(0xFF2DD4BF),
+                        size: 20,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         provider.toUpperCase(),
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11.5, letterSpacing: 0.5),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11.5,
+                          letterSpacing: 0.5,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF2DD4BF).withAlpha(30),
                       borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: const Color(0xFF2DD4BF).withAlpha(80), width: 0.6),
+                      border: Border.all(
+                        color: const Color(0xFF2DD4BF).withAlpha(80),
+                        width: 0.6,
+                      ),
                     ),
-                    child: const Text('CASHLESS VERIFIED', style: TextStyle(color: Color(0xFF2DD4BF), fontSize: 8, fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      'CASHLESS VERIFIED',
+                      style: TextStyle(
+                        color: Color(0xFF2DD4BF),
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -1484,7 +1895,14 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('POLICY NUMBER', style: TextStyle(color: Colors.white60, fontSize: 8, letterSpacing: 0.8)),
+                  const Text(
+                    'POLICY NUMBER',
+                    style: TextStyle(
+                      color: Colors.white60,
+                      fontSize: 8,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
                   InkWell(
                     onTap: widget.allowReveal ? _toggleReveal : null,
                     borderRadius: BorderRadius.circular(4),
@@ -1506,8 +1924,12 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                         ),
                         const SizedBox(width: 6),
                         Icon(
-                          _isRevealed ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
-                          color: _isRevealed ? Colors.greenAccent : Colors.white60,
+                          _isRevealed
+                              ? Icons.lock_open_rounded
+                              : Icons.lock_outline_rounded,
+                          color: _isRevealed
+                              ? Colors.greenAccent
+                              : Colors.white60,
                           size: 14,
                         ),
                       ],
@@ -1523,10 +1945,17 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('INSURED PERSON', style: TextStyle(color: Colors.white60, fontSize: 8)),
+                        const Text(
+                          'INSURED PERSON',
+                          style: TextStyle(color: Colors.white60, fontSize: 8),
+                        ),
                         Text(
                           holder,
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12.5,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
@@ -1536,11 +1965,18 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text('VALID THRU', style: TextStyle(color: Colors.white60, fontSize: 8)),
+                        const Text(
+                          'VALID THRU',
+                          style: TextStyle(color: Colors.white60, fontSize: 8),
+                        ),
                         Text(
-                          DateFormat('dd MMM yyyy').format(widget.document.expiryDate!),
+                          DateFormat(
+                            'dd MMM yyyy',
+                          ).format(widget.document.expiryDate!),
                           style: TextStyle(
-                            color: widget.document.isExpired ? Colors.redAccent : const Color(0xFF2DD4BF),
+                            color: widget.document.isExpired
+                                ? Colors.redAccent
+                                : const Color(0xFF2DD4BF),
                             fontWeight: FontWeight.bold,
                             fontSize: 11,
                           ),
@@ -1568,7 +2004,9 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
   // ==========================================
   Widget _buildVoterIdCard(BuildContext context) {
     final meta = _parseCardMetadata();
-    final holder = meta.holder.isNotEmpty ? meta.holder : widget.document.documentName;
+    final holder = meta.holder.isNotEmpty
+        ? meta.holder
+        : widget.document.documentName;
     final defaultNumber = meta.number.isNotEmpty ? meta.number : 'EPIC •••••••';
     final displayNumber = (_isRevealed && _unmaskedNumber != null)
         ? _unmaskedNumber!
@@ -1597,9 +2035,17 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                 children: [
                   Text(
                     'ELECTION COMMISSION OF INDIA\nभारत निर्वाचन आयोग',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 9.5),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 9.5,
+                    ),
                   ),
-                  Icon(Icons.how_to_vote_rounded, color: Color(0xFFFDE047), size: 20),
+                  Icon(
+                    Icons.how_to_vote_rounded,
+                    color: Color(0xFFFDE047),
+                    size: 20,
+                  ),
                 ],
               ),
 
@@ -1622,8 +2068,12 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                       ),
                       const SizedBox(width: 6),
                       Icon(
-                        _isRevealed ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
-                        color: _isRevealed ? Colors.greenAccent : const Color(0xFFFDE047),
+                        _isRevealed
+                            ? Icons.lock_open_rounded
+                            : Icons.lock_outline_rounded,
+                        color: _isRevealed
+                            ? Colors.greenAccent
+                            : const Color(0xFFFDE047),
                         size: 14,
                       ),
                     ],
@@ -1636,9 +2086,16 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                 children: [
                   Text(
                     holder,
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
                   ),
-                  const Text('ELECTOR PHOTO ID', style: TextStyle(color: Colors.white70, fontSize: 8.5)),
+                  const Text(
+                    'ELECTOR PHOTO ID',
+                    style: TextStyle(color: Colors.white70, fontSize: 8.5),
+                  ),
                 ],
               ),
             ],
@@ -1660,15 +2117,27 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
   // ==========================================
   Widget _buildPaymentCard(BuildContext context) {
     final isCredit = widget.document.category.toLowerCase() == 'credit_card';
-    final cardColor1 = isCredit ? const Color(0xFF1E293B) : const Color(0xFF1E3A8A);
-    final cardColor2 = isCredit ? const Color(0xFF0F172A) : const Color(0xFF0F2042);
+    final cardColor1 = isCredit
+        ? const Color(0xFF1E293B)
+        : const Color(0xFF1E3A8A);
+    final cardColor2 = isCredit
+        ? const Color(0xFF0F172A)
+        : const Color(0xFF0F2042);
     final meta = _parseCardMetadata();
-    final holder = meta.holder.isNotEmpty ? meta.holder.toUpperCase() : widget.document.documentName.toUpperCase();
-    final defaultNumber = meta.number.isNotEmpty ? meta.number : '•••• •••• •••• ••••';
+    final holder = meta.holder.isNotEmpty
+        ? meta.holder.toUpperCase()
+        : widget.document.documentName.toUpperCase();
+    final defaultNumber = meta.number.isNotEmpty
+        ? meta.number
+        : '•••• •••• •••• ••••';
     final displayNumber = (_isRevealed && _unmaskedNumber != null)
         ? _formatRevealedNumber('payment', _unmaskedNumber!)
         : defaultNumber;
-    final bank = meta.issuer.isNotEmpty ? meta.issuer : (meta.bank.isNotEmpty ? meta.bank : (isCredit ? 'CREDIT CARD' : 'DEBIT CARD'));
+    final bank = meta.issuer.isNotEmpty
+        ? meta.issuer
+        : (meta.bank.isNotEmpty
+              ? meta.bank
+              : (isCredit ? 'CREDIT CARD' : 'DEBIT CARD'));
 
     return Stack(
       children: [
@@ -1693,11 +2162,20 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                 children: [
                   Text(
                     bank.toUpperCase(),
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.2, fontSize: 12.5),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                      fontSize: 12.5,
+                    ),
                   ),
                   const Row(
                     children: [
-                      Icon(Icons.contactless_rounded, color: Colors.white70, size: 20),
+                      Icon(
+                        Icons.contactless_rounded,
+                        color: Colors.white70,
+                        size: 20,
+                      ),
                     ],
                   ),
                 ],
@@ -1726,8 +2204,12 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                       ),
                       const SizedBox(width: 6),
                       Icon(
-                        _isRevealed ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
-                        color: _isRevealed ? Colors.greenAccent : Colors.white60,
+                        _isRevealed
+                            ? Icons.lock_open_rounded
+                            : Icons.lock_outline_rounded,
+                        color: _isRevealed
+                            ? Colors.greenAccent
+                            : Colors.white60,
                         size: 14,
                       ),
                     ],
@@ -1742,10 +2224,21 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('CARDHOLDER', style: TextStyle(color: Colors.white54, fontSize: 8, letterSpacing: 0.8)),
+                        const Text(
+                          'CARDHOLDER',
+                          style: TextStyle(
+                            color: Colors.white54,
+                            fontSize: 8,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
                         Text(
                           holder,
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12.5,
+                          ),
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
                         ),
@@ -1757,15 +2250,38 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text('VALID THRU', style: TextStyle(color: Colors.white54, fontSize: 8, letterSpacing: 0.8)),
-                        Text(DateFormat('MM/yy').format(widget.document.expiryDate!), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)),
+                        const Text(
+                          'VALID THRU',
+                          style: TextStyle(
+                            color: Colors.white54,
+                            fontSize: 8,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                        Text(
+                          DateFormat(
+                            'MM/yy',
+                          ).format(widget.document.expiryDate!),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12.5,
+                          ),
+                        ),
                       ],
                     ),
                   ],
                   const SizedBox(width: 8),
                   Text(
-                    meta.network.isNotEmpty ? meta.network.toUpperCase() : 'PAYMENT',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 14, fontStyle: FontStyle.italic),
+                    meta.network.isNotEmpty
+                        ? meta.network.toUpperCase()
+                        : 'PAYMENT',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 14,
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
                 ],
               ),
@@ -1789,7 +2305,9 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
   Widget _buildGenericDocCard(BuildContext context) {
     final meta = _parseCardMetadata();
     final isPdf = widget.document.mimeType.contains('pdf');
-    final holder = meta.holder.isNotEmpty ? meta.holder : widget.document.documentName;
+    final holder = meta.holder.isNotEmpty
+        ? meta.holder
+        : widget.document.documentName;
     final displayNumber = (_isRevealed && _unmaskedNumber != null)
         ? _unmaskedNumber!
         : meta.number;
@@ -1817,11 +2335,23 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                 children: [
                   Row(
                     children: [
-                      Icon(isPdf ? Icons.picture_as_pdf_rounded : Icons.description_rounded, color: Colors.white, size: 20),
+                      Icon(
+                        isPdf
+                            ? Icons.picture_as_pdf_rounded
+                            : Icons.description_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                       const SizedBox(width: 8),
                       Text(
-                        widget.document.category.replaceAll('_', ' ').toUpperCase(),
-                        style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.bold, fontSize: 11),
+                        widget.document.category
+                            .replaceAll('_', ' ')
+                            .toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                        ),
                       ),
                     ],
                   ),
@@ -1833,7 +2363,11 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                 children: [
                   Text(
                     widget.document.documentName,
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15.5),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15.5,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1846,12 +2380,20 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                         children: [
                           Text(
                             displayNumber,
-                            style: const TextStyle(color: Colors.white70, fontFamily: 'monospace', fontSize: 12),
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontFamily: 'monospace',
+                              fontSize: 12,
+                            ),
                           ),
                           const SizedBox(width: 6),
                           Icon(
-                            _isRevealed ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
-                            color: _isRevealed ? Colors.greenAccent : Colors.white60,
+                            _isRevealed
+                                ? Icons.lock_open_rounded
+                                : Icons.lock_outline_rounded,
+                            color: _isRevealed
+                                ? Colors.greenAccent
+                                : Colors.white60,
                             size: 12,
                           ),
                         ],
@@ -1863,12 +2405,17 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(holder, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+                  Text(
+                    holder,
+                    style: const TextStyle(color: Colors.white70, fontSize: 11),
+                  ),
                   if (widget.document.expiryDate != null)
                     Text(
                       'Exp: ${DateFormat('dd MMM yyyy').format(widget.document.expiryDate!)}',
                       style: TextStyle(
-                        color: widget.document.isExpired ? Colors.redAccent : Colors.white70,
+                        color: widget.document.isExpired
+                            ? Colors.redAccent
+                            : Colors.white70,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                       ),
@@ -1892,8 +2439,12 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
   Widget _buildFavoriteButton({required bool isDarkTheme}) {
     return IconButton(
       icon: Icon(
-        widget.document.isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
-        color: widget.document.isFavorite ? Colors.amber : (isDarkTheme ? Colors.white60 : Colors.black45),
+        widget.document.isFavorite
+            ? Icons.star_rounded
+            : Icons.star_border_rounded,
+        color: widget.document.isFavorite
+            ? Colors.amber
+            : (isDarkTheme ? Colors.white60 : Colors.black45),
         size: 20,
       ),
       onPressed: widget.onFavoriteToggle,
@@ -1938,7 +2489,9 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
           provider = trimmed.replaceFirst('Provider:', '').trim();
         } else if (trimmed.startsWith('Vehicle Class:')) {
           final raw = trimmed.replaceFirst('Vehicle Class:', '').trim();
-          vehicleClasses.addAll(raw.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty));
+          vehicleClasses.addAll(
+            raw.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty),
+          );
         }
       }
     }
@@ -2002,7 +2555,12 @@ class _EmvChipWidget extends StatelessWidget {
       height: height,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFFFFE082), Color(0xFFD4AF37), Color(0xFFB8860B), Color(0xFFD4AF37)],
+          colors: [
+            Color(0xFFFFE082),
+            Color(0xFFD4AF37),
+            Color(0xFFB8860B),
+            Color(0xFFD4AF37),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -2022,19 +2580,28 @@ class _EmvChipWidget extends StatelessWidget {
             top: 0,
             bottom: 0,
             left: width * 0.38,
-            child: Container(width: 1, color: const Color(0xFF78350F).withAlpha(150)),
+            child: Container(
+              width: 1,
+              color: const Color(0xFF78350F).withAlpha(150),
+            ),
           ),
           Positioned(
             top: 0,
             bottom: 0,
             right: width * 0.38,
-            child: Container(width: 1, color: const Color(0xFF78350F).withAlpha(150)),
+            child: Container(
+              width: 1,
+              color: const Color(0xFF78350F).withAlpha(150),
+            ),
           ),
           Positioned(
             left: 0,
             right: 0,
             top: height * 0.5,
-            child: Container(height: 1, color: const Color(0xFF78350F).withAlpha(150)),
+            child: Container(
+              height: 1,
+              color: const Color(0xFF78350F).withAlpha(150),
+            ),
           ),
         ],
       ),
@@ -2117,9 +2684,7 @@ class _QrMatrixWidget extends StatelessWidget {
               ),
             ],
           ),
-          child: CustomPaint(
-            painter: _QrMatrixPainter(color: accentColor),
-          ),
+          child: CustomPaint(painter: _QrMatrixPainter(color: accentColor)),
         ),
         const SizedBox(height: 2),
         Text(
@@ -2158,7 +2723,12 @@ class _QrMatrixPainter extends CustomPainter {
       for (int j = 0; j < 4; j++) {
         if ((i + j) % 2 == 0) {
           canvas.drawRect(
-            Rect.fromLTWH(w * 0.38 + (i * dotSize * 1.1), h * 0.38 + (j * dotSize * 1.1), dotSize, dotSize),
+            Rect.fromLTWH(
+              w * 0.38 + (i * dotSize * 1.1),
+              h * 0.38 + (j * dotSize * 1.1),
+              dotSize,
+              dotSize,
+            ),
             paint,
           );
         }
@@ -2166,7 +2736,13 @@ class _QrMatrixPainter extends CustomPainter {
     }
   }
 
-  void _drawFinderSquare(Canvas canvas, double x, double y, double s, Paint paint) {
+  void _drawFinderSquare(
+    Canvas canvas,
+    double x,
+    double y,
+    double s,
+    Paint paint,
+  ) {
     final outerPaint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
@@ -2177,11 +2753,20 @@ class _QrMatrixPainter extends CustomPainter {
       ..color = color
       ..style = PaintingStyle.fill;
     final innerMargin = s * 0.32;
-    canvas.drawRect(Rect.fromLTWH(x + innerMargin, y + innerMargin, s - (2 * innerMargin), s - (2 * innerMargin)), innerPaint);
+    canvas.drawRect(
+      Rect.fromLTWH(
+        x + innerMargin,
+        y + innerMargin,
+        s - (2 * innerMargin),
+        s - (2 * innerMargin),
+      ),
+      innerPaint,
+    );
   }
 
   @override
-  bool shouldRepaint(covariant _QrMatrixPainter oldDelegate) => oldDelegate.color != color;
+  bool shouldRepaint(covariant _QrMatrixPainter oldDelegate) =>
+      oldDelegate.color != color;
 }
 
 /// Vector Painter for the Ashoka Lion Capital Emblem of India
@@ -2252,7 +2837,8 @@ class _AshokaEmblemPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _AshokaEmblemPainter oldDelegate) => oldDelegate.color != color;
+  bool shouldRepaint(covariant _AshokaEmblemPainter oldDelegate) =>
+      oldDelegate.color != color;
 }
 
 /// Vector Painter for UIDAI Sunburst Ray Emblem
@@ -2271,8 +2857,15 @@ class _UidaiSunburstPainter extends CustomPainter {
 
     for (int i = 0; i < 8; i++) {
       final angle = (i * 3.14159 / 4);
-      final p1 = Offset(center.dx + (radius * 0.5 * (angle == 0 ? 1 : (angle == 3.14159 ? -1 : 0))), center.dy);
-      final p2 = Offset(center.dx + (radius * (angle == 0 ? 1 : (angle == 3.14159 ? -1 : 0))), center.dy);
+      final p1 = Offset(
+        center.dx +
+            (radius * 0.5 * (angle == 0 ? 1 : (angle == 3.14159 ? -1 : 0))),
+        center.dy,
+      );
+      final p2 = Offset(
+        center.dx + (radius * (angle == 0 ? 1 : (angle == 3.14159 ? -1 : 0))),
+        center.dy,
+      );
       canvas.drawLine(p1, p2, rayPaint);
     }
 
@@ -2307,5 +2900,6 @@ class _SecurityWatermarkPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _SecurityWatermarkPainter oldDelegate) => oldDelegate.accentColor != accentColor;
+  bool shouldRepaint(covariant _SecurityWatermarkPainter oldDelegate) =>
+      oldDelegate.accentColor != accentColor;
 }

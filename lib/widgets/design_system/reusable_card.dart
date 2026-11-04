@@ -2,16 +2,19 @@ import 'package:flutter/material.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_spacing.dart';
-import '../../app/theme/app_shadows.dart';
+import '../glass/glass_surface.dart';
 
-/// Standardized Fintech Card container adhering to the Spendz design tokens.
+/// Standardized Fintech Card container built on the Spendz 2.0 GlassSurface.
+///
+/// Provides backward-compatible properties while rendering refined minimal
+/// glassmorphism styling, subtle specular sheens, and soft elevation.
 class ReusableCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
   final VoidCallback? onTap;
   final Color? color;
-  final Border? border;
+  final BoxBorder? border;
   final double? borderRadius;
   final List<BoxShadow>? shadows;
   final bool hasBorder;
@@ -35,37 +38,19 @@ class ReusableCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final radius = borderRadius ?? AppRadius.card;
     final cardBorder = hasBorder
-        ? (border ?? Border.all(color: AppColors.getBorder(context), width: 1))
+        ? (border ??
+              Border.all(color: AppColors.getGlassBorder(context), width: 1.0))
         : null;
-    final cardColor = color ?? AppColors.getSurface(context);
-    final cardShadows = shadows ?? AppShadows.card(context);
 
-    Widget content = Container(
+    return GlassSurface(
+      padding: padding ?? const EdgeInsets.all(AppSpacing.card),
       margin: margin ?? const EdgeInsets.only(bottom: AppSpacing.sm),
-      decoration: BoxDecoration(
-        color: gradient == null ? cardColor : null,
-        gradient: gradient,
-        borderRadius: BorderRadius.circular(radius),
-        border: cardBorder,
-        boxShadow: gradient == null ? cardShadows : null,
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(radius),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(radius),
-          splashColor: AppColors.getPrimary(context).withAlpha(15),
-          highlightColor: AppColors.getPrimary(context).withAlpha(8),
-          child: Padding(
-            padding: padding ?? const EdgeInsets.all(AppSpacing.card),
-            child: child,
-          ),
-        ),
-      ),
+      borderRadius: radius,
+      color: color,
+      border: cardBorder,
+      shadows: shadows,
+      onTap: onTap,
+      child: child,
     );
-
-    return content;
   }
 }
-

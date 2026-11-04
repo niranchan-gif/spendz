@@ -55,7 +55,8 @@ class _SecureProtectedFieldState extends State<SecureProtectedField>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
       // Re-mask immediately when app goes to background
       _maskValue();
     }
@@ -90,7 +91,8 @@ class _SecureProtectedFieldState extends State<SecureProtectedField>
 
     try {
       final success = await authService.authenticate(
-        localizedReason: 'Authenticate with biometrics or passcode to reveal ${widget.label}',
+        localizedReason:
+            'Authenticate with biometrics or passcode to reveal ${widget.label}',
       );
 
       if (!mounted) return;
@@ -153,7 +155,10 @@ class _SecureProtectedFieldState extends State<SecureProtectedField>
     final defaultStyle = widget.textStyle ?? AppTextStyles.cardNumber;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
       decoration: BoxDecoration(
         color: Colors.black.withAlpha(45),
         borderRadius: AppRadius.roundedMd,
@@ -185,7 +190,10 @@ class _SecureProtectedFieldState extends State<SecureProtectedField>
                     if (_isRevealed) ...[
                       const SizedBox(width: AppSpacing.sm),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 5,
+                          vertical: 1,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.getWarning(context).withAlpha(35),
                           borderRadius: BorderRadius.circular(4),
@@ -210,10 +218,7 @@ class _SecureProtectedFieldState extends State<SecureProtectedField>
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
-                  child: Text(
-                    displayValue,
-                    style: defaultStyle,
-                  ),
+                  child: Text(displayValue, style: defaultStyle),
                 ),
               ],
             ),
@@ -246,9 +251,13 @@ class _SecureProtectedFieldState extends State<SecureProtectedField>
                       ),
                     )
                   : Icon(
-                      _isRevealed ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                      _isRevealed
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
                       size: 18,
-                      color: _isRevealed ? AppColors.getPrimary(context) : Colors.white,
+                      color: _isRevealed
+                          ? AppColors.getPrimary(context)
+                          : Colors.white,
                     ),
             ),
           ),
@@ -257,4 +266,3 @@ class _SecureProtectedFieldState extends State<SecureProtectedField>
     );
   }
 }
-

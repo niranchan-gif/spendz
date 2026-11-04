@@ -22,7 +22,9 @@ class ImportedTransaction {
       reference: json['reference']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
       amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
-      date: json['date'] != null ? DateTime.tryParse(json['date'].toString()) ?? DateTime.now() : DateTime.now(),
+      date: json['date'] != null
+          ? DateTime.tryParse(json['date'].toString()) ?? DateTime.now()
+          : DateTime.now(),
       type: json['type']?.toString() ?? '',
       source: json['source']?.toString() ?? '',
     );

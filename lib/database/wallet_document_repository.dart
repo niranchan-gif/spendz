@@ -44,7 +44,9 @@ class WalletDocumentRepository {
     return maps.map((m) => WalletDocumentModel.fromMap(m)).toList();
   }
 
-  Future<List<WalletDocumentModel>> getDocumentsByCategory(String category) async {
+  Future<List<WalletDocumentModel>> getDocumentsByCategory(
+    String category,
+  ) async {
     final db = await dbHelper.database;
     if (category.toLowerCase() == 'all') {
       return getAllDocuments();
@@ -58,7 +60,9 @@ class WalletDocumentRepository {
     return maps.map((m) => WalletDocumentModel.fromMap(m)).toList();
   }
 
-  Future<List<WalletDocumentModel>> getExpiringDocuments({int daysThreshold = 30}) async {
+  Future<List<WalletDocumentModel>> getExpiringDocuments({
+    int daysThreshold = 30,
+  }) async {
     final db = await dbHelper.database;
     final now = DateTime.now();
     final thresholdDate = now.add(Duration(days: daysThreshold));
@@ -116,4 +120,3 @@ class WalletDocumentRepository {
     );
   }
 }
-

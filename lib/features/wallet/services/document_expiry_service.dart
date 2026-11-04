@@ -22,7 +22,8 @@ abstract class LocalNotificationGateway {
 
 /// Production implementation using FlutterLocalNotificationsPlugin and Timezone.
 class FlutterLocalNotificationGateway implements LocalNotificationGateway {
-  final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _plugin =
+      FlutterLocalNotificationsPlugin();
   bool _isInitialized = false;
 
   @override
@@ -33,7 +34,9 @@ class FlutterLocalNotificationGateway implements LocalNotificationGateway {
       tz.initializeTimeZones();
     } catch (_) {}
 
-    const androidSettings = AndroidInitializationSettings('@mipmap/launcher_icon');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/launcher_icon',
+    );
     const darwinSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -56,13 +59,22 @@ class FlutterLocalNotificationGateway implements LocalNotificationGateway {
   Future<bool> requestPermissions() async {
     try {
       if (Platform.isAndroid) {
-        final androidImpl = _plugin.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+        final androidImpl = _plugin
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >();
         return await androidImpl?.requestNotificationsPermission() ?? false;
       } else if (Platform.isIOS) {
-        final iosImpl = _plugin.resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>();
-        return await iosImpl?.requestPermissions(alert: true, badge: true, sound: true) ?? false;
+        final iosImpl = _plugin
+            .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin
+            >();
+        return await iosImpl?.requestPermissions(
+              alert: true,
+              badge: true,
+              sound: true,
+            ) ??
+            false;
       }
     } catch (e) {
       debugPrint('Permission request error: $e');
@@ -81,7 +93,8 @@ class FlutterLocalNotificationGateway implements LocalNotificationGateway {
       const androidDetails = AndroidNotificationDetails(
         'spendz_document_expiry_channel',
         'Document Expiry Alerts',
-        channelDescription: 'Alerts when your vault documents (DL, Passport, Insurance) are expiring.',
+        channelDescription:
+            'Alerts when your vault documents (DL, Passport, Insurance) are expiring.',
         importance: Importance.high,
         priority: Priority.high,
         icon: '@mipmap/launcher_icon',
@@ -182,7 +195,9 @@ class DocumentExpiryInfo {
   String get formattedStatus {
     if (isExpired) {
       final daysAgo = daysRemaining.abs();
-      return daysAgo == 0 ? 'Expired today' : 'Expired $daysAgo day${daysAgo == 1 ? "" : "s"} ago';
+      return daysAgo == 0
+          ? 'Expired today'
+          : 'Expired $daysAgo day${daysAgo == 1 ? "" : "s"} ago';
     } else if (daysRemaining == 0) {
       return 'Expires today';
     } else if (daysRemaining == 1) {
@@ -204,8 +219,9 @@ class DocumentExpiryService {
   DocumentExpiryService({
     WalletDocumentRepository? documentRepository,
     LocalNotificationGateway? notificationGateway,
-  })  : _documentRepository = documentRepository ?? WalletDocumentRepository(),
-        _notificationGateway = notificationGateway ?? FlutterLocalNotificationGateway();
+  }) : _documentRepository = documentRepository ?? WalletDocumentRepository(),
+       _notificationGateway =
+           notificationGateway ?? FlutterLocalNotificationGateway();
 
   Future<void> initialize() async {
     await _notificationGateway.initialize();
@@ -217,7 +233,9 @@ class DocumentExpiryService {
   }
 
   /// Evaluates and groups all registered documents by expiry status.
-  Future<List<DocumentExpiryInfo>> getExpiryAssessments({DateTime? referenceNow}) async {
+  Future<List<DocumentExpiryInfo>> getExpiryAssessments({
+    DateTime? referenceNow,
+  }) async {
     final docs = await _documentRepository.getAllDocuments();
     final now = referenceNow ?? DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -237,12 +255,14 @@ class DocumentExpiryService {
       final isExpired = differenceDays < 0;
       final isExpiringSoon = differenceDays >= 0 && differenceDays <= 30;
 
-      results.add(DocumentExpiryInfo(
-        document: doc,
-        daysRemaining: differenceDays,
-        isExpired: isExpired,
-        isExpiringSoon: isExpiringSoon,
-      ));
+      results.add(
+        DocumentExpiryInfo(
+          document: doc,
+          daysRemaining: differenceDays,
+          isExpired: isExpired,
+          isExpiringSoon: isExpiringSoon,
+        ),
+      );
     }
 
     // Sort: Expired first, then closest upcoming expiry
@@ -251,13 +271,20 @@ class DocumentExpiryService {
   }
 
   /// Returns documents expiring within [days] (default 30).
-  Future<List<DocumentExpiryInfo>> getUpcomingExpiries({int days = 30, DateTime? referenceNow}) async {
+  Future<List<DocumentExpiryInfo>> getUpcomingExpiries({
+    int days = 30,
+    DateTime? referenceNow,
+  }) async {
     final all = await getExpiryAssessments(referenceNow: referenceNow);
-    return all.where((info) => !info.isExpired && info.daysRemaining <= days).toList();
+    return all
+        .where((info) => !info.isExpired && info.daysRemaining <= days)
+        .toList();
   }
 
   /// Returns already expired documents.
-  Future<List<DocumentExpiryInfo>> getExpiredDocuments({DateTime? referenceNow}) async {
+  Future<List<DocumentExpiryInfo>> getExpiredDocuments({
+    DateTime? referenceNow,
+  }) async {
     final all = await getExpiryAssessments(referenceNow: referenceNow);
     return all.where((info) => info.isExpired).toList();
   }
@@ -296,7 +323,8 @@ class DocumentExpiryService {
         final title = daysBefore == 0
             ? 'Document Expired Today!'
             : 'Document Expiring in $daysBefore Days';
-        final body = '${document.documentName} is expiring on ${expiry.day}/${expiry.month}/${expiry.year}. Please review or renew.';
+        final body =
+            '${document.documentName} is expiring on ${expiry.day}/${expiry.month}/${expiry.year}. Please review or renew.';
 
         await _notificationGateway.scheduleNotification(
           id: notifId,
@@ -316,4 +344,3 @@ class DocumentExpiryService {
     }
   }
 }
-

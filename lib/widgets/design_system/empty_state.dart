@@ -59,9 +59,9 @@ class EmptyState extends StatelessWidget {
             const SizedBox(height: AppSpacing.lg),
             Text(
               title,
-              style: AppTextStyles.getHeading3(context).copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+              style: AppTextStyles.getHeading3(
+                context,
+              ).copyWith(fontWeight: FontWeight.w700),
               textAlign: TextAlign.center,
             ),
             if (_effectiveMessage.isNotEmpty) ...[

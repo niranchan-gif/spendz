@@ -22,9 +22,7 @@ class SettingsScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
+      appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         physics: const BouncingScrollPhysics(),
@@ -38,7 +36,10 @@ class SettingsScreen extends StatelessWidget {
                 return ReusableCard(
                   padding: const EdgeInsets.all(AppSpacing.card),
                   child: Center(
-                    child: Text('No transactions yet.', style: AppTextStyles.bodyMedium),
+                    child: Text(
+                      'No transactions yet.',
+                      style: AppTextStyles.bodyMedium,
+                    ),
                   ),
                 );
               }
@@ -53,12 +54,20 @@ class SettingsScreen extends StatelessWidget {
                   leading: Container(
                     padding: const EdgeInsets.all(AppSpacing.xs + 2),
                     decoration: BoxDecoration(
-                      color: (recent.type == 'expense' ? AppColors.error : AppColors.success).withAlpha(25),
+                      color:
+                          (recent.type == 'expense'
+                                  ? AppColors.error
+                                  : AppColors.success)
+                              .withAlpha(25),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      recent.type == 'expense' ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
-                      color: recent.type == 'expense' ? AppColors.error : AppColors.success,
+                      recent.type == 'expense'
+                          ? Icons.arrow_downward_rounded
+                          : Icons.arrow_upward_rounded,
+                      color: recent.type == 'expense'
+                          ? AppColors.error
+                          : AppColors.success,
                       size: 20,
                     ),
                   ),
@@ -77,7 +86,9 @@ class SettingsScreen extends StatelessWidget {
                     '₹${recent.amount.toStringAsFixed(2)}',
                     style: AppTextStyles.labelLarge.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: recent.type == 'expense' ? AppColors.error : AppColors.success,
+                      color: recent.type == 'expense'
+                          ? AppColors.error
+                          : AppColors.success,
                     ),
                   ),
                 ),
@@ -91,10 +102,15 @@ class SettingsScreen extends StatelessWidget {
           ReusableCard(
             padding: EdgeInsets.zero,
             child: ListTile(
-              leading: const Icon(Icons.category_outlined, color: AppColors.primary),
+              leading: const Icon(
+                Icons.category_outlined,
+                color: AppColors.primary,
+              ),
               title: Text(
                 'Manage Categories',
-                style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w600),
+                style: AppTextStyles.labelLarge.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               subtitle: Text(
                 'Customize category labels, icons and colors',
@@ -104,7 +120,9 @@ class SettingsScreen extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const CategoriesScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => const CategoriesScreen(),
+                  ),
                 );
               },
             ),
@@ -116,7 +134,10 @@ class SettingsScreen extends StatelessWidget {
           ReusableCard(
             padding: EdgeInsets.zero,
             child: ListTile(
-              leading: const Icon(Icons.delete_outline_rounded, color: AppColors.error),
+              leading: const Icon(
+                Icons.delete_outline_rounded,
+                color: AppColors.error,
+              ),
               title: Text(
                 'Clear All Data',
                 style: AppTextStyles.labelLarge.copyWith(
@@ -132,7 +153,8 @@ class SettingsScreen extends StatelessWidget {
                 final confirm = await CustomDialog.showConfirmation(
                   context: context,
                   title: 'Clear All Data?',
-                  message: 'This will delete all your transactions and settings. This action cannot be undone.',
+                  message:
+                      'This will delete all your transactions and settings. This action cannot be undone.',
                   confirmLabel: 'Clear All Data',
                   isDestructive: true,
                   icon: Icons.warning_amber_rounded,
@@ -145,7 +167,9 @@ class SettingsScreen extends StatelessWidget {
                   if (context.mounted) {
                     context.read<TransactionProvider>().loadTransactions();
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('All data cleared successfully.')),
+                      const SnackBar(
+                        content: Text('All data cleared successfully.'),
+                      ),
                     );
                   }
                 }

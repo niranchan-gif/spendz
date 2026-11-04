@@ -47,11 +47,13 @@ class GlassNavigationBar extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
               decoration: BoxDecoration(
                 color: isDark
-                    ? const Color(0xFF14231B).withAlpha(210)
-                    : const Color(0xFFFFFFFF).withAlpha(225),
+                    ? const Color(0xFF0D1712).withAlpha(225)
+                    : const Color(0xFFFFFFFF).withAlpha(235),
                 borderRadius: BorderRadius.circular(AppRadius.full),
                 border: Border.all(
-                  color: isDark ? Colors.white.withAlpha(30) : Colors.white.withAlpha(220),
+                  color: isDark
+                      ? Colors.white.withAlpha(30)
+                      : Colors.white.withAlpha(220),
                   width: 1.2,
                 ),
                 boxShadow: [
@@ -102,9 +104,13 @@ class GlassNavigationBar extends StatelessWidget {
                               item.label,
                               style: TextStyle(
                                 fontSize: 10,
-                                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                fontWeight: isSelected
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
                                 color: isSelected
-                                    ? (isDark ? accent : AppColors.primaryLightMode)
+                                    ? (isDark
+                                          ? accent
+                                          : AppColors.primaryLightMode)
                                     : AppColors.getTextSecondary(context),
                                 letterSpacing: 0.2,
                               ),
@@ -125,4 +131,3 @@ class GlassNavigationBar extends StatelessWidget {
     );
   }
 }
-

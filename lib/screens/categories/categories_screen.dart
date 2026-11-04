@@ -31,7 +31,9 @@ class CategoriesScreen extends StatelessWidget {
             indicatorWeight: 3,
             labelColor: AppColors.primary,
             unselectedLabelColor: AppColors.getTextSecondary(context),
-            labelStyle: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
+            labelStyle: AppTextStyles.labelLarge.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
             unselectedLabelStyle: AppTextStyles.labelLarge,
             tabs: const [
               Tab(text: 'Expenses'),
@@ -42,13 +44,23 @@ class CategoriesScreen extends StatelessWidget {
         body: Consumer<CategoryProvider>(
           builder: (context, catProvider, child) {
             if (catProvider.isLoading) {
-              return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+              return const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              );
             }
 
             return TabBarView(
               children: [
-                _buildCategoryList(context, catProvider.expenseCategories, isExpense: true),
-                _buildCategoryList(context, catProvider.incomeCategories, isExpense: false),
+                _buildCategoryList(
+                  context,
+                  catProvider.expenseCategories,
+                  isExpense: true,
+                ),
+                _buildCategoryList(
+                  context,
+                  catProvider.incomeCategories,
+                  isExpense: false,
+                ),
               ],
             );
           },
@@ -58,20 +70,30 @@ class CategoriesScreen extends StatelessWidget {
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           icon: const Icon(Icons.add_rounded),
-          label: const Text('New Category', style: TextStyle(fontWeight: FontWeight.bold)),
+          label: const Text(
+            'New Category',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           onPressed: () => _showAddCategorySheet(context),
         ),
       ),
     );
   }
 
-  Widget _buildCategoryList(BuildContext context, List<CategoryModel> categories, {required bool isExpense}) {
+  Widget _buildCategoryList(
+    BuildContext context,
+    List<CategoryModel> categories, {
+    required bool isExpense,
+  }) {
     if (categories.isEmpty) {
       return Center(
         child: EmptyState(
-          icon: isExpense ? Icons.shopping_bag_outlined : Icons.account_balance_wallet_outlined,
+          icon: isExpense
+              ? Icons.shopping_bag_outlined
+              : Icons.account_balance_wallet_outlined,
           title: isExpense ? 'No Expense Categories' : 'No Income Categories',
-          subtitle: 'Create customized categories to organize your financial transactions.',
+          subtitle:
+              'Create customized categories to organize your financial transactions.',
           actionLabel: 'Add Category',
           onActionPressed: () => _showAddCategorySheet(context),
         ),
@@ -79,12 +101,19 @@ class CategoriesScreen extends StatelessWidget {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 100),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.lg,
+        100,
+      ),
       physics: const BouncingScrollPhysics(),
       itemCount: categories.length,
       itemBuilder: (context, index) {
         final cat = categories[index];
-        final color = Color(int.tryParse(cat.color) ?? AppColors.primary.toARGB32());
+        final color = Color(
+          int.tryParse(cat.color) ?? AppColors.primary.toARGB32(),
+        );
         final surfaceColor = AppColors.getSurface(context);
         final borderColor = AppColors.getBorder(context);
 
@@ -99,7 +128,10 @@ class CategoriesScreen extends StatelessWidget {
             color: Colors.transparent,
             borderRadius: BorderRadius.circular(AppRadius.card),
             child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: 4,
+              ),
               leading: Container(
                 width: 44,
                 height: 44,
@@ -108,7 +140,11 @@ class CategoriesScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppRadius.sm + 2),
                   border: Border.all(color: color.withAlpha(50)),
                 ),
-                child: Icon(IconMapper.getIcon(cat.icon), color: color, size: 22),
+                child: Icon(
+                  IconMapper.getIcon(cat.icon),
+                  color: color,
+                  size: 22,
+                ),
               ),
               title: Text(
                 cat.name,
@@ -119,12 +155,18 @@ class CategoriesScreen extends StatelessWidget {
               ),
               subtitle: Text(
                 cat.isDefault ? 'Standard Category' : 'Custom Category',
-                style: AppTextStyles.caption.copyWith(color: AppColors.getTextSecondary(context)),
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.getTextSecondary(context),
+                ),
               ),
               trailing: cat.isDefault
                   ? null
                   : IconButton(
-                      icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error, size: 20),
+                      icon: const Icon(
+                        Icons.delete_outline_rounded,
+                        color: AppColors.error,
+                        size: 20,
+                      ),
                       onPressed: () => _confirmDeleteCategory(context, cat),
                     ),
               onLongPress: () {
@@ -139,11 +181,15 @@ class CategoriesScreen extends StatelessWidget {
     );
   }
 
-  void _confirmDeleteCategory(BuildContext context, CategoryModel category) async {
+  void _confirmDeleteCategory(
+    BuildContext context,
+    CategoryModel category,
+  ) async {
     final confirm = await CustomDialog.showConfirmation(
       context: context,
       title: 'Delete Category?',
-      message: 'Are you sure you want to delete "${category.name}"? Transactions associated with this category will remain preserved.',
+      message:
+          'Are you sure you want to delete "${category.name}"? Transactions associated with this category will remain preserved.',
       confirmLabel: 'Delete',
       isDestructive: true,
       icon: Icons.delete_outline_rounded,
@@ -202,7 +248,9 @@ class CategoriesScreen extends StatelessWidget {
                 selected: {selectedType},
                 style: ButtonStyle(
                   shape: WidgetStatePropertyAll(
-                    RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.full)),
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.full),
+                    ),
                   ),
                 ),
                 onSelectionChanged: (Set<String> newSelection) {
@@ -219,7 +267,8 @@ class CategoriesScreen extends StatelessWidget {
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: colors.length,
-                  separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.sm),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(width: AppSpacing.sm),
                   itemBuilder: (context, index) {
                     final hex = colors[index];
                     final color = Color(int.parse(hex));
@@ -234,15 +283,27 @@ class CategoriesScreen extends StatelessWidget {
                           color: color,
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: isSelected ? Colors.white : Colors.transparent,
+                            color: isSelected
+                                ? Colors.white
+                                : Colors.transparent,
                             width: 3,
                           ),
                           boxShadow: isSelected
-                              ? [BoxShadow(color: color.withAlpha(120), blurRadius: 8, spreadRadius: 1)]
+                              ? [
+                                  BoxShadow(
+                                    color: color.withAlpha(120),
+                                    blurRadius: 8,
+                                    spreadRadius: 1,
+                                  ),
+                                ]
                               : null,
                         ),
                         child: isSelected
-                            ? const Icon(Icons.check, color: Colors.white, size: 20)
+                            ? const Icon(
+                                Icons.check,
+                                color: Colors.white,
+                                size: 20,
+                              )
                             : null,
                       ),
                     );
@@ -285,21 +346,40 @@ class CategoriesScreen extends StatelessWidget {
 
   String _getSuitableIcon(String name) {
     final lower = name.toLowerCase();
-    if (lower.contains('food') || lower.contains('coffee') || lower.contains('eat') || lower.contains('burger') || lower.contains('drink')) {
+    if (lower.contains('food') ||
+        lower.contains('coffee') ||
+        lower.contains('eat') ||
+        lower.contains('burger') ||
+        lower.contains('drink')) {
       return 'restaurant';
-    } else if (lower.contains('car') || lower.contains('gas') || lower.contains('fuel') || lower.contains('transit') || lower.contains('taxi')) {
+    } else if (lower.contains('car') ||
+        lower.contains('gas') ||
+        lower.contains('fuel') ||
+        lower.contains('transit') ||
+        lower.contains('taxi')) {
       return 'directions_car';
-    } else if (lower.contains('shop') || lower.contains('cloth') || lower.contains('mall')) {
+    } else if (lower.contains('shop') ||
+        lower.contains('cloth') ||
+        lower.contains('mall')) {
       return 'shopping_bag';
-    } else if (lower.contains('health') || lower.contains('doc') || lower.contains('med') || lower.contains('gym')) {
+    } else if (lower.contains('health') ||
+        lower.contains('doc') ||
+        lower.contains('med') ||
+        lower.contains('gym')) {
       return 'local_hospital';
-    } else if (lower.contains('game') || lower.contains('movie') || lower.contains('fun')) {
+    } else if (lower.contains('game') ||
+        lower.contains('movie') ||
+        lower.contains('fun')) {
       return 'movie';
-    } else if (lower.contains('house') || lower.contains('rent') || lower.contains('home')) {
+    } else if (lower.contains('house') ||
+        lower.contains('rent') ||
+        lower.contains('home')) {
       return 'house';
     } else if (lower.contains('bill') || lower.contains('util')) {
       return 'receipt';
-    } else if (lower.contains('salary') || lower.contains('pay') || lower.contains('wage')) {
+    } else if (lower.contains('salary') ||
+        lower.contains('pay') ||
+        lower.contains('wage')) {
       return 'work';
     } else if (lower.contains('gift') || lower.contains('present')) {
       return 'card_giftcard';

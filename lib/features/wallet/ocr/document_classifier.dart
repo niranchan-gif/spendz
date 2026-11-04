@@ -61,12 +61,23 @@ class DocumentClassifier {
   static final RegExp _cardRegex = RegExp(r'\b(?:\d{4}[ -]?){3}\d{4}\b');
   static final RegExp _aadhaarRegex = RegExp(r'\b\d{4}\s\d{4}\s\d{4}\b');
   static final RegExp _panRegex = RegExp(r'\b[A-Z]{5}[0-9]{4}[A-Z]\b');
-  static final RegExp _dlRegex = RegExp(r'\b[A-Z]{2}[- ]?[0-9]{2}[- ]?[0-9]{11}\b', caseSensitive: false);
-  static final RegExp _dlAlternativeRegex = RegExp(r'\bDL[- ]?[0-9A-Z]{10,15}\b', caseSensitive: false);
+  static final RegExp _dlRegex = RegExp(
+    r'\b[A-Z]{2}[- ]?[0-9]{2}[- ]?[0-9]{11}\b',
+    caseSensitive: false,
+  );
+  static final RegExp _dlAlternativeRegex = RegExp(
+    r'\bDL[- ]?[0-9A-Z]{10,15}\b',
+    caseSensitive: false,
+  );
   static final RegExp _voterIdRegex = RegExp(r'\b[A-Z]{3}[0-9]{7}\b');
-  static final RegExp _passportRegex = RegExp(r'\b[A-PR-WYa-pr-wy][1-9][0-9]\s?[0-9]{4}[0-9]\b');
+  static final RegExp _passportRegex = RegExp(
+    r'\b[A-PR-WYa-pr-wy][1-9][0-9]\s?[0-9]{4}[0-9]\b',
+  );
   static final RegExp _passportOldRegex = RegExp(r'\b[A-Z][0-9]{7}\b');
-  static final RegExp _rcRegex = RegExp(r'\b[A-Z]{2}[ -]?[0-9]{1,2}[ -]?[A-Z]{1,3}[ -]?[0-9]{4}\b', caseSensitive: false);
+  static final RegExp _rcRegex = RegExp(
+    r'\b[A-Z]{2}[ -]?[0-9]{1,2}[ -]?[A-Z]{1,3}[ -]?[0-9]{4}\b',
+    caseSensitive: false,
+  );
 
   /// Classifies a document using the raw OCR text.
   DocumentClassificationResult classify(String rawText) {
@@ -145,11 +156,17 @@ class DocumentClassifier {
       points += 45;
       reasons.add('Debit card keyword found');
     }
-    if (lower.contains('valid thru') || lower.contains('valid from') || lower.contains('expires') || lower.contains('expiry')) {
+    if (lower.contains('valid thru') ||
+        lower.contains('valid from') ||
+        lower.contains('expires') ||
+        lower.contains('expiry')) {
       points += 20;
       reasons.add('Card validity / expiry format found');
     }
-    if (lower.contains('visa') || lower.contains('mastercard') || lower.contains('rupay') || lower.contains('maestro')) {
+    if (lower.contains('visa') ||
+        lower.contains('mastercard') ||
+        lower.contains('rupay') ||
+        lower.contains('maestro')) {
       points += 25;
       reasons.add('Payment network brand found');
     }
@@ -169,7 +186,12 @@ class DocumentClassifier {
       points += 45;
       reasons.add('Credit card keyword found');
     }
-    if (lower.contains('platinum') || lower.contains('titanium') || lower.contains('rewards') || lower.contains('signature') || lower.contains('regalia') || lower.contains('infinia')) {
+    if (lower.contains('platinum') ||
+        lower.contains('titanium') ||
+        lower.contains('rewards') ||
+        lower.contains('signature') ||
+        lower.contains('regalia') ||
+        lower.contains('infinia')) {
       points += 25;
       reasons.add('Premium credit card tier found');
     }
@@ -177,7 +199,11 @@ class DocumentClassifier {
       points += 20;
       reasons.add('Card validity format found');
     }
-    if (lower.contains('visa') || lower.contains('mastercard') || lower.contains('american express') || lower.contains('amex') || lower.contains('diners')) {
+    if (lower.contains('visa') ||
+        lower.contains('mastercard') ||
+        lower.contains('american express') ||
+        lower.contains('amex') ||
+        lower.contains('diners')) {
       points += 25;
       reasons.add('Payment network brand found');
     }
@@ -193,15 +219,19 @@ class DocumentClassifier {
       points += 40;
       reasons.add('12-digit Aadhaar pattern matched');
     }
-    if (lower.contains('unique identification authority of india') || lower.contains('uidai')) {
+    if (lower.contains('unique identification authority of india') ||
+        lower.contains('uidai')) {
       points += 40;
       reasons.add('UIDAI authority header found');
     }
-    if (lower.contains('government of india') || lower.contains('govt of india')) {
+    if (lower.contains('government of india') ||
+        lower.contains('govt of india')) {
       points += 15;
       reasons.add('Government of India header');
     }
-    if (lower.contains('mera aadhaar') || lower.contains('meri pehchan') || lower.contains('aadhaar')) {
+    if (lower.contains('mera aadhaar') ||
+        lower.contains('meri pehchan') ||
+        lower.contains('aadhaar')) {
       points += 20;
       reasons.add('Aadhaar keyword found');
     }
@@ -221,11 +251,13 @@ class DocumentClassifier {
       points += 45;
       reasons.add('10-character PAN pattern matched');
     }
-    if (lower.contains('income tax department') || lower.contains('incometax')) {
+    if (lower.contains('income tax department') ||
+        lower.contains('incometax')) {
       points += 40;
       reasons.add('Income Tax Department header found');
     }
-    if (lower.contains('permanent account number') || lower.contains('pan card')) {
+    if (lower.contains('permanent account number') ||
+        lower.contains('pan card')) {
       points += 25;
       reasons.add('Permanent Account Number title found');
     }
@@ -245,15 +277,21 @@ class DocumentClassifier {
       points += 40;
       reasons.add('Driving Licence number format matched');
     }
-    if (lower.contains('driving licence') || lower.contains('driving license')) {
+    if (lower.contains('driving licence') ||
+        lower.contains('driving license')) {
       points += 40;
       reasons.add('Driving Licence title found');
     }
-    if (lower.contains('transport department') || lower.contains('union of india') || lower.contains('rto')) {
+    if (lower.contains('transport department') ||
+        lower.contains('union of india') ||
+        lower.contains('rto')) {
       points += 20;
       reasons.add('Transport Department authority header');
     }
-    if (lower.contains('authorisation to drive') || lower.contains('form 7') || lower.contains('lmv') || lower.contains('mcwg')) {
+    if (lower.contains('authorisation to drive') ||
+        lower.contains('form 7') ||
+        lower.contains('lmv') ||
+        lower.contains('mcwg')) {
       points += 25;
       reasons.add('Vehicle class / Form 7 designation found');
     }
@@ -269,15 +307,20 @@ class DocumentClassifier {
       points += 45;
       reasons.add('10-character Voter ID / EPIC format matched');
     }
-    if (lower.contains('election commission of india') || lower.contains('bharat nirvachan')) {
+    if (lower.contains('election commission of india') ||
+        lower.contains('bharat nirvachan')) {
       points += 45;
       reasons.add('Election Commission of India header found');
     }
-    if (lower.contains("elector's photo identity card") || lower.contains('elector photo identity') || lower.contains('epic no') || lower.contains('voter id')) {
+    if (lower.contains("elector's photo identity card") ||
+        lower.contains('elector photo identity') ||
+        lower.contains('epic no') ||
+        lower.contains('voter id')) {
       points += 40;
       reasons.add('EPIC / Voter ID title found');
     }
-    if (lower.contains('assembly constituency') || lower.contains('parliamentary constituency')) {
+    if (lower.contains('assembly constituency') ||
+        lower.contains('parliamentary constituency')) {
       points += 20;
       reasons.add('Constituency marker found');
     }
@@ -297,15 +340,21 @@ class DocumentClassifier {
       points += 40;
       reasons.add('Passport title found');
     }
-    if (lower.contains('republic of india') || lower.contains('bharat sarkar')) {
+    if (lower.contains('republic of india') ||
+        lower.contains('bharat sarkar')) {
       points += 20;
       reasons.add('Republic of India header found');
     }
-    if (lower.contains('type p') || lower.contains('code ind') || raw.contains('P<IND') || raw.contains('<<<<')) {
+    if (lower.contains('type p') ||
+        lower.contains('code ind') ||
+        raw.contains('P<IND') ||
+        raw.contains('<<<<')) {
       points += 35;
       reasons.add('MRZ / Type P Passport indicators found');
     }
-    if (lower.contains('given name') || lower.contains('surname') || lower.contains('nationality')) {
+    if (lower.contains('given name') ||
+        lower.contains('surname') ||
+        lower.contains('nationality')) {
       points += 15;
       reasons.add('Standard passport metadata fields found');
     }
@@ -321,7 +370,8 @@ class DocumentClassifier {
       points += 35;
       reasons.add('Vehicle registration number matched');
     }
-    if (lower.contains('registration certificate') || lower.contains('certificate of registration')) {
+    if (lower.contains('registration certificate') ||
+        lower.contains('certificate of registration')) {
       points += 45;
       reasons.add('Registration Certificate title found');
     }
@@ -329,7 +379,8 @@ class DocumentClassifier {
       points += 25;
       reasons.add('Chassis / Engine number markers found');
     }
-    if (lower.contains('ministry of road transport') || lower.contains('parivahan')) {
+    if (lower.contains('ministry of road transport') ||
+        lower.contains('parivahan')) {
       points += 20;
       reasons.add('Ministry of Road Transport / Parivahan marker');
     }
@@ -341,7 +392,9 @@ class DocumentClassifier {
     int points = 0;
     final reasons = <String>[];
 
-    if (lower.contains('certificate of insurance') || lower.contains('policy schedule') || lower.contains('insurance policy')) {
+    if (lower.contains('certificate of insurance') ||
+        lower.contains('policy schedule') ||
+        lower.contains('insurance policy')) {
       points += 45;
       reasons.add('Insurance Policy title found');
     }
@@ -349,11 +402,16 @@ class DocumentClassifier {
       points += 30;
       reasons.add('Policy Number field found');
     }
-    if (lower.contains('sum insured') || lower.contains('premium') || lower.contains('period of insurance')) {
+    if (lower.contains('sum insured') ||
+        lower.contains('premium') ||
+        lower.contains('period of insurance')) {
       points += 25;
       reasons.add('Sum Insured / Premium / Period indicators found');
     }
-    if (lower.contains('general insurance') || lower.contains('life insurance') || lower.contains('motor insurance') || lower.contains('health insurance')) {
+    if (lower.contains('general insurance') ||
+        lower.contains('life insurance') ||
+        lower.contains('motor insurance') ||
+        lower.contains('health insurance')) {
       points += 20;
       reasons.add('Insurance company type marker');
     }
@@ -365,19 +423,28 @@ class DocumentClassifier {
     int points = 0;
     final reasons = <String>[];
 
-    if (lower.contains('bank statement') || lower.contains('account statement') || lower.contains('statement of account')) {
+    if (lower.contains('bank statement') ||
+        lower.contains('account statement') ||
+        lower.contains('statement of account')) {
       points += 45;
       reasons.add('Bank Statement title found');
     }
-    if (lower.contains('account no') || lower.contains('account number') || lower.contains('a/c no')) {
+    if (lower.contains('account no') ||
+        lower.contains('account number') ||
+        lower.contains('a/c no')) {
       points += 30;
       reasons.add('Account Number marker found');
     }
-    if (lower.contains('ifsc') || lower.contains('micr') || lower.contains('branch code')) {
+    if (lower.contains('ifsc') ||
+        lower.contains('micr') ||
+        lower.contains('branch code')) {
       points += 30;
       reasons.add('IFSC / Bank routing marker found');
     }
-    if (lower.contains('savings account') || lower.contains('current account') || lower.contains('opening balance') || lower.contains('closing balance')) {
+    if (lower.contains('savings account') ||
+        lower.contains('current account') ||
+        lower.contains('opening balance') ||
+        lower.contains('closing balance')) {
       points += 25;
       reasons.add('Bank account ledger terms found');
     }
@@ -389,15 +456,23 @@ class DocumentClassifier {
     int points = 0;
     final reasons = <String>[];
 
-    if (lower.contains('student id') || lower.contains('identity card') || lower.contains('student identity card')) {
+    if (lower.contains('student id') ||
+        lower.contains('identity card') ||
+        lower.contains('student identity card')) {
       points += 40;
       reasons.add('Student / Identity card title found');
     }
-    if (lower.contains('college') || lower.contains('university') || lower.contains('institute of technology') || lower.contains('school')) {
+    if (lower.contains('college') ||
+        lower.contains('university') ||
+        lower.contains('institute of technology') ||
+        lower.contains('school')) {
       points += 35;
       reasons.add('Educational institution name found');
     }
-    if (lower.contains('roll no') || lower.contains('enrollment no') || lower.contains('reg no') || lower.contains('branch')) {
+    if (lower.contains('roll no') ||
+        lower.contains('enrollment no') ||
+        lower.contains('reg no') ||
+        lower.contains('branch')) {
       points += 25;
       reasons.add('Roll number / branch student markers found');
     }
@@ -409,15 +484,21 @@ class DocumentClassifier {
     int points = 0;
     final reasons = <String>[];
 
-    if (lower.contains('certificate of') || lower.contains('completion certificate') || lower.contains('certificate of achievement')) {
+    if (lower.contains('certificate of') ||
+        lower.contains('completion certificate') ||
+        lower.contains('certificate of achievement')) {
       points += 45;
       reasons.add('Certificate title found');
     }
-    if (lower.contains('certifies that') || lower.contains('has successfully completed') || lower.contains('awarded to')) {
+    if (lower.contains('certifies that') ||
+        lower.contains('has successfully completed') ||
+        lower.contains('awarded to')) {
       points += 40;
       reasons.add('Certification statement found');
     }
-    if (lower.contains('course') || lower.contains('participation') || lower.contains('conferred upon')) {
+    if (lower.contains('course') ||
+        lower.contains('participation') ||
+        lower.contains('conferred upon')) {
       points += 20;
       reasons.add('Course completion keywords found');
     }

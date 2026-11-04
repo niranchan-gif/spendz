@@ -67,11 +67,15 @@ class _CardThemeSheetState extends State<CardThemeSheet> {
                     children: [
                       Text(
                         'Change Card Theme',
-                        style: AppTextStyles.getHeading2(context).copyWith(fontWeight: FontWeight.bold),
+                        style: AppTextStyles.getHeading2(
+                          context,
+                        ).copyWith(fontWeight: FontWeight.bold),
                       ),
                       Text(
                         'Select a distinctive visual identity',
-                        style: AppTextStyles.caption.copyWith(color: AppColors.getTextSecondary(context)),
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.getTextSecondary(context),
+                        ),
                       ),
                     ],
                   ),
@@ -128,7 +132,10 @@ class _CardThemeSheetState extends State<CardThemeSheet> {
                       setState(() => _selectedTheme = theme);
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         gradient: theme.backgroundGradient,
                         borderRadius: BorderRadius.circular(12),
@@ -154,11 +161,18 @@ class _CardThemeSheetState extends State<CardThemeSheet> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: theme.primaryAccent,
-                              border: Border.all(color: Colors.white, width: 1.5),
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 1.5,
+                              ),
                             ),
                             child: isSelected
                                 ? const Center(
-                                    child: Icon(Icons.check, size: 8, color: Colors.white),
+                                    child: Icon(
+                                      Icons.check,
+                                      size: 8,
+                                      color: Colors.white,
+                                    ),
                                   )
                                 : null,
                           ),
@@ -178,7 +192,11 @@ class _CardThemeSheetState extends State<CardThemeSheet> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 Text(
-                                  theme.primaryAccent.toARGB32().toRadixString(16).substring(2).toUpperCase(),
+                                  theme.primaryAccent
+                                      .toARGB32()
+                                      .toRadixString(16)
+                                      .substring(2)
+                                      .toUpperCase(),
                                   style: TextStyle(
                                     color: Colors.white.withAlpha(160),
                                     fontSize: 9,
@@ -214,13 +232,18 @@ class _CardThemeSheetState extends State<CardThemeSheet> {
                         final provider = context.read<WalletCardProvider>();
                         final walletProvider = context.read<WalletProvider>();
                         final messenger = ScaffoldMessenger.maybeOf(context);
-                        await provider.updateCardTheme(widget.card.id, _selectedTheme.id);
+                        await provider.updateCardTheme(
+                          widget.card.id,
+                          _selectedTheme.id,
+                        );
                         if (context.mounted) {
                           walletProvider.loadWallet();
                           try {
                             messenger?.showSnackBar(
                               SnackBar(
-                                content: Text('Applied "${_selectedTheme.name}" theme'),
+                                content: Text(
+                                  'Applied "${_selectedTheme.name}" theme',
+                                ),
                                 backgroundColor: AppColors.success,
                               ),
                             );

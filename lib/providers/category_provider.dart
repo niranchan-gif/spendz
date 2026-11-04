@@ -10,8 +10,9 @@ class CategoryProvider with ChangeNotifier {
   List<CategoryModel> get categories => _categories;
   bool get isLoading => _isLoading;
 
-  List<CategoryModel> get expenseCategories =>
-      _categories.where((c) => c.type == 'expense' || c.type == 'both').toList();
+  List<CategoryModel> get expenseCategories => _categories
+      .where((c) => c.type == 'expense' || c.type == 'both')
+      .toList();
 
   List<CategoryModel> get incomeCategories =>
       _categories.where((c) => c.type == 'income' || c.type == 'both').toList();

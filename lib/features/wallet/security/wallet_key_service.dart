@@ -7,10 +7,10 @@ import 'document_encryption_service.dart';
 
 class MasterKeyLostException extends VaultSecurityException {
   MasterKeyLostException()
-      : super(
-          'Master encryption key not found in secure hardware storage, but encrypted documents exist in vault. '
-          'Silent regeneration prevented to avoid data loss. Manual key recovery or vault reset required.',
-        );
+    : super(
+        'Master encryption key not found in secure hardware storage, but encrypted documents exist in vault. '
+        'Silent regeneration prevented to avoid data loss. Manual key recovery or vault reset required.',
+      );
 }
 
 class KeyStorageException extends VaultSecurityException {
@@ -37,19 +37,16 @@ class WalletKeyService {
   // In-memory cache for the session (cleared on lock / app kill)
   List<int>? _cachedKey;
 
-  WalletKeyService({
-    FlutterSecureStorage? secureStorage,
-    AesGcm? cipher,
-  })  : _secureStorage = secureStorage ??
-            const FlutterSecureStorage(
-              aOptions: AndroidOptions(
-                resetOnError: true,
-              ),
-              iOptions: IOSOptions(
-                accessibility: KeychainAccessibility.first_unlock,
-              ),
+  WalletKeyService({FlutterSecureStorage? secureStorage, AesGcm? cipher})
+    : _secureStorage =
+          secureStorage ??
+          const FlutterSecureStorage(
+            aOptions: AndroidOptions(resetOnError: true),
+            iOptions: IOSOptions(
+              accessibility: KeychainAccessibility.first_unlock,
             ),
-        _cipher = cipher ?? AesGcm.with256bits();
+          ),
+      _cipher = cipher ?? AesGcm.with256bits();
 
   /// Checks if master key exists in hardware secure storage.
   Future<bool> hasMasterKey() async {
@@ -84,7 +81,9 @@ class WalletKeyService {
       return List<int>.unmodifiable(_cachedKey!);
     } catch (e) {
       if (e is VaultSecurityException) rethrow;
-      throw KeyStorageException('Failed to retrieve master key from secure storage: $e');
+      throw KeyStorageException(
+        'Failed to retrieve master key from secure storage: $e',
+      );
     }
   }
 
@@ -137,7 +136,9 @@ class WalletKeyService {
     final newKeyBytes = await secretKey.extractBytes();
 
     if (newKeyBytes.length != keyLengthBytes) {
-      throw InvalidKeyException('CSPRNG generated unexpected key length: ${newKeyBytes.length}');
+      throw InvalidKeyException(
+        'CSPRNG generated unexpected key length: ${newKeyBytes.length}',
+      );
     }
 
     final base64Key = base64Encode(newKeyBytes);
@@ -156,7 +157,9 @@ class WalletKeyService {
     final newKeyBytes = await secretKey.extractBytes();
 
     if (newKeyBytes.length != keyLengthBytes) {
-      throw InvalidKeyException('CSPRNG generated unexpected key length: ${newKeyBytes.length}');
+      throw InvalidKeyException(
+        'CSPRNG generated unexpected key length: ${newKeyBytes.length}',
+      );
     }
 
     final base64Key = base64Encode(newKeyBytes);
@@ -171,7 +174,9 @@ class WalletKeyService {
   /// The caller is responsible for re-encrypting existing documents with the new key.
   Future<void> rotateMasterKey(List<int> newKeyBytes) async {
     if (newKeyBytes.length != keyLengthBytes) {
-      throw InvalidKeyException('New master key must be $keyLengthBytes bytes (256 bits).');
+      throw InvalidKeyException(
+        'New master key must be $keyLengthBytes bytes (256 bits).',
+      );
     }
 
     final base64Key = base64Encode(newKeyBytes);

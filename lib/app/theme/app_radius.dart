@@ -32,6 +32,7 @@ class AppRadius {
   static final BorderRadius roundedCard = BorderRadius.circular(card);
   static final BorderRadius roundedLg = BorderRadius.circular(lg);
   static final BorderRadius roundedXl = BorderRadius.circular(xl);
-  static final BorderRadius roundedSheet = const BorderRadius.vertical(top: Radius.circular(sheet));
+  static final BorderRadius roundedSheet = const BorderRadius.vertical(
+    top: Radius.circular(sheet),
+  );
 }
-

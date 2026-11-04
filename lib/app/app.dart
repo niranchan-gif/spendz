@@ -47,7 +47,8 @@ class _SpendzAppState extends State<SpendzApp> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
       _authService.onAppPaused();
       _vaultService.cleanupAllTemporaryFiles();
     }

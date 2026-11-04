@@ -21,13 +21,16 @@ class SecureNumberService {
     FlutterSecureStorage? secureStorage,
     WalletKeyService? keyService,
     DocumentEncryptionService? encryptionService,
-  })  : _secureStorage = secureStorage ??
-            const FlutterSecureStorage(
-              aOptions: AndroidOptions(resetOnError: true),
-              iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
-            ),
-        _keyService = keyService ?? WalletKeyService(),
-        _encryptionService = encryptionService ?? DocumentEncryptionService();
+  }) : _secureStorage =
+           secureStorage ??
+           const FlutterSecureStorage(
+             aOptions: AndroidOptions(resetOnError: true),
+             iOptions: IOSOptions(
+               accessibility: KeychainAccessibility.first_unlock,
+             ),
+           ),
+       _keyService = keyService ?? WalletKeyService(),
+       _encryptionService = encryptionService ?? DocumentEncryptionService();
 
   /// Saves the full card number encrypted in secure storage.
   Future<void> saveCardFullNumber(String cardId, String fullNumber) async {
@@ -46,7 +49,9 @@ class SecureNumberService {
         value: base64Encode(encrypted),
       );
     } catch (e) {
-      debugPrint('SecureNumberService: Failed to store encrypted card number securely: $e');
+      debugPrint(
+        'SecureNumberService: Failed to store encrypted card number securely: $e',
+      );
     }
   }
 
@@ -94,7 +99,9 @@ class SecureNumberService {
         value: base64Encode(encrypted),
       );
     } catch (e) {
-      debugPrint('SecureNumberService: Failed to store encrypted doc number securely: $e');
+      debugPrint(
+        'SecureNumberService: Failed to store encrypted doc number securely: $e',
+      );
     }
   }
 

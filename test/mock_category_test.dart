@@ -8,28 +8,30 @@ import 'package:uuid/uuid.dart';
 // Create a mock CategoryProvider
 class MockCategoryProvider extends CategoryProvider {
   final List<CategoryModel> _mockCategories = [];
-  
+
   @override
   List<CategoryModel> get categories => _mockCategories;
-  
+
   @override
-  List<CategoryModel> get expenseCategories => 
+  List<CategoryModel> get expenseCategories =>
       _mockCategories.where((c) => c.type == 'expense').toList();
-      
+
   @override
-  List<CategoryModel> get incomeCategories => 
+  List<CategoryModel> get incomeCategories =>
       _mockCategories.where((c) => c.type == 'income').toList();
-      
+
   void addMock(String name, String type) {
-    _mockCategories.add(CategoryModel(
-      id: Uuid().v4(),
-      name: name,
-      icon: 'icon',
-      color: '0xFF000000',
-      type: type,
-      isDefault: true,
-      createdAt: DateTime.now(),
-    ));
+    _mockCategories.add(
+      CategoryModel(
+        id: Uuid().v4(),
+        name: name,
+        icon: 'icon',
+        color: '0xFF000000',
+        type: type,
+        isDefault: true,
+        createdAt: DateTime.now(),
+      ),
+    );
   }
 }
 
@@ -41,16 +43,28 @@ void main() {
   provider.addMock('Transport', 'expense');
   provider.addMock('Other', 'expense');
   provider.addMock('Other Income', 'income');
-  
+
   print('--- Testing KISHAN CAFE ---');
-  final id1 = CategoryEngine.suggestCategoryId('kishancafe@hdfc (KISHAN CAFE)', 'DEBIT', provider);
+  final id1 = CategoryEngine.suggestCategoryId(
+    'kishancafe@hdfc (KISHAN CAFE)',
+    'DEBIT',
+    provider,
+  );
   print('ID: $id1');
-  
+
   print('--- Testing Parent Transfer ---');
-  final id2 = CategoryEngine.suggestCategoryId('VIJAYALAKSHMI MUTHUKUMAR', 'CREDIT', provider);
+  final id2 = CategoryEngine.suggestCategoryId(
+    'VIJAYALAKSHMI MUTHUKUMAR',
+    'CREDIT',
+    provider,
+  );
   print('ID: $id2');
-  
+
   print('--- Testing Unknown ---');
-  final id3 = CategoryEngine.suggestCategoryId('SOMETHING RANDOM', 'DEBIT', provider);
+  final id3 = CategoryEngine.suggestCategoryId(
+    'SOMETHING RANDOM',
+    'DEBIT',
+    provider,
+  );
   print('ID: $id3');
 }

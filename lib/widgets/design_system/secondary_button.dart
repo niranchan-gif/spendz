@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_spacing.dart';
-import '../../app/theme/app_text_styles.dart';
+import '../glass/glass_button.dart';
 
-/// Secondary / Outlined button adhering to fintech standards.
+/// Secondary / Outlined button adhering to fintech standards,
+/// styled with the Spendz 2.0 minimal glassmorphism theme.
 class SecondaryButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
@@ -29,54 +30,20 @@ class SecondaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textColor = customTextColor ?? AppColors.getTextPrimary(context);
-    final borderColor = customBorderColor ?? AppColors.getBorder(context);
-
-    return SizedBox(
-      width: width ?? double.infinity,
+    return GlassButton(
+      label: label,
+      iconData: icon,
+      onPressed: onPressed,
+      isLoading: isLoading,
+      isFullWidth: width == null,
+      width: width,
       height: height,
-      child: OutlinedButton(
-        onPressed: isLoading ? null : onPressed,
-        style: OutlinedButton.styleFrom(
-          foregroundColor: textColor,
-          side: BorderSide(color: borderColor, width: 1.2),
-          shape: RoundedRectangleBorder(
-            borderRadius: AppRadius.roundedMd,
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-        ),
-        child: isLoading
-            ? SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.2,
-                  valueColor: AlwaysStoppedAnimation<Color>(textColor),
-                ),
-              )
-            : Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (icon != null) ...[
-                    Icon(icon, size: 18, color: textColor),
-                    const SizedBox(width: AppSpacing.sm),
-                  ],
-                  Flexible(
-                    child: Text(
-                      label,
-                      style: AppTextStyles.labelLarge.copyWith(
-                        color: textColor,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ),
-                ],
-              ),
-      ),
+      color: customTextColor ?? AppColors.getTextPrimary(context),
+      variant: customBorderColor != null
+          ? GlassButtonVariant.outline
+          : GlassButtonVariant.secondary,
+      borderRadius: AppRadius.md,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
     );
   }
 }
-

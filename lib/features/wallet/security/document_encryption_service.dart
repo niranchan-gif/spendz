@@ -43,25 +43,27 @@ class InvalidKeyException extends VaultSecurityException {
 /// Any tampering with the version, algorithm identifier, or magic bytes invalidates the
 /// authentication tag and causes decryption to abort before any plaintext is released.
 class DocumentEncryptionService {
-  static const List<int> magicBytes = [0x53, 0x50, 0x44, 0x5A]; // 'S', 'P', 'D', 'Z'
+  static const List<int> magicBytes = [
+    0x53,
+    0x50,
+    0x44,
+    0x5A,
+  ]; // 'S', 'P', 'D', 'Z'
   static const int currentVersion = 1;
   static const int algorithmAes256Gcm = 1;
   static const int nonceLength = 12; // 96-bit standard GCM nonce
   static const int tagLength = 16; // 128-bit standard GCM auth tag
-  static const int headerLength = 4 + 1 + 1 + nonceLength + tagLength; // 34 bytes
+  static const int headerLength =
+      4 + 1 + 1 + nonceLength + tagLength; // 34 bytes
 
   final AesGcm _cipher;
 
   DocumentEncryptionService({AesGcm? cipher})
-      : _cipher = cipher ?? AesGcm.with256bits(nonceLength: nonceLength);
+    : _cipher = cipher ?? AesGcm.with256bits(nonceLength: nonceLength);
 
   /// Additional Authenticated Data bound to the cipher
   static Uint8List _buildAad(int version, int algorithm) {
-    return Uint8List.fromList([
-      ...magicBytes,
-      version,
-      algorithm,
-    ]);
+    return Uint8List.fromList([...magicBytes, version, algorithm]);
   }
 
   /// Encrypts [plainBytes] using AES-256-GCM with a freshly generated 12-byte CSPRNG nonce.
@@ -74,7 +76,9 @@ class DocumentEncryptionService {
     List<int>? customNonce, // For deterministic security testing only
   }) async {
     if (keyBytes.length != 32) {
-      throw InvalidKeyException('Master key must be exactly 32 bytes (256 bits). Received ${keyBytes.length} bytes.');
+      throw InvalidKeyException(
+        'Master key must be exactly 32 bytes (256 bits). Received ${keyBytes.length} bytes.',
+      );
     }
 
     final secretKey = SecretKey(keyBytes);
@@ -83,7 +87,9 @@ class DocumentEncryptionService {
     final SecretBox secretBox;
     if (customNonce != null) {
       if (customNonce.length != nonceLength) {
-        throw VaultSecurityException('Nonce must be exactly $nonceLength bytes. Received ${customNonce.length}.');
+        throw VaultSecurityException(
+          'Nonce must be exactly $nonceLength bytes. Received ${customNonce.length}.',
+        );
       }
       secretBox = await _cipher.encrypt(
         plainBytes,
@@ -142,7 +148,9 @@ class DocumentEncryptionService {
     required List<int> keyBytes,
   }) async {
     if (keyBytes.length != 32) {
-      throw InvalidKeyException('Master key must be exactly 32 bytes (256 bits). Received ${keyBytes.length} bytes.');
+      throw InvalidKeyException(
+        'Master key must be exactly 32 bytes (256 bits). Received ${keyBytes.length} bytes.',
+      );
     }
 
     if (encryptedBytes.length < headerLength) {
@@ -154,7 +162,9 @@ class DocumentEncryptionService {
     // 1. Validate Magic
     for (int i = 0; i < 4; i++) {
       if (encryptedBytes[i] != magicBytes[i]) {
-        throw InvalidFileHeaderException('Invalid magic identifier. Not a Spendz Vault document.');
+        throw InvalidFileHeaderException(
+          'Invalid magic identifier. Not a Spendz Vault document.',
+        );
       }
     }
 
@@ -189,11 +199,7 @@ class DocumentEncryptionService {
 
     try {
       final decrypted = await _cipher.decrypt(
-        SecretBox(
-          cipherText,
-          nonce: nonce,
-          mac: Mac(tag),
-        ),
+        SecretBox(cipherText, nonce: nonce, mac: Mac(tag)),
         secretKey: secretKey,
         aad: aad,
       );

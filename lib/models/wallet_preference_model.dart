@@ -2,16 +2,10 @@ class WalletPreferenceModel {
   final String key;
   final String value;
 
-  WalletPreferenceModel({
-    required this.key,
-    required this.value,
-  });
+  WalletPreferenceModel({required this.key, required this.value});
 
   Map<String, dynamic> toMap() {
-    return {
-      'key': key,
-      'value': value,
-    };
+    return {'key': key, 'value': value};
   }
 
   factory WalletPreferenceModel.fromMap(Map<String, dynamic> map) {
@@ -21,10 +15,7 @@ class WalletPreferenceModel {
     );
   }
 
-  WalletPreferenceModel copyWith({
-    String? key,
-    String? value,
-  }) {
+  WalletPreferenceModel copyWith({String? key, String? value}) {
     return WalletPreferenceModel(
       key: key ?? this.key,
       value: value ?? this.value,
@@ -33,4 +24,3 @@ class WalletPreferenceModel {
 }
 
 typedef WalletPreferences = WalletPreferenceModel;
-

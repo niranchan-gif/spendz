@@ -70,7 +70,9 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     setState(() => _currentCard = updated);
 
     try {
-      await context.read<WalletCardProvider>().toggleCardFavorite(_currentCard.id);
+      await context.read<WalletCardProvider>().toggleCardFavorite(
+        _currentCard.id,
+      );
       if (mounted) {
         context.read<WalletProvider>().loadWallet();
       }
@@ -79,9 +81,15 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
 
   void _showEditCardDialog() {
     final formKey = GlobalKey<FormState>();
-    final nicknameController = TextEditingController(text: _currentCard.nickname);
-    final issuerController = TextEditingController(text: _currentCard.issuerName);
-    final cardholderController = TextEditingController(text: _currentCard.cardholderName);
+    final nicknameController = TextEditingController(
+      text: _currentCard.nickname,
+    );
+    final issuerController = TextEditingController(
+      text: _currentCard.issuerName,
+    );
+    final cardholderController = TextEditingController(
+      text: _currentCard.cardholderName,
+    );
     final fullNumberController = TextEditingController();
     int expiryMonth = _currentCard.expiryMonth;
     int expiryYear = _currentCard.expiryYear;
@@ -89,15 +97,20 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     String themeGradient = _currentCard.themeGradient;
     String cardLayoutId = _currentCard.cardLayoutId;
 
-    final cardTypes = ['credit', 'debit', 'atm', 'membership', 'loyalty', 'custom'];
+    final cardTypes = [
+      'credit',
+      'debit',
+      'atm',
+      'membership',
+      'loyalty',
+      'custom',
+    ];
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.getSurface(context),
-      shape: RoundedRectangleBorder(
-        borderRadius: AppRadius.roundedSheet,
-      ),
+      shape: RoundedRectangleBorder(borderRadius: AppRadius.roundedSheet),
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setModalState) {
@@ -121,7 +134,9 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                         children: [
                           Text(
                             'Edit Virtual Card',
-                            style: AppTextStyles.getHeading2(context).copyWith(fontWeight: FontWeight.w700),
+                            style: AppTextStyles.getHeading2(
+                              context,
+                            ).copyWith(fontWeight: FontWeight.w700),
                           ),
                           IconButton(
                             icon: const Icon(Icons.close),
@@ -132,8 +147,11 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                       const SizedBox(height: AppSpacing.md),
                       TextFormField(
                         controller: nicknameController,
-                        decoration: const InputDecoration(labelText: 'Card Nickname'),
-                        validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                        decoration: const InputDecoration(
+                          labelText: 'Card Nickname',
+                        ),
+                        validator: (v) =>
+                            v == null || v.isEmpty ? 'Required' : null,
                       ),
                       const SizedBox(height: AppSpacing.md),
                       Row(
@@ -141,20 +159,29 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                           Expanded(
                             child: TextFormField(
                               controller: issuerController,
-                              decoration: const InputDecoration(labelText: 'Bank / Issuer'),
-                              validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                              decoration: const InputDecoration(
+                                labelText: 'Bank / Issuer',
+                              ),
+                              validator: (v) =>
+                                  v == null || v.isEmpty ? 'Required' : null,
                             ),
                           ),
                           const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: DropdownButtonFormField<String>(
                               initialValue: cardType,
-                              decoration: const InputDecoration(labelText: 'Card Type'),
+                              decoration: const InputDecoration(
+                                labelText: 'Card Type',
+                              ),
                               items: cardTypes.map((t) {
-                                return DropdownMenuItem(value: t, child: Text(t.toUpperCase()));
+                                return DropdownMenuItem(
+                                  value: t,
+                                  child: Text(t.toUpperCase()),
+                                );
                               }).toList(),
                               onChanged: (val) {
-                                if (val != null) setModalState(() => cardType = val);
+                                if (val != null)
+                                  setModalState(() => cardType = val);
                               },
                             ),
                           ),
@@ -163,16 +190,23 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                       const SizedBox(height: AppSpacing.md),
                       TextFormField(
                         controller: cardholderController,
-                        decoration: const InputDecoration(labelText: 'Cardholder Name'),
-                        validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                        decoration: const InputDecoration(
+                          labelText: 'Cardholder Name',
+                        ),
+                        validator: (v) =>
+                            v == null || v.isEmpty ? 'Required' : null,
                       ),
                       const SizedBox(height: AppSpacing.md),
                       TextFormField(
                         controller: fullNumberController,
                         decoration: InputDecoration(
                           labelText: 'Update Full Card Number (Optional)',
-                          hintText: 'Leave empty to preserve existing (${_currentCard.maskedNumber})',
-                          prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18),
+                          hintText:
+                              'Leave empty to preserve existing (${_currentCard.maskedNumber})',
+                          prefixIcon: const Icon(
+                            Icons.lock_outline_rounded,
+                            size: 18,
+                          ),
                         ),
                         keyboardType: TextInputType.number,
                       ),
@@ -182,12 +216,18 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                           Expanded(
                             child: DropdownButtonFormField<int>(
                               initialValue: expiryMonth,
-                              decoration: const InputDecoration(labelText: 'Exp Month'),
+                              decoration: const InputDecoration(
+                                labelText: 'Exp Month',
+                              ),
                               items: List.generate(12, (i) => i + 1).map((m) {
-                                return DropdownMenuItem(value: m, child: Text(m.toString().padLeft(2, '0')));
+                                return DropdownMenuItem(
+                                  value: m,
+                                  child: Text(m.toString().padLeft(2, '0')),
+                                );
                               }).toList(),
                               onChanged: (val) {
-                                if (val != null) setModalState(() => expiryMonth = val);
+                                if (val != null)
+                                  setModalState(() => expiryMonth = val);
                               },
                             ),
                           ),
@@ -195,12 +235,18 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                           Expanded(
                             child: DropdownButtonFormField<int>(
                               initialValue: expiryYear,
-                              decoration: const InputDecoration(labelText: 'Exp Year'),
+                              decoration: const InputDecoration(
+                                labelText: 'Exp Year',
+                              ),
                               items: List.generate(15, (i) => 24 + i).map((y) {
-                                return DropdownMenuItem(value: y, child: Text('20$y'));
+                                return DropdownMenuItem(
+                                  value: y,
+                                  child: Text('20$y'),
+                                );
                               }).toList(),
                               onChanged: (val) {
-                                if (val != null) setModalState(() => expiryYear = val);
+                                if (val != null)
+                                  setModalState(() => expiryYear = val);
                               },
                             ),
                           ),
@@ -217,9 +263,13 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                           return ChoiceChip(
                             label: Text(t.name),
                             selected: isSelected,
-                            avatar: CircleAvatar(backgroundColor: t.primaryAccent, radius: 6),
+                            avatar: CircleAvatar(
+                              backgroundColor: t.primaryAccent,
+                              radius: 6,
+                            ),
                             onSelected: (selected) {
-                              if (selected) setModalState(() => themeGradient = t.id);
+                              if (selected)
+                                setModalState(() => themeGradient = t.id);
                             },
                           );
                         }).toList(),
@@ -236,7 +286,8 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                             label: Text(l.name),
                             selected: isSelected,
                             onSelected: (selected) {
-                              if (selected) setModalState(() => cardLayoutId = l.id);
+                              if (selected)
+                                setModalState(() => cardLayoutId = l.id);
                             },
                           );
                         }).toList(),
@@ -246,8 +297,10 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                         label: 'Save Changes',
                         onPressed: () async {
                           if (formKey.currentState!.validate()) {
-                            final cardProvider = context.read<WalletCardProvider>();
-                            final walletProvider = context.read<WalletProvider>();
+                            final cardProvider = context
+                                .read<WalletCardProvider>();
+                            final walletProvider = context
+                                .read<WalletProvider>();
                             final messenger = ScaffoldMessenger.of(context);
 
                             String lastFour = _currentCard.lastFour;
@@ -255,17 +308,28 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
 
                             final rawInput = fullNumberController.text.trim();
                             if (rawInput.isNotEmpty) {
-                              final clean = rawInput.replaceAll(RegExp(r'\s+'), '');
+                              final clean = rawInput.replaceAll(
+                                RegExp(r'\s+'),
+                                '',
+                              );
                               if (clean.length >= 4) {
                                 lastFour = clean.substring(clean.length - 4);
                                 maskedNumber = '•••• •••• •••• $lastFour';
                                 try {
-                                  await _secureNumberService.saveCardFullNumber(_currentCard.id, clean);
+                                  await _secureNumberService.saveCardFullNumber(
+                                    _currentCard.id,
+                                    clean,
+                                  );
                                 } catch (_) {
                                   try {
                                     final keyService = WalletKeyService();
-                                    await keyService.resetAndRegenerateMasterKey();
-                                    await _secureNumberService.saveCardFullNumber(_currentCard.id, clean);
+                                    await keyService
+                                        .resetAndRegenerateMasterKey();
+                                    await _secureNumberService
+                                        .saveCardFullNumber(
+                                          _currentCard.id,
+                                          clean,
+                                        );
                                   } catch (_) {}
                                 }
                               }
@@ -293,7 +357,9 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                                 Navigator.pop(ctx);
                               }
                               messenger.showSnackBar(
-                                const SnackBar(content: Text('Card updated successfully')),
+                                const SnackBar(
+                                  content: Text('Card updated successfully'),
+                                ),
                               );
                             }
                           }
@@ -319,7 +385,8 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     final confirm = await CustomDialog.showConfirmation(
       context: context,
       title: 'Delete Card?',
-      message: 'This card will be removed from your wallet. Any associated transactions will remain safely preserved.',
+      message:
+          'This card will be removed from your wallet. Any associated transactions will remain safely preserved.',
       confirmLabel: 'Delete Card',
       isDestructive: true,
       icon: Icons.delete_outline_rounded,
@@ -348,12 +415,19 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     return Scaffold(
       backgroundColor: AppColors.getBackground(context),
       appBar: AppBar(
-        title: Text(_currentCard.nickname, style: AppTextStyles.getHeading3(context)),
+        title: Text(
+          _currentCard.nickname,
+          style: AppTextStyles.getHeading3(context),
+        ),
         actions: [
           IconButton(
             icon: Icon(
-              _currentCard.isFavorite ? Icons.star_rounded : Icons.star_outline_rounded,
-              color: _currentCard.isFavorite ? Colors.amber : AppColors.getTextSecondary(context),
+              _currentCard.isFavorite
+                  ? Icons.star_rounded
+                  : Icons.star_outline_rounded,
+              color: _currentCard.isFavorite
+                  ? Colors.amber
+                  : AppColors.getTextSecondary(context),
             ),
             onPressed: _toggleFavorite,
           ),
@@ -362,13 +436,19 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
             onPressed: _showEditCardDialog,
           ),
           IconButton(
-            icon: Icon(Icons.delete_outline_rounded, color: AppColors.getError(context)),
+            icon: Icon(
+              Icons.delete_outline_rounded,
+              color: AppColors.getError(context),
+            ),
             onPressed: _deleteCard,
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -388,23 +468,33 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
               children: [
                 ActionChip(
                   avatar: const Icon(Icons.palette_outlined, size: 16),
-                  label: Text(CardStudioTheme.getTheme(_currentCard.themeGradient).name),
+                  label: Text(
+                    CardStudioTheme.getTheme(_currentCard.themeGradient).name,
+                  ),
                   onPressed: () async {
                     await CardThemeSheet.show(context, _currentCard);
                     if (!context.mounted) return;
-                    final updated = context.read<WalletCardProvider>().getCardById(_currentCard.id);
-                    if (updated != null && mounted) setState(() => _currentCard = updated);
+                    final updated = context
+                        .read<WalletCardProvider>()
+                        .getCardById(_currentCard.id);
+                    if (updated != null && mounted)
+                      setState(() => _currentCard = updated);
                   },
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 ActionChip(
                   avatar: const Icon(Icons.view_quilt_outlined, size: 16),
-                  label: Text(CardStudioLayout.getLayout(_currentCard.cardLayoutId).name),
+                  label: Text(
+                    CardStudioLayout.getLayout(_currentCard.cardLayoutId).name,
+                  ),
                   onPressed: () async {
                     await CardLayoutSheet.show(context, _currentCard);
                     if (!context.mounted) return;
-                    final updated = context.read<WalletCardProvider>().getCardById(_currentCard.id);
-                    if (updated != null && mounted) setState(() => _currentCard = updated);
+                    final updated = context
+                        .read<WalletCardProvider>()
+                        .getCardById(_currentCard.id);
+                    if (updated != null && mounted)
+                      setState(() => _currentCard = updated);
                   },
                 ),
               ],
@@ -417,16 +507,24 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
               decoration: BoxDecoration(
                 color: AppColors.getPrimary(context).withAlpha(15),
                 borderRadius: AppRadius.roundedMd,
-                border: Border.all(color: AppColors.getPrimary(context).withAlpha(35)),
+                border: Border.all(
+                  color: AppColors.getPrimary(context).withAlpha(35),
+                ),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.shield_outlined, color: AppColors.getPrimary(context), size: 18),
+                  Icon(
+                    Icons.shield_outlined,
+                    color: AppColors.getPrimary(context),
+                    size: 18,
+                  ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
                       'Spendz never stores CVVs or PINs. Card numbers are encrypted with hardware-backed AES-256-GCM and revealed only via biometric verification.',
-                      style: AppTextStyles.getBodySmall(context).copyWith(fontSize: 11),
+                      style: AppTextStyles.getBodySmall(
+                        context,
+                      ).copyWith(fontSize: 11),
                     ),
                   ),
                 ],
@@ -436,18 +534,30 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
 
             // Metadata Summary Card
             ReusableCard(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg,
+                vertical: AppSpacing.sm,
+              ),
               child: Column(
                 children: [
                   _buildMetaRow('Issuer Bank', _currentCard.issuerName),
                   Divider(color: AppColors.getDivider(context)),
                   _buildMetaRow('Cardholder', _currentCard.cardholderName),
                   Divider(color: AppColors.getDivider(context)),
-                  _buildMetaRow('Card Type', _currentCard.cardType.toUpperCase()),
+                  _buildMetaRow(
+                    'Card Type',
+                    _currentCard.cardType.toUpperCase(),
+                  ),
                   Divider(color: AppColors.getDivider(context)),
-                  _buildMetaRow('Payment Network', _currentCard.cardNetwork.toUpperCase()),
+                  _buildMetaRow(
+                    'Payment Network',
+                    _currentCard.cardNetwork.toUpperCase(),
+                  ),
                   Divider(color: AppColors.getDivider(context)),
-                  _buildMetaRow('Expiry Date', '${_currentCard.expiryMonth.toString().padLeft(2, '0')}/${_currentCard.expiryYear}'),
+                  _buildMetaRow(
+                    'Expiry Date',
+                    '${_currentCard.expiryMonth.toString().padLeft(2, '0')}/${_currentCard.expiryYear}',
+                  ),
                   Divider(color: AppColors.getDivider(context)),
                   _buildMetaRow('Masked Number', _currentCard.maskedNumber),
                 ],
@@ -461,7 +571,9 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
               children: [
                 Text(
                   'Linked Transactions',
-                  style: AppTextStyles.getHeading3(context).copyWith(fontWeight: FontWeight.w700),
+                  style: AppTextStyles.getHeading3(
+                    context,
+                  ).copyWith(fontWeight: FontWeight.w700),
                 ),
                 if (_linkedTransactions.isNotEmpty)
                   Text(
@@ -482,7 +594,8 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
               const EmptyState(
                 icon: Icons.receipt_long_outlined,
                 title: 'No Linked Transactions',
-                message: 'Transactions tagged with this card will appear here automatically.',
+                message:
+                    'Transactions tagged with this card will appear here automatically.',
               )
             else
               ListView.separated(
@@ -494,7 +607,10 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                   final t = _linkedTransactions[i];
                   final isExpense = t.type == 'expense';
                   return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.getSurface(context),
                       borderRadius: AppRadius.roundedMd,
@@ -505,13 +621,21 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                         Container(
                           padding: const EdgeInsets.all(AppSpacing.sm),
                           decoration: BoxDecoration(
-                            color: (isExpense ? AppColors.getError(context) : AppColors.getSuccess(context)).withAlpha(20),
+                            color:
+                                (isExpense
+                                        ? AppColors.getError(context)
+                                        : AppColors.getSuccess(context))
+                                    .withAlpha(20),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(
-                            isExpense ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
+                            isExpense
+                                ? Icons.arrow_downward_rounded
+                                : Icons.arrow_upward_rounded,
                             size: 16,
-                            color: isExpense ? AppColors.getError(context) : AppColors.getSuccess(context),
+                            color: isExpense
+                                ? AppColors.getError(context)
+                                : AppColors.getSuccess(context),
                           ),
                         ),
                         const SizedBox(width: AppSpacing.md),
@@ -521,7 +645,9 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                             children: [
                               Text(
                                 t.merchant ?? t.description ?? 'Transaction',
-                                style: AppTextStyles.getBodyMedium(context).copyWith(fontWeight: FontWeight.w600),
+                                style: AppTextStyles.getBodyMedium(
+                                  context,
+                                ).copyWith(fontWeight: FontWeight.w600),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -535,7 +661,9 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                         Text(
                           '${isExpense ? '-' : '+'}${currencyFormat.format(t.amount)}',
                           style: TextStyle(
-                            color: isExpense ? AppColors.getError(context) : AppColors.getSuccess(context),
+                            color: isExpense
+                                ? AppColors.getError(context)
+                                : AppColors.getSuccess(context),
                             fontWeight: FontWeight.w700,
                             fontSize: 14,
                           ),
@@ -560,16 +688,16 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
         children: [
           Text(
             label,
-            style: AppTextStyles.getBodySmall(context).copyWith(
-              color: AppColors.getTextSecondary(context),
-            ),
+            style: AppTextStyles.getBodySmall(
+              context,
+            ).copyWith(color: AppColors.getTextSecondary(context)),
           ),
           Flexible(
             child: Text(
               value,
-              style: AppTextStyles.getBodyMedium(context).copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: AppTextStyles.getBodyMedium(
+                context,
+              ).copyWith(fontWeight: FontWeight.w600),
               textAlign: TextAlign.end,
               overflow: TextOverflow.ellipsis,
             ),

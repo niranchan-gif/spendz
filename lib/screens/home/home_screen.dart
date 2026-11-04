@@ -8,7 +8,6 @@ import '../../providers/gmail_import_provider.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_radius.dart';
-import '../../app/theme/app_shadows.dart';
 import '../../widgets/glass/glass.dart';
 import '../../widgets/transaction_tile.dart';
 import '../../widgets/design_system/empty_state.dart';
@@ -79,8 +78,8 @@ class HomeScreen extends StatelessWidget {
     final greeting = hour < 12
         ? 'Good morning'
         : hour < 17
-            ? 'Good afternoon'
-            : 'Good evening';
+        ? 'Good afternoon'
+        : 'Good evening';
 
     final isDark = AppColors.isDark(context);
     final emerald = AppColors.getEmeraldAccent(context);
@@ -89,60 +88,69 @@ class HomeScreen extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: emerald,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: emerald.withAlpha(140),
-                        blurRadius: 6,
-                        spreadRadius: 1,
-                      ),
-                    ],
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: emerald,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: emerald.withAlpha(140),
+                          blurRadius: 6,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  'SPENDZ',
-                  style: TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 2.5,
-                    color: emerald,
+                  const SizedBox(width: 6),
+                  Text(
+                    'SPENDZ',
+                    style: TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 2.5,
+                      color: emerald,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 2),
-            Text(
-              greeting,
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: AppColors.getTextPrimary(context),
-                letterSpacing: -0.5,
+                ],
               ),
-            ),
-          ],
+              const SizedBox(height: 2),
+              Text(
+                greeting,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.getTextPrimary(context),
+                  letterSpacing: -0.5,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
+        const SizedBox(width: AppSpacing.sm),
 
         // Live Vault Security Status Indicator
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1B3025).withAlpha(160) : Colors.white.withAlpha(200),
+            color: isDark
+                ? const Color(0xFF1B3025).withAlpha(160)
+                : Colors.white.withAlpha(200),
             borderRadius: BorderRadius.circular(AppRadius.full),
             border: Border.all(
-              color: isDark ? emerald.withAlpha(50) : AppColors.getBorder(context),
+              color: isDark
+                  ? emerald.withAlpha(50)
+                  : AppColors.getBorder(context),
               width: 1,
             ),
             boxShadow: [
@@ -175,13 +183,31 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildFinancialHero(BuildContext context) {
-    return Consumer<DashboardProvider>(
-      builder: (context, dashboard, child) {
+    return Consumer2<DashboardProvider, TransactionProvider>(
+      builder: (context, dashboard, txProvider, child) {
+        final now = DateTime.now();
+        final days = List.generate(
+          7,
+          (i) => now.subtract(Duration(days: 6 - i)),
+        );
+        final trend = days.map((d) {
+          return txProvider.transactions
+              .where(
+                (t) =>
+                    t.type == 'expense' &&
+                    t.date.year == d.year &&
+                    t.date.month == d.month &&
+                    t.date.day == d.day,
+              )
+              .fold(0.0, (sum, t) => sum + t.amount);
+        }).toList();
+
         return FinancialSummaryCard(
           netBalance: dashboard.totalBalance,
           income: dashboard.monthlyIncome,
           expenses: dashboard.monthlyExpenses,
           owedToMe: dashboard.totalOwed,
+          weeklyTrend: trend,
           onAnalyticsTap: () {
             Navigator.push(
               context,
@@ -252,7 +278,8 @@ class _RecentTransactionsTabs extends StatefulWidget {
   const _RecentTransactionsTabs();
 
   @override
-  State<_RecentTransactionsTabs> createState() => _RecentTransactionsTabsState();
+  State<_RecentTransactionsTabs> createState() =>
+      _RecentTransactionsTabsState();
 }
 
 class _RecentTransactionsTabsState extends State<_RecentTransactionsTabs>
@@ -280,14 +307,21 @@ class _RecentTransactionsTabsState extends State<_RecentTransactionsTabs>
 
     return Consumer2<TransactionProvider, CategoryProvider>(
       builder: (context, txProvider, catProvider, child) {
-        final pendingSplits = txProvider.transactions.where((t) => t.owedAmount > 0).toList();
-        final totalOwed = pendingSplits.fold(0.0, (sum, t) => sum + t.owedAmount);
+        final pendingSplits = txProvider.transactions
+            .where((t) => t.owedAmount > 0)
+            .toList();
+        final totalOwed = pendingSplits.fold(
+          0.0,
+          (sum, t) => sum + t.owedAmount,
+        );
         final recentTransactions = txProvider.transactions
             .where((t) => t.owedAmount == 0)
             .take(5)
             .toList();
 
-        final currentList = _tabController.index == 0 ? recentTransactions : pendingSplits;
+        final currentList = _tabController.index == 0
+            ? recentTransactions
+            : pendingSplits;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -305,8 +339,14 @@ class _RecentTransactionsTabsState extends State<_RecentTransactionsTabs>
                     indicatorWeight: 2.5,
                     labelColor: emerald,
                     unselectedLabelColor: AppColors.getTextSecondary(context),
-                    labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-                    unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13.5),
+                    labelStyle: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+                    unselectedLabelStyle: const TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 13.5,
+                    ),
                     tabs: [
                       const Tab(text: 'Recent Activity'),
                       Tab(
@@ -322,12 +362,17 @@ class _RecentTransactionsTabsState extends State<_RecentTransactionsTabs>
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const TransactionsScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const TransactionsScreen(),
+                        ),
                       );
                     },
                     style: TextButton.styleFrom(
                       foregroundColor: emerald,
-                      textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                      textStyle: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
                     ),
                     child: const Text('See All'),
                   ),
@@ -345,12 +390,16 @@ class _RecentTransactionsTabsState extends State<_RecentTransactionsTabs>
                 subtitle: _tabController.index == 0
                     ? 'Add an expense or sync your Gmail HDFC alerts to see your recent transactions.'
                     : 'Split expenses with friends and track reimbursements directly from Spendz.',
-                actionLabel: _tabController.index == 0 ? 'Add Transaction' : null,
+                actionLabel: _tabController.index == 0
+                    ? 'Add Transaction'
+                    : null,
                 onActionPressed: _tabController.index == 0
                     ? () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const AddTransactionScreen(),
+                          ),
                         );
                       }
                     : null,
@@ -374,10 +423,7 @@ class _RecentTransactionsTabsState extends State<_RecentTransactionsTabs>
                         ? catProvider.getCategoryById(tx.categoryId!)
                         : null;
 
-                    return TransactionTile(
-                      transaction: tx,
-                      category: category,
-                    );
+                    return TransactionTile(transaction: tx, category: category);
                   },
                 ),
               ),
@@ -422,7 +468,10 @@ class _SlideToSyncBannerState extends State<SlideToSyncBanner>
     super.dispose();
   }
 
-  void _triggerSync(GmailImportProvider importProvider, CategoryProvider categoryProvider) async {
+  void _triggerSync(
+    GmailImportProvider importProvider,
+    CategoryProvider categoryProvider,
+  ) async {
     await importProvider.reloadTransactions(categoryProvider);
     if (mounted) {
       if (importProvider.error == null) {
@@ -433,7 +482,9 @@ class _SlideToSyncBannerState extends State<SlideToSyncBanner>
         } else {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const ImportedTransactionsScreen()),
+            MaterialPageRoute(
+              builder: (context) => const ImportedTransactionsScreen(),
+            ),
           );
         }
       } else {
@@ -451,8 +502,11 @@ class _SlideToSyncBannerState extends State<SlideToSyncBanner>
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        const bannerWidth = 144.0;
-        _maxDrag = (constraints.maxWidth - bannerWidth - 8).clamp(0.0, double.infinity);
+        const handleWidth = 56.0;
+        _maxDrag = (constraints.maxWidth - handleWidth - 8).clamp(
+          0.0,
+          double.infinity,
+        );
 
         return Consumer2<GmailImportProvider, CategoryProvider>(
           builder: (context, importProvider, categoryProvider, child) {
@@ -477,73 +531,129 @@ class _SlideToSyncBannerState extends State<SlideToSyncBanner>
                         _triggerSync(importProvider, categoryProvider);
                       }
 
-                      _snapAnimation = Tween<double>(begin: _dragOffset, end: 0.0).animate(
-                        CurvedAnimation(parent: _snapController, curve: Curves.easeOutBack),
-                      );
+                      _snapAnimation =
+                          Tween<double>(begin: _dragOffset, end: 0.0).animate(
+                            CurvedAnimation(
+                              parent: _snapController,
+                              curve: Curves.easeOutBack,
+                            ),
+                          );
                       _snapController.forward(from: 0.0);
                     },
               child: Stack(
                 alignment: Alignment.centerLeft,
                 children: [
+                  // Track
                   Container(
-                    height: 56,
+                    height: 52,
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(AppRadius.card),
+                      borderRadius: BorderRadius.circular(AppRadius.full),
                       color: isDark
-                          ? const Color(0xFF14231B).withAlpha(180)
-                          : const Color(0xFFFFFFFF).withAlpha(200),
+                          ? const Color(0xFF101C16).withAlpha(200)
+                          : const Color(0xFFFFFFFF).withAlpha(220),
                       border: Border.all(
-                        color: isDark ? emerald.withAlpha(40) : AppColors.getBorder(context),
+                        color: isDark
+                            ? Colors.white.withAlpha(25)
+                            : AppColors.getBorder(context),
                         width: 1,
                       ),
-                      boxShadow: AppShadows.card(context),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(isDark ? 50 : 15),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: AppSpacing.lg),
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                    ),
                     child: Opacity(
-                      opacity: isSyncing ? 1.0 : (_maxDrag > 0 ? (_dragOffset / (_maxDrag * 0.7)).clamp(0.0, 1.0) : 1.0),
-                      child: isSyncing
-                          ? SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: emerald,
+                      opacity: isSyncing
+                          ? 1.0
+                          : (_maxDrag > 0
+                                ? (1.0 - (_dragOffset / (_maxDrag * 0.7)))
+                                      .clamp(0.0, 1.0)
+                                : 1.0),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: isSyncing
+                            ? Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: emerald,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Syncing HDFC Alerts...',
+                                    style: TextStyle(
+                                      color: emerald,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 0.5,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Slide to Sync HDFC alerts',
+                                    style: TextStyle(
+                                      color: isDark
+                                          ? const Color(0xFFA2B3A7)
+                                          : AppColors.getTextSecondary(context),
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 0.4,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                    Icons.chevron_right_rounded,
+                                    size: 16,
+                                    color: emerald.withAlpha(160),
+                                  ),
+                                ],
                               ),
-                            )
-                          : Text(
-                              'Slide to Sync HDFC',
-                              style: TextStyle(
-                                color: emerald,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.8,
-                                fontSize: 12.5,
-                              ),
-                            ),
+                      ),
                     ),
                   ),
+
+                  // Draggable Glowing Handle
                   Transform.translate(
                     offset: Offset(_dragOffset, 0),
                     child: Container(
-                      height: 48,
-                      width: bannerWidth,
-                      margin: const EdgeInsets.only(left: 4),
+                      height: 44,
+                      width: handleWidth,
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                        borderRadius: BorderRadius.circular(AppRadius.full),
+                        gradient: LinearGradient(
+                          colors: [emerald, const Color(0xFF059669)],
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withAlpha(isSyncing ? 10 : 35),
+                            color: emerald.withAlpha(90),
                             blurRadius: 10,
-                            offset: const Offset(0, 4),
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                        child: Image.asset(
-                          'assets/banner.png',
-                          fit: BoxFit.contain,
+                      child: const Center(
+                        child: Icon(
+                          Icons.sync_rounded,
+                          color: Colors.white,
+                          size: 20,
                         ),
                       ),
                     ),

@@ -16,7 +16,8 @@ class WalletCardRepository {
     final db = await dbHelper.database;
     final maps = await db.query(
       'wallet_cards',
-      orderBy: 'is_default DESC, display_order ASC, is_favorite DESC, created_at DESC',
+      orderBy:
+          'is_default DESC, display_order ASC, is_favorite DESC, created_at DESC',
     );
     return maps.map((m) => WalletCardModel.fromMap(m)).toList();
   }
@@ -51,7 +52,8 @@ class WalletCardRepository {
     final pattern = '%$query%';
     final maps = await db.query(
       'wallet_cards',
-      where: 'nickname LIKE ? OR issuer_name LIKE ? OR cardholder_name LIKE ? OR last_four LIKE ?',
+      where:
+          'nickname LIKE ? OR issuer_name LIKE ? OR cardholder_name LIKE ? OR last_four LIKE ?',
       whereArgs: [pattern, pattern, pattern, pattern],
       orderBy: 'is_favorite DESC, created_at DESC',
     );
@@ -94,7 +96,11 @@ class WalletCardRepository {
     });
   }
 
-  Future<int> updateThemeAndLayout(String id, {String? themeId, String? layoutId}) async {
+  Future<int> updateThemeAndLayout(
+    String id, {
+    String? themeId,
+    String? layoutId,
+  }) async {
     final db = await dbHelper.database;
     final Map<String, dynamic> updates = {
       'updated_at': DateTime.now().toIso8601String(),
@@ -132,11 +138,6 @@ class WalletCardRepository {
     final db = await dbHelper.database;
     // Safely unlink any transaction associated with this card
     await _transactionDao.unlinkCardFromTransactions(id);
-    return await db.delete(
-      'wallet_cards',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('wallet_cards', where: 'id = ?', whereArgs: [id]);
   }
 }
-

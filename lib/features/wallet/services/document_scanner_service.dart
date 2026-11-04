@@ -31,9 +31,11 @@ class DocumentAttachmentPayload {
   });
 
   int get pageCount =>
-      explicitPageCount ?? (pages.isNotEmpty ? pages.length : (pdfBytes != null ? 1 : 0));
+      explicitPageCount ??
+      (pages.isNotEmpty ? pages.length : (pdfBytes != null ? 1 : 0));
   bool get isPdf => mimeType.contains('pdf') || pdfBytes != null;
-  Uint8List get primaryBytes => pdfBytes ?? (pages.isNotEmpty ? pages.first : Uint8List(0));
+  Uint8List get primaryBytes =>
+      pdfBytes ?? (pages.isNotEmpty ? pages.first : Uint8List(0));
   int get calculatedSize => fileSizeBytes ?? primaryBytes.length;
 }
 
@@ -58,8 +60,8 @@ class DocumentScannerService {
   DocumentScannerService({
     ImageProcessingService? imageProcessor,
     ImagePicker? imagePicker,
-  })  : _imageProcessor = imageProcessor ?? ImageProcessingService(),
-        _imagePicker = imagePicker ?? ImagePicker();
+  }) : _imageProcessor = imageProcessor ?? ImageProcessingService(),
+       _imagePicker = imagePicker ?? ImagePicker();
 
   ImageProcessingService get imageProcessor => _imageProcessor;
 
@@ -144,7 +146,9 @@ class DocumentScannerService {
       await CunningDocumentScanner.cleanCache();
       return results;
     } catch (e) {
-      debugPrint('[DocumentScannerService] Native document scanner error: $e. Falling back to camera.');
+      debugPrint(
+        '[DocumentScannerService] Native document scanner error: $e. Falling back to camera.',
+      );
       return [];
     }
   }
@@ -206,7 +210,8 @@ class DocumentScannerService {
       final fileBytes = await file.xFile.readAsBytes();
       if (fileBytes.isEmpty) return null;
 
-      final isPdf = file.extension?.toLowerCase() == 'pdf' ||
+      final isPdf =
+          file.extension?.toLowerCase() == 'pdf' ||
           (fileBytes.length >= 4 &&
               fileBytes[0] == 0x25 &&
               fileBytes[1] == 0x50 &&
@@ -257,7 +262,15 @@ class DocumentScannerService {
     }
 
     // Compress large images sensibly to avoid excessive memory usage
-    final optimized = pages.map((p) => _imageProcessor.compressAndOptimize(p, maxDimension: 2048, quality: 85)).toList();
+    final optimized = pages
+        .map(
+          (p) => _imageProcessor.compressAndOptimize(
+            p,
+            maxDimension: 2048,
+            quality: 85,
+          ),
+        )
+        .toList();
     return _imageProcessor.createPdfFromImages(optimized, title: title);
   }
 
@@ -270,7 +283,9 @@ class DocumentScannerService {
   }) async {
     if (pdfBytes.isEmpty) return null;
 
-    final sanitizedName = fileName.endsWith('.pdf') ? fileName : '$fileName.pdf';
+    final sanitizedName = fileName.endsWith('.pdf')
+        ? fileName
+        : '$fileName.pdf';
 
     // 1. Try FilePicker saveFile (Storage Access Framework ACTION_CREATE_DOCUMENT)
     try {
@@ -295,27 +310,35 @@ class DocumentScannerService {
       if (Platform.isAndroid) {
         targetDir = Directory('/storage/emulated/0/Download');
         if (!await targetDir.exists()) {
-          final externalDirs = await getExternalStorageDirectories(type: StorageDirectory.downloads);
+          final externalDirs = await getExternalStorageDirectories(
+            type: StorageDirectory.downloads,
+          );
           if (externalDirs != null && externalDirs.isNotEmpty) {
             targetDir = externalDirs.first;
           }
         }
       } else {
-        targetDir = await getDownloadsDirectory() ?? await getApplicationDocumentsDirectory();
+        targetDir =
+            await getDownloadsDirectory() ??
+            await getApplicationDocumentsDirectory();
       }
 
       if (await targetDir.exists()) {
         var destination = File('${targetDir.path}/$sanitizedName');
         if (await destination.exists()) {
           final baseName = p.basenameWithoutExtension(sanitizedName);
-          final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+          final timestamp = DateFormat(
+            'yyyyMMdd_HHmmss',
+          ).format(DateTime.now());
           destination = File('${targetDir.path}/${baseName}_$timestamp.pdf');
         }
         await destination.writeAsBytes(pdfBytes, flush: true);
         return destination.path;
       }
     } catch (e) {
-      debugPrint('[DocumentScannerService] Downloads directory write error: $e');
+      debugPrint(
+        '[DocumentScannerService] Downloads directory write error: $e',
+      );
     }
 
     return null;
@@ -349,10 +372,15 @@ class DocumentScannerService {
   }
 
   /// Stages bytes to a verified temporary file.
-  Future<File?> stageBytesToCache(Uint8List bytes, {String extension = 'jpg'}) async {
+  Future<File?> stageBytesToCache(
+    Uint8List bytes, {
+    String extension = 'jpg',
+  }) async {
     try {
       final tempDir = await getTemporaryDirectory();
-      final targetFile = File('${tempDir.path}/attachment_${const Uuid().v4()}.$extension');
+      final targetFile = File(
+        '${tempDir.path}/attachment_${const Uuid().v4()}.$extension',
+      );
       await targetFile.writeAsBytes(bytes, flush: true);
       if (await targetFile.exists() && await targetFile.length() > 0) {
         return targetFile;

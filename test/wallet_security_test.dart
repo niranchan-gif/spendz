@@ -60,31 +60,55 @@ void main() {
       validKey = List<int>.generate(32, (i) => i * 7 % 256);
     });
 
-    test('1. Round-trip encryption and decryption preserves exact bytes', () async {
-      final dummyData = Uint8List.fromList('CONFIDENTIAL_DUMMY_DOCUMENT_PAYLOAD_12345'.codeUnits);
-      final encrypted = await encryptionService.encryptBytes(dummyData, keyBytes: validKey);
+    test(
+      '1. Round-trip encryption and decryption preserves exact bytes',
+      () async {
+        final dummyData = Uint8List.fromList(
+          'CONFIDENTIAL_DUMMY_DOCUMENT_PAYLOAD_12345'.codeUnits,
+        );
+        final encrypted = await encryptionService.encryptBytes(
+          dummyData,
+          keyBytes: validKey,
+        );
 
-      expect(encrypted.length, greaterThan(dummyData.length));
-      // First 4 bytes must be magic SPDZ
-      expect(encrypted.sublist(0, 4), [0x53, 0x50, 0x44, 0x5A]);
+        expect(encrypted.length, greaterThan(dummyData.length));
+        // First 4 bytes must be magic SPDZ
+        expect(encrypted.sublist(0, 4), [0x53, 0x50, 0x44, 0x5A]);
 
-      final decrypted = await encryptionService.decryptBytes(encrypted, keyBytes: validKey);
-      expect(decrypted, equals(dummyData));
-    });
+        final decrypted = await encryptionService.decryptBytes(
+          encrypted,
+          keyBytes: validKey,
+        );
+        expect(decrypted, equals(dummyData));
+      },
+    );
 
-    test('2. Encrypting identical data generates unique nonces (CSPRNG check)', () async {
-      final plainData = Uint8List.fromList('SAME_PLAINTEXT_DATA'.codeUnits);
+    test(
+      '2. Encrypting identical data generates unique nonces (CSPRNG check)',
+      () async {
+        final plainData = Uint8List.fromList('SAME_PLAINTEXT_DATA'.codeUnits);
 
-      final enc1 = await encryptionService.encryptBytes(plainData, keyBytes: validKey);
-      final enc2 = await encryptionService.encryptBytes(plainData, keyBytes: validKey);
+        final enc1 = await encryptionService.encryptBytes(
+          plainData,
+          keyBytes: validKey,
+        );
+        final enc2 = await encryptionService.encryptBytes(
+          plainData,
+          keyBytes: validKey,
+        );
 
-      // Nonce is bytes 6 to 18
-      final nonce1 = enc1.sublist(6, 18);
-      final nonce2 = enc2.sublist(6, 18);
+        // Nonce is bytes 6 to 18
+        final nonce1 = enc1.sublist(6, 18);
+        final nonce2 = enc2.sublist(6, 18);
 
-      expect(nonce1, isNot(equals(nonce2)), reason: 'Nonces must never repeat for same key');
-      expect(enc1, isNot(equals(enc2)));
-    });
+        expect(
+          nonce1,
+          isNot(equals(nonce2)),
+          reason: 'Nonces must never repeat for same key',
+        );
+        expect(enc1, isNot(equals(enc2)));
+      },
+    );
 
     test('3. Invalid key length throws InvalidKeyException', () async {
       final data = Uint8List.fromList('Test'.codeUnits);
@@ -101,91 +125,146 @@ void main() {
       );
     });
 
-    test('4. Authentication tag modification aborts decryption with zero plaintext', () async {
-      final dummyData = Uint8List.fromList('CRITICAL_DOCUMENT_CONTENT'.codeUnits);
-      final encrypted = await encryptionService.encryptBytes(dummyData, keyBytes: validKey);
+    test(
+      '4. Authentication tag modification aborts decryption with zero plaintext',
+      () async {
+        final dummyData = Uint8List.fromList(
+          'CRITICAL_DOCUMENT_CONTENT'.codeUnits,
+        );
+        final encrypted = await encryptionService.encryptBytes(
+          dummyData,
+          keyBytes: validKey,
+        );
 
-      // Tamper with the authentication tag (tag is at offset 18 to 34)
-      final tampered = Uint8List.fromList(encrypted);
-      tampered[22] = (tampered[22] + 1) % 256; // Flip 1 byte in tag
+        // Tamper with the authentication tag (tag is at offset 18 to 34)
+        final tampered = Uint8List.fromList(encrypted);
+        tampered[22] = (tampered[22] + 1) % 256; // Flip 1 byte in tag
 
-      expect(
-        () async => encryptionService.decryptBytes(tampered, keyBytes: validKey),
-        throwsA(isA<DecryptionAuthenticationException>()),
-      );
-    });
+        expect(
+          () async =>
+              encryptionService.decryptBytes(tampered, keyBytes: validKey),
+          throwsA(isA<DecryptionAuthenticationException>()),
+        );
+      },
+    );
 
     test('5. Ciphertext tampering causes tag verification failure', () async {
-      final dummyData = Uint8List.fromList('FINANCIAL_STATEMENT_CONTENT'.codeUnits);
-      final encrypted = await encryptionService.encryptBytes(dummyData, keyBytes: validKey);
+      final dummyData = Uint8List.fromList(
+        'FINANCIAL_STATEMENT_CONTENT'.codeUnits,
+      );
+      final encrypted = await encryptionService.encryptBytes(
+        dummyData,
+        keyBytes: validKey,
+      );
 
       // Tamper with ciphertext (after 34-byte header)
       final tampered = Uint8List.fromList(encrypted);
       tampered[36] = (tampered[36] + 1) % 256;
 
       expect(
-        () async => encryptionService.decryptBytes(tampered, keyBytes: validKey),
+        () async =>
+            encryptionService.decryptBytes(tampered, keyBytes: validKey),
         throwsA(isA<DecryptionAuthenticationException>()),
       );
     });
 
-    test('6. Tampered magic bytes in header throws InvalidFileHeaderException', () async {
-      final dummyData = Uint8List.fromList('DUMMY_DOC'.codeUnits);
-      final encrypted = await encryptionService.encryptBytes(dummyData, keyBytes: validKey);
+    test(
+      '6. Tampered magic bytes in header throws InvalidFileHeaderException',
+      () async {
+        final dummyData = Uint8List.fromList('DUMMY_DOC'.codeUnits);
+        final encrypted = await encryptionService.encryptBytes(
+          dummyData,
+          keyBytes: validKey,
+        );
 
-      final corrupted = Uint8List.fromList(encrypted);
-      corrupted[0] = 0x00; // Corrupt first magic byte
+        final corrupted = Uint8List.fromList(encrypted);
+        corrupted[0] = 0x00; // Corrupt first magic byte
 
-      expect(
-        () async => encryptionService.decryptBytes(corrupted, keyBytes: validKey),
-        throwsA(isA<InvalidFileHeaderException>()),
-      );
-    });
+        expect(
+          () async =>
+              encryptionService.decryptBytes(corrupted, keyBytes: validKey),
+          throwsA(isA<InvalidFileHeaderException>()),
+        );
+      },
+    );
 
-    test('7. Unsupported format version throws UnsupportedFormatVersionException', () async {
-      final dummyData = Uint8List.fromList('DUMMY_DOC'.codeUnits);
-      final encrypted = await encryptionService.encryptBytes(dummyData, keyBytes: validKey);
+    test(
+      '7. Unsupported format version throws UnsupportedFormatVersionException',
+      () async {
+        final dummyData = Uint8List.fromList('DUMMY_DOC'.codeUnits);
+        final encrypted = await encryptionService.encryptBytes(
+          dummyData,
+          keyBytes: validKey,
+        );
 
-      final corrupted = Uint8List.fromList(encrypted);
-      corrupted[4] = 99; // Version 99
+        final corrupted = Uint8List.fromList(encrypted);
+        corrupted[4] = 99; // Version 99
 
-      expect(
-        () async => encryptionService.decryptBytes(corrupted, keyBytes: validKey),
-        throwsA(isA<UnsupportedFormatVersionException>()),
-      );
-    });
+        expect(
+          () async =>
+              encryptionService.decryptBytes(corrupted, keyBytes: validKey),
+          throwsA(isA<UnsupportedFormatVersionException>()),
+        );
+      },
+    );
 
-    test('8. Unsupported algorithm ID throws UnsupportedAlgorithmException', () async {
-      final dummyData = Uint8List.fromList('DUMMY_DOC'.codeUnits);
-      final encrypted = await encryptionService.encryptBytes(dummyData, keyBytes: validKey);
+    test(
+      '8. Unsupported algorithm ID throws UnsupportedAlgorithmException',
+      () async {
+        final dummyData = Uint8List.fromList('DUMMY_DOC'.codeUnits);
+        final encrypted = await encryptionService.encryptBytes(
+          dummyData,
+          keyBytes: validKey,
+        );
 
-      final corrupted = Uint8List.fromList(encrypted);
-      corrupted[5] = 42; // Invalid Algorithm ID
+        final corrupted = Uint8List.fromList(encrypted);
+        corrupted[5] = 42; // Invalid Algorithm ID
 
-      expect(
-        () async => encryptionService.decryptBytes(corrupted, keyBytes: validKey),
-        throwsA(isA<UnsupportedAlgorithmException>()),
-      );
-    });
+        expect(
+          () async =>
+              encryptionService.decryptBytes(corrupted, keyBytes: validKey),
+          throwsA(isA<UnsupportedAlgorithmException>()),
+        );
+      },
+    );
 
-    test('9. File shorter than header length throws InvalidFileHeaderException', () async {
-      final truncated = Uint8List.fromList([0x53, 0x50, 0x44, 0x5A, 0x01]); // 5 bytes
-      expect(
-        () async => encryptionService.decryptBytes(truncated, keyBytes: validKey),
-        throwsA(isA<InvalidFileHeaderException>()),
-      );
-    });
+    test(
+      '9. File shorter than header length throws InvalidFileHeaderException',
+      () async {
+        final truncated = Uint8List.fromList([
+          0x53,
+          0x50,
+          0x44,
+          0x5A,
+          0x01,
+        ]); // 5 bytes
+        expect(
+          () async =>
+              encryptionService.decryptBytes(truncated, keyBytes: validKey),
+          throwsA(isA<InvalidFileHeaderException>()),
+        );
+      },
+    );
 
-    test('10. Decrypting with wrong 256-bit key fails authentication', () async {
-      final dummyData = Uint8List.fromList('TOP_SECRET_PASSPORT_NUMBER'.codeUnits);
-      final encrypted = await encryptionService.encryptBytes(dummyData, keyBytes: validKey);
+    test(
+      '10. Decrypting with wrong 256-bit key fails authentication',
+      () async {
+        final dummyData = Uint8List.fromList(
+          'TOP_SECRET_PASSPORT_NUMBER'.codeUnits,
+        );
+        final encrypted = await encryptionService.encryptBytes(
+          dummyData,
+          keyBytes: validKey,
+        );
 
-      final wrongKey = List<int>.generate(32, (i) => (i + 1) % 256);
-      expect(
-        () async => encryptionService.decryptBytes(encrypted, keyBytes: wrongKey),
-        throwsA(isA<DecryptionAuthenticationException>()),
-      );
-    });
+        final wrongKey = List<int>.generate(32, (i) => (i + 1) % 256);
+        expect(
+          () async =>
+              encryptionService.decryptBytes(encrypted, keyBytes: wrongKey),
+          throwsA(isA<DecryptionAuthenticationException>()),
+        );
+      },
+    );
   });
 
   // ─── 2. Key Lifecycle & Hardware Security Tests ───────────────────────────
@@ -198,36 +277,45 @@ void main() {
       );
     });
 
-    test('11. Generates 32-byte master key on clean first-time setup', () async {
-      expect(await keyService.hasMasterKey(), isFalse);
+    test(
+      '11. Generates 32-byte master key on clean first-time setup',
+      () async {
+        expect(await keyService.hasMasterKey(), isFalse);
 
-      final key = await keyService.getOrCreateMasterKey(
-        hasExistingVaultDocuments: () => false,
-      );
+        final key = await keyService.getOrCreateMasterKey(
+          hasExistingVaultDocuments: () => false,
+        );
 
-      expect(key.length, 32);
-      expect(await keyService.hasMasterKey(), isTrue);
+        expect(key.length, 32);
+        expect(await keyService.hasMasterKey(), isTrue);
 
-      // Re-retrieving returns identical key
-      final retrievedKey = await keyService.getMasterKey();
-      expect(retrievedKey, equals(key));
-    });
+        // Re-retrieving returns identical key
+        final retrievedKey = await keyService.getMasterKey();
+        expect(retrievedKey, equals(key));
+      },
+    );
 
-    test('12. Prevents silent key regeneration if vault has documents (MasterKeyLostException)', () async {
-      // Storage has no key, but documents exist in SQLite
-      expect(await keyService.hasMasterKey(), isFalse);
+    test(
+      '12. Prevents silent key regeneration if vault has documents (MasterKeyLostException)',
+      () async {
+        // Storage has no key, but documents exist in SQLite
+        expect(await keyService.hasMasterKey(), isFalse);
 
-      expect(
-        () async => keyService.getOrCreateMasterKey(
-          hasExistingVaultDocuments: () => true, // Documents exist
-        ),
-        throwsA(isA<MasterKeyLostException>()),
-        reason: 'Must never silently overwrite an existing vault with a new key',
-      );
-    });
+        expect(
+          () async => keyService.getOrCreateMasterKey(
+            hasExistingVaultDocuments: () => true, // Documents exist
+          ),
+          throwsA(isA<MasterKeyLostException>()),
+          reason:
+              'Must never silently overwrite an existing vault with a new key',
+        );
+      },
+    );
 
     test('13. Key rotation stores new key successfully', () async {
-      final initialKey = await keyService.getOrCreateMasterKey(hasExistingVaultDocuments: () => false);
+      final initialKey = await keyService.getOrCreateMasterKey(
+        hasExistingVaultDocuments: () => false,
+      );
       final newKey = List<int>.generate(32, (i) => 255 - i);
 
       await keyService.rotateMasterKey(newKey);
@@ -253,7 +341,9 @@ void main() {
       testVaultDir = Directory.systemTemp.createTempSync('spendz_vault_test_');
       testTempDir = Directory.systemTemp.createTempSync('spendz_temp_test_');
 
-      keyService = WalletKeyService(secureStorage: const FlutterSecureStorage());
+      keyService = WalletKeyService(
+        secureStorage: const FlutterSecureStorage(),
+      );
       docRepo = WalletDocumentRepository();
 
       vaultService = DocumentVaultService(
@@ -273,37 +363,52 @@ void main() {
       } catch (_) {}
     });
 
-    test('14. Imports document: writes ciphertext, verifies zero plaintext on disk', () async {
-      final dummyPdf = Uint8List.fromList('%PDF-1.4 DUMMY_AADHAAR_DOCUMENT_TEST_CONTENT_DO_NOT_LEAK'.codeUnits);
+    test(
+      '14. Imports document: writes ciphertext, verifies zero plaintext on disk',
+      () async {
+        final dummyPdf = Uint8List.fromList(
+          '%PDF-1.4 DUMMY_AADHAAR_DOCUMENT_TEST_CONTENT_DO_NOT_LEAK'.codeUnits,
+        );
 
-      final imported = await vaultService.importDocument(
-        documentName: 'Test Identity Card',
-        category: 'aadhaar',
-        mimeType: 'application/pdf',
-        fileBytes: dummyPdf,
-        description: 'Test ID Description',
-      );
+        final imported = await vaultService.importDocument(
+          documentName: 'Test Identity Card',
+          category: 'aadhaar',
+          mimeType: 'application/pdf',
+          fileBytes: dummyPdf,
+          description: 'Test ID Description',
+        );
 
-      expect(imported.id, isNotEmpty);
-      expect(imported.fileSize, dummyPdf.length);
+        expect(imported.id, isNotEmpty);
+        expect(imported.fileSize, dummyPdf.length);
 
-      // Verify file exists on disk
-      final fileOnDisk = File(imported.encryptedFilePath);
-      expect(await fileOnDisk.exists(), isTrue);
+        // Verify file exists on disk
+        final fileOnDisk = File(imported.encryptedFilePath);
+        expect(await fileOnDisk.exists(), isTrue);
 
-      // CRITICAL SECURITY CHECK: Verify ciphertext on disk DOES NOT contain plaintext
-      final diskBytes = await fileOnDisk.readAsBytes();
-      final diskContent = String.fromCharCodes(diskBytes);
-      expect(diskContent.contains('DUMMY_AADHAAR_DOCUMENT_TEST_CONTENT'), isFalse);
-      expect(diskBytes.sublist(0, 4), [0x53, 0x50, 0x44, 0x5A], reason: 'Must have SPDZ header');
+        // CRITICAL SECURITY CHECK: Verify ciphertext on disk DOES NOT contain plaintext
+        final diskBytes = await fileOnDisk.readAsBytes();
+        final diskContent = String.fromCharCodes(diskBytes);
+        expect(
+          diskContent.contains('DUMMY_AADHAAR_DOCUMENT_TEST_CONTENT'),
+          isFalse,
+        );
+        expect(diskBytes.sublist(0, 4), [
+          0x53,
+          0x50,
+          0x44,
+          0x5A,
+        ], reason: 'Must have SPDZ header');
 
-      // Verify retrieval and decryption
-      final decrypted = await vaultService.decryptDocumentBytes(imported);
-      expect(decrypted, equals(dummyPdf));
-    });
+        // Verify retrieval and decryption
+        final decrypted = await vaultService.decryptDocumentBytes(imported);
+        expect(decrypted, equals(dummyPdf));
+      },
+    );
 
     test('15. PDF preview staging and ephemeral cleanup', () async {
-      final dummyPdf = Uint8List.fromList('%PDF-1.4 TEST_PASSPORT_PREVIEW'.codeUnits);
+      final dummyPdf = Uint8List.fromList(
+        '%PDF-1.4 TEST_PASSPORT_PREVIEW'.codeUnits,
+      );
       final doc = await vaultService.importDocument(
         documentName: 'Passport',
         category: 'passport',
@@ -320,36 +425,47 @@ void main() {
       expect(await previewFile.exists(), isFalse);
     });
 
-    test('16. cleanupAllTemporaryFiles cleans entire cache directory', () async {
-      final dummyFile1 = File('${testTempDir.path}/preview_1.pdf');
-      final dummyFile2 = File('${testTempDir.path}/preview_2.jpg');
-      await dummyFile1.writeAsString('temp1');
-      await dummyFile2.writeAsString('temp2');
+    test(
+      '16. cleanupAllTemporaryFiles cleans entire cache directory',
+      () async {
+        final dummyFile1 = File('${testTempDir.path}/preview_1.pdf');
+        final dummyFile2 = File('${testTempDir.path}/preview_2.jpg');
+        await dummyFile1.writeAsString('temp1');
+        await dummyFile2.writeAsString('temp2');
 
-      expect(await dummyFile1.exists(), isTrue);
-      expect(await dummyFile2.exists(), isTrue);
+        expect(await dummyFile1.exists(), isTrue);
+        expect(await dummyFile2.exists(), isTrue);
 
-      await vaultService.cleanupAllTemporaryFiles();
+        await vaultService.cleanupAllTemporaryFiles();
 
-      expect(await dummyFile1.exists(), isFalse);
-      expect(await dummyFile2.exists(), isFalse);
-    });
+        expect(await dummyFile1.exists(), isFalse);
+        expect(await dummyFile2.exists(), isFalse);
+      },
+    );
 
-    test('17. Unsupported MIME type is rejected without writing files', () async {
-      final dummyExe = Uint8List.fromList([0x4D, 0x5A, 0x90, 0x00]); // DOS header
-      expect(
-        () async => vaultService.importDocument(
-          documentName: 'Malicious File',
-          category: 'other',
-          mimeType: 'application/x-msdownload',
-          fileBytes: dummyExe,
-        ),
-        throwsA(isA<VaultValidationException>()),
-      );
+    test(
+      '17. Unsupported MIME type is rejected without writing files',
+      () async {
+        final dummyExe = Uint8List.fromList([
+          0x4D,
+          0x5A,
+          0x90,
+          0x00,
+        ]); // DOS header
+        expect(
+          () async => vaultService.importDocument(
+            documentName: 'Malicious File',
+            category: 'other',
+            mimeType: 'application/x-msdownload',
+            fileBytes: dummyExe,
+          ),
+          throwsA(isA<VaultValidationException>()),
+        );
 
-      final files = await testVaultDir.list().toList();
-      expect(files, isEmpty);
-    });
+        final files = await testVaultDir.list().toList();
+        expect(files, isEmpty);
+      },
+    );
 
     test('18. Empty document is rejected', () async {
       expect(
@@ -377,24 +493,29 @@ void main() {
       );
     });
 
-    test('20. Delete document removes both DB row and ciphertext file', () async {
-      final dummyData = Uint8List.fromList('DOCUMENT_TO_BE_DELETED'.codeUnits);
-      final doc = await vaultService.importDocument(
-        documentName: 'To Delete',
-        category: 'other',
-        mimeType: 'image/jpeg',
-        fileBytes: dummyData,
-      );
+    test(
+      '20. Delete document removes both DB row and ciphertext file',
+      () async {
+        final dummyData = Uint8List.fromList(
+          'DOCUMENT_TO_BE_DELETED'.codeUnits,
+        );
+        final doc = await vaultService.importDocument(
+          documentName: 'To Delete',
+          category: 'other',
+          mimeType: 'image/jpeg',
+          fileBytes: dummyData,
+        );
 
-      final encryptedFile = File(doc.encryptedFilePath);
-      expect(await encryptedFile.exists(), isTrue);
+        final encryptedFile = File(doc.encryptedFilePath);
+        expect(await encryptedFile.exists(), isTrue);
 
-      await vaultService.deleteDocument(doc.id);
+        await vaultService.deleteDocument(doc.id);
 
-      expect(await encryptedFile.exists(), isFalse);
-      final found = await docRepo.getDocumentById(doc.id);
-      expect(found, isNull);
-    });
+        expect(await encryptedFile.exists(), isFalse);
+        final found = await docRepo.getDocumentById(doc.id);
+        expect(found, isNull);
+      },
+    );
   });
 
   // ─── 4. Auth & Inactivity Timeout Tests ───────────────────────────────────
@@ -410,7 +531,9 @@ void main() {
       authService.recordActivity();
       expect(authService.hasTimedOut(), isFalse);
 
-      authService.recordActivity(DateTime.now().subtract(const Duration(seconds: 10)));
+      authService.recordActivity(
+        DateTime.now().subtract(const Duration(seconds: 10)),
+      );
       expect(authService.hasTimedOut(), isTrue);
     });
 
@@ -433,7 +556,16 @@ void main() {
         "SELECT name FROM sqlite_master WHERE type='table'",
       );
       final names = tables.map((t) => t['name'] as String).toSet();
-      expect(names, containsAll(['transactions', 'categories', 'wallet_documents', 'wallet_cards', 'wallet_passes']));
+      expect(
+        names,
+        containsAll([
+          'transactions',
+          'categories',
+          'wallet_documents',
+          'wallet_cards',
+          'wallet_passes',
+        ]),
+      );
     });
   });
 }

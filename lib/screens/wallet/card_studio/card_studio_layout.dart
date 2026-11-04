@@ -18,31 +18,36 @@ class CardStudioLayout {
     CardStudioLayout(
       id: 'minimal_luxury',
       name: 'Minimal Luxury',
-      description: 'Clean balanced layout: Bank top, chip, spaced number, holder & expiry bottom',
+      description:
+          'Clean balanced layout: Bank top, chip, spaced number, holder & expiry bottom',
       icon: Icons.dashboard_outlined,
     ),
     CardStudioLayout(
       id: 'bold_gradient',
       name: 'Bold Gradient',
-      description: 'Dynamic composition: Prominent network badge top-right, bold typography, underline accents',
+      description:
+          'Dynamic composition: Prominent network badge top-right, bold typography, underline accents',
       icon: Icons.auto_awesome_motion_outlined,
     ),
     CardStudioLayout(
       id: 'metallic_premium',
       name: 'Metallic Premium',
-      description: 'Ultra-refined micro-typography, centered chip, single baseline footer alignment',
+      description:
+          'Ultra-refined micro-typography, centered chip, single baseline footer alignment',
       icon: Icons.view_compact_outlined,
     ),
     CardStudioLayout(
       id: 'modern_geometric',
       name: 'Modern Geometric',
-      description: 'Layered vertical layout, prominent issuer crest, crisp numbers with strong contrast',
+      description:
+          'Layered vertical layout, prominent issuer crest, crisp numbers with strong contrast',
       icon: Icons.widgets_outlined,
     ),
     CardStudioLayout(
       id: 'dark_minimal',
       name: 'Dark Minimal',
-      description: 'Subtle stealth aesthetic, glowing perimeter accents, razor-sharp sans-serif typography',
+      description:
+          'Subtle stealth aesthetic, glowing perimeter accents, razor-sharp sans-serif typography',
       icon: Icons.crop_square_rounded,
     ),
   ];

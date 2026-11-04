@@ -24,7 +24,9 @@ class FakeWalletAuthService extends WalletAuthService {
   String? lastReason;
 
   @override
-  Future<bool> authenticate({String localizedReason = 'Unlock Spendz Vault'}) async {
+  Future<bool> authenticate({
+    String localizedReason = 'Unlock Spendz Vault',
+  }) async {
     authenticateCallCount++;
     lastReason = localizedReason;
     if (shouldSucceed) {
@@ -52,8 +54,12 @@ void main() {
   });
 
   setUp(() async {
-    tempVaultDir = await Directory.systemTemp.createTemp('spendz_biometric_vault_');
-    tempCacheDir = await Directory.systemTemp.createTemp('spendz_biometric_cache_');
+    tempVaultDir = await Directory.systemTemp.createTemp(
+      'spendz_biometric_vault_',
+    );
+    tempCacheDir = await Directory.systemTemp.createTemp(
+      'spendz_biometric_cache_',
+    );
 
     docRepo = WalletDocumentRepository();
     vaultService = DocumentVaultService(
@@ -68,7 +74,9 @@ void main() {
     await db.delete('wallet_cards');
 
     keyService = WalletKeyService(secureStorage: const FlutterSecureStorage());
-    await keyService.getOrCreateMasterKey(hasExistingVaultDocuments: () => false);
+    await keyService.getOrCreateMasterKey(
+      hasExistingVaultDocuments: () => false,
+    );
   });
 
   tearDown(() {
@@ -85,218 +93,239 @@ void main() {
   }) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider<WalletAuthService>.value(value: customAuth ?? authService),
+        ChangeNotifierProvider<WalletAuthService>.value(
+          value: customAuth ?? authService,
+        ),
         ChangeNotifierProvider(create: (_) => WalletDocumentProvider()),
         ChangeNotifierProvider(create: (_) => WalletCardProvider()),
-        ChangeNotifierProvider<WalletProvider>.value(value: walletProvider ?? WalletProvider()),
-      ],
-      child: MaterialApp(
-        home: Material(
-          child: child,
+        ChangeNotifierProvider<WalletProvider>.value(
+          value: walletProvider ?? WalletProvider(),
         ),
-      ),
+      ],
+      child: MaterialApp(home: Material(child: child)),
     );
   }
 
   group('1. Biometric Guard for Viewing Private Numbers', () {
-    testWidgets('SecureProtectedField masks number by default and reveals only with biometric authentication', (tester) async {
-      authService.shouldSucceed = true;
+    testWidgets(
+      'SecureProtectedField masks number by default and reveals only with biometric authentication',
+      (tester) async {
+        authService.shouldSucceed = true;
 
-      await tester.pumpWidget(
-        buildTestHarness(
-          child: SecureProtectedField(
-            label: 'Aadhaar Number',
-            maskedValue: '•••• •••• 9012',
-            onRetrieveProtectedValue: () async => '123456789012',
+        await tester.pumpWidget(
+          buildTestHarness(
+            child: SecureProtectedField(
+              label: 'Aadhaar Number',
+              maskedValue: '•••• •••• 9012',
+              onRetrieveProtectedValue: () async => '123456789012',
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      // Initially masked
-      expect(find.text('•••• •••• 9012'), findsOneWidget);
-      expect(find.text('123456789012'), findsNothing);
-
-      // Tap reveal button
-      final revealBtn = find.byIcon(Icons.visibility_outlined);
-      expect(revealBtn, findsOneWidget);
-      await tester.tap(revealBtn);
-      await tester.pumpAndSettle();
-
-      // Biometrics called and succeeded
-      expect(authService.authenticateCallCount, equals(1));
-      expect(find.text('123456789012'), findsOneWidget);
-
-      // Tap again to re-mask
-      final hideBtn = find.byIcon(Icons.visibility_off_outlined);
-      expect(hideBtn, findsOneWidget);
-      await tester.tap(hideBtn);
-      await tester.pumpAndSettle();
-
-      expect(find.text('•••• •••• 9012'), findsOneWidget);
-      expect(find.text('123456789012'), findsNothing);
-    });
-
-    testWidgets('Failed biometric authentication keeps private number securely masked', (tester) async {
-      authService.shouldSucceed = false;
-
-      await tester.pumpWidget(
-        buildTestHarness(
-          child: SecureProtectedField(
-            label: 'PAN Number',
-            maskedValue: 'ABCDE••••F',
-            onRetrieveProtectedValue: () async => 'ABCDE1234F',
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('ABCDE••••F'), findsOneWidget);
-
-      // Tap reveal
-      await tester.tap(find.byIcon(Icons.visibility_outlined));
-      await tester.pumpAndSettle();
-
-      // Authentication failed
-      expect(authService.authenticateCallCount, equals(1));
-      // Must stay masked!
-      expect(find.text('ABCDE••••F'), findsOneWidget);
-      expect(find.text('ABCDE1234F'), findsNothing);
-    });
-
-    testWidgets('VirtualDocumentCard tap-to-reveal prompts biometrics and reveals unmasked number', (tester) async {
-      late WalletDocumentModel doc;
-      await tester.runAsync(() async {
-        doc = await vaultService.saveManualDocument(
-          documentName: 'My Aadhaar',
-          category: 'aadhaar',
-          holderName: 'Vikram Seth',
-          maskedIdentifier: '•••• •••• 4455',
-          unmaskedIdentifier: '112233444455',
         );
-      });
+        await tester.pumpAndSettle();
 
-      authService.shouldSucceed = true;
+        // Initially masked
+        expect(find.text('•••• •••• 9012'), findsOneWidget);
+        expect(find.text('123456789012'), findsNothing);
 
-      await tester.pumpWidget(
-        buildTestHarness(
-          child: VirtualDocumentCard(
-            document: doc,
-            allowReveal: true,
+        // Tap reveal button
+        final revealBtn = find.byIcon(Icons.visibility_outlined);
+        expect(revealBtn, findsOneWidget);
+        await tester.tap(revealBtn);
+        await tester.pumpAndSettle();
+
+        // Biometrics called and succeeded
+        expect(authService.authenticateCallCount, equals(1));
+        expect(find.text('123456789012'), findsOneWidget);
+
+        // Tap again to re-mask
+        final hideBtn = find.byIcon(Icons.visibility_off_outlined);
+        expect(hideBtn, findsOneWidget);
+        await tester.tap(hideBtn);
+        await tester.pumpAndSettle();
+
+        expect(find.text('•••• •••• 9012'), findsOneWidget);
+        expect(find.text('123456789012'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'Failed biometric authentication keeps private number securely masked',
+      (tester) async {
+        authService.shouldSucceed = false;
+
+        await tester.pumpWidget(
+          buildTestHarness(
+            child: SecureProtectedField(
+              label: 'PAN Number',
+              maskedValue: 'ABCDE••••F',
+              onRetrieveProtectedValue: () async => 'ABCDE1234F',
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      // Initially shows masked number
-      expect(find.text('•••• •••• 4455'), findsOneWidget);
+        expect(find.text('ABCDE••••F'), findsOneWidget);
 
-      // Tap on the biometric lock/number area
-      final numberArea = find.text('•••• •••• 4455');
-      await tester.tap(numberArea);
-      await tester.pumpAndSettle();
+        // Tap reveal
+        await tester.tap(find.byIcon(Icons.visibility_outlined));
+        await tester.pumpAndSettle();
 
-      // Biometrics called
-      expect(authService.authenticateCallCount, equals(1));
-      // Full number is revealed!
-      expect(find.text('1122 3344 4455'), findsOneWidget);
-    });
+        // Authentication failed
+        expect(authService.authenticateCallCount, equals(1));
+        // Must stay masked!
+        expect(find.text('ABCDE••••F'), findsOneWidget);
+        expect(find.text('ABCDE1234F'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'VirtualDocumentCard tap-to-reveal prompts biometrics and reveals unmasked number',
+      (tester) async {
+        late WalletDocumentModel doc;
+        await tester.runAsync(() async {
+          doc = await vaultService.saveManualDocument(
+            documentName: 'My Aadhaar',
+            category: 'aadhaar',
+            holderName: 'Vikram Seth',
+            maskedIdentifier: '•••• •••• 4455',
+            unmaskedIdentifier: '112233444455',
+          );
+        });
+
+        authService.shouldSucceed = true;
+
+        await tester.pumpWidget(
+          buildTestHarness(
+            child: VirtualDocumentCard(document: doc, allowReveal: true),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Initially shows masked number
+        expect(find.text('•••• •••• 4455'), findsOneWidget);
+
+        // Tap on the biometric lock/number area
+        final numberArea = find.text('•••• •••• 4455');
+        await tester.tap(numberArea);
+        await tester.pumpAndSettle();
+
+        // Biometrics called
+        expect(authService.authenticateCallCount, equals(1));
+        // Full number is revealed!
+        expect(find.text('1122 3344 4455'), findsOneWidget);
+      },
+    );
   });
 
   group('2. Biometric Guard for Sharing Documents', () {
-    testWidgets('DocumentPreviewScreen requires biometric authentication when tapping Share', (tester) async {
-      tester.view.physicalSize = const Size(800, 1600);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
+    testWidgets(
+      'DocumentPreviewScreen requires biometric authentication when tapping Share',
+      (tester) async {
+        tester.view.physicalSize = const Size(800, 1600);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
 
-      late WalletDocumentModel doc;
-      await tester.runAsync(() async {
-        doc = await vaultService.saveManualDocument(
-          documentName: 'Official Passport',
-          category: 'passport',
-          holderName: 'Rohan Joshi',
-          maskedIdentifier: 'P••••999',
-          unmaskedIdentifier: 'P1234999',
+        late WalletDocumentModel doc;
+        await tester.runAsync(() async {
+          doc = await vaultService.saveManualDocument(
+            documentName: 'Official Passport',
+            category: 'passport',
+            holderName: 'Rohan Joshi',
+            maskedIdentifier: 'P••••999',
+            unmaskedIdentifier: 'P1234999',
+          );
+        });
+
+        // Simulate biometric rejection / cancellation
+        authService.shouldSucceed = false;
+
+        await tester.pumpWidget(
+          buildTestHarness(child: DocumentPreviewScreen(document: doc)),
         );
-      });
+        await tester.pumpAndSettle();
 
-      // Simulate biometric rejection / cancellation
-      authService.shouldSucceed = false;
+        // Find Share button in the unified 4-action row
+        final shareBtn = find.text('Share');
+        expect(shareBtn, findsOneWidget);
 
-      await tester.pumpWidget(
-        buildTestHarness(
-          child: DocumentPreviewScreen(document: doc),
-        ),
-      );
-      await tester.pumpAndSettle();
+        await tester.tap(shareBtn);
+        await tester.pumpAndSettle();
 
-      // Find Share button in the unified 4-action row
-      final shareBtn = find.text('Share');
-      expect(shareBtn, findsOneWidget);
+        // Confirmation dialog pops up: "Share Document?"
+        expect(find.text('Share Document?'), findsOneWidget);
 
-      await tester.tap(shareBtn);
-      await tester.pumpAndSettle();
+        // Tap "Proceed & Share"
+        final proceedBtn = find.text('Proceed & Share');
+        expect(proceedBtn, findsOneWidget);
+        await tester.tap(proceedBtn);
+        await tester.pumpAndSettle();
 
-      // Confirmation dialog pops up: "Share Document?"
-      expect(find.text('Share Document?'), findsOneWidget);
-
-      // Tap "Proceed & Share"
-      final proceedBtn = find.text('Proceed & Share');
-      expect(proceedBtn, findsOneWidget);
-      await tester.tap(proceedBtn);
-      await tester.pumpAndSettle();
-
-      // Biometric authentication was prompted!
-      expect(authService.authenticateCallCount, equals(1));
-      expect(authService.lastReason, contains('Authenticate with biometrics to share'));
-
-      // Since auth failed, sharing was blocked and error snackbar shown
-      expect(find.textContaining('Biometric authentication is required to share documents'), findsOneWidget);
-    });
-
-    testWidgets('DocumentPreviewScreen proceeds with sharing when biometrics succeed', (tester) async {
-      tester.view.physicalSize = const Size(800, 1600);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
-
-      late WalletDocumentModel doc;
-      await tester.runAsync(() async {
-        doc = await vaultService.saveManualDocument(
-          documentName: 'Driving Licence',
-          category: 'driving_license',
-          holderName: 'Karan Johar',
-          maskedIdentifier: 'DL-••••8888',
-          unmaskedIdentifier: 'DL-1420110008888',
+        // Biometric authentication was prompted!
+        expect(authService.authenticateCallCount, equals(1));
+        expect(
+          authService.lastReason,
+          contains('Authenticate with biometrics to share'),
         );
-      });
 
-      authService.shouldSucceed = true;
+        // Since auth failed, sharing was blocked and error snackbar shown
+        expect(
+          find.textContaining(
+            'Biometric authentication is required to share documents',
+          ),
+          findsOneWidget,
+        );
+      },
+    );
 
-      await tester.pumpWidget(
-        buildTestHarness(
-          child: DocumentPreviewScreen(document: doc),
-        ),
-      );
-      await tester.pumpAndSettle();
+    testWidgets(
+      'DocumentPreviewScreen proceeds with sharing when biometrics succeed',
+      (tester) async {
+        tester.view.physicalSize = const Size(800, 1600);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
 
-      // Tap Share
-      await tester.tap(find.text('Share'));
-      await tester.pumpAndSettle();
+        late WalletDocumentModel doc;
+        await tester.runAsync(() async {
+          doc = await vaultService.saveManualDocument(
+            documentName: 'Driving Licence',
+            category: 'driving_license',
+            holderName: 'Karan Johar',
+            maskedIdentifier: 'DL-••••8888',
+            unmaskedIdentifier: 'DL-1420110008888',
+          );
+        });
 
-      // Confirm proceed
-      await tester.tap(find.text('Proceed & Share'));
-      await tester.pumpAndSettle();
+        authService.shouldSucceed = true;
 
-      // Biometrics was verified
-      expect(authService.authenticateCallCount, equals(1));
-      // No failure snackbar
-      expect(find.textContaining('Biometric authentication is required to share documents'), findsNothing);
-    });
+        await tester.pumpWidget(
+          buildTestHarness(child: DocumentPreviewScreen(document: doc)),
+        );
+        await tester.pumpAndSettle();
+
+        // Tap Share
+        await tester.tap(find.text('Share'));
+        await tester.pumpAndSettle();
+
+        // Confirm proceed
+        await tester.tap(find.text('Proceed & Share'));
+        await tester.pumpAndSettle();
+
+        // Biometrics was verified
+        expect(authService.authenticateCallCount, equals(1));
+        // No failure snackbar
+        expect(
+          find.textContaining(
+            'Biometric authentication is required to share documents',
+          ),
+          findsNothing,
+        );
+      },
+    );
   });
 }

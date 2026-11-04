@@ -36,28 +36,28 @@ class GlassPanel extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             color: isDark
-                ? const Color(0xFF14231B).withAlpha(210)
+                ? const Color(0xFF0F1A14).withAlpha(215)
                 : const Color(0xFFFFFFFF).withAlpha(225),
             borderRadius: BorderRadius.circular(borderRadius),
             border: Border.all(
               color: isDark
-                  ? accent.withAlpha(50)
+                  ? Colors.white.withAlpha(25)
                   : Colors.white.withAlpha(230),
-              width: 1.2,
+              width: 1.0,
             ),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                accent.withAlpha(isDark ? 30 : 25),
+                accent.withAlpha(isDark ? 25 : 20),
                 Colors.transparent,
-                accent.withAlpha(isDark ? 15 : 10),
+                accent.withAlpha(isDark ? 12 : 8),
               ],
             ),
           ),
           child: Padding(
             padding: padding ?? const EdgeInsets.all(20.0),
-            child: child,
+            child: Material(type: MaterialType.transparency, child: child),
           ),
         ),
       ),
@@ -98,4 +98,3 @@ class GlassPanel extends StatelessWidget {
     return content;
   }
 }
-

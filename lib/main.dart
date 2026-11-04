@@ -4,7 +4,7 @@ import 'app/app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Database safely
   try {
     await DatabaseHelper.instance.database;

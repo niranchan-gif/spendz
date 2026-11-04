@@ -53,7 +53,9 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => DocumentCreationScreen(
-          initialCategory: _selectedCategory != 'all' ? _selectedCategory : null,
+          initialCategory: _selectedCategory != 'all'
+              ? _selectedCategory
+              : null,
         ),
       ),
     );
@@ -66,9 +68,14 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
 
     switch (selected) {
       case 'identity':
-        return cat == 'aadhaar' || cat == 'pan' || cat == 'voter_id' || cat == 'college_id';
+        return cat == 'aadhaar' ||
+            cat == 'pan' ||
+            cat == 'voter_id' ||
+            cat == 'college_id';
       case 'banking':
-        return cat == 'debit_card' || cat == 'credit_card' || cat == 'bank_document';
+        return cat == 'debit_card' ||
+            cat == 'credit_card' ||
+            cat == 'bank_document';
       case 'driving':
         return cat == 'driving_license' || cat == 'rc';
       case 'travel':
@@ -90,12 +97,19 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         title: const Text('My Documents'),
         actions: [
           IconButton(
-            icon: Icon(_isCardView ? Icons.view_list_rounded : Icons.view_agenda_rounded),
-            tooltip: _isCardView ? 'Switch to List View' : 'Switch to Virtual Card View',
+            icon: Icon(
+              _isCardView ? Icons.view_list_rounded : Icons.view_agenda_rounded,
+            ),
+            tooltip: _isCardView
+                ? 'Switch to List View'
+                : 'Switch to Virtual Card View',
             onPressed: () => setState(() => _isCardView = !_isCardView),
           ),
           IconButton(
-            icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.primary),
+            icon: const Icon(
+              Icons.add_circle_outline_rounded,
+              color: AppColors.primary,
+            ),
             tooltip: 'Add Document',
             onPressed: _navigateToAddDocument,
           ),
@@ -105,7 +119,9 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const WalletSecuritySettingsScreen()),
+                MaterialPageRoute(
+                  builder: (_) => const WalletSecuritySettingsScreen(),
+                ),
               );
             },
           ),
@@ -121,19 +137,36 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       body: Consumer<WalletProvider>(
         builder: (context, wallet, _) {
           if (wallet.isLoading) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+            return const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            );
           }
 
           final allDocs = wallet.documents;
 
           // Apply filtering
           final filteredDocs = allDocs.where((doc) {
-            final matchesCat = _matchesCategory(doc.category, _selectedCategory);
-            final matchesSearch = _searchQuery.isEmpty ||
-                doc.documentName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                (doc.holderName?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
-                (doc.maskedIdentifier?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
-                (doc.description?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
+            final matchesCat = _matchesCategory(
+              doc.category,
+              _selectedCategory,
+            );
+            final matchesSearch =
+                _searchQuery.isEmpty ||
+                doc.documentName.toLowerCase().contains(
+                  _searchQuery.toLowerCase(),
+                ) ||
+                (doc.holderName?.toLowerCase().contains(
+                      _searchQuery.toLowerCase(),
+                    ) ??
+                    false) ||
+                (doc.maskedIdentifier?.toLowerCase().contains(
+                      _searchQuery.toLowerCase(),
+                    ) ??
+                    false) ||
+                (doc.description?.toLowerCase().contains(
+                      _searchQuery.toLowerCase(),
+                    ) ??
+                    false);
 
             bool matchesFilter = true;
             if (_selectedFilter == 'favorites') {
@@ -141,7 +174,9 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
             } else if (_selectedFilter == 'expiring') {
               matchesFilter = doc.isExpiringSoon || doc.isExpired;
             } else if (_selectedFilter == 'recent') {
-              final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
+              final sevenDaysAgo = DateTime.now().subtract(
+                const Duration(days: 7),
+              );
               matchesFilter = doc.createdAt.isAfter(sevenDaysAgo);
             }
 
@@ -152,12 +187,17 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
             children: [
               // Search Bar
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.xs,
+                ),
                 child: TextField(
                   onChanged: (val) => setState(() => _searchQuery = val.trim()),
                   decoration: InputDecoration(
                     hintText: 'Search documents, holders, or numbers...',
-                    hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.getTextSecondary(context)),
+                    hintStyle: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.getTextSecondary(context),
+                    ),
                     prefixIcon: const Icon(Icons.search_rounded, size: 20),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
@@ -167,14 +207,21 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                         : null,
                     filled: true,
                     fillColor: AppColors.getSurface(context),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.sm,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppRadius.md),
-                      borderSide: BorderSide(color: AppColors.getBorder(context)),
+                      borderSide: BorderSide(
+                        color: AppColors.getBorder(context),
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppRadius.md),
-                      borderSide: BorderSide(color: AppColors.getBorder(context)),
+                      borderSide: BorderSide(
+                        color: AppColors.getBorder(context),
+                      ),
                     ),
                   ),
                 ),
@@ -197,9 +244,19 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                   children: [
                     _filterTab('All', 'all', allDocs.length),
                     const SizedBox(width: AppSpacing.sm),
-                    _filterTab('Favorites', 'favorites', allDocs.where((d) => d.isFavorite).length),
+                    _filterTab(
+                      'Favorites',
+                      'favorites',
+                      allDocs.where((d) => d.isFavorite).length,
+                    ),
                     const SizedBox(width: AppSpacing.sm),
-                    _filterTab('Expiring', 'expiring', allDocs.where((d) => d.isExpiringSoon || d.isExpired).length),
+                    _filterTab(
+                      'Expiring',
+                      'expiring',
+                      allDocs
+                          .where((d) => d.isExpiringSoon || d.isExpired)
+                          .length,
+                    ),
                     const SizedBox(width: AppSpacing.sm),
                     _filterTab('Recent', 'recent', null),
                   ],
@@ -213,8 +270,8 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                 child: filteredDocs.isEmpty
                     ? _buildEmptyView()
                     : (_isCardView
-                        ? _buildCardGrid(filteredDocs)
-                        : _buildListView(filteredDocs)),
+                          ? _buildCardGrid(filteredDocs)
+                          : _buildListView(filteredDocs)),
               ),
             ],
           );
@@ -230,7 +287,9 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withAlpha(20) : Colors.transparent,
+          color: isSelected
+              ? AppColors.primary.withAlpha(20)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? AppColors.primary : Colors.transparent,
@@ -243,7 +302,9 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected ? AppColors.primary : AppColors.getTextSecondary(context),
+                color: isSelected
+                    ? AppColors.primary
+                    : AppColors.getTextSecondary(context),
               ),
             ),
             if (count != null && count > 0) ...[
@@ -251,7 +312,9 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary : Colors.grey.withAlpha(50),
+                  color: isSelected
+                      ? AppColors.primary
+                      : Colors.grey.withAlpha(50),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -259,7 +322,9 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
-                    color: isSelected ? Colors.white : AppColors.getTextSecondary(context),
+                    color: isSelected
+                        ? Colors.white
+                        : AppColors.getTextSecondary(context),
                   ),
                 ),
               ),
@@ -272,7 +337,10 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
 
   Widget _buildCardGrid(List<dynamic> docs) {
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.xs,
+      ),
       itemCount: docs.length,
       physics: const BouncingScrollPhysics(),
       itemBuilder: (context, index) {
@@ -283,11 +351,15 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => DocumentPreviewScreen(document: doc)),
+              MaterialPageRoute(
+                builder: (_) => DocumentPreviewScreen(document: doc),
+              ),
             );
           },
           onFavoriteToggle: () {
-            context.read<WalletDocumentProvider>().toggleDocumentFavorite(doc.id);
+            context.read<WalletDocumentProvider>().toggleDocumentFavorite(
+              doc.id,
+            );
           },
         );
       },
@@ -296,7 +368,10 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
 
   Widget _buildListView(List<dynamic> docs) {
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.xs,
+      ),
       itemCount: docs.length,
       physics: const BouncingScrollPhysics(),
       itemBuilder: (context, index) {
@@ -306,11 +381,15 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => DocumentPreviewScreen(document: doc)),
+              MaterialPageRoute(
+                builder: (_) => DocumentPreviewScreen(document: doc),
+              ),
             );
           },
           onFavoriteToggle: () {
-            context.read<WalletDocumentProvider>().toggleDocumentFavorite(doc.id);
+            context.read<WalletDocumentProvider>().toggleDocumentFavorite(
+              doc.id,
+            );
           },
         );
       },
@@ -321,7 +400,9 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     return Center(
       child: EmptyState(
         icon: Icons.folder_open_outlined,
-        title: _searchQuery.isNotEmpty ? 'No Matching Documents' : 'No Documents in Vault',
+        title: _searchQuery.isNotEmpty
+            ? 'No Matching Documents'
+            : 'No Documents in Vault',
         subtitle: _searchQuery.isNotEmpty
             ? 'Try adjusting your search terms or category filter.'
             : 'Tap Add Document to manually store your digital IDs, cards, licences, and insurance policies with military-grade encryption.',

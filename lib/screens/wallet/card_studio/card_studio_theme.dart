@@ -36,7 +36,8 @@ class CardStudioTheme {
     CardStudioTheme(
       id: 'midnight_emerald',
       name: 'Midnight Emerald',
-      description: 'Deep forest green, emerald gradient & metallic gold detailing',
+      description:
+          'Deep forest green, emerald gradient & metallic gold detailing',
       backgroundGradient: LinearGradient(
         colors: [Color(0xFF071F14), Color(0xFF0F3E28), Color(0xFF165B3A)],
         begin: Alignment.topLeft,
@@ -56,7 +57,8 @@ class CardStudioTheme {
     CardStudioTheme(
       id: 'obsidian_black',
       name: 'Obsidian Black',
-      description: 'Near-black surface, graphite gradients & polished silver accents',
+      description:
+          'Near-black surface, graphite gradients & polished silver accents',
       backgroundGradient: LinearGradient(
         colors: [Color(0xFF090A0F), Color(0xFF13141C), Color(0xFF222430)],
         begin: Alignment.topRight,
@@ -76,7 +78,8 @@ class CardStudioTheme {
     CardStudioTheme(
       id: 'royal_amethyst',
       name: 'Royal Amethyst',
-      description: 'Deep purple, rich violet gradients & subtle lavender highlights',
+      description:
+          'Deep purple, rich violet gradients & subtle lavender highlights',
       backgroundGradient: LinearGradient(
         colors: [Color(0xFF1C0A35), Color(0xFF381467), Color(0xFF5A1E9E)],
         begin: Alignment.topLeft,
@@ -116,7 +119,8 @@ class CardStudioTheme {
     CardStudioTheme(
       id: 'champagne_gold',
       name: 'Champagne Gold',
-      description: 'Warm charcoal, champagne highlights & elegant metallic finish',
+      description:
+          'Warm charcoal, champagne highlights & elegant metallic finish',
       backgroundGradient: LinearGradient(
         colors: [Color(0xFF1A1817), Color(0xFF292524), Color(0xFF44403C)],
         begin: Alignment.topLeft,
@@ -136,7 +140,8 @@ class CardStudioTheme {
     CardStudioTheme(
       id: 'crimson_luxe',
       name: 'Crimson Luxe',
-      description: 'Deep burgundy, muted crimson gradients & dark luxury detailing',
+      description:
+          'Deep burgundy, muted crimson gradients & dark luxury detailing',
       backgroundGradient: LinearGradient(
         colors: [Color(0xFF26060D), Color(0xFF4F0C1B), Color(0xFF881337)],
         begin: Alignment.topCenter,
@@ -176,7 +181,8 @@ class CardStudioTheme {
     CardStudioTheme(
       id: 'aurora_mint',
       name: 'Aurora Mint',
-      description: 'Deep emerald petrol, vibrant mint accents & atmospheric aurora aura',
+      description:
+          'Deep emerald petrol, vibrant mint accents & atmospheric aurora aura',
       backgroundGradient: LinearGradient(
         colors: [Color(0xFF04201E), Color(0xFF0B3B38), Color(0xFF134E4A)],
         begin: Alignment.topLeft,
@@ -259,13 +265,23 @@ class _EmeraldGeometryPainter extends CustomPainter {
 
     // Glowing corner orb
     final glowPaint = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          const Color(0xFF10B981).withAlpha(60),
-          const Color(0xFF10B981).withAlpha(0),
-        ],
-      ).createShader(Rect.fromCircle(center: Offset(size.width * 0.85, size.height * 0.2), radius: 90));
-    canvas.drawCircle(Offset(size.width * 0.85, size.height * 0.2), 90, glowPaint);
+      ..shader =
+          RadialGradient(
+            colors: [
+              const Color(0xFF10B981).withAlpha(60),
+              const Color(0xFF10B981).withAlpha(0),
+            ],
+          ).createShader(
+            Rect.fromCircle(
+              center: Offset(size.width * 0.85, size.height * 0.2),
+              radius: 90,
+            ),
+          );
+    canvas.drawCircle(
+      Offset(size.width * 0.85, size.height * 0.2),
+      90,
+      glowPaint,
+    );
   }
 
   @override
@@ -317,13 +333,20 @@ class _AmethystGeometryPainter extends CustomPainter {
 
     // Top left lavender glow
     final glowPaint = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          const Color(0xFFA855F7).withAlpha(45),
-          Colors.transparent,
-        ],
-      ).createShader(Rect.fromCircle(center: Offset(size.width * 0.15, size.height * 0.2), radius: 80));
-    canvas.drawCircle(Offset(size.width * 0.15, size.height * 0.2), 80, glowPaint);
+      ..shader =
+          RadialGradient(
+            colors: [const Color(0xFFA855F7).withAlpha(45), Colors.transparent],
+          ).createShader(
+            Rect.fromCircle(
+              center: Offset(size.width * 0.15, size.height * 0.2),
+              radius: 80,
+            ),
+          );
+    canvas.drawCircle(
+      Offset(size.width * 0.15, size.height * 0.2),
+      80,
+      glowPaint,
+    );
   }
 
   @override
@@ -347,7 +370,14 @@ class _SapphireGeometryPainter extends CustomPainter {
 
     final path = Path()
       ..moveTo(0, size.height * 0.4)
-      ..cubicTo(size.width * 0.35, size.height * 0.2, size.width * 0.65, size.height * 0.9, size.width, size.height * 0.6)
+      ..cubicTo(
+        size.width * 0.35,
+        size.height * 0.2,
+        size.width * 0.65,
+        size.height * 0.9,
+        size.width,
+        size.height * 0.6,
+      )
       ..lineTo(size.width, size.height)
       ..lineTo(0, size.height)
       ..close();
@@ -356,7 +386,14 @@ class _SapphireGeometryPainter extends CustomPainter {
     wavePaint.color = const Color(0xFF38BDF8).withAlpha(40);
     final linePath = Path()
       ..moveTo(0, size.height * 0.35)
-      ..cubicTo(size.width * 0.35, size.height * 0.15, size.width * 0.65, size.height * 0.85, size.width, size.height * 0.55);
+      ..cubicTo(
+        size.width * 0.35,
+        size.height * 0.15,
+        size.width * 0.65,
+        size.height * 0.85,
+        size.width,
+        size.height * 0.55,
+      );
     canvas.drawPath(linePath, wavePaint);
   }
 
@@ -374,7 +411,11 @@ class _GoldGeometryPainter extends CustomPainter {
       ..strokeWidth = 1.2;
 
     final center = Offset(size.width * 0.5, size.height * 1.2);
-    for (double angle = -math.pi * 0.75; angle <= -math.pi * 0.25; angle += 0.08) {
+    for (
+      double angle = -math.pi * 0.75;
+      angle <= -math.pi * 0.25;
+      angle += 0.08
+    ) {
       final x = center.dx + math.cos(angle) * 320;
       final y = center.dy + math.sin(angle) * 320;
       canvas.drawLine(center, Offset(x, y), goldPaint);
@@ -396,8 +437,16 @@ class _CrimsonGeometryPainter extends CustomPainter {
 
     const spacing = 32.0;
     for (double x = 0; x < size.width + size.height; x += spacing) {
-      canvas.drawLine(Offset(x, 0), Offset(x - size.height, size.height), diamondPaint);
-      canvas.drawLine(Offset(x - size.height, 0), Offset(x, size.height), diamondPaint);
+      canvas.drawLine(
+        Offset(x, 0),
+        Offset(x - size.height, size.height),
+        diamondPaint,
+      );
+      canvas.drawLine(
+        Offset(x - size.height, 0),
+        Offset(x, size.height),
+        diamondPaint,
+      );
     }
   }
 
@@ -416,15 +465,27 @@ class _ArcticGeometryPainter extends CustomPainter {
 
     // Draw horizontal dashed technical guide marks
     for (double y = 20; y < size.height; y += 24) {
-      canvas.drawLine(Offset(size.width * 0.6, y), Offset(size.width - 20, y), techPaint);
+      canvas.drawLine(
+        Offset(size.width * 0.6, y),
+        Offset(size.width - 20, y),
+        techPaint,
+      );
     }
 
     final cornerAccent = Paint()
       ..color = const Color(0xFFE2E8F0).withAlpha(40)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
-    canvas.drawLine(Offset(size.width - 40, 20), Offset(size.width - 20, 20), cornerAccent);
-    canvas.drawLine(Offset(size.width - 20, 20), Offset(size.width - 20, 40), cornerAccent);
+    canvas.drawLine(
+      Offset(size.width - 40, 20),
+      Offset(size.width - 20, 20),
+      cornerAccent,
+    );
+    canvas.drawLine(
+      Offset(size.width - 20, 20),
+      Offset(size.width - 20, 40),
+      cornerAccent,
+    );
   }
 
   @override
@@ -449,9 +510,19 @@ class _AuroraGeometryPainter extends CustomPainter {
 
     final path = Path()
       ..moveTo(0, size.height * 0.1)
-      ..quadraticBezierTo(size.width * 0.4, size.height * 0.8, size.width, size.height * 0.3)
+      ..quadraticBezierTo(
+        size.width * 0.4,
+        size.height * 0.8,
+        size.width,
+        size.height * 0.3,
+      )
       ..lineTo(size.width, size.height * 0.6)
-      ..quadraticBezierTo(size.width * 0.4, size.height * 1.1, 0, size.height * 0.4)
+      ..quadraticBezierTo(
+        size.width * 0.4,
+        size.height * 1.1,
+        0,
+        size.height * 0.4,
+      )
       ..close();
     canvas.drawPath(path, ribbonPaint);
   }

@@ -93,11 +93,6 @@ class WalletPassRepository {
 
   Future<int> delete(String id) async {
     final db = await dbHelper.database;
-    return await db.delete(
-      'wallet_passes',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('wallet_passes', where: 'id = ?', whereArgs: [id]);
   }
 }
-

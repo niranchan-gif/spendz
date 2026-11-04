@@ -11,7 +11,6 @@ import 'transactions/transactions_screen.dart';
 import 'wallet/wallet_dashboard_screen.dart';
 import 'analytics/analytics_screen.dart';
 import 'profile/profile_screen.dart';
-import 'wallet/widgets/spendz_pop_sheet.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -47,24 +46,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     return Scaffold(
       backgroundColor: AppColors.getBackground(context),
       extendBody: true,
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.miniEndFloat,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 84.0),
-        child: FloatingActionButton(
-          heroTag: 'spendz_pop_fab',
-          mini: true,
-          backgroundColor: AppColors.getPrimary(context),
-          foregroundColor: Colors.white,
-          elevation: 6,
-          tooltip: 'Spendz POP Quick Wallet',
-          onPressed: () => SpendzPopSheet.show(context),
-          child: const Icon(Icons.bolt_rounded, size: 22),
-        ),
-      ),
+      body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: GlassNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),

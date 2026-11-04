@@ -48,7 +48,8 @@ class AppShadows {
   ];
 
   static List<BoxShadow> card(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark ? darkCard : lightCard;
+    return Theme.of(context).brightness == Brightness.dark
+        ? darkCard
+        : lightCard;
   }
 }
-

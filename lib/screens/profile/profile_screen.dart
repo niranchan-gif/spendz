@@ -7,7 +7,6 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_radius.dart';
 import '../../providers/transaction_provider.dart';
-import '../../providers/wallet_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../database/database_helper.dart';
 import '../categories/categories_screen.dart';
@@ -91,15 +90,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
-        child: Consumer3<TransactionProvider, WalletProvider, ThemeProvider>(
-          builder: (context, txProvider, walletProvider, themeProvider, child) {
-            final txCount = txProvider.transactions.length;
-            final cardCount = walletProvider.cards.length;
-            final docCount = walletProvider.documents.length;
-            final passCount = walletProvider.passes.length;
-
+        child: Consumer<ThemeProvider>(
+          builder: (context, themeProvider, child) {
             return ListView(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 120),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.sm,
+                AppSpacing.lg,
+                120,
+              ),
               physics: const BouncingScrollPhysics(),
               children: [
                 // Minimal Editorial Header
@@ -136,7 +135,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const WalletSecuritySettingsScreen()),
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  const WalletSecuritySettingsScreen(),
+                            ),
                           );
                         },
                       ),
@@ -150,97 +152,95 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 GlassPanel(
                   padding: const EdgeInsets.all(AppSpacing.card),
                   glowColor: AppColors.primary,
-                  child: Column(
+                  child: Row(
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 60,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                colors: [
-                                  AppColors.primary,
-                                  emerald,
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [AppColors.primary, emerald],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withAlpha(
+                                isDark ? 80 : 50,
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.primary.withAlpha(isDark ? 80 : 50),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 6),
-                                ),
-                              ],
+                              blurRadius: 16,
+                              offset: const Offset(0, 6),
                             ),
-                            child: const Center(
-                              child: Icon(Icons.person_rounded, color: Colors.white, size: 30),
-                            ),
+                          ],
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.person_rounded,
+                            color: Colors.white,
+                            size: 28,
                           ),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Spendz 2.0',
-                                  style: AppTextStyles.headingSmall.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    color: textPrimary,
-                                    letterSpacing: -0.3,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Encrypted Finance & Digital Wallet',
-                                  style: AppTextStyles.caption.copyWith(
-                                    color: textSecondary,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: emerald.withAlpha(isDark ? 30 : 25),
-                                    borderRadius: BorderRadius.circular(AppRadius.xs),
-                                    border: Border.all(color: emerald.withAlpha(70), width: 0.8),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(Icons.lock_rounded, size: 10, color: emerald),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        'SQLite v4 • Hardware Keystore Active',
-                                        style: AppTextStyles.caption.copyWith(
-                                          color: emerald,
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 9.5,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                      const SizedBox(height: AppSpacing.md),
-                      Divider(height: 1, color: AppColors.getGlassBorder(context)),
-                      const SizedBox(height: AppSpacing.md),
-                      // Quick Storage Stats Row
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _buildStatCol(context, 'Expenses', txCount.toString(), Icons.receipt_long_rounded),
-                          _buildStatCol(context, 'Cards', cardCount.toString(), Icons.credit_card_rounded),
-                          _buildStatCol(context, 'Docs', docCount.toString(), Icons.shield_rounded),
-                          _buildStatCol(context, 'Passes', passCount.toString(), Icons.qr_code_2_rounded),
-                        ],
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Spendz 2.0',
+                              style: AppTextStyles.headingSmall.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: textPrimary,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Encrypted Finance & Digital Wallet',
+                              style: AppTextStyles.caption.copyWith(
+                                color: textSecondary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: emerald.withAlpha(isDark ? 30 : 25),
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.xs,
+                                ),
+                                border: Border.all(
+                                  color: emerald.withAlpha(70),
+                                  width: 0.8,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.lock_rounded,
+                                    size: 10,
+                                    color: emerald,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Hardware Keystore & AES-256 Active',
+                                    style: AppTextStyles.caption.copyWith(
+                                      color: emerald,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 9.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -260,7 +260,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.palette_outlined, color: emerald, size: 20),
+                            Icon(
+                              Icons.palette_outlined,
+                              color: emerald,
+                              size: 20,
+                            ),
                             const SizedBox(width: AppSpacing.sm),
                             Text(
                               'Theme Mode',
@@ -280,7 +284,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               label: 'System',
                               icon: Icons.brightness_auto_rounded,
                               currentMode: themeProvider.themeMode,
-                              onSelect: () => themeProvider.setThemeMode(ThemeMode.system),
+                              onSelect: () =>
+                                  themeProvider.setThemeMode(ThemeMode.system),
                             ),
                             const SizedBox(width: AppSpacing.sm),
                             _buildThemeOption(
@@ -289,7 +294,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               label: 'Light',
                               icon: Icons.light_mode_rounded,
                               currentMode: themeProvider.themeMode,
-                              onSelect: () => themeProvider.setThemeMode(ThemeMode.light),
+                              onSelect: () =>
+                                  themeProvider.setThemeMode(ThemeMode.light),
                             ),
                             const SizedBox(width: AppSpacing.sm),
                             _buildThemeOption(
@@ -298,7 +304,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               label: 'Dark',
                               icon: Icons.dark_mode_rounded,
                               currentMode: themeProvider.themeMode,
-                              onSelect: () => themeProvider.setThemeMode(ThemeMode.dark),
+                              onSelect: () =>
+                                  themeProvider.setThemeMode(ThemeMode.dark),
                             ),
                           ],
                         ),
@@ -319,8 +326,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Column(
                       children: [
                         ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 2),
-                          leading: _buildIconBox(context, Icons.shield_outlined),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                            vertical: 2,
+                          ),
+                          leading: _buildIconBox(
+                            context,
+                            Icons.shield_outlined,
+                          ),
                           title: Text(
                             'Vault Security & Hardware Keystore',
                             style: AppTextStyles.labelLarge.copyWith(
@@ -330,20 +343,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           subtitle: Text(
                             'AES-256-GCM status, hardware keys, and auto-lock',
-                            style: AppTextStyles.caption.copyWith(color: textSecondary),
+                            style: AppTextStyles.caption.copyWith(
+                              color: textSecondary,
+                            ),
                           ),
-                          trailing: Icon(Icons.chevron_right_rounded, color: textSecondary),
+                          trailing: Icon(
+                            Icons.chevron_right_rounded,
+                            color: textSecondary,
+                          ),
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => const WalletSecuritySettingsScreen()),
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    const WalletSecuritySettingsScreen(),
+                              ),
                             );
                           },
                         ),
-                        Divider(height: 1, indent: 56, color: AppColors.getGlassBorder(context)),
+                        Divider(
+                          height: 1,
+                          indent: 56,
+                          color: AppColors.getGlassBorder(context),
+                        ),
                         SwitchListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 2),
-                          secondary: _buildIconBox(context, Icons.fingerprint_rounded),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                            vertical: 2,
+                          ),
+                          secondary: _buildIconBox(
+                            context,
+                            Icons.fingerprint_rounded,
+                          ),
                           title: Text(
                             'Biometric Authentication',
                             style: AppTextStyles.labelLarge.copyWith(
@@ -353,16 +384,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           subtitle: Text(
                             'Fingerprint / Face ID to reveal sensitive numbers and decrypt cards',
-                            style: AppTextStyles.caption.copyWith(color: textSecondary),
+                            style: AppTextStyles.caption.copyWith(
+                              color: textSecondary,
+                            ),
                           ),
                           value: _biometricEnabled,
                           activeThumbColor: emerald,
                           onChanged: _updateBiometric,
                         ),
-                        Divider(height: 1, indent: 56, color: AppColors.getGlassBorder(context)),
+                        Divider(
+                          height: 1,
+                          indent: 56,
+                          color: AppColors.getGlassBorder(context),
+                        ),
                         SwitchListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 2),
-                          secondary: _buildIconBox(context, Icons.lock_outline_rounded),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                            vertical: 2,
+                          ),
+                          secondary: _buildIconBox(
+                            context,
+                            Icons.lock_outline_rounded,
+                          ),
                           title: Text(
                             'App Lock on Startup',
                             style: AppTextStyles.labelLarge.copyWith(
@@ -372,15 +415,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           subtitle: Text(
                             'Prompt passcode/biometrics when opening Spendz',
-                            style: AppTextStyles.caption.copyWith(color: textSecondary),
+                            style: AppTextStyles.caption.copyWith(
+                              color: textSecondary,
+                            ),
                           ),
                           value: _appLockEnabled,
                           activeThumbColor: emerald,
                           onChanged: _updateAppLock,
                         ),
-                        Divider(height: 1, indent: 56, color: AppColors.getGlassBorder(context)),
+                        Divider(
+                          height: 1,
+                          indent: 56,
+                          color: AppColors.getGlassBorder(context),
+                        ),
                         ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 2),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                            vertical: 2,
+                          ),
                           leading: _buildIconBox(context, Icons.timer_outlined),
                           title: Text(
                             'Inactivity Timeout',
@@ -391,9 +443,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           subtitle: Text(
                             _inactivityTimeout,
-                            style: AppTextStyles.caption.copyWith(color: emerald, fontWeight: FontWeight.w600),
+                            style: AppTextStyles.caption.copyWith(
+                              color: emerald,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                          trailing: Icon(Icons.chevron_right_rounded, color: textSecondary),
+                          trailing: Icon(
+                            Icons.chevron_right_rounded,
+                            color: textSecondary,
+                          ),
                           onTap: () => _showInactivityDialog(context),
                         ),
                       ],
@@ -413,8 +471,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Column(
                       children: [
                         ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 2),
-                          leading: _buildIconBox(context, Icons.category_outlined),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                            vertical: 2,
+                          ),
+                          leading: _buildIconBox(
+                            context,
+                            Icons.category_outlined,
+                          ),
                           title: Text(
                             'Manage Categories',
                             style: AppTextStyles.labelLarge.copyWith(
@@ -424,20 +488,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           subtitle: Text(
                             'Customize income and expense classification tags',
-                            style: AppTextStyles.caption.copyWith(color: textSecondary),
+                            style: AppTextStyles.caption.copyWith(
+                              color: textSecondary,
+                            ),
                           ),
-                          trailing: Icon(Icons.chevron_right_rounded, color: textSecondary),
+                          trailing: Icon(
+                            Icons.chevron_right_rounded,
+                            color: textSecondary,
+                          ),
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const CategoriesScreen()),
+                              MaterialPageRoute(
+                                builder: (context) => const CategoriesScreen(),
+                              ),
                             );
                           },
                         ),
-                        Divider(height: 1, indent: 56, color: AppColors.getGlassBorder(context)),
+                        Divider(
+                          height: 1,
+                          indent: 56,
+                          color: AppColors.getGlassBorder(context),
+                        ),
                         ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 2),
-                          leading: _buildIconBox(context, Icons.mail_outline_rounded),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                            vertical: 2,
+                          ),
+                          leading: _buildIconBox(
+                            context,
+                            Icons.mail_outline_rounded,
+                          ),
                           title: Text(
                             'HDFC Gmail Sync Settings',
                             style: AppTextStyles.labelLarge.copyWith(
@@ -447,13 +528,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           subtitle: Text(
                             'Automated parser for HDFC debit and credit transaction emails',
-                            style: AppTextStyles.caption.copyWith(color: textSecondary),
+                            style: AppTextStyles.caption.copyWith(
+                              color: textSecondary,
+                            ),
                           ),
-                          trailing: Icon(Icons.chevron_right_rounded, color: textSecondary),
+                          trailing: Icon(
+                            Icons.chevron_right_rounded,
+                            color: textSecondary,
+                          ),
                           onTap: () {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('HDFC Gmail sync is operational.'),
+                                content: Text(
+                                  'HDFC Gmail sync is operational.',
+                                ),
                                 behavior: SnackBarBehavior.floating,
                               ),
                             );
@@ -475,14 +563,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     padding: EdgeInsets.zero,
                     border: Border.all(color: AppColors.error.withAlpha(60)),
                     child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: 4,
+                      ),
                       leading: Container(
                         padding: const EdgeInsets.all(AppSpacing.xs + 2),
                         decoration: BoxDecoration(
                           color: AppColors.error.withAlpha(25),
                           borderRadius: BorderRadius.circular(AppRadius.sm),
                         ),
-                        child: const Icon(Icons.delete_outline_rounded, color: AppColors.error, size: 20),
+                        child: const Icon(
+                          Icons.delete_outline_rounded,
+                          color: AppColors.error,
+                          size: 20,
+                        ),
                       ),
                       title: Text(
                         'Clear All Local Data',
@@ -493,7 +588,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       subtitle: Text(
                         'Wipes stored transactions and resets app preferences',
-                        style: AppTextStyles.caption.copyWith(color: textSecondary),
+                        style: AppTextStyles.caption.copyWith(
+                          color: textSecondary,
+                        ),
                       ),
                       onTap: () async {
                         final txProvider = context.read<TransactionProvider>();
@@ -502,7 +599,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         final confirm = await CustomDialog.showConfirmation(
                           context: context,
                           title: 'Clear All Local Data?',
-                          message: 'This will delete all transactions and reset preferences. This action cannot be undone.',
+                          message:
+                              'This will delete all transactions and reset preferences. This action cannot be undone.',
                           confirmLabel: 'Clear All',
                           isDestructive: true,
                           icon: Icons.warning_amber_rounded,
@@ -516,7 +614,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             txProvider.loadTransactions();
                             messenger.showSnackBar(
                               const SnackBar(
-                                content: Text('All local data cleared successfully.'),
+                                content: Text(
+                                  'All local data cleared successfully.',
+                                ),
                                 behavior: SnackBarBehavior.floating,
                               ),
                             );
@@ -534,16 +634,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Column(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.getGlassBackground(context),
                           borderRadius: BorderRadius.circular(AppRadius.full),
-                          border: Border.all(color: AppColors.getGlassBorder(context)),
+                          border: Border.all(
+                            color: AppColors.getGlassBorder(context),
+                          ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.verified_user_outlined, size: 14, color: emerald),
+                            Icon(
+                              Icons.verified_user_outlined,
+                              size: 14,
+                              color: emerald,
+                            ),
                             const SizedBox(width: 6),
                             Text(
                               'Spendz 2.0 • Hardware Keystore & AES-256-GCM',
@@ -597,7 +706,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: isSelected
-                ? (isDark ? emerald.withAlpha(35) : AppColors.primary.withAlpha(20))
+                ? (isDark
+                      ? emerald.withAlpha(35)
+                      : AppColors.primary.withAlpha(20))
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(AppRadius.md),
             border: Border.all(
@@ -607,11 +718,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           child: Column(
             children: [
-              Icon(
-                icon,
-                size: 20,
-                color: isSelected ? emerald : textSecondary,
-              ),
+              Icon(icon, size: 20, color: isSelected ? emerald : textSecondary),
               const SizedBox(height: 6),
               Text(
                 label,
@@ -640,41 +747,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildStatCol(BuildContext context, String label, String value, IconData icon) {
-    final emerald = AppColors.getEmeraldAccent(context);
-    final textPrimary = AppColors.getTextPrimary(context);
-    final textSecondary = AppColors.getTextSecondary(context);
-
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.xs + 2),
-          decoration: BoxDecoration(
-            color: emerald.withAlpha(25),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, size: 16, color: emerald),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          value,
-          style: AppTextStyles.headingSmall.copyWith(
-            fontWeight: FontWeight.w800,
-            fontSize: 16,
-            color: textPrimary,
-          ),
-        ),
-        Text(
-          label,
-          style: AppTextStyles.caption.copyWith(
-            color: textSecondary,
-            fontSize: 10.5,
-          ),
-        ),
-      ],
-    );
-  }
-
   void _showInactivityDialog(BuildContext context) {
     GlassDialog.show(
       context: context,
@@ -692,7 +764,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             trailing: isSelected
-                ? Icon(Icons.check_rounded, color: AppColors.getEmeraldAccent(context))
+                ? Icon(
+                    Icons.check_rounded,
+                    color: AppColors.getEmeraldAccent(context),
+                  )
                 : null,
             onTap: () async {
               final prefs = await SharedPreferences.getInstance();

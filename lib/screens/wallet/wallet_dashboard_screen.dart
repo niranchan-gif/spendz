@@ -46,7 +46,9 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const DocumentCreationScreen()),
+                MaterialPageRoute(
+                  builder: (_) => const DocumentCreationScreen(),
+                ),
               );
             },
           ),
@@ -59,7 +61,9 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const CardsScreen(openAddDialog: true)),
+                MaterialPageRoute(
+                  builder: (_) => const CardsScreen(openAddDialog: true),
+                ),
               );
             },
           ),
@@ -72,7 +76,9 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const DocumentsScreen(openAddDialog: true)),
+                MaterialPageRoute(
+                  builder: (_) => const DocumentsScreen(openAddDialog: true),
+                ),
               );
             },
           ),
@@ -85,7 +91,9 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const PassesScreen(openAddDialog: true)),
+                MaterialPageRoute(
+                  builder: (_) => const PassesScreen(openAddDialog: true),
+                ),
               );
             },
           ),
@@ -163,7 +171,10 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
 
                     // Quick Actions
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                        vertical: AppSpacing.sm,
+                      ),
                       child: Row(
                         children: [
                           Expanded(
@@ -175,7 +186,10 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                               onTap: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (_) => const DocumentCreationScreen()),
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        const DocumentCreationScreen(),
+                                  ),
                                 );
                               },
                             ),
@@ -190,7 +204,10 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                               onTap: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (_) => const CardsScreen(openAddDialog: true)),
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        const CardsScreen(openAddDialog: true),
+                                  ),
                                 );
                               },
                             ),
@@ -205,7 +222,10 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                               onTap: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (_) => const PassesScreen(openAddDialog: true)),
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        const PassesScreen(openAddDialog: true),
+                                  ),
                                 );
                               },
                             ),
@@ -222,14 +242,18 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
 
                     // Section 1: Card Studio Carousel
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                      ),
                       child: SectionHeader(
                         title: 'Card Studio',
                         actionLabel: 'Manage Cards',
                         onActionPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const CardsScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const CardsScreen(),
+                            ),
                           );
                         },
                       ),
@@ -238,7 +262,9 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
 
                     if (cards.isEmpty)
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg,
+                        ),
                         child: ReusableCard(
                           padding: const EdgeInsets.all(AppSpacing.lg),
                           child: Center(
@@ -247,7 +273,9 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                                 Icon(
                                   Icons.credit_card_off_outlined,
                                   size: 36,
-                                  color: AppColors.getTextSecondary(context).withAlpha(120),
+                                  color: AppColors.getTextSecondary(
+                                    context,
+                                  ).withAlpha(120),
                                 ),
                                 const SizedBox(height: AppSpacing.sm),
                                 Text(
@@ -261,14 +289,20 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                                   onPressed: () {
                                     Navigator.push(
                                       context,
-                                      MaterialPageRoute(builder: (_) => const CardsScreen(openAddDialog: true)),
+                                      MaterialPageRoute(
+                                        builder: (_) => const CardsScreen(
+                                          openAddDialog: true,
+                                        ),
+                                      ),
                                     );
                                   },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: AppColors.primary,
                                     foregroundColor: Colors.white,
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(AppRadius.md),
+                                      borderRadius: BorderRadius.circular(
+                                        AppRadius.md,
+                                      ),
                                     ),
                                   ),
                                   child: const Text('Add Card to Studio'),
@@ -284,17 +318,23 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                         child: ListView.builder(
                           scrollDirection: Axis.horizontal,
                           physics: const BouncingScrollPhysics(),
-                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                          ),
                           itemCount: cards.length,
                           itemBuilder: (context, index) {
                             final card = cards[index];
                             return WalletCardWidget(
                               card: card,
-                              onFavoriteToggle: () => wallet.toggleCardFavorite(card.id),
+                              onFavoriteToggle: () =>
+                                  wallet.toggleCardFavorite(card.id),
                               onTap: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (_) => CardDetailScreen(card: card)),
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        CardDetailScreen(card: card),
+                                  ),
                                 );
                               },
                             );
@@ -306,14 +346,18 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
 
                     // Section 2: Document Vault Categories Grid
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                      ),
                       child: SectionHeader(
                         title: 'Document Vault',
                         actionLabel: 'Open Vault',
                         onActionPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const DocumentsScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const DocumentsScreen(),
+                            ),
                           );
                         },
                       ),
@@ -321,7 +365,9 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                     const SizedBox(height: AppSpacing.sm),
 
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                      ),
                       child: _buildCategoryGrid(context, documents),
                     ),
 
@@ -329,14 +375,18 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
 
                     // Section 3: Recent Vault Documents
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                      ),
                       child: SectionHeader(
                         title: 'Recent Documents',
                         actionLabel: 'See All',
                         onActionPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const DocumentsScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const DocumentsScreen(),
+                            ),
                           );
                         },
                       ),
@@ -344,17 +394,23 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                     const SizedBox(height: AppSpacing.sm),
 
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                      ),
                       child: documents.isEmpty
                           ? EmptyState(
                               icon: Icons.folder_open_outlined,
                               title: 'Vault is Empty',
-                              subtitle: 'Tap Add Doc to securely store your personal IDs and documents.',
+                              subtitle:
+                                  'Tap Add Doc to securely store your personal IDs and documents.',
                               actionLabel: 'Add Document',
                               onActionPressed: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (_) => const DocumentCreationScreen()),
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        const DocumentCreationScreen(),
+                                  ),
                                 );
                               },
                             )
@@ -362,12 +418,15 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                               children: documents.take(3).map((doc) {
                                 return DocumentVaultTile(
                                   document: doc,
-                                  onFavoriteToggle: () => wallet.toggleDocumentFavorite(doc.id),
+                                  onFavoriteToggle: () =>
+                                      wallet.toggleDocumentFavorite(doc.id),
                                   onTap: () {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => DocumentPreviewScreen(document: doc),
+                                        builder: (_) => DocumentPreviewScreen(
+                                          document: doc,
+                                        ),
                                       ),
                                     );
                                   },
@@ -376,32 +435,200 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                             ),
                     ),
 
+                    const SizedBox(height: AppSpacing.xl),
+
+                    // Section 4: Digital Passes Workspace
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                      ),
+                      child: SectionHeader(
+                        title: 'Digital Passes',
+                        actionLabel: wallet.passes.isNotEmpty
+                            ? 'View All (${wallet.passes.length})'
+                            : 'Add Pass',
+                        onActionPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => PassesScreen(
+                                openAddDialog: wallet.passes.isEmpty,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                      ),
+                      child: wallet.passes.isEmpty
+                          ? GlassCard(
+                              padding: const EdgeInsets.all(AppSpacing.md),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.getEmeraldAccent(
+                                        context,
+                                      ).withAlpha(25),
+                                      borderRadius: BorderRadius.circular(
+                                        AppRadius.md,
+                                      ),
+                                    ),
+                                    child: Icon(
+                                      Icons.qr_code_2_rounded,
+                                      color: AppColors.getEmeraldAccent(
+                                        context,
+                                      ),
+                                      size: 24,
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.md),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'No Passes Saved',
+                                          style: AppTextStyles.labelLarge
+                                              .copyWith(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                        ),
+                                        Text(
+                                          'Store boarding passes, event tickets, and loyalty QR codes.',
+                                          style: AppTextStyles.caption.copyWith(
+                                            color: AppColors.getTextSecondary(
+                                              context,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => const PassesScreen(
+                                            openAddDialog: true,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: const Text('Add'),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : Column(
+                              children: wallet.passes.take(2).map((pass) {
+                                return GlassCard(
+                                  padding: const EdgeInsets.all(AppSpacing.md),
+                                  margin: const EdgeInsets.only(
+                                    bottom: AppSpacing.sm,
+                                  ),
+                                  child: ListTile(
+                                    contentPadding: EdgeInsets.zero,
+                                    leading: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.getEmeraldAccent(
+                                          context,
+                                        ).withAlpha(25),
+                                        borderRadius: BorderRadius.circular(
+                                          AppRadius.sm,
+                                        ),
+                                      ),
+                                      child: Icon(
+                                        Icons.qr_code_2_rounded,
+                                        color: AppColors.getEmeraldAccent(
+                                          context,
+                                        ),
+                                        size: 22,
+                                      ),
+                                    ),
+                                    title: Text(
+                                      pass.title,
+                                      style: AppTextStyles.labelLarge.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                      '${pass.passType.replaceAll('_', ' ').toUpperCase()} • ${pass.issuer}',
+                                      style: AppTextStyles.caption.copyWith(
+                                        color: AppColors.getTextSecondary(
+                                          context,
+                                        ),
+                                      ),
+                                    ),
+                                    trailing: const Icon(
+                                      Icons.chevron_right_rounded,
+                                    ),
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => const PassesScreen(),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                    ),
+
                     // Section 4: Starred Favorites
-                    if (favoriteCards.isNotEmpty || favoriteDocs.isNotEmpty) ...[
+                    if (favoriteCards.isNotEmpty ||
+                        favoriteDocs.isNotEmpty) ...[
                       const SizedBox(height: AppSpacing.xl),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                        child: SectionHeader(
-                          title: 'Starred Favourites',
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg,
                         ),
+                        child: SectionHeader(title: 'Starred Favourites'),
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg,
+                        ),
                         child: GlassCard(
-                          padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: AppSpacing.xs,
+                          ),
                           child: Column(
                             children: [
                               if (favoriteCards.isNotEmpty)
                                 ListTile(
-                                  leading: const Icon(Icons.star_rounded, color: Colors.amber, size: 24),
+                                  leading: const Icon(
+                                    Icons.star_rounded,
+                                    color: Colors.amber,
+                                    size: 24,
+                                  ),
                                   title: Text(
                                     '${favoriteCards.length} Favourite Card(s)',
-                                    style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w600),
+                                    style: AppTextStyles.labelLarge.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                   subtitle: Text(
-                                    favoriteCards.map((c) => c.nickname).join(', '),
-                                    style: AppTextStyles.bodySmall.copyWith(color: AppColors.getTextSecondary(context)),
+                                    favoriteCards
+                                        .map((c) => c.nickname)
+                                        .join(', '),
+                                    style: AppTextStyles.bodySmall.copyWith(
+                                      color: AppColors.getTextSecondary(
+                                        context,
+                                      ),
+                                    ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -411,21 +638,39 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                                   ),
                                   onTap: () => Navigator.push(
                                     context,
-                                    MaterialPageRoute(builder: (_) => const CardsScreen()),
+                                    MaterialPageRoute(
+                                      builder: (_) => const CardsScreen(),
+                                    ),
                                   ),
                                 ),
                               if (favoriteDocs.isNotEmpty) ...[
                                 if (favoriteCards.isNotEmpty)
-                                  Divider(height: 1, indent: 56, color: AppColors.getBorder(context)),
+                                  Divider(
+                                    height: 1,
+                                    indent: 56,
+                                    color: AppColors.getBorder(context),
+                                  ),
                                 ListTile(
-                                  leading: const Icon(Icons.star_rounded, color: Colors.amber, size: 24),
+                                  leading: const Icon(
+                                    Icons.star_rounded,
+                                    color: Colors.amber,
+                                    size: 24,
+                                  ),
                                   title: Text(
                                     '${favoriteDocs.length} Favourite Document(s)',
-                                    style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w600),
+                                    style: AppTextStyles.labelLarge.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                   subtitle: Text(
-                                    favoriteDocs.map((d) => d.documentName).join(', '),
-                                    style: AppTextStyles.bodySmall.copyWith(color: AppColors.getTextSecondary(context)),
+                                    favoriteDocs
+                                        .map((d) => d.documentName)
+                                        .join(', '),
+                                    style: AppTextStyles.bodySmall.copyWith(
+                                      color: AppColors.getTextSecondary(
+                                        context,
+                                      ),
+                                    ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -435,7 +680,9 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                                   ),
                                   onTap: () => Navigator.push(
                                     context,
-                                    MaterialPageRoute(builder: (_) => const DocumentsScreen()),
+                                    MaterialPageRoute(
+                                      builder: (_) => const DocumentsScreen(),
+                                    ),
                                   ),
                                 ),
                               ],
@@ -460,7 +707,12 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     final textSecondary = AppColors.getTextSecondary(context);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.xs),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.md,
+        AppSpacing.lg,
+        AppSpacing.xs,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -479,11 +731,17 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: emerald.withAlpha(25),
                       borderRadius: BorderRadius.circular(AppRadius.xs),
-                      border: Border.all(color: emerald.withAlpha(70), width: 0.8),
+                      border: Border.all(
+                        color: emerald.withAlpha(70),
+                        width: 0.8,
+                      ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -506,9 +764,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
               const SizedBox(height: 2),
               Text(
                 'Card Studio • Smart Scanner • Secure Vault',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: textSecondary,
-                ),
+                style: AppTextStyles.bodySmall.copyWith(color: textSecondary),
               ),
             ],
           ),
@@ -520,7 +776,9 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const WalletSecuritySettingsScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const WalletSecuritySettingsScreen(),
+                    ),
                   );
                 },
               ),
@@ -538,9 +796,15 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     );
   }
 
-  Widget _buildExpiryBanner(BuildContext context, List<WalletDocumentModel> expiringDocs) {
+  Widget _buildExpiryBanner(
+    BuildContext context,
+    List<WalletDocumentModel> expiringDocs,
+  ) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.xs,
+      ),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
@@ -550,7 +814,11 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         ),
         child: Row(
           children: [
-            const Icon(Icons.event_busy_rounded, color: AppColors.warning, size: 24),
+            const Icon(
+              Icons.event_busy_rounded,
+              color: AppColors.warning,
+              size: 24,
+            ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
@@ -637,16 +905,35 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     );
   }
 
-  Widget _buildCategoryGrid(BuildContext context, List<WalletDocumentModel> docs) {
+  Widget _buildCategoryGrid(
+    BuildContext context,
+    List<WalletDocumentModel> docs,
+  ) {
     final categories = [
       {'id': 'aadhaar', 'label': 'Aadhaar', 'icon': Icons.badge_outlined},
       {'id': 'pan', 'label': 'PAN Card', 'icon': Icons.credit_card},
-      {'id': 'driving_license', 'label': 'Driving Lic.', 'icon': Icons.directions_car_outlined},
+      {
+        'id': 'driving_license',
+        'label': 'Driving Lic.',
+        'icon': Icons.directions_car_outlined,
+      },
       {'id': 'passport', 'label': 'Passport', 'icon': Icons.flight_outlined},
       {'id': 'rc', 'label': 'Vehicle RC', 'icon': Icons.speed_outlined},
-      {'id': 'insurance', 'label': 'Insurance', 'icon': Icons.security_outlined},
-      {'id': 'college_id', 'label': 'Student ID', 'icon': Icons.school_outlined},
-      {'id': 'certificate', 'label': 'Certificates', 'icon': Icons.workspace_premium_outlined},
+      {
+        'id': 'insurance',
+        'label': 'Insurance',
+        'icon': Icons.security_outlined,
+      },
+      {
+        'id': 'college_id',
+        'label': 'Student ID',
+        'icon': Icons.school_outlined,
+      },
+      {
+        'id': 'certificate',
+        'label': 'Certificates',
+        'icon': Icons.workspace_premium_outlined,
+      },
     ];
 
     final emerald = AppColors.getEmeraldAccent(context);
@@ -666,13 +953,17 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
       itemBuilder: (context, i) {
         final cat = categories[i];
         final catId = cat['id'] as String;
-        final matchingDocs = docs.where((d) => d.category.toLowerCase() == catId.toLowerCase()).toList();
+        final matchingDocs = docs
+            .where((d) => d.category.toLowerCase() == catId.toLowerCase())
+            .toList();
         final count = matchingDocs.length;
 
         return GlassCard(
           padding: EdgeInsets.zero,
           border: Border.all(
-            color: count > 0 ? emerald.withAlpha(120) : AppColors.getGlassBorder(context),
+            color: count > 0
+                ? emerald.withAlpha(120)
+                : AppColors.getGlassBorder(context),
             width: count > 0 ? 1.2 : 0.8,
           ),
           onTap: () {
@@ -681,7 +972,8 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => DocumentPreviewScreen(document: matchingDocs.first),
+                  builder: (_) =>
+                      DocumentPreviewScreen(document: matchingDocs.first),
                 ),
               );
             } else if (matchingDocs.length > 1) {
@@ -697,7 +989,8 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => DocumentCreationScreen(initialCategory: catId),
+                  builder: (_) =>
+                      DocumentCreationScreen(initialCategory: catId),
                 ),
               );
             }

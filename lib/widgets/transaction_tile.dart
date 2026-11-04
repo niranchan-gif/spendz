@@ -33,7 +33,7 @@ class TransactionTile extends StatelessWidget {
     final textPrimary = AppColors.getTextPrimary(context);
     final textSecondary = AppColors.getTextSecondary(context);
     final primaryColor = AppColors.getPrimary(context);
-    
+
     // Parse color or use default
     Color iconColor = primaryColor;
     if (category != null && category!.color.isNotEmpty) {
@@ -43,7 +43,9 @@ class TransactionTile extends StatelessWidget {
     }
 
     // Default icon
-    IconData iconData = isIncome ? Icons.arrow_downward_rounded : Icons.shopping_bag_outlined;
+    IconData iconData = isIncome
+        ? Icons.arrow_downward_rounded
+        : Icons.shopping_bag_outlined;
     if (category != null) {
       iconData = IconMapper.getIcon(category!.icon);
     }
@@ -57,9 +59,17 @@ class TransactionTile extends StatelessWidget {
           context: context,
           builder: (ctx) => AlertDialog(
             backgroundColor: surfaceColor,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: Text('Delete Transaction?', style: TextStyle(color: textPrimary, fontWeight: FontWeight.bold)),
-            content: Text('Are you sure you want to delete this transaction?', style: TextStyle(color: textSecondary)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: Text(
+              'Delete Transaction?',
+              style: TextStyle(color: textPrimary, fontWeight: FontWeight.bold),
+            ),
+            content: Text(
+              'Are you sure you want to delete this transaction?',
+              style: TextStyle(color: textSecondary),
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
@@ -67,13 +77,21 @@ class TransactionTile extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () {
-                  context.read<TransactionProvider>().deleteTransaction(transaction.id);
+                  context.read<TransactionProvider>().deleteTransaction(
+                    transaction.id,
+                  );
                   Navigator.of(ctx).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Transaction deleted')),
                   );
                 },
-                child: Text('Delete', style: TextStyle(color: AppColors.getError(context), fontWeight: FontWeight.bold)),
+                child: Text(
+                  'Delete',
+                  style: TextStyle(
+                    color: AppColors.getError(context),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ],
           ),
@@ -90,12 +108,28 @@ class TransactionTile extends StatelessWidget {
               child: Material(
                 color: Colors.transparent,
                 borderRadius: BorderRadius.circular(16),
-                child: _buildTile(context, iconData, iconColor, textPrimary, textSecondary, amountColor, isIncome),
+                child: _buildTile(
+                  context,
+                  iconData,
+                  iconColor,
+                  textPrimary,
+                  textSecondary,
+                  amountColor,
+                  isIncome,
+                ),
               ),
             )
           : Material(
               color: Colors.transparent,
-              child: _buildTile(context, iconData, iconColor, textPrimary, textSecondary, amountColor, isIncome),
+              child: _buildTile(
+                context,
+                iconData,
+                iconColor,
+                textPrimary,
+                textSecondary,
+                amountColor,
+                isIncome,
+              ),
             ),
     );
   }
@@ -113,147 +147,169 @@ class TransactionTile extends StatelessWidget {
       onTap: onTap ?? () => _showTransactionDetails(context),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            leading: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: iconColor.withAlpha(20),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(iconData, color: iconColor, size: 24),
-            ),
-            title: Text(
-              category?.name ?? 'Uncategorized',
-              style: AppTextStyles.labelLarge,
-            ),
-            subtitle: Consumer<WalletProvider>(
-              builder: (context, wallet, _) {
-                final card = transaction.cardId != null ? wallet.getCardById(transaction.cardId!) : null;
-                return Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          _getScrubbedName(),
-                          style: AppTextStyles.bodySmall,
-                          overflow: TextOverflow.ellipsis,
+      leading: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: iconColor.withAlpha(20),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Icon(iconData, color: iconColor, size: 24),
+      ),
+      title: Text(
+        category?.name ?? 'Uncategorized',
+        style: AppTextStyles.labelLarge,
+      ),
+      subtitle: Consumer<WalletProvider>(
+        builder: (context, wallet, _) {
+          final card = transaction.cardId != null
+              ? wallet.getCardById(transaction.cardId!)
+              : null;
+          return Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _getScrubbedName(),
+                    style: AppTextStyles.bodySmall,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (card != null) ...[
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 1.5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withAlpha(25),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: AppColors.primary.withAlpha(40),
                         ),
                       ),
-                      if (card != null) ...[
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withAlpha(25),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: AppColors.primary.withAlpha(40)),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.credit_card, size: 10, color: AppColors.primary),
-                                const SizedBox(width: 3),
-                                Flexible(
-                                  child: Text(
-                                    '${card.issuerName} • ${card.lastFour}',
-                                    style: const TextStyle(fontSize: 9, color: AppColors.primary, fontWeight: FontWeight.bold),
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
-                                  ),
-                                ),
-                              ],
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.credit_card,
+                            size: 10,
+                            color: AppColors.primary,
+                          ),
+                          const SizedBox(width: 3),
+                          Flexible(
+                            child: Text(
+                              '${card.issuerName} • ${card.lastFour}',
+                              style: const TextStyle(
+                                fontSize: 9,
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
                           ),
-                        ),
-                      ],
-                    ],
-                  ),
-                );
-              },
-            ),
-          trailing: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 160),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                // Amount row — badge above if present, amount always shown
-                if (transaction.expectedPayments > 0)
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 3),
-                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                    decoration: BoxDecoration(
-                      color: transaction.linkedPayments >= transaction.expectedPayments
-                          ? Colors.green.withAlpha(30)
-                          : Colors.orange.withAlpha(30),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: transaction.linkedPayments >= transaction.expectedPayments
-                            ? Colors.green.withAlpha(50)
-                            : Colors.orange.withAlpha(50),
+                        ],
                       ),
                     ),
-                    child: Text(
-                      transaction.linkedPayments >= transaction.expectedPayments
-                          ? 'Settled'
-                          : '${transaction.linkedPayments}/${transaction.expectedPayments} paid',
-                      style: TextStyle(
-                        fontSize: 9,
-                        color: transaction.linkedPayments >= transaction.expectedPayments
-                            ? Colors.green
-                            : Colors.orange,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  )
-                else if (transaction.owedAmount > 0)
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 3),
-                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.withAlpha(30),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.orange.withAlpha(50)),
-                    ),
-                    child: Text(
-                      'Owed ${CurrencyFormatter.format(transaction.owedAmount)}',
-                      style: const TextStyle(fontSize: 9, color: Colors.orange),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
                   ),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    '${isIncome ? '+' : '-'}${CurrencyFormatter.format(transaction.amount)}',
-                    style: AppTextStyles.bodyLarge.copyWith(
-                      color: amountColor,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 15,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  DateFormatter.formatTime(transaction.date),
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: textSecondary,
-                    fontSize: 10,
-                  ),
-                ),
+                ],
               ],
             ),
-          ),
+          );
+        },
+      ),
+      trailing: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 160),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            // Amount row — badge above if present, amount always shown
+            if (transaction.expectedPayments > 0)
+              Container(
+                margin: const EdgeInsets.only(bottom: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                decoration: BoxDecoration(
+                  color:
+                      transaction.linkedPayments >= transaction.expectedPayments
+                      ? Colors.green.withAlpha(30)
+                      : Colors.orange.withAlpha(30),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color:
+                        transaction.linkedPayments >=
+                            transaction.expectedPayments
+                        ? Colors.green.withAlpha(50)
+                        : Colors.orange.withAlpha(50),
+                  ),
+                ),
+                child: Text(
+                  transaction.linkedPayments >= transaction.expectedPayments
+                      ? 'Settled'
+                      : '${transaction.linkedPayments}/${transaction.expectedPayments} paid',
+                  style: TextStyle(
+                    fontSize: 9,
+                    color:
+                        transaction.linkedPayments >=
+                            transaction.expectedPayments
+                        ? Colors.green
+                        : Colors.orange,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              )
+            else if (transaction.owedAmount > 0)
+              Container(
+                margin: const EdgeInsets.only(bottom: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withAlpha(30),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange.withAlpha(50)),
+                ),
+                child: Text(
+                  'Owed ${CurrencyFormatter.format(transaction.owedAmount)}',
+                  style: const TextStyle(fontSize: 9, color: Colors.orange),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                '${isIncome ? '+' : '-'}${CurrencyFormatter.format(transaction.amount)}',
+                style: AppTextStyles.bodyLarge.copyWith(
+                  color: amountColor,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                ),
+              ),
+            ),
+            const SizedBox(height: 1),
+            Text(
+              DateFormatter.formatTime(transaction.date),
+              style: AppTextStyles.bodySmall.copyWith(
+                color: textSecondary,
+                fontSize: 10,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   void _showCategoryPicker(BuildContext context) {
     final catProvider = context.read<CategoryProvider>();
     final isIncome = transaction.type == 'income';
-    final categories = isIncome ? catProvider.incomeCategories : catProvider.expenseCategories;
+    final categories = isIncome
+        ? catProvider.incomeCategories
+        : catProvider.expenseCategories;
 
     showModalBottomSheet(
       context: context,
@@ -270,14 +326,17 @@ class TransactionTile extends StatelessWidget {
           builder: (context, scrollController) {
             return Material(
               color: Theme.of(context).scaffoldBackgroundColor,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
               child: Column(
                 children: [
                   // Drag handle
                   Padding(
                     padding: const EdgeInsets.only(top: 12, bottom: 4),
                     child: Container(
-                      width: 40, height: 4,
+                      width: 40,
+                      height: 4,
                       decoration: BoxDecoration(
                         color: Colors.white24,
                         borderRadius: BorderRadius.circular(2),
@@ -286,7 +345,10 @@ class TransactionTile extends StatelessWidget {
                   ),
                   Padding(
                     padding: const EdgeInsets.all(16.0),
-                    child: Text('Assign Category', style: AppTextStyles.heading3),
+                    child: Text(
+                      'Assign Category',
+                      style: AppTextStyles.heading3,
+                    ),
                   ),
                   Expanded(
                     child: ListView.builder(
@@ -294,13 +356,26 @@ class TransactionTile extends StatelessWidget {
                       itemCount: categories.length,
                       itemBuilder: (ctx, index) {
                         final cat = categories[index];
-                        final color = Color(int.tryParse(cat.color) ?? AppColors.primary.toARGB32());
+                        final color = Color(
+                          int.tryParse(cat.color) ??
+                              AppColors.primary.toARGB32(),
+                        );
                         return ListTile(
-                          leading: Icon(IconMapper.getIcon(cat.icon), color: color),
-                          title: Text(cat.name, style: AppTextStyles.bodyMedium),
+                          leading: Icon(
+                            IconMapper.getIcon(cat.icon),
+                            color: color,
+                          ),
+                          title: Text(
+                            cat.name,
+                            style: AppTextStyles.bodyMedium,
+                          ),
                           onTap: () {
-                            final updatedTx = transaction.copyWith(categoryId: cat.id);
-                            context.read<TransactionProvider>().updateTransaction(updatedTx);
+                            final updatedTx = transaction.copyWith(
+                              categoryId: cat.id,
+                            );
+                            context
+                                .read<TransactionProvider>()
+                                .updateTransaction(updatedTx);
                             Navigator.pop(ctx);
                           },
                         );
@@ -325,19 +400,27 @@ class TransactionTile extends StatelessWidget {
 
     if (transaction.type == 'income') {
       // Try to extract a standard UPI ID / VPA (e.g. username@bank)
-      final upiMatch = RegExp(r'[a-zA-Z0-9.\-_]+@[a-zA-Z0-9]+').firstMatch(rawName);
+      final upiMatch = RegExp(
+        r'[a-zA-Z0-9.\-_]+@[a-zA-Z0-9]+',
+      ).firstMatch(rawName);
       if (upiMatch != null) {
         return upiMatch.group(0)!;
       }
     }
 
-    String scrubbed = rawName.replaceAll(RegExp(r'\d{5,}'), ''); // Remove 5+ digits (account numbers, phone numbers)
-    scrubbed = scrubbed.replaceAll(RegExp(r'@[a-zA-Z0-9.]+'), ''); // Remove @bank extensions
+    String scrubbed = rawName.replaceAll(
+      RegExp(r'\d{5,}'),
+      '',
+    ); // Remove 5+ digits (account numbers, phone numbers)
+    scrubbed = scrubbed.replaceAll(
+      RegExp(r'@[a-zA-Z0-9.]+'),
+      '',
+    ); // Remove @bank extensions
     scrubbed = scrubbed.replaceAll(RegExp(r'UPI-?'), ''); // Remove UPI prefix
     // Clean up extra spaces or punctuation
     scrubbed = scrubbed.replaceAll(RegExp(r'[^\w\s]'), ' ').trim();
     if (scrubbed.isEmpty) scrubbed = 'Unknown';
-    
+
     final lower = scrubbed.toLowerCase();
     if (lower.contains('tamilnadu state transpo')) {
       return 'Tamilnadu State Transport Corporation';
@@ -345,7 +428,7 @@ class TransactionTile extends StatelessWidget {
     if (lower.contains('metropolitan transpo')) {
       return 'Metropolitan Transport Corporation';
     }
-    
+
     return scrubbed;
   }
 
@@ -361,10 +444,7 @@ class TransactionTile extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              scrubbed,
-              style: AppTextStyles.heading3,
-            ),
+            Text(scrubbed, style: AppTextStyles.heading3),
             const SizedBox(height: 16),
             Text(
               'Amount: ${CurrencyFormatter.format(transaction.amount)}',
@@ -386,7 +466,10 @@ class TransactionTile extends StatelessWidget {
                 Navigator.pop(ctx);
                 _showExpensePicker(context);
               },
-              child: const Text('Link to Expense', style: TextStyle(color: Colors.blue)),
+              child: const Text(
+                'Link to Expense',
+                style: TextStyle(color: Colors.blue),
+              ),
             )
           else if (transaction.type == 'expense')
             TextButton(
@@ -394,7 +477,10 @@ class TransactionTile extends StatelessWidget {
                 Navigator.pop(ctx);
                 _showSplitDialog(context);
               },
-              child: const Text('Mark as Split', style: TextStyle(color: Colors.orange)),
+              child: const Text(
+                'Mark as Split',
+                style: TextStyle(color: Colors.orange),
+              ),
             ),
           TextButton(
             onPressed: () {
@@ -411,9 +497,12 @@ class TransactionTile extends StatelessWidget {
       ),
     );
   }
+
   void _showSplitDialog(BuildContext context) {
     final TextEditingController peopleController = TextEditingController(
-      text: transaction.expectedPayments > 0 ? transaction.expectedPayments.toString() : '',
+      text: transaction.expectedPayments > 0
+          ? transaction.expectedPayments.toString()
+          : '',
     );
     final TextEditingController amountController = TextEditingController(
       text: transaction.owedAmount > 0 ? transaction.owedAmount.toString() : '',
@@ -429,7 +518,9 @@ class TransactionTile extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Original Amount: ${CurrencyFormatter.format(transaction.amount)}'),
+            Text(
+              'Original Amount: ${CurrencyFormatter.format(transaction.amount)}',
+            ),
             const SizedBox(height: 16),
             TextField(
               controller: peopleController,
@@ -442,7 +533,9 @@ class TransactionTile extends StatelessWidget {
             const SizedBox(height: 16),
             TextField(
               controller: amountController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               decoration: const InputDecoration(
                 labelText: 'Total Amount Owed to you',
                 prefixText: '₹ ',
@@ -483,7 +576,11 @@ class TransactionTile extends StatelessWidget {
               Navigator.pop(ctx);
 
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Expense marked as split. Expected refund: ${CurrencyFormatter.format(owed)} from $expected people')),
+                SnackBar(
+                  content: Text(
+                    'Expense marked as split. Expected refund: ${CurrencyFormatter.format(owed)} from $expected people',
+                  ),
+                ),
               );
             },
             child: const Text('Save'),
@@ -496,7 +593,10 @@ class TransactionTile extends StatelessWidget {
   void _showExpensePicker(BuildContext context) {
     final txProvider = context.read<TransactionProvider>();
     final recentExpenses = txProvider.transactions
-        .where((t) => t.type == 'expense' && t.owedAmount > 0 && t.id != transaction.id)
+        .where(
+          (t) =>
+              t.type == 'expense' && t.owedAmount > 0 && t.id != transaction.id,
+        )
         .toList();
 
     showModalBottomSheet(
@@ -514,14 +614,17 @@ class TransactionTile extends StatelessWidget {
           builder: (context, scrollController) {
             return Material(
               color: Theme.of(context).scaffoldBackgroundColor,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
               child: Column(
                 children: [
                   // Drag handle
                   Padding(
                     padding: const EdgeInsets.only(top: 12, bottom: 4),
                     child: Container(
-                      width: 40, height: 4,
+                      width: 40,
+                      height: 4,
                       decoration: BoxDecoration(
                         color: Colors.white24,
                         borderRadius: BorderRadius.circular(2),
@@ -530,7 +633,10 @@ class TransactionTile extends StatelessWidget {
                   ),
                   Padding(
                     padding: const EdgeInsets.all(16.0),
-                    child: Text('Select Expense to Offset', style: AppTextStyles.heading3),
+                    child: Text(
+                      'Select Expense to Offset',
+                      style: AppTextStyles.heading3,
+                    ),
                   ),
                   Expanded(
                     child: recentExpenses.isEmpty
@@ -541,31 +647,52 @@ class TransactionTile extends StatelessWidget {
                             itemBuilder: (ctx, index) {
                               final expense = recentExpenses[index];
                               return ListTile(
-                                title: Text(expense.merchant ?? expense.description ?? 'Unknown Expense', style: AppTextStyles.bodyMedium),
-                                subtitle: Text(DateFormatter.formatShortDate(expense.date), style: AppTextStyles.bodySmall),
+                                title: Text(
+                                  expense.merchant ??
+                                      expense.description ??
+                                      'Unknown Expense',
+                                  style: AppTextStyles.bodyMedium,
+                                ),
+                                subtitle: Text(
+                                  DateFormatter.formatShortDate(expense.date),
+                                  style: AppTextStyles.bodySmall,
+                                ),
                                 trailing: Text(
                                   CurrencyFormatter.format(expense.amount),
-                                  style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textPrimary),
+                                  style: AppTextStyles.bodyLarge.copyWith(
+                                    color: AppColors.textPrimary,
+                                  ),
                                 ),
                                 onTap: () {
-                                  final newExpenseAmount = (expense.amount - transaction.amount).clamp(0.0, double.infinity);
-                                  final newOwedAmount = (expense.owedAmount - transaction.amount).clamp(0.0, double.infinity);
-                                  final newLinkedPayments = expense.linkedPayments + 1;
+                                  final newExpenseAmount =
+                                      (expense.amount - transaction.amount)
+                                          .clamp(0.0, double.infinity);
+                                  final newOwedAmount =
+                                      (expense.owedAmount - transaction.amount)
+                                          .clamp(0.0, double.infinity);
+                                  final newLinkedPayments =
+                                      expense.linkedPayments + 1;
                                   final updatedExpense = expense.copyWith(
                                     amount: newExpenseAmount,
                                     owedAmount: newOwedAmount,
                                     linkedPayments: newLinkedPayments,
-                                    description: '${expense.description ?? ''} (Refunded ${CurrencyFormatter.format(transaction.amount)} from ${transaction.merchant ?? 'Income'})',
+                                    description:
+                                        '${expense.description ?? ''} (Refunded ${CurrencyFormatter.format(transaction.amount)} from ${transaction.merchant ?? 'Income'})',
                                   );
                                   txProvider.updateTransaction(updatedExpense);
                                   final updatedIncome = transaction.copyWith(
                                     type: 'refund',
-                                    description: 'Linked refund to ${expense.merchant ?? expense.description ?? 'expense'}',
+                                    description:
+                                        'Linked refund to ${expense.merchant ?? expense.description ?? 'expense'}',
                                   );
                                   txProvider.updateTransaction(updatedIncome);
                                   Navigator.pop(ctx);
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Linked to expense! Amount reduced to ${CurrencyFormatter.format(newExpenseAmount)}.')),
+                                    SnackBar(
+                                      content: Text(
+                                        'Linked to expense! Amount reduced to ${CurrencyFormatter.format(newExpenseAmount)}.',
+                                      ),
+                                    ),
                                   );
                                 },
                               );
@@ -581,4 +708,3 @@ class TransactionTile extends StatelessWidget {
     );
   }
 }
-

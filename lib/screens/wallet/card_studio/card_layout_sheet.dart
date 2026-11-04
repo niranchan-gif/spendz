@@ -67,11 +67,15 @@ class _CardLayoutSheetState extends State<CardLayoutSheet> {
                     children: [
                       Text(
                         'Change Card Layout',
-                        style: AppTextStyles.getHeading2(context).copyWith(fontWeight: FontWeight.bold),
+                        style: AppTextStyles.getHeading2(
+                          context,
+                        ).copyWith(fontWeight: FontWeight.bold),
                       ),
                       Text(
                         'Customize typography & element composition',
-                        style: AppTextStyles.caption.copyWith(color: AppColors.getTextSecondary(context)),
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.getTextSecondary(context),
+                        ),
                       ),
                     ],
                   ),
@@ -112,7 +116,8 @@ class _CardLayoutSheetState extends State<CardLayoutSheet> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: CardStudioLayout.allLayouts.length,
-                separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.xs),
+                separatorBuilder: (_, _) =>
+                    const SizedBox(height: AppSpacing.xs),
                 itemBuilder: (context, index) {
                   final layout = CardStudioLayout.allLayouts[index];
                   final isSelected = layout.id == _selectedLayout.id;
@@ -123,7 +128,10 @@ class _CardLayoutSheetState extends State<CardLayoutSheet> {
                       setState(() => _selectedLayout = layout);
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? AppColors.getPrimary(context).withAlpha(20)
@@ -161,12 +169,13 @@ class _CardLayoutSheetState extends State<CardLayoutSheet> {
                               children: [
                                 Text(
                                   layout.name,
-                                  style: AppTextStyles.getBodyMedium(context).copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: isSelected
-                                        ? AppColors.getPrimary(context)
-                                        : AppColors.getTextPrimary(context),
-                                  ),
+                                  style: AppTextStyles.getBodyMedium(context)
+                                      .copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: isSelected
+                                            ? AppColors.getPrimary(context)
+                                            : AppColors.getTextPrimary(context),
+                                      ),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
@@ -181,10 +190,14 @@ class _CardLayoutSheetState extends State<CardLayoutSheet> {
                           ),
                           const SizedBox(width: 8),
                           Icon(
-                            isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
+                            isSelected
+                                ? Icons.radio_button_checked
+                                : Icons.radio_button_off,
                             color: isSelected
                                 ? AppColors.getPrimary(context)
-                                : AppColors.getTextSecondary(context).withAlpha(90),
+                                : AppColors.getTextSecondary(
+                                    context,
+                                  ).withAlpha(90),
                             size: 20,
                           ),
                         ],
@@ -213,13 +226,18 @@ class _CardLayoutSheetState extends State<CardLayoutSheet> {
                         final provider = context.read<WalletCardProvider>();
                         final walletProvider = context.read<WalletProvider>();
                         final messenger = ScaffoldMessenger.maybeOf(context);
-                        await provider.updateCardLayout(widget.card.id, _selectedLayout.id);
+                        await provider.updateCardLayout(
+                          widget.card.id,
+                          _selectedLayout.id,
+                        );
                         if (context.mounted) {
                           walletProvider.loadWallet();
                           try {
                             messenger?.showSnackBar(
                               SnackBar(
-                                content: Text('Applied "${_selectedLayout.name}" layout'),
+                                content: Text(
+                                  'Applied "${_selectedLayout.name}" layout',
+                                ),
                                 backgroundColor: AppColors.success,
                               ),
                             );

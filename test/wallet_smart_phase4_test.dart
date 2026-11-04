@@ -191,7 +191,9 @@ void main() {
 
     // Seed mock secure storage with a clean initial state
     FlutterSecureStorage.setMockInitialValues({});
-    final keyService = WalletKeyService(secureStorage: const FlutterSecureStorage());
+    final keyService = WalletKeyService(
+      secureStorage: const FlutterSecureStorage(),
+    );
     final encService = DocumentEncryptionService();
 
     vaultService = DocumentVaultService(
@@ -214,15 +216,24 @@ void main() {
   });
 
   group('1. OCR Engine & Text Extraction Tests', () {
-    test('MockOcrEngine returns structured OcrResult with fullText, blocks, and lines', () async {
-      final mock = MockOcrEngine(predefinedText: 'Government of India\nUnique Identification Authority of India\n1234 5678 9012');
-      final result = await mock.processImageBytes(Uint8List(10));
+    test(
+      'MockOcrEngine returns structured OcrResult with fullText, blocks, and lines',
+      () async {
+        final mock = MockOcrEngine(
+          predefinedText:
+              'Government of India\nUnique Identification Authority of India\n1234 5678 9012',
+        );
+        final result = await mock.processImageBytes(Uint8List(10));
 
-      expect(result.isSuccess, isTrue);
-      expect(result.fullText, contains('Unique Identification Authority of India'));
-      expect(result.lines.length, equals(3));
-      expect(result.lines[2].text, equals('1234 5678 9012'));
-    });
+        expect(result.isSuccess, isTrue);
+        expect(
+          result.fullText,
+          contains('Unique Identification Authority of India'),
+        );
+        expect(result.lines.length, equals(3));
+        expect(result.lines[2].text, equals('1234 5678 9012'));
+      },
+    );
 
     test('MockOcrEngine handles failure gracefully', () async {
       final mock = MockOcrEngine(shouldFail: true);
@@ -355,25 +366,35 @@ void main() {
       expect(res.confidence, greaterThanOrEqualTo(0.70));
     });
 
-    test('3. Low-confidence or ambiguous text defaults to other/unclassified', () {
-      const ambiguousText = 'Thank you for shopping at Supermart. Item 1: Apples. Total: 150';
-      final res = classifier.classify(ambiguousText);
-      expect(res.category, equals('other'));
-      expect(res.isHighConfidence, isFalse);
-    });
+    test(
+      '3. Low-confidence or ambiguous text defaults to other/unclassified',
+      () {
+        const ambiguousText =
+            'Thank you for shopping at Supermart. Item 1: Apples. Total: 150';
+        final res = classifier.classify(ambiguousText);
+        expect(res.category, equals('other'));
+        expect(res.isHighConfidence, isFalse);
+      },
+    );
   });
 
   group('4. Structured Field & Date Extraction Tests', () {
-    test('Extracts masked document number for Aadhaar (privacy protection)', () {
-      const text = '''
+    test(
+      'Extracts masked document number for Aadhaar (privacy protection)',
+      () {
+        const text = '''
         Unique Identification Authority of India
         9876 5432 1098
       ''';
-      final fields = fieldExtractor.extract(rawText: text, category: 'aadhaar');
-      expect(fields.documentNumber, equals('•••• •••• 1098'));
-      expect(fields.rawDocumentNumber, equals('9876 5432 1098'));
-      expect(fields.issuer, contains('UIDAI'));
-    });
+        final fields = fieldExtractor.extract(
+          rawText: text,
+          category: 'aadhaar',
+        );
+        expect(fields.documentNumber, equals('•••• •••• 1098'));
+        expect(fields.rawDocumentNumber, equals('9876 5432 1098'));
+        expect(fields.issuer, contains('UIDAI'));
+      },
+    );
 
     test('Extracts PAN number and holder name', () {
       const text = '''
@@ -388,27 +409,39 @@ void main() {
       expect(fields.holderName, equals('Rajesh Khanna'));
     });
 
-    test('5. Contextual Date Extraction: Associates date with expiry only when contextual keywords present', () {
-      const textWithContext = '''
+    test(
+      '5. Contextual Date Extraction: Associates date with expiry only when contextual keywords present',
+      () {
+        const textWithContext = '''
         Transport Department
         Licence to Drive
         Issue Date: 12/04/2018
         Valid Till: 11/04/2038
       ''';
-      final fields = fieldExtractor.extract(rawText: textWithContext, category: 'driving_license');
-      expect(fields.issueDate, equals(DateTime(2018, 4, 12)));
-      expect(fields.expiryDate, equals(DateTime(2038, 4, 11)));
-    });
+        final fields = fieldExtractor.extract(
+          rawText: textWithContext,
+          category: 'driving_license',
+        );
+        expect(fields.issueDate, equals(DateTime(2018, 4, 12)));
+        expect(fields.expiryDate, equals(DateTime(2038, 4, 11)));
+      },
+    );
 
-    test('6. Invalid date handling: Does NOT infer random dates as expiry date without contextual markers', () {
-      const textWithoutExpiryKeywords = '''
+    test(
+      '6. Invalid date handling: Does NOT infer random dates as expiry date without contextual markers',
+      () {
+        const textWithoutExpiryKeywords = '''
         Random Note with Date
         Meeting scheduled on 15/08/2025
         Amount: 500
       ''';
-      final fields = fieldExtractor.extract(rawText: textWithoutExpiryKeywords, category: 'other');
-      expect(fields.expiryDate, isNull);
-    });
+        final fields = fieldExtractor.extract(
+          rawText: textWithoutExpiryKeywords,
+          category: 'other',
+        );
+        expect(fields.expiryDate, isNull);
+      },
+    );
   });
 
   group('7. Image Processing, Enhancement & PDF Generation Tests', () {
@@ -438,7 +471,10 @@ void main() {
       final page1 = _generateDummyImageBytes(width: 100, height: 100);
       final page2 = _generateDummyImageBytes(width: 100, height: 100);
 
-      final pdfBytes = imageProcessor.createPdfFromImages([page1, page2], title: 'Test Multi-Page');
+      final pdfBytes = imageProcessor.createPdfFromImages([
+        page1,
+        page2,
+      ], title: 'Test Multi-Page');
       expect(pdfBytes, isNotEmpty);
       // Verify PDF magic header '%PDF'
       final header = String.fromCharCodes(pdfBytes.take(4));
@@ -447,152 +483,187 @@ void main() {
   });
 
   group('11. Encrypted Document Storing & Vault Integration', () {
-    test('Imports document with AES-256-GCM authenticated encryption and saves to DB', () async {
-      final dummyImage = _generateDummyImageBytes();
-      final doc = await vaultService.importDocument(
-        documentName: 'Synthetic PAN Card',
-        category: 'pan',
-        mimeType: 'image/jpeg',
-        fileBytes: dummyImage,
-        description: 'Number: ABCDE1234F',
-        issueDate: DateTime(2020, 1, 1),
-        expiryDate: DateTime(2030, 1, 1),
-      );
+    test(
+      'Imports document with AES-256-GCM authenticated encryption and saves to DB',
+      () async {
+        final dummyImage = _generateDummyImageBytes();
+        final doc = await vaultService.importDocument(
+          documentName: 'Synthetic PAN Card',
+          category: 'pan',
+          mimeType: 'image/jpeg',
+          fileBytes: dummyImage,
+          description: 'Number: ABCDE1234F',
+          issueDate: DateTime(2020, 1, 1),
+          expiryDate: DateTime(2030, 1, 1),
+        );
 
-      expect(doc.id, isNotEmpty);
-      expect(doc.documentName, equals('Synthetic PAN Card'));
+        expect(doc.id, isNotEmpty);
+        expect(doc.documentName, equals('Synthetic PAN Card'));
 
-      // Check SQLite table has record
-      final fromDb = await docRepo.getDocumentById(doc.id);
-      expect(fromDb, isNotNull);
-      expect(fromDb!.category, equals('pan'));
+        // Check SQLite table has record
+        final fromDb = await docRepo.getDocumentById(doc.id);
+        expect(fromDb, isNotNull);
+        expect(fromDb!.category, equals('pan'));
 
-      // Verify file on disk is ciphertext (magic 'SPDZ')
-      final cipherFile = File(fromDb.encryptedFilePath);
-      expect(await cipherFile.exists(), isTrue);
-      final rawCipher = await cipherFile.readAsBytes();
-      final magic = String.fromCharCodes(rawCipher.take(4));
-      expect(magic, equals('SPDZ'));
+        // Verify file on disk is ciphertext (magic 'SPDZ')
+        final cipherFile = File(fromDb.encryptedFilePath);
+        expect(await cipherFile.exists(), isTrue);
+        final rawCipher = await cipherFile.readAsBytes();
+        final magic = String.fromCharCodes(rawCipher.take(4));
+        expect(magic, equals('SPDZ'));
 
-      // Clean up
-      await vaultService.deleteDocument(doc.id);
-      expect(await cipherFile.exists(), isFalse);
-    });
+        // Clean up
+        await vaultService.deleteDocument(doc.id);
+        expect(await cipherFile.exists(), isFalse);
+      },
+    );
   });
 
   group('12. Card Studio CRUD Regression Tests', () {
-    test('Full Card lifecycle: create, read, update, favorite toggle, delete', () async {
-      final card = WalletCardModel(
-        id: 'card-test-uuid-1',
-        nickname: 'Primary Shopping Card',
-        issuerName: 'HDFC Bank',
-        cardholderName: 'John Doe',
-        maskedNumber: '•••• •••• •••• 4321',
-        lastFour: '4321',
-        expiryMonth: 12,
-        expiryYear: 28,
-        cardType: 'credit',
-        cardNetwork: 'visa',
-        themeGradient: 'emerald',
-        isFavorite: false,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
+    test(
+      'Full Card lifecycle: create, read, update, favorite toggle, delete',
+      () async {
+        final card = WalletCardModel(
+          id: 'card-test-uuid-1',
+          nickname: 'Primary Shopping Card',
+          issuerName: 'HDFC Bank',
+          cardholderName: 'John Doe',
+          maskedNumber: '•••• •••• •••• 4321',
+          lastFour: '4321',
+          expiryMonth: 12,
+          expiryYear: 28,
+          cardType: 'credit',
+          cardNetwork: 'visa',
+          themeGradient: 'emerald',
+          isFavorite: false,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
 
-      await cardRepo.insert(card);
+        await cardRepo.insert(card);
 
-      final readCard = await cardRepo.getCardById('card-test-uuid-1');
-      expect(readCard, isNotNull);
-      expect(readCard!.nickname, equals('Primary Shopping Card'));
-      expect(readCard.lastFour, equals('4321'));
+        final readCard = await cardRepo.getCardById('card-test-uuid-1');
+        expect(readCard, isNotNull);
+        expect(readCard!.nickname, equals('Primary Shopping Card'));
+        expect(readCard.lastFour, equals('4321'));
 
-      // Toggle favorite
-      await cardRepo.toggleFavorite('card-test-uuid-1', true);
-      final favCard = await cardRepo.getCardById('card-test-uuid-1');
-      expect(favCard!.isFavorite, isTrue);
+        // Toggle favorite
+        await cardRepo.toggleFavorite('card-test-uuid-1', true);
+        final favCard = await cardRepo.getCardById('card-test-uuid-1');
+        expect(favCard!.isFavorite, isTrue);
 
-      // Associate card with a transaction
-      final txn = TransactionModel(
-        id: 'txn-card-link-1',
-        amount: 1450.0,
-        type: 'expense',
-        merchant: 'Amazon Superstore',
-        date: DateTime.now(),
-        source: 'manual',
-        cardId: 'card-test-uuid-1',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-      await txnDao.insert(txn);
+        // Associate card with a transaction
+        final txn = TransactionModel(
+          id: 'txn-card-link-1',
+          amount: 1450.0,
+          type: 'expense',
+          merchant: 'Amazon Superstore',
+          date: DateTime.now(),
+          source: 'manual',
+          cardId: 'card-test-uuid-1',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        await txnDao.insert(txn);
 
-      final linkedTxns = await txnDao.getTransactionsByCard('card-test-uuid-1');
-      expect(linkedTxns.length, equals(1));
-      expect(linkedTxns.first.merchant, equals('Amazon Superstore'));
+        final linkedTxns = await txnDao.getTransactionsByCard(
+          'card-test-uuid-1',
+        );
+        expect(linkedTxns.length, equals(1));
+        expect(linkedTxns.first.merchant, equals('Amazon Superstore'));
 
-      // Delete card and verify transaction is safely unlinked (card_id set to null)
-      await cardRepo.delete('card-test-uuid-1');
-      final deletedCard = await cardRepo.getCardById('card-test-uuid-1');
-      expect(deletedCard, isNull);
+        // Delete card and verify transaction is safely unlinked (card_id set to null)
+        await cardRepo.delete('card-test-uuid-1');
+        final deletedCard = await cardRepo.getCardById('card-test-uuid-1');
+        expect(deletedCard, isNull);
 
-      final unlinkedTxn = await txnDao.getTransactionById('txn-card-link-1');
-      expect(unlinkedTxn, isNotNull);
-      expect(unlinkedTxn!.cardId, isNull);
-    });
+        final unlinkedTxn = await txnDao.getTransactionById('txn-card-link-1');
+        expect(unlinkedTxn, isNotNull);
+        expect(unlinkedTxn!.cardId, isNull);
+      },
+    );
   });
 
   group('13. Expiry Notification Intelligence Tests', () {
-    test('Schedules reminders at 30 days, 7 days, 1 day, and on expiry', () async {
-      final now = DateTime(2026, 6, 1, 10, 0);
-      final expiryDate = DateTime(2026, 7, 15); // Expiring in 44 days
+    test(
+      'Schedules reminders at 30 days, 7 days, 1 day, and on expiry',
+      () async {
+        final now = DateTime(2026, 6, 1, 10, 0);
+        final expiryDate = DateTime(2026, 7, 15); // Expiring in 44 days
 
-      final doc = WalletDocumentModel(
-        id: 'doc-expiry-test-1',
-        documentName: 'Driving Licence',
-        category: 'driving_license',
-        encryptedFilePath: '/dummy/path',
-        mimeType: 'image/jpeg',
-        expiryDate: expiryDate,
-        createdAt: now,
-        updatedAt: now,
-      );
+        final doc = WalletDocumentModel(
+          id: 'doc-expiry-test-1',
+          documentName: 'Driving Licence',
+          category: 'driving_license',
+          encryptedFilePath: '/dummy/path',
+          mimeType: 'image/jpeg',
+          expiryDate: expiryDate,
+          createdAt: now,
+          updatedAt: now,
+        );
 
-      await expiryService.scheduleRemindersForDocument(doc, referenceNow: now);
+        await expiryService.scheduleRemindersForDocument(
+          doc,
+          referenceNow: now,
+        );
 
-      // Should schedule all 4 future intervals: 30 days, 7 days, 1 day, 0 days
-      expect(mockNotifGateway.scheduledNotifications.length, equals(4));
+        // Should schedule all 4 future intervals: 30 days, 7 days, 1 day, 0 days
+        expect(mockNotifGateway.scheduledNotifications.length, equals(4));
 
-      final baseId = expiryService.getBaseNotificationId(doc.id);
-      expect(mockNotifGateway.scheduledNotifications.containsKey(baseId + 0), isTrue); // 30 days
-      expect(mockNotifGateway.scheduledNotifications.containsKey(baseId + 1), isTrue); // 7 days
-      expect(mockNotifGateway.scheduledNotifications.containsKey(baseId + 2), isTrue); // 1 day
-      expect(mockNotifGateway.scheduledNotifications.containsKey(baseId + 3), isTrue); // Day of expiry
-    });
+        final baseId = expiryService.getBaseNotificationId(doc.id);
+        expect(
+          mockNotifGateway.scheduledNotifications.containsKey(baseId + 0),
+          isTrue,
+        ); // 30 days
+        expect(
+          mockNotifGateway.scheduledNotifications.containsKey(baseId + 1),
+          isTrue,
+        ); // 7 days
+        expect(
+          mockNotifGateway.scheduledNotifications.containsKey(baseId + 2),
+          isTrue,
+        ); // 1 day
+        expect(
+          mockNotifGateway.scheduledNotifications.containsKey(baseId + 3),
+          isTrue,
+        ); // Day of expiry
+      },
+    );
 
-    test('14. Duplicate notification prevention: Rescheduling replaces existing notifications', () async {
-      final now = DateTime(2026, 6, 1, 10, 0);
-      final expiryDate = DateTime(2026, 7, 15);
+    test(
+      '14. Duplicate notification prevention: Rescheduling replaces existing notifications',
+      () async {
+        final now = DateTime(2026, 6, 1, 10, 0);
+        final expiryDate = DateTime(2026, 7, 15);
 
-      final doc = WalletDocumentModel(
-        id: 'doc-expiry-dup-1',
-        documentName: 'Passport',
-        category: 'passport',
-        encryptedFilePath: '/dummy/path',
-        mimeType: 'image/jpeg',
-        expiryDate: expiryDate,
-        createdAt: now,
-        updatedAt: now,
-      );
+        final doc = WalletDocumentModel(
+          id: 'doc-expiry-dup-1',
+          documentName: 'Passport',
+          category: 'passport',
+          encryptedFilePath: '/dummy/path',
+          mimeType: 'image/jpeg',
+          expiryDate: expiryDate,
+          createdAt: now,
+          updatedAt: now,
+        );
 
-      // Schedule first time
-      await expiryService.scheduleRemindersForDocument(doc, referenceNow: now);
-      final countFirst = mockNotifGateway.scheduledNotifications.length;
+        // Schedule first time
+        await expiryService.scheduleRemindersForDocument(
+          doc,
+          referenceNow: now,
+        );
+        final countFirst = mockNotifGateway.scheduledNotifications.length;
 
-      // Reschedule (e.g. user edited document)
-      await expiryService.scheduleRemindersForDocument(doc, referenceNow: now);
-      final countSecond = mockNotifGateway.scheduledNotifications.length;
+        // Reschedule (e.g. user edited document)
+        await expiryService.scheduleRemindersForDocument(
+          doc,
+          referenceNow: now,
+        );
+        final countSecond = mockNotifGateway.scheduledNotifications.length;
 
-      expect(countSecond, equals(countFirst));
-    });
+        expect(countSecond, equals(countFirst));
+      },
+    );
 
     test('15. Notification cancellation on document deletion', () async {
       final now = DateTime(2026, 6, 1, 10, 0);
@@ -619,78 +690,88 @@ void main() {
   });
 
   group('16. Financial Integrity & Gmail Import Regression Tests', () {
-    test('17. Existing transaction calculations and category mapping remain unchanged', () async {
-      final txn1 = TransactionModel(
-        id: 'txn-calc-1',
-        amount: 250.0,
-        type: 'expense',
-        merchant: 'Swiggy',
-        date: DateTime.now(),
-        source: 'manual',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-      final txn2 = TransactionModel(
-        id: 'txn-calc-2',
-        amount: 750.0,
-        type: 'expense',
-        merchant: 'Zomato',
-        date: DateTime.now(),
-        source: 'manual',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-      final incomeTxn = TransactionModel(
-        id: 'txn-calc-3',
-        amount: 50000.0,
-        type: 'income',
-        merchant: 'Employer Salary',
-        date: DateTime.now(),
-        source: 'manual',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
+    test(
+      '17. Existing transaction calculations and category mapping remain unchanged',
+      () async {
+        final txn1 = TransactionModel(
+          id: 'txn-calc-1',
+          amount: 250.0,
+          type: 'expense',
+          merchant: 'Swiggy',
+          date: DateTime.now(),
+          source: 'manual',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        final txn2 = TransactionModel(
+          id: 'txn-calc-2',
+          amount: 750.0,
+          type: 'expense',
+          merchant: 'Zomato',
+          date: DateTime.now(),
+          source: 'manual',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        final incomeTxn = TransactionModel(
+          id: 'txn-calc-3',
+          amount: 50000.0,
+          type: 'income',
+          merchant: 'Employer Salary',
+          date: DateTime.now(),
+          source: 'manual',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
 
-      await txnDao.insert(txn1);
-      await txnDao.insert(txn2);
-      await txnDao.insert(incomeTxn);
+        await txnDao.insert(txn1);
+        await txnDao.insert(txn2);
+        await txnDao.insert(incomeTxn);
 
-      final all = await txnDao.getAllTransactions();
-      expect(all.length, equals(3));
+        final all = await txnDao.getAllTransactions();
+        expect(all.length, equals(3));
 
-      double totalExpense = 0.0;
-      double totalIncome = 0.0;
-      for (final t in all) {
-        if (t.type == 'expense') totalExpense += t.amount;
-        if (t.type == 'income') totalIncome += t.amount;
-      }
+        double totalExpense = 0.0;
+        double totalIncome = 0.0;
+        for (final t in all) {
+          if (t.type == 'expense') totalExpense += t.amount;
+          if (t.type == 'income') totalIncome += t.amount;
+        }
 
-      expect(totalExpense, equals(1000.0));
-      expect(totalIncome, equals(50000.0));
-    });
+        expect(totalExpense, equals(1000.0));
+        expect(totalIncome, equals(50000.0));
+      },
+    );
 
-    test('18. Existing duplicate transaction detection (Gmail HDFC import safeguard) works as designed', () async {
-      final now = DateTime.now();
-      final txn = TransactionModel(
-        id: 'txn-gmail-1',
-        amount: 1200.0,
-        type: 'expense',
-        merchant: 'HDFC Pos Payment',
-        referenceId: 'HDFC_REF_12345678',
-        date: now,
-        source: 'bank_email',
-        createdAt: now,
-        updatedAt: now,
-      );
+    test(
+      '18. Existing duplicate transaction detection (Gmail HDFC import safeguard) works as designed',
+      () async {
+        final now = DateTime.now();
+        final txn = TransactionModel(
+          id: 'txn-gmail-1',
+          amount: 1200.0,
+          type: 'expense',
+          merchant: 'HDFC Pos Payment',
+          referenceId: 'HDFC_REF_12345678',
+          date: now,
+          source: 'bank_email',
+          createdAt: now,
+          updatedAt: now,
+        );
 
-      await txnDao.insert(txn);
+        await txnDao.insert(txn);
 
-      // Verify transactionExistsWithReference detects existing duplicate
-      final exists = await txnDao.transactionExistsWithReference('HDFC_REF_12345678');
-      expect(exists, isTrue);
+        // Verify transactionExistsWithReference detects existing duplicate
+        final exists = await txnDao.transactionExistsWithReference(
+          'HDFC_REF_12345678',
+        );
+        expect(exists, isTrue);
 
-      final nonExistent = await txnDao.transactionExistsWithReference('NON_EXISTENT_REF');
-      expect(nonExistent, isFalse);
-    });
+        final nonExistent = await txnDao.transactionExistsWithReference(
+          'NON_EXISTENT_REF',
+        );
+        expect(nonExistent, isFalse);
+      },
+    );
   });
 }

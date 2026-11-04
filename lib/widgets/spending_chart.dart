@@ -25,18 +25,11 @@ class SpendingChart extends StatelessWidget {
             drawVerticalLine: false,
             horizontalInterval: 1000,
             getDrawingHorizontalLine: (value) {
-              return const FlLine(
-                color: AppColors.divider,
-                strokeWidth: 1,
-              );
+              return const FlLine(color: AppColors.divider, strokeWidth: 1);
             },
           ),
-          titlesData: const FlTitlesData(
-            show: false,
-          ),
-          borderData: FlBorderData(
-            show: false,
-          ),
+          titlesData: const FlTitlesData(show: false),
+          borderData: FlBorderData(show: false),
           barGroups: spots.map((spot) {
             return BarChartGroupData(
               x: spot.x.toInt(),
@@ -45,7 +38,9 @@ class SpendingChart extends StatelessWidget {
                   toY: spot.y,
                   color: AppColors.primary,
                   width: 6,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(4),
+                  ),
                 ),
               ],
             );

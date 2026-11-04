@@ -34,10 +34,12 @@ class DocumentAttachmentScannerScreen extends StatefulWidget {
   });
 
   @override
-  State<DocumentAttachmentScannerScreen> createState() => _DocumentAttachmentScannerScreenState();
+  State<DocumentAttachmentScannerScreen> createState() =>
+      _DocumentAttachmentScannerScreenState();
 }
 
-class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScannerScreen> {
+class _DocumentAttachmentScannerScreenState
+    extends State<DocumentAttachmentScannerScreen> {
   late final DocumentScannerService _scannerService;
   final List<Uint8List> _pages = [];
   Uint8List? _pdfBytes;
@@ -60,8 +62,12 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
   }
 
   String get _defaultPdfName {
-    if (widget.suggestedTitle != null && widget.suggestedTitle!.trim().isNotEmpty) {
-      final sanitized = widget.suggestedTitle!.trim().replaceAll(RegExp(r'[^\w\s\-]'), '').replaceAll(RegExp(r'\s+'), '_');
+    if (widget.suggestedTitle != null &&
+        widget.suggestedTitle!.trim().isNotEmpty) {
+      final sanitized = widget.suggestedTitle!
+          .trim()
+          .replaceAll(RegExp(r'[^\w\s\-]'), '')
+          .replaceAll(RegExp(r'\s+'), '_');
       return sanitized.endsWith('.pdf') ? sanitized : '$sanitized.pdf';
     }
     return DocumentScannerService.getDefaultPdfFileName(widget.category);
@@ -75,7 +81,9 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
       _processingMessage = 'Launching Smart Document Scanner...';
     });
     try {
-      final scannedPages = await _scannerService.scanWithNativeScanner(maxPages: 15);
+      final scannedPages = await _scannerService.scanWithNativeScanner(
+        maxPages: 15,
+      );
       if (scannedPages.isNotEmpty) {
         setState(() {
           _pages.addAll(scannedPages);
@@ -191,7 +199,10 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
         _pages[_currentPageIndex] = enhanced;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Document clarity enhanced!'), duration: Duration(seconds: 1)),
+        const SnackBar(
+          content: Text('Document clarity enhanced!'),
+          duration: Duration(seconds: 1),
+        ),
       );
     } finally {
       setState(() => _isProcessing = false);
@@ -210,11 +221,17 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
           'This automatically removes extraneous background borders around your document.',
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Auto-Crop Margins', style: TextStyle(color: Colors.white)),
+            child: const Text(
+              'Auto-Crop Margins',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -288,9 +305,14 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Page?'),
-        content: Text('Remove Page ${_currentPageIndex + 1} from this document scan session?'),
+        content: Text(
+          'Remove Page ${_currentPageIndex + 1} from this document scan session?',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
             onPressed: () => Navigator.pop(ctx, true),
@@ -339,7 +361,10 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('PDF generation failed: $e'), backgroundColor: Colors.redAccent),
+          SnackBar(
+            content: Text('PDF generation failed: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
         );
       }
     } finally {
@@ -349,7 +374,9 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
 
   void _showPdfCompletionSheet(Uint8List pdfData, String fileName) {
     final sizeStr = DocumentScannerService.formatFileSize(pdfData.length);
-    final pageCount = _pages.isNotEmpty ? _pages.length : _scannerService.getPdfPageCount(pdfData);
+    final pageCount = _pages.isNotEmpty
+        ? _pages.length
+        : _scannerService.getPdfPageCount(pdfData);
 
     showModalBottomSheet(
       context: context,
@@ -359,7 +386,9 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
           color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(AppRadius.lg),
+          ),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -384,7 +413,11 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
                     color: AppColors.primary.withAlpha(25),
                     borderRadius: BorderRadius.circular(AppRadius.md),
                   ),
-                  child: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.primary, size: 28),
+                  child: const Icon(
+                    Icons.picture_as_pdf_rounded,
+                    color: AppColors.primary,
+                    size: 28,
+                  ),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
@@ -393,12 +426,16 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
                     children: [
                       Text(
                         fileName,
-                        style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
+                        style: AppTextStyles.bodyLarge.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
                         '$pageCount Page(s) • $sizeStr • Ready',
-                        style: AppTextStyles.caption.copyWith(color: AppColors.getTextSecondary(context)),
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.getTextSecondary(context),
+                        ),
                       ),
                     ],
                   ),
@@ -419,7 +456,10 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                 ),
                 icon: const Icon(Icons.check_circle_rounded),
-                label: const Text('Attach to Document & Return', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                label: const Text(
+                  'Attach to Document & Return',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                ),
                 onPressed: () {
                   Navigator.pop(ctx);
                   final payload = DocumentAttachmentPayload(
@@ -444,8 +484,14 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                 ),
-                icon: const Icon(Icons.download_rounded, color: AppColors.primary),
-                label: const Text('Save PDF to Phone Storage', style: TextStyle(fontWeight: FontWeight.bold)),
+                icon: const Icon(
+                  Icons.download_rounded,
+                  color: AppColors.primary,
+                ),
+                label: const Text(
+                  'Save PDF to Phone Storage',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 onPressed: () async {
                   Navigator.pop(ctx);
                   await _savePdfToPhone(pdfData, fileName);
@@ -460,7 +506,9 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
                 Expanded(
                   child: OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.sm,
+                      ),
                     ),
                     icon: const Icon(Icons.visibility_outlined, size: 18),
                     label: const Text('Preview PDF'),
@@ -476,7 +524,9 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
                 Expanded(
                   child: OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.sm,
+                      ),
                     ),
                     icon: const Icon(Icons.edit_note_rounded, size: 18),
                     label: const Text('Keep Editing'),
@@ -520,11 +570,19 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
               'You can open and manage it using your phone\'s Files or Downloads app.',
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Done')),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Done'),
+              ),
               ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                ),
                 icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                label: const Text('Open File', style: TextStyle(color: Colors.white)),
+                label: const Text(
+                  'Open File',
+                  style: TextStyle(color: Colors.white),
+                ),
                 onPressed: () {
                   Navigator.pop(ctx);
                   OpenFilex.open(savedPath);
@@ -535,13 +593,18 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
         );
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Save cancelled or file location unchanged.')),
+          const SnackBar(
+            content: Text('Save cancelled or file location unchanged.'),
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save PDF: $e'), backgroundColor: Colors.redAccent),
+          SnackBar(
+            content: Text('Failed to save PDF: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
         );
       }
     } finally {
@@ -551,15 +614,18 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
 
   Future<void> _previewPdfBytes(Uint8List pdfData, String fileName) async {
     try {
-      final file = await _scannerService.stageBytesToCache(pdfData, extension: 'pdf');
+      final file = await _scannerService.stageBytesToCache(
+        pdfData,
+        extension: 'pdf',
+      );
       if (file != null) {
         await OpenFilex.open(file.path);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not open preview: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Could not open preview: $e')));
       }
     }
   }
@@ -571,9 +637,17 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
         child: Wrap(
           children: [
             ListTile(
-              leading: const Icon(Icons.document_scanner_rounded, color: AppColors.primary),
-              title: const Text('Smart Document Scanner', style: TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: const Text('Auto-detects edges, perspective, and auto-crops'),
+              leading: const Icon(
+                Icons.document_scanner_rounded,
+                color: AppColors.primary,
+              ),
+              title: const Text(
+                'Smart Document Scanner',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: const Text(
+                'Auto-detects edges, perspective, and auto-crops',
+              ),
               onTap: () {
                 Navigator.pop(ctx);
                 _scanWithNativeScanner();
@@ -591,7 +665,9 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
               title: const Text('Gallery Photos'),
-              subtitle: const Text('Select one or more images from phone gallery'),
+              subtitle: const Text(
+                'Select one or more images from phone gallery',
+              ),
               onTap: () {
                 Navigator.pop(ctx);
                 _pickFromGallery();
@@ -600,7 +676,9 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
             ListTile(
               leading: const Icon(Icons.picture_as_pdf_outlined),
               title: const Text('Pick Existing PDF'),
-              subtitle: const Text('Select a pre-existing PDF from phone storage'),
+              subtitle: const Text(
+                'Select a pre-existing PDF from phone storage',
+              ),
               onTap: () {
                 Navigator.pop(ctx);
                 _pickExistingPdf();
@@ -624,10 +702,16 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Document Scanner & Attach', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const Text(
+              'Document Scanner & Attach',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
             Text(
               '${widget.category.replaceAll('_', ' ').toUpperCase()} • ${_pages.isNotEmpty ? '${_pages.length} Page(s)' : (_pdfBytes != null ? 'PDF Document' : 'No Pages')}',
-              style: TextStyle(fontSize: 11, color: isDark ? Colors.white60 : Colors.black54),
+              style: TextStyle(
+                fontSize: 11,
+                color: isDark ? Colors.white60 : Colors.black54,
+              ),
             ),
           ],
         ),
@@ -635,7 +719,10 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
           if (hasAttachment)
             TextButton(
               onPressed: _onFinishAndGeneratePdf,
-              child: const Text('Finish & PDF', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: const Text(
+                'Finish & PDF',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
         ],
       ),
@@ -654,7 +741,9 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
               children: [
                 Expanded(
                   child: hasAttachment
-                      ? (_pdfBytes != null ? _buildPdfPreview(isDark) : _buildMultiPageViewer(isDark))
+                      ? (_pdfBytes != null
+                            ? _buildPdfPreview(isDark)
+                            : _buildMultiPageViewer(isDark))
                       : _buildEmptyPrompt(isDark),
                 ),
                 _buildBottomToolbar(isDark, hasAttachment),
@@ -685,13 +774,17 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
             const SizedBox(height: AppSpacing.lg),
             Text(
               'Document Scanner',
-              style: AppTextStyles.headingSmall.copyWith(fontWeight: FontWeight.bold),
+              style: AppTextStyles.headingSmall.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
               'Scan physical documents with automatic boundary detection, capture multiple pages (e.g. Front & Back), and generate a clean PDF.',
               textAlign: TextAlign.center,
-              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.getTextSecondary(context)),
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.getTextSecondary(context),
+              ),
             ),
             const SizedBox(height: AppSpacing.xl),
             SizedBox(
@@ -699,7 +792,10 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
               child: ElevatedButton.icon(
                 onPressed: _scanWithNativeScanner,
                 icon: const Icon(Icons.document_scanner_rounded),
-                label: const Text('Smart Document Scanner', style: TextStyle(fontWeight: FontWeight.bold)),
+                label: const Text(
+                  'Smart Document Scanner',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
@@ -716,7 +812,10 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
                   icon: const Icon(Icons.camera_alt_rounded, size: 18),
                   label: const Text('Camera'),
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.sm,
+                    ),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
@@ -725,7 +824,10 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
                   icon: const Icon(Icons.photo_library_rounded, size: 18),
                   label: const Text('Gallery'),
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.sm,
+                    ),
                   ),
                 ),
               ],
@@ -765,24 +867,35 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.picture_as_pdf_rounded, size: 72, color: Colors.redAccent),
+            const Icon(
+              Icons.picture_as_pdf_rounded,
+              size: 72,
+              color: Colors.redAccent,
+            ),
             const SizedBox(height: AppSpacing.md),
             Text(
               _pdfFileName ?? _defaultPdfName,
-              style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
+              style: AppTextStyles.bodyLarge.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
               'PDF Document • $pages Page(s) • $sizeKb',
-              style: AppTextStyles.bodySmall.copyWith(color: AppColors.getTextSecondary(context)),
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.getTextSecondary(context),
+              ),
             ),
             const SizedBox(height: AppSpacing.lg),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 OutlinedButton.icon(
-                  onPressed: () => _previewPdfBytes(_pdfBytes!, _pdfFileName ?? _defaultPdfName),
+                  onPressed: () => _previewPdfBytes(
+                    _pdfBytes!,
+                    _pdfFileName ?? _defaultPdfName,
+                  ),
                   icon: const Icon(Icons.visibility_outlined, size: 18),
                   label: const Text('Preview'),
                 ),
@@ -808,14 +921,19 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
       children: [
         // Page counter & reorder bar
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.xs,
+          ),
           color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 'Page ${_currentPageIndex + 1} of ${_pages.length}',
-                style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               Row(
                 children: [
@@ -826,7 +944,9 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
                   ),
                   IconButton(
                     icon: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
-                    onPressed: _currentPageIndex < _pages.length - 1 ? _movePageRight : null,
+                    onPressed: _currentPageIndex < _pages.length - 1
+                        ? _movePageRight
+                        : null,
                     tooltip: 'Move page right',
                   ),
                   IconButton(
@@ -835,7 +955,10 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
                     tooltip: 'Rotate 90°',
                   ),
                   IconButton(
-                    icon: const Icon(Icons.auto_fix_high_rounded, color: AppColors.primary),
+                    icon: const Icon(
+                      Icons.auto_fix_high_rounded,
+                      color: AppColors.primary,
+                    ),
                     onPressed: _enhanceCurrentPage,
                     tooltip: 'Enhance Clarity',
                   ),
@@ -850,7 +973,10 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
                     tooltip: 'Retake photo',
                   ),
                   IconButton(
-                    icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
+                    icon: const Icon(
+                      Icons.delete_outline_rounded,
+                      color: Colors.redAccent,
+                    ),
                     onPressed: _deleteCurrentPage,
                     tooltip: 'Delete page',
                   ),
@@ -873,10 +999,7 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
               minScale: 0.8,
               maxScale: 3.5,
               child: Center(
-                child: Image.memory(
-                  currentBytes,
-                  fit: BoxFit.contain,
-                ),
+                child: Image.memory(currentBytes, fit: BoxFit.contain),
               ),
             ),
           ),
@@ -891,9 +1014,12 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
               Expanded(
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                  ),
                   itemCount: _pages.length,
-                  separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.sm),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(width: AppSpacing.sm),
                   itemBuilder: (context, index) {
                     final isSelected = index == _currentPageIndex;
                     return GestureDetector(
@@ -902,7 +1028,9 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
                         width: 54,
                         decoration: BoxDecoration(
                           border: Border.all(
-                            color: isSelected ? AppColors.primary : Colors.grey.shade400,
+                            color: isSelected
+                                ? AppColors.primary
+                                : Colors.grey.shade400,
                             width: isSelected ? 2.5 : 1,
                           ),
                           borderRadius: BorderRadius.circular(6),
@@ -916,14 +1044,21 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
                               bottom: 2,
                               right: 2,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 1,
+                                ),
                                 decoration: BoxDecoration(
                                   color: Colors.black87,
                                   borderRadius: BorderRadius.circular(3),
                                 ),
                                 child: Text(
                                   '${index + 1}',
-                                  style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ),
@@ -953,10 +1088,15 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
     return SafeArea(
       top: false,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
-          border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
+          border: Border(
+            top: BorderSide(color: Theme.of(context).dividerColor),
+          ),
         ),
         child: Row(
           children: [
@@ -964,7 +1104,9 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
               child: OutlinedButton.icon(
                 onPressed: _showAddPageBottomSheet,
                 icon: const Icon(Icons.add_rounded, size: 18),
-                label: Text(_pages.isEmpty ? 'Scan / Add Page' : 'Add Next Page'),
+                label: Text(
+                  _pages.isEmpty ? 'Scan / Add Page' : 'Add Next Page',
+                ),
               ),
             ),
             if (hasAttachment) ...[
@@ -973,7 +1115,10 @@ class _DocumentAttachmentScannerScreenState extends State<DocumentAttachmentScan
                 child: ElevatedButton.icon(
                   onPressed: _onFinishAndGeneratePdf,
                   icon: const Icon(Icons.picture_as_pdf_rounded, size: 18),
-                  label: const Text('Generate PDF', style: TextStyle(fontWeight: FontWeight.bold)),
+                  label: const Text(
+                    'Generate PDF',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,

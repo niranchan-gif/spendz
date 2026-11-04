@@ -7,10 +7,13 @@ class WalletCardModel {
   final String lastFour;
   final int expiryMonth;
   final int expiryYear;
-  final String cardType; // 'debit', 'credit', 'atm', 'membership', 'loyalty', 'custom'
+  final String
+  cardType; // 'debit', 'credit', 'atm', 'membership', 'loyalty', 'custom'
   final String cardNetwork; // 'visa', 'mastercard', 'rupay', 'amex', 'other'
-  final String themeGradient; // e.g., 'midnight_emerald', 'obsidian_black', 'royal_amethyst', 'ocean_sapphire', etc.
-  final String cardLayoutId; // e.g. 'minimal_luxury', 'bold_gradient', 'metallic_premium', 'modern_geometric', 'dark_minimal'
+  final String
+  themeGradient; // e.g., 'midnight_emerald', 'obsidian_black', 'royal_amethyst', 'ocean_sapphire', etc.
+  final String
+  cardLayoutId; // e.g. 'minimal_luxury', 'bold_gradient', 'metallic_premium', 'modern_geometric', 'dark_minimal'
   final int displayOrder;
   final bool isFavorite;
   final bool isDefault;
@@ -74,7 +77,8 @@ class WalletCardModel {
       expiryYear: map['expiry_year'] ?? 30,
       cardType: map['card_type'] ?? 'credit',
       cardNetwork: map['card_network'] ?? 'visa',
-      themeGradient: map['card_theme_id'] ?? map['theme_gradient'] ?? 'midnight_emerald',
+      themeGradient:
+          map['card_theme_id'] ?? map['theme_gradient'] ?? 'midnight_emerald',
       cardLayoutId: map['card_layout_id'] ?? 'minimal_luxury',
       displayOrder: map['display_order'] ?? 0,
       isFavorite: map['is_favorite'] == 1,
@@ -126,4 +130,3 @@ class WalletCardModel {
 }
 
 typedef WalletCard = WalletCardModel;
-

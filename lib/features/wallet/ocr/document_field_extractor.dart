@@ -2,7 +2,8 @@
 class ExtractedFields {
   final String? holderName;
   final String? documentNumber; // Masked / sanitized for sensitive documents
-  final String? rawDocumentNumber; // Original unmasked for secure hardware storage
+  final String?
+  rawDocumentNumber; // Original unmasked for secure hardware storage
   final String? issuer;
   final DateTime? issueDate;
   final DateTime? expiryDate;
@@ -52,22 +53,38 @@ class ExtractedFields {
   /// that is both human-readable and structured for later parsing.
   String toDescriptionString() {
     final buffer = StringBuffer();
-    if (holderName != null && holderName!.isNotEmpty) buffer.writeln('Holder: $holderName');
-    if (documentNumber != null && documentNumber!.isNotEmpty) buffer.writeln('Number: $documentNumber');
+    if (holderName != null && holderName!.isNotEmpty)
+      buffer.writeln('Holder: $holderName');
+    if (documentNumber != null && documentNumber!.isNotEmpty)
+      buffer.writeln('Number: $documentNumber');
     if (issuer != null && issuer!.isNotEmpty) buffer.writeln('Issuer: $issuer');
-    if (cardNetwork != null && cardNetwork!.isNotEmpty) buffer.writeln('Network: $cardNetwork');
-    if (issuingBank != null && issuingBank!.isNotEmpty) buffer.writeln('Bank: $issuingBank');
-    if (fatherName != null && fatherName!.isNotEmpty) buffer.writeln("Father's Name: $fatherName");
-    if (dob != null) buffer.writeln('DOB: ${dob!.year}-${dob!.month.toString().padLeft(2, '0')}-${dob!.day.toString().padLeft(2, '0')}');
+    if (cardNetwork != null && cardNetwork!.isNotEmpty)
+      buffer.writeln('Network: $cardNetwork');
+    if (issuingBank != null && issuingBank!.isNotEmpty)
+      buffer.writeln('Bank: $issuingBank');
+    if (fatherName != null && fatherName!.isNotEmpty)
+      buffer.writeln("Father's Name: $fatherName");
+    if (dob != null)
+      buffer.writeln(
+        'DOB: ${dob!.year}-${dob!.month.toString().padLeft(2, '0')}-${dob!.day.toString().padLeft(2, '0')}',
+      );
     if (gender != null && gender!.isNotEmpty) buffer.writeln('Gender: $gender');
-    if (vehicleCategories != null && vehicleCategories!.isNotEmpty) buffer.writeln('Vehicle Class: $vehicleCategories');
-    if (vehicleNumber != null && vehicleNumber!.isNotEmpty) buffer.writeln('Vehicle No: $vehicleNumber');
-    if (nationality != null && nationality!.isNotEmpty) buffer.writeln('Nationality: $nationality');
-    if (placeOfBirth != null && placeOfBirth!.isNotEmpty) buffer.writeln('Place of Birth: $placeOfBirth');
-    if (policyType != null && policyType!.isNotEmpty) buffer.writeln('Policy Type: $policyType');
-    if (accountNumber != null && accountNumber!.isNotEmpty) buffer.writeln('Account No: $accountNumber');
-    if (ifscCode != null && ifscCode!.isNotEmpty) buffer.writeln('IFSC: $ifscCode');
-    if (address != null && address!.isNotEmpty) buffer.writeln('Address: $address');
+    if (vehicleCategories != null && vehicleCategories!.isNotEmpty)
+      buffer.writeln('Vehicle Class: $vehicleCategories');
+    if (vehicleNumber != null && vehicleNumber!.isNotEmpty)
+      buffer.writeln('Vehicle No: $vehicleNumber');
+    if (nationality != null && nationality!.isNotEmpty)
+      buffer.writeln('Nationality: $nationality');
+    if (placeOfBirth != null && placeOfBirth!.isNotEmpty)
+      buffer.writeln('Place of Birth: $placeOfBirth');
+    if (policyType != null && policyType!.isNotEmpty)
+      buffer.writeln('Policy Type: $policyType');
+    if (accountNumber != null && accountNumber!.isNotEmpty)
+      buffer.writeln('Account No: $accountNumber');
+    if (ifscCode != null && ifscCode!.isNotEmpty)
+      buffer.writeln('IFSC: $ifscCode');
+    if (address != null && address!.isNotEmpty)
+      buffer.writeln('Address: $address');
 
     if (unclassifiedLines.isNotEmpty) {
       buffer.writeln('\n--- Unclassified OCR Text ---');
@@ -84,15 +101,28 @@ class ExtractedFields {
 class DocumentFieldExtractor {
   // Regex patterns
   static final RegExp _cardRegex = RegExp(r'\b(?:\d{4}[ -]?){3}\d{4}\b');
-  static final RegExp _cardExpiryRegex = RegExp(r'\b(0[1-9]|1[0-2])[\/ -](\d{2}|\d{4})\b');
+  static final RegExp _cardExpiryRegex = RegExp(
+    r'\b(0[1-9]|1[0-2])[\/ -](\d{2}|\d{4})\b',
+  );
   static final RegExp _aadhaarRegex = RegExp(r'\b(\d{4})\s(\d{4})\s(\d{4})\b');
   static final RegExp _panRegex = RegExp(r'\b([A-Z]{5}[0-9]{4}[A-Z])\b');
-  static final RegExp _dlRegex = RegExp(r'\b([A-Z]{2}[- ]?[0-9]{2}[- ]?[0-9]{11})\b', caseSensitive: false);
-  static final RegExp _dlAlternativeRegex = RegExp(r'\bDL[- ]?([0-9A-Z]{10,15})\b', caseSensitive: false);
+  static final RegExp _dlRegex = RegExp(
+    r'\b([A-Z]{2}[- ]?[0-9]{2}[- ]?[0-9]{11})\b',
+    caseSensitive: false,
+  );
+  static final RegExp _dlAlternativeRegex = RegExp(
+    r'\bDL[- ]?([0-9A-Z]{10,15})\b',
+    caseSensitive: false,
+  );
   static final RegExp _voterIdRegex = RegExp(r'\b([A-Z]{3}[0-9]{7})\b');
-  static final RegExp _passportRegex = RegExp(r'\b([A-PR-WYa-pr-wy][1-9][0-9]\s?[0-9]{4}[0-9])\b');
+  static final RegExp _passportRegex = RegExp(
+    r'\b([A-PR-WYa-pr-wy][1-9][0-9]\s?[0-9]{4}[0-9])\b',
+  );
   static final RegExp _passportOldRegex = RegExp(r'\b([A-Z][0-9]{7})\b');
-  static final RegExp _rcRegex = RegExp(r'\b([A-Z]{2}[ -]?[0-9]{1,2}[ -]?[A-Z]{1,3}[ -]?[0-9]{4})\b', caseSensitive: false);
+  static final RegExp _rcRegex = RegExp(
+    r'\b([A-Z]{2}[ -]?[0-9]{1,2}[ -]?[A-Z]{1,3}[ -]?[0-9]{4})\b',
+    caseSensitive: false,
+  );
   static final RegExp _ifscRegex = RegExp(r'\b([A-Z]{4}0[A-Z0-9]{6})\b');
 
   // Date parsing regexes
@@ -108,10 +138,7 @@ class DocumentFieldExtractor {
   );
 
   /// Extracts fields based on document category and OCR text.
-  ExtractedFields extract({
-    required String rawText,
-    required String category,
-  }) {
+  ExtractedFields extract({required String rawText, required String category}) {
     final lines = rawText
         .split('\n')
         .map((l) => l.trim())
@@ -148,7 +175,9 @@ class DocumentFieldExtractor {
         // Extract card number
         final cardMatch = _cardRegex.firstMatch(rawText);
         if (cardMatch != null) {
-          final fullCard = cardMatch.group(0)!.replaceAll(RegExp(r'[\s\-]'), '');
+          final fullCard = cardMatch
+              .group(0)!
+              .replaceAll(RegExp(r'[\s\-]'), '');
           rawDocNum = fullCard;
           docNum = '•••• •••• •••• ${fullCard.substring(fullCard.length - 4)}';
           confidences['documentNumber'] = 0.95;
@@ -163,7 +192,8 @@ class DocumentFieldExtractor {
           cardNetwork = 'Mastercard';
         } else if (lower.contains('rupay')) {
           cardNetwork = 'RuPay';
-        } else if (lower.contains('american express') || lower.contains('amex')) {
+        } else if (lower.contains('american express') ||
+            lower.contains('amex')) {
           cardNetwork = 'American Express';
         } else if (lower.contains('diners')) {
           cardNetwork = 'Diners Club';
@@ -238,14 +268,20 @@ class DocumentFieldExtractor {
         }
 
         // Father's name
-        fatherName = _extractLabeledField(lines, ["father's name", 'fathers name', 'father name'], usedLines);
+        fatherName = _extractLabeledField(lines, [
+          "father's name",
+          'fathers name',
+          'father name',
+        ], usedLines);
         if (fatherName != null) confidences['fatherName'] = 0.85;
         break;
 
       case 'driving_license':
         issuer = 'Ministry of Road Transport and Highways (MoRTH)';
         confidences['issuer'] = 0.90;
-        final match = _dlRegex.firstMatch(rawText) ?? _dlAlternativeRegex.firstMatch(rawText);
+        final match =
+            _dlRegex.firstMatch(rawText) ??
+            _dlAlternativeRegex.firstMatch(rawText);
         if (match != null) {
           rawDocNum = match.group(1);
           docNum = rawDocNum;
@@ -254,9 +290,15 @@ class DocumentFieldExtractor {
         }
 
         // Vehicle categories
-        final vcMatch = RegExp(r'\b(LMV|MCWG|MCWOG|HGMV|TRANS|3W-CAB)\b', caseSensitive: false).allMatches(rawText);
+        final vcMatch = RegExp(
+          r'\b(LMV|MCWG|MCWOG|HGMV|TRANS|3W-CAB)\b',
+          caseSensitive: false,
+        ).allMatches(rawText);
         if (vcMatch.isNotEmpty) {
-          final uniqueClasses = vcMatch.map((m) => m.group(0)!.toUpperCase()).toSet().toList();
+          final uniqueClasses = vcMatch
+              .map((m) => m.group(0)!.toUpperCase())
+              .toSet()
+              .toList();
           vehicleCategories = uniqueClasses.join(', ');
           confidences['vehicleCategories'] = 0.85;
         }
@@ -273,7 +315,12 @@ class DocumentFieldExtractor {
           _markUsedLine(lines, match.group(0)!, usedLines);
         }
 
-        fatherName = _extractLabeledField(lines, ["father's name", 'fathers name', "husband's name", 'relative name'], usedLines);
+        fatherName = _extractLabeledField(lines, [
+          "father's name",
+          'fathers name',
+          "husband's name",
+          'relative name',
+        ], usedLines);
         if (fatherName != null) confidences['fatherName'] = 0.80;
 
         final lowerVoter = rawText.toLowerCase();
@@ -289,7 +336,9 @@ class DocumentFieldExtractor {
         confidences['issuer'] = 0.95;
         nationality = 'INDIAN';
         confidences['nationality'] = 0.95;
-        final match = _passportRegex.firstMatch(rawText) ?? _passportOldRegex.firstMatch(rawText);
+        final match =
+            _passportRegex.firstMatch(rawText) ??
+            _passportOldRegex.firstMatch(rawText);
         if (match != null) {
           rawDocNum = match.group(1);
           docNum = rawDocNum;
@@ -297,7 +346,10 @@ class DocumentFieldExtractor {
           _markUsedLine(lines, match.group(0)!, usedLines);
         }
 
-        placeOfBirth = _extractLabeledField(lines, ['place of birth', 'birth place'], usedLines);
+        placeOfBirth = _extractLabeledField(lines, [
+          'place of birth',
+          'birth place',
+        ], usedLines);
         if (placeOfBirth != null) confidences['placeOfBirth'] = 0.85;
         break;
 
@@ -316,7 +368,10 @@ class DocumentFieldExtractor {
         break;
 
       case 'insurance':
-        final policyRegex = RegExp(r'(?:policy\s*(?:no|number|#)[\s:]*)([A-Z0-9\-\/]{6,25})', caseSensitive: false);
+        final policyRegex = RegExp(
+          r'(?:policy\s*(?:no|number|#)[\s:]*)([A-Z0-9\-\/]{6,25})',
+          caseSensitive: false,
+        );
         final match = policyRegex.firstMatch(rawText);
         if (match != null) {
           docNum = match.group(1);
@@ -328,7 +383,9 @@ class DocumentFieldExtractor {
         final lowerIns = rawText.toLowerCase();
         if (lowerIns.contains('health')) {
           policyType = 'Health Insurance';
-        } else if (lowerIns.contains('motor') || lowerIns.contains('car') || lowerIns.contains('two wheeler')) {
+        } else if (lowerIns.contains('motor') ||
+            lowerIns.contains('car') ||
+            lowerIns.contains('two wheeler')) {
           policyType = 'Motor Insurance';
         } else if (lowerIns.contains('life') || lowerIns.contains('term')) {
           policyType = 'Life Insurance';
@@ -352,7 +409,10 @@ class DocumentFieldExtractor {
           _markUsedLine(lines, ifscMatch.group(0)!, usedLines);
         }
 
-        final accMatch = RegExp(r'(?:a\/c|account\s*(?:no|number)[\s:]*)([0-9]{9,18})', caseSensitive: false).firstMatch(rawText);
+        final accMatch = RegExp(
+          r'(?:a\/c|account\s*(?:no|number)[\s:]*)([0-9]{9,18})',
+          caseSensitive: false,
+        ).firstMatch(rawText);
         if (accMatch != null) {
           final acc = accMatch.group(1)!;
           accountNumber = acc;
@@ -388,7 +448,9 @@ class DocumentFieldExtractor {
     final unclassified = <String>[];
     for (final line in lines) {
       final trimmed = line.trim();
-      if (trimmed.length > 2 && !usedLines.contains(trimmed) && !_isNoiseLine(trimmed)) {
+      if (trimmed.length > 2 &&
+          !usedLines.contains(trimmed) &&
+          !_isNoiseLine(trimmed)) {
         unclassified.add(trimmed);
       }
     }
@@ -431,12 +493,16 @@ class DocumentFieldExtractor {
 
   String? _detectBank(String lower) {
     if (lower.contains('hdfc')) return 'HDFC Bank';
-    if (lower.contains('state bank of india') || lower.contains('sbi')) return 'State Bank of India (SBI)';
+    if (lower.contains('state bank of india') || lower.contains('sbi'))
+      return 'State Bank of India (SBI)';
     if (lower.contains('icici')) return 'ICICI Bank';
-    if (lower.contains('axis bank') || lower.contains('axis')) return 'Axis Bank';
+    if (lower.contains('axis bank') || lower.contains('axis'))
+      return 'Axis Bank';
     if (lower.contains('kotak')) return 'Kotak Mahindra Bank';
-    if (lower.contains('punjab national') || lower.contains('pnb')) return 'Punjab National Bank';
-    if (lower.contains('bank of baroda') || lower.contains('bob')) return 'Bank of Baroda';
+    if (lower.contains('punjab national') || lower.contains('pnb'))
+      return 'Punjab National Bank';
+    if (lower.contains('bank of baroda') || lower.contains('bob'))
+      return 'Bank of Baroda';
     if (lower.contains('canara')) return 'Canara Bank';
     if (lower.contains('indusind')) return 'IndusInd Bank';
     if (lower.contains('yes bank')) return 'Yes Bank';
@@ -447,11 +513,13 @@ class DocumentFieldExtractor {
   }
 
   String? _detectInsuranceProvider(String lower) {
-    if (lower.contains('lic') || lower.contains('life insurance corporation')) return 'Life Insurance Corporation (LIC)';
+    if (lower.contains('lic') || lower.contains('life insurance corporation'))
+      return 'Life Insurance Corporation (LIC)';
     if (lower.contains('star health')) return 'Star Health & Allied Insurance';
     if (lower.contains('icici lombard')) return 'ICICI Lombard';
     if (lower.contains('hdfc ergo')) return 'HDFC ERGO';
-    if (lower.contains('care health') || lower.contains('religare')) return 'Care Health Insurance';
+    if (lower.contains('care health') || lower.contains('religare'))
+      return 'Care Health Insurance';
     if (lower.contains('bajaj allianz')) return 'Bajaj Allianz';
     if (lower.contains('new india assurance')) return 'The New India Assurance';
     if (lower.contains('united india')) return 'United India Insurance';
@@ -491,8 +559,18 @@ class DocumentFieldExtractor {
         lower.contains('customer');
   }
 
-  String? _extractHolderName(List<String> lines, String category, Set<String> used) {
-    final nameLabels = ['name:', 'name', 'holder name:', 'full name:', 'elector name:'];
+  String? _extractHolderName(
+    List<String> lines,
+    String category,
+    Set<String> used,
+  ) {
+    final nameLabels = [
+      'name:',
+      'name',
+      'holder name:',
+      'full name:',
+      'elector name:',
+    ];
 
     for (int i = 0; i < lines.length; i++) {
       final line = lines[i];
@@ -533,7 +611,11 @@ class DocumentFieldExtractor {
     return null;
   }
 
-  String? _extractLabeledField(List<String> lines, List<String> labels, Set<String> used) {
+  String? _extractLabeledField(
+    List<String> lines,
+    List<String> labels,
+    Set<String> used,
+  ) {
     for (int i = 0; i < lines.length; i++) {
       final line = lines[i];
       final lower = line.toLowerCase();
@@ -564,9 +646,18 @@ class DocumentFieldExtractor {
 
     for (final line in lines) {
       final lower = line.toLowerCase();
-      if (lower.contains('address:') || lower.contains('address') || lower.contains('s/o') || lower.contains('d/o') || lower.contains('w/o')) {
+      if (lower.contains('address:') ||
+          lower.contains('address') ||
+          lower.contains('s/o') ||
+          lower.contains('d/o') ||
+          lower.contains('w/o')) {
         capturing = true;
-        final clean = line.replaceAll(RegExp(r'^(address|address:)\s*', caseSensitive: false), '').trim();
+        final clean = line
+            .replaceAll(
+              RegExp(r'^(address|address:)\s*', caseSensitive: false),
+              '',
+            )
+            .trim();
         if (clean.isNotEmpty) addrBuffer.writeln(clean);
         used.add(line);
         continue;
@@ -592,14 +683,39 @@ class DocumentFieldExtractor {
     return result.isEmpty ? null : result;
   }
 
-  _ContextualDates _extractContextualDates(List<String> lines, Set<String> used) {
+  _ContextualDates _extractContextualDates(
+    List<String> lines,
+    Set<String> used,
+  ) {
     DateTime? issueDate;
     DateTime? expiryDate;
     DateTime? dob;
 
-    final expiryKeywords = ['valid till', 'valid upto', 'valid until', 'expiry', 'expires', 'exp date', 'valid through', 'valid thru'];
-    final issueKeywords = ['issue date', 'date of issue', 'issued on', 'date of registration', 'issued date', 'valid from'];
-    final dobKeywords = ['date of birth', 'dob', 'birth date', 'yob', 'year of birth'];
+    final expiryKeywords = [
+      'valid till',
+      'valid upto',
+      'valid until',
+      'expiry',
+      'expires',
+      'exp date',
+      'valid through',
+      'valid thru',
+    ];
+    final issueKeywords = [
+      'issue date',
+      'date of issue',
+      'issued on',
+      'date of registration',
+      'issued date',
+      'valid from',
+    ];
+    final dobKeywords = [
+      'date of birth',
+      'dob',
+      'birth date',
+      'yob',
+      'year of birth',
+    ];
 
     for (final line in lines) {
       final lower = line.toLowerCase();
@@ -647,7 +763,11 @@ class DocumentFieldExtractor {
       }
     }
 
-    return _ContextualDates(issueDate: issueDate, expiryDate: expiryDate, dob: dob);
+    return _ContextualDates(
+      issueDate: issueDate,
+      expiryDate: expiryDate,
+      dob: dob,
+    );
   }
 
   DateTime? _findDateInString(String text) {
@@ -689,8 +809,18 @@ class DocumentFieldExtractor {
 
   int? _monthNameToNumber(String monthName) {
     const months = {
-      'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
-      'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12,
+      'jan': 1,
+      'feb': 2,
+      'mar': 3,
+      'apr': 4,
+      'may': 5,
+      'jun': 6,
+      'jul': 7,
+      'aug': 8,
+      'sep': 9,
+      'oct': 10,
+      'nov': 11,
+      'dec': 12,
     };
     return months[monthName.toLowerCase().substring(0, 3)];
   }
@@ -700,7 +830,10 @@ class DocumentFieldExtractor {
     if (trimmed.length < 3 || trimmed.length > 40) return false;
     // Names should primarily contain alphabetic characters and spaces
     if (RegExp(r'\d').hasMatch(trimmed)) return false;
-    if (trimmed.contains('/') || trimmed.contains('\\') || trimmed.contains('@')) return false;
+    if (trimmed.contains('/') ||
+        trimmed.contains('\\') ||
+        trimmed.contains('@'))
+      return false;
     return true;
   }
 
@@ -729,7 +862,12 @@ class DocumentFieldExtractor {
   }
 
   String _cleanName(String raw) {
-    return raw.replaceAll(RegExp(r'^(name|holder|full name)[\s:]*', caseSensitive: false), '').trim();
+    return raw
+        .replaceAll(
+          RegExp(r'^(name|holder|full name)[\s:]*', caseSensitive: false),
+          '',
+        )
+        .trim();
   }
 }
 

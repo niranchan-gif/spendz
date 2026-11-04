@@ -44,7 +44,14 @@ class _PassesScreenState extends State<PassesScreen> {
     String passType = 'qr_code';
     DateTime? validUntil;
 
-    final passTypes = ['qr_code', 'barcode', 'event_ticket', 'boarding_pass', 'membership', 'loyalty'];
+    final passTypes = [
+      'qr_code',
+      'barcode',
+      'event_ticket',
+      'boarding_pass',
+      'membership',
+      'loyalty',
+    ];
 
     AppBottomSheet.show(
       context: context,
@@ -65,7 +72,9 @@ class _PassesScreenState extends State<PassesScreen> {
                   label: 'Pass Title',
                   hint: 'e.g. Metro Smart Card / Flight Boarding Pass',
                   prefixIcon: Icons.confirmation_number_outlined,
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Pass title required' : null,
+                  validator: (v) => v == null || v.trim().isEmpty
+                      ? 'Pass title required'
+                      : null,
                 ),
                 const SizedBox(height: AppSpacing.md),
                 DropdownButtonFormField<String>(
@@ -78,13 +87,18 @@ class _PassesScreenState extends State<PassesScreen> {
                     fillColor: surfaceColor,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppRadius.md),
-                      borderSide: BorderSide(color: AppColors.getBorder(context)),
+                      borderSide: BorderSide(
+                        color: AppColors.getBorder(context),
+                      ),
                     ),
                   ),
                   items: passTypes.map((t) {
                     return DropdownMenuItem(
                       value: t,
-                      child: Text(t.replaceAll('_', ' ').toUpperCase(), style: AppTextStyles.labelMedium),
+                      child: Text(
+                        t.replaceAll('_', ' ').toUpperCase(),
+                        style: AppTextStyles.labelMedium,
+                      ),
                     );
                   }).toList(),
                   onChanged: (val) {
@@ -97,7 +111,9 @@ class _PassesScreenState extends State<PassesScreen> {
                   label: 'Code / QR Payload',
                   hint: 'Enter barcode or QR string',
                   prefixIcon: Icons.qr_code_2_rounded,
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Payload code required' : null,
+                  validator: (v) => v == null || v.trim().isEmpty
+                      ? 'Payload code required'
+                      : null,
                 ),
                 const SizedBox(height: AppSpacing.md),
                 AppFormField(
@@ -109,10 +125,17 @@ class _PassesScreenState extends State<PassesScreen> {
                 const SizedBox(height: AppSpacing.md),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: Text('Valid Until', style: AppTextStyles.caption.copyWith(color: textSecondary)),
+                  title: Text(
+                    'Valid Until',
+                    style: AppTextStyles.caption.copyWith(color: textSecondary),
+                  ),
                   subtitle: Text(
-                    validUntil != null ? DateFormat('dd MMM yyyy, HH:mm').format(validUntil!) : 'No Expiry',
-                    style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold),
+                    validUntil != null
+                        ? DateFormat('dd MMM yyyy, HH:mm').format(validUntil!)
+                        : 'No Expiry',
+                    style: AppTextStyles.labelMedium.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   trailing: const Icon(Icons.calendar_today_rounded, size: 18),
                   onTap: () async {
@@ -120,7 +143,9 @@ class _PassesScreenState extends State<PassesScreen> {
                       context: context,
                       initialDate: DateTime.now().add(const Duration(days: 7)),
                       firstDate: DateTime.now(),
-                      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+                      lastDate: DateTime.now().add(
+                        const Duration(days: 365 * 5),
+                      ),
                     );
                     if (d != null) setModalState(() => validUntil = d);
                   },
@@ -137,7 +162,9 @@ class _PassesScreenState extends State<PassesScreen> {
                         passType: passType,
                         encryptedCodePath: dataController.text.trim(),
                         codeFormat: 'QR_CODE',
-                        issuer: issuerController.text.trim().isEmpty ? null : issuerController.text.trim(),
+                        issuer: issuerController.text.trim().isEmpty
+                            ? null
+                            : issuerController.text.trim(),
                         validUntil: validUntil,
                         isFavorite: false,
                         createdAt: DateTime.now(),
@@ -168,7 +195,9 @@ class _PassesScreenState extends State<PassesScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.getSurface(context),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
         title: Text(
           pass.title,
           style: AppTextStyles.headingSmall.copyWith(
@@ -195,7 +224,9 @@ class _PassesScreenState extends State<PassesScreen> {
               child: Column(
                 children: [
                   QrImageView(
-                    data: pass.codeData.isNotEmpty ? pass.codeData : 'spendz-pass',
+                    data: pass.codeData.isNotEmpty
+                        ? pass.codeData
+                        : 'spendz-pass',
                     version: QrVersions.auto,
                     size: 180.0,
                   ),
@@ -247,7 +278,10 @@ class _PassesScreenState extends State<PassesScreen> {
                 walletProvider.deletePass(pass.id);
               }
             },
-            child: const Text('Delete Pass', style: TextStyle(color: AppColors.error)),
+            child: const Text(
+              'Delete Pass',
+              style: TextStyle(color: AppColors.error),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -281,7 +315,8 @@ class _PassesScreenState extends State<PassesScreen> {
               child: EmptyState(
                 icon: Icons.confirmation_number_outlined,
                 title: 'No Passes Saved',
-                subtitle: 'Save event tickets, flight boarding passes, and transit QR codes.',
+                subtitle:
+                    'Save event tickets, flight boarding passes, and transit QR codes.',
                 actionLabel: 'Add Digital Pass',
                 onActionPressed: () => _showAddPassDialog(context),
               ),
@@ -318,9 +353,15 @@ class _PassesScreenState extends State<PassesScreen> {
                       decoration: BoxDecoration(
                         color: AppColors.primary.withAlpha(25),
                         borderRadius: BorderRadius.circular(AppRadius.sm + 2),
-                        border: Border.all(color: AppColors.primary.withAlpha(50)),
+                        border: Border.all(
+                          color: AppColors.primary.withAlpha(50),
+                        ),
                       ),
-                      child: const Icon(Icons.qr_code_2_rounded, color: AppColors.primary, size: 24),
+                      child: const Icon(
+                        Icons.qr_code_2_rounded,
+                        color: AppColors.primary,
+                        size: 24,
+                      ),
                     ),
                     title: Text(
                       pass.title,
@@ -340,15 +381,23 @@ class _PassesScreenState extends State<PassesScreen> {
                       children: [
                         IconButton(
                           icon: Icon(
-                            pass.isFavorite ? Icons.star_rounded : Icons.star_outline_rounded,
-                            color: pass.isFavorite ? Colors.amber : AppColors.getTextSecondary(context).withAlpha(120),
+                            pass.isFavorite
+                                ? Icons.star_rounded
+                                : Icons.star_outline_rounded,
+                            color: pass.isFavorite
+                                ? Colors.amber
+                                : AppColors.getTextSecondary(
+                                    context,
+                                  ).withAlpha(120),
                           ),
                           onPressed: () => wallet.togglePassFavorite(pass.id),
                           splashRadius: 20,
                         ),
                         Icon(
                           Icons.chevron_right_rounded,
-                          color: AppColors.getTextSecondary(context).withAlpha(140),
+                          color: AppColors.getTextSecondary(
+                            context,
+                          ).withAlpha(140),
                           size: 18,
                         ),
                       ],

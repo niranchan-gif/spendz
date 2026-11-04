@@ -12,14 +12,14 @@ class TransactionDao {
 
   Future<List<TransactionModel>> getAllTransactions() async {
     final db = await dbHelper.database;
-    final maps = await db.query(
-      'transactions',
-      orderBy: 'date DESC',
-    );
+    final maps = await db.query('transactions', orderBy: 'date DESC');
     return maps.map((map) => TransactionModel.fromMap(map)).toList();
   }
 
-  Future<List<TransactionModel>> getTransactionsByDateRange(DateTime start, DateTime end) async {
+  Future<List<TransactionModel>> getTransactionsByDateRange(
+    DateTime start,
+    DateTime end,
+  ) async {
     final db = await dbHelper.database;
     final maps = await db.query(
       'transactions',
@@ -56,14 +56,14 @@ class TransactionDao {
 
   Future<int> delete(String id) async {
     final db = await dbHelper.database;
-    return await db.delete(
-      'transactions',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('transactions', where: 'id = ?', whereArgs: [id]);
   }
 
-  Future<bool> transactionExistsWithReference(String referenceId, {double? amount, DateTime? date}) async {
+  Future<bool> transactionExistsWithReference(
+    String referenceId, {
+    double? amount,
+    DateTime? date,
+  }) async {
     final db = await dbHelper.database;
     final maps = await db.query(
       'transactions',
@@ -75,8 +75,19 @@ class TransactionDao {
     if (maps.isNotEmpty) return true;
 
     if (amount != null && date != null) {
-      final dateStart = DateTime(date.year, date.month, date.day).toIso8601String();
-      final dateEnd = DateTime(date.year, date.month, date.day, 23, 59, 59).toIso8601String();
+      final dateStart = DateTime(
+        date.year,
+        date.month,
+        date.day,
+      ).toIso8601String();
+      final dateEnd = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        23,
+        59,
+        59,
+      ).toIso8601String();
       final duplicateMaps = await db.query(
         'transactions',
         columns: ['id'],
@@ -86,7 +97,7 @@ class TransactionDao {
       );
       if (duplicateMaps.isNotEmpty) return true;
     }
-    
+
     return false;
   }
 

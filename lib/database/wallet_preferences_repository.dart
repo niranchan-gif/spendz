@@ -6,11 +6,10 @@ class WalletPreferencesRepository {
 
   Future<void> setPreference(String key, String value) async {
     final db = await dbHelper.database;
-    await db.insert(
-      'wallet_preferences',
-      {'key': key, 'value': value},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('wallet_preferences', {
+      'key': key,
+      'value': value,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<String?> getPreference(String key) async {
@@ -55,4 +54,3 @@ class WalletPreferencesRepository {
     return await db.delete('wallet_preferences');
   }
 }
-

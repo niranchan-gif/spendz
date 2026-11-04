@@ -1,7 +1,8 @@
 class WalletDocumentModel {
   final String id;
   final String documentName;
-  final String category; // 'aadhaar', 'pan', 'driving_license', 'passport', 'debit_card', 'credit_card', 'insurance', 'rc', 'college_id', 'certificate', 'other'
+  final String
+  category; // 'aadhaar', 'pan', 'driving_license', 'passport', 'debit_card', 'credit_card', 'insurance', 'rc', 'college_id', 'certificate', 'other'
   final String? description;
   final String encryptedFilePath;
   final String? thumbnailPath;
@@ -89,15 +90,28 @@ class WalletDocumentModel {
       thumbnailPath: map['thumbnail_path'],
       mimeType: map['mime_type'] ?? 'image/jpeg',
       fileSize: map['file_size'] ?? 0,
-      issueDate: map['issue_date'] != null ? DateTime.tryParse(map['issue_date']) : null,
-      expiryDate: map['expiry_date'] != null ? DateTime.tryParse(map['expiry_date']) : null,
+      issueDate: map['issue_date'] != null
+          ? DateTime.tryParse(map['issue_date'])
+          : null,
+      expiryDate: map['expiry_date'] != null
+          ? DateTime.tryParse(map['expiry_date'])
+          : null,
       isFavorite: map['is_favorite'] == 1,
       maskedIdentifier: map['masked_identifier'],
       holderName: map['holder_name'],
       encryptedFields: map['encrypted_fields'],
-      attachmentType: map['attachment_type'] ?? (map['encrypted_file_path'] != null && (map['encrypted_file_path'] as String).isNotEmpty ? 'image' : 'none'),
-      createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : DateTime.now(),
-      updatedAt: map['updated_at'] != null ? DateTime.parse(map['updated_at']) : DateTime.now(),
+      attachmentType:
+          map['attachment_type'] ??
+          (map['encrypted_file_path'] != null &&
+                  (map['encrypted_file_path'] as String).isNotEmpty
+              ? 'image'
+              : 'none'),
+      createdAt: map['created_at'] != null
+          ? DateTime.parse(map['created_at'])
+          : DateTime.now(),
+      updatedAt: map['updated_at'] != null
+          ? DateTime.parse(map['updated_at'])
+          : DateTime.now(),
     );
   }
 

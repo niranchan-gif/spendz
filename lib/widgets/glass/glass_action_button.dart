@@ -88,4 +88,3 @@ class GlassActionButton extends StatelessWidget {
     );
   }
 }
-

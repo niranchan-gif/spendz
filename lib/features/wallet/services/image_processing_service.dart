@@ -41,18 +41,14 @@ class ImageProcessingService {
     var processed = img.grayscale(image);
 
     // 2. Enhance contrast to separate text from background shadows
-    processed = img.adjustColor(
-      processed,
-      contrast: 1.45,
-      brightness: 1.05,
-    );
+    processed = img.adjustColor(processed, contrast: 1.45, brightness: 1.05);
 
     // 3. Subtle sharpening to define text edges
-    processed = img.convolution(processed, filter: [
-      0, -1, 0,
-      -1, 5, -1,
-      0, -1, 0,
-    ], div: 1);
+    processed = img.convolution(
+      processed,
+      filter: [0, -1, 0, -1, 5, -1, 0, -1, 0],
+      div: 1,
+    );
 
     return Uint8List.fromList(img.encodeJpg(processed, quality: 92));
   }
@@ -158,4 +154,3 @@ class ImageProcessingService {
     return Uint8List.fromList(pdfBytes);
   }
 }
-

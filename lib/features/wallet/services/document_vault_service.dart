@@ -54,12 +54,12 @@ class DocumentVaultService {
     SecureNumberService? secureNumberService,
     String? customVaultDirectory,
     String? customTempDirectory,
-  })  : _documentRepository = documentRepository ?? WalletDocumentRepository(),
-        _encryptionService = encryptionService ?? DocumentEncryptionService(),
-        _keyService = keyService ?? WalletKeyService(),
-        _secureNumberService = secureNumberService ?? SecureNumberService(),
-        _customVaultDirectory = customVaultDirectory,
-        _customTempDirectory = customTempDirectory;
+  }) : _documentRepository = documentRepository ?? WalletDocumentRepository(),
+       _encryptionService = encryptionService ?? DocumentEncryptionService(),
+       _keyService = keyService ?? WalletKeyService(),
+       _secureNumberService = secureNumberService ?? SecureNumberService(),
+       _customVaultDirectory = customVaultDirectory,
+       _customTempDirectory = customTempDirectory;
 
   /// Returns the private application directory where encrypted documents reside.
   Future<Directory> getVaultDirectory() async {
@@ -104,7 +104,9 @@ class DocumentVaultService {
   }
 
   /// Decrypts an encrypted metadata map using the master encryption key.
-  Future<Map<String, dynamic>> decryptMetadataFields(String base64Ciphertext) async {
+  Future<Map<String, dynamic>> decryptMetadataFields(
+    String base64Ciphertext,
+  ) async {
     if (base64Ciphertext.trim().isEmpty) return {};
     try {
       final masterKey = await _keyService.getMasterKey();
@@ -148,7 +150,10 @@ class DocumentVaultService {
 
     // 2. Save full unmasked number in SecureNumberService if provided
     if (unmaskedIdentifier != null && unmaskedIdentifier.trim().isNotEmpty) {
-      await _secureNumberService.saveDocumentFullNumber(docId, unmaskedIdentifier.trim());
+      await _secureNumberService.saveDocumentFullNumber(
+        docId,
+        unmaskedIdentifier.trim(),
+      );
     }
 
     // 3. Encrypt and write attachment file if provided
@@ -164,7 +169,9 @@ class DocumentVaultService {
         );
       }
 
-      normalizedMime = (attachmentMimeType ?? 'image/jpeg').toLowerCase().trim();
+      normalizedMime = (attachmentMimeType ?? 'image/jpeg')
+          .toLowerCase()
+          .trim();
       final vaultDir = await getVaultDirectory();
       final stagingFile = File(p.join(vaultDir.path, '$docId.tmp'));
       final finalEncryptedFile = File(p.join(vaultDir.path, '$docId.enc'));
@@ -178,17 +185,26 @@ class DocumentVaultService {
         );
 
         await stagingFile.writeAsBytes(encryptedBytes, flush: true);
-        if (!await stagingFile.exists() || await stagingFile.length() != encryptedBytes.length) {
-          throw VaultStorageException('Failed to verify staged attachment ciphertext write.');
+        if (!await stagingFile.exists() ||
+            await stagingFile.length() != encryptedBytes.length) {
+          throw VaultStorageException(
+            'Failed to verify staged attachment ciphertext write.',
+          );
         }
 
         await stagingFile.rename(finalEncryptedFile.path);
         encryptedFilePath = finalEncryptedFile.path;
         fileSize = attachmentBytes.length;
-        finalAttachmentType = attachmentType ?? (normalizedMime.contains('pdf') ? 'pdf' : 'image');
+        finalAttachmentType =
+            attachmentType ??
+            (normalizedMime.contains('pdf') ? 'pdf' : 'image');
       } catch (e) {
-        if (await stagingFile.exists()) await stagingFile.delete().catchError((_) => stagingFile);
-        if (await finalEncryptedFile.exists()) await finalEncryptedFile.delete().catchError((_) => finalEncryptedFile);
+        if (await stagingFile.exists())
+          await stagingFile.delete().catchError((_) => stagingFile);
+        if (await finalEncryptedFile.exists())
+          await finalEncryptedFile.delete().catchError(
+            (_) => finalEncryptedFile,
+          );
         rethrow;
       }
     }
@@ -197,7 +213,9 @@ class DocumentVaultService {
       id: docId,
       documentName: documentName.trim(),
       category: category.toLowerCase().trim(),
-      description: description?.trim().isEmpty == true ? null : description?.trim(),
+      description: description?.trim().isEmpty == true
+          ? null
+          : description?.trim(),
       encryptedFilePath: encryptedFilePath,
       thumbnailPath: null,
       mimeType: normalizedMime,
@@ -274,7 +292,9 @@ class DocumentVaultService {
 
     final vaultDir = await getVaultDirectory();
     final stagingFile = File(p.join(vaultDir.path, '${document.id}_new.tmp'));
-    final finalEncryptedFile = File(p.join(vaultDir.path, '${document.id}.enc'));
+    final finalEncryptedFile = File(
+      p.join(vaultDir.path, '${document.id}.enc'),
+    );
 
     final masterKey = await _keyService.getOrCreateMasterKey();
 
@@ -291,7 +311,8 @@ class DocumentVaultService {
       encryptedFilePath: finalEncryptedFile.path,
       mimeType: normalizedMime,
       fileSize: fileBytes.length,
-      attachmentType: attachmentType ?? (normalizedMime.contains('pdf') ? 'pdf' : 'image'),
+      attachmentType:
+          attachmentType ?? (normalizedMime.contains('pdf') ? 'pdf' : 'image'),
       updatedAt: DateTime.now(),
     );
 
@@ -300,7 +321,9 @@ class DocumentVaultService {
   }
 
   /// Removes the attachment from an existing document while preserving all metadata.
-  Future<WalletDocumentModel> removeAttachmentFromDocument(WalletDocumentModel document) async {
+  Future<WalletDocumentModel> removeAttachmentFromDocument(
+    WalletDocumentModel document,
+  ) async {
     if (document.hasAttachment) {
       final file = File(document.encryptedFilePath);
       if (await file.exists()) {
@@ -339,7 +362,10 @@ class DocumentVaultService {
     }
 
     if (unmaskedIdentifier != null && unmaskedIdentifier.trim().isNotEmpty) {
-      await _secureNumberService.saveDocumentFullNumber(document.id, unmaskedIdentifier.trim());
+      await _secureNumberService.saveDocumentFullNumber(
+        document.id,
+        unmaskedIdentifier.trim(),
+      );
     }
 
     final updated = document.copyWith(
@@ -348,7 +374,9 @@ class DocumentVaultService {
       holderName: holderName?.trim(),
       maskedIdentifier: maskedIdentifier?.trim(),
       encryptedFields: encryptedFieldsCiphertext,
-      description: description?.trim().isEmpty == true ? null : description?.trim(),
+      description: description?.trim().isEmpty == true
+          ? null
+          : description?.trim(),
       issueDate: issueDate,
       expiryDate: expiryDate,
       updatedAt: DateTime.now(),
@@ -371,7 +399,9 @@ class DocumentVaultService {
 
     final file = File(document.encryptedFilePath);
     if (!await file.exists()) {
-      throw VaultStorageException('Encrypted file not found on disk at: ${document.encryptedFilePath}');
+      throw VaultStorageException(
+        'Encrypted file not found on disk at: ${document.encryptedFilePath}',
+      );
     }
 
     final encryptedBytes = await file.readAsBytes();
@@ -394,7 +424,9 @@ class DocumentVaultService {
         ? '.pdf'
         : (document.mimeType.contains('png') ? '.png' : '.jpg');
 
-    final previewFile = File(p.join(tempDir.path, '${document.id}_preview$ext'));
+    final previewFile = File(
+      p.join(tempDir.path, '${document.id}_preview$ext'),
+    );
     await previewFile.writeAsBytes(decryptedBytes, flush: true);
     return previewFile;
   }
@@ -444,7 +476,8 @@ class DocumentVaultService {
       if (await dir.exists()) {
         final entities = dir.listSync();
         for (final entity in entities) {
-          if (entity is File && (entity.path.endsWith('.enc') || entity.path.endsWith('.tmp'))) {
+          if (entity is File &&
+              (entity.path.endsWith('.enc') || entity.path.endsWith('.tmp'))) {
             await entity.delete().catchError((_) => entity);
           }
         }

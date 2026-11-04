@@ -9,7 +9,7 @@ class DashboardProvider with ChangeNotifier {
   double _monthlyTransfers = 0;
   double _monthlyRefunds = 0;
   double _totalOwed = 0;
-  
+
   double _previousMonthIncome = 0;
   double _previousMonthExpenses = 0;
 
@@ -20,13 +20,14 @@ class DashboardProvider with ChangeNotifier {
   double get monthlyRefunds => _monthlyRefunds;
   double get totalOwed => _totalOwed;
 
-  double get incomeChange => _previousMonthIncome == 0 
-      ? 100 
+  double get incomeChange => _previousMonthIncome == 0
+      ? 100
       : ((_monthlyIncome - _previousMonthIncome) / _previousMonthIncome) * 100;
-      
-  double get expenseChange => _previousMonthExpenses == 0 
-      ? 100 
-      : ((_monthlyExpenses - _previousMonthExpenses) / _previousMonthExpenses) * 100;
+
+  double get expenseChange => _previousMonthExpenses == 0
+      ? 100
+      : ((_monthlyExpenses - _previousMonthExpenses) / _previousMonthExpenses) *
+            100;
 
   Map<String, double> _categorySpending = {};
   Map<String, double> get categorySpending => _categorySpending;
@@ -50,7 +51,7 @@ class DashboardProvider with ChangeNotifier {
     final now = DateTime.now();
     final currentMonth = now.month;
     final currentYear = now.year;
-    
+
     // Calculate previous month and year
     int prevMonth = currentMonth - 1;
     int prevYear = currentYear;
@@ -72,9 +73,10 @@ class DashboardProvider with ChangeNotifier {
         _totalOwed += tx.owedAmount;
         if (tx.date.year == currentYear && tx.date.month == currentMonth) {
           _monthlyExpenses += tx.amount;
-          
+
           if (tx.categoryId != null) {
-            _categorySpending[tx.categoryId!] = (_categorySpending[tx.categoryId!] ?? 0) + tx.amount;
+            _categorySpending[tx.categoryId!] =
+                (_categorySpending[tx.categoryId!] ?? 0) + tx.amount;
           }
         } else if (tx.date.year == prevYear && tx.date.month == prevMonth) {
           _previousMonthExpenses += tx.amount;
@@ -98,7 +100,7 @@ class DashboardProvider with ChangeNotifier {
     final now = DateTime.now();
     final currentMonth = now.month;
     final currentYear = now.year;
-    
+
     // Group expenses by day
     Map<int, double> dailyExpenses = {};
     for (int i = 1; i <= 31; i++) {
@@ -106,13 +108,16 @@ class DashboardProvider with ChangeNotifier {
     }
 
     for (var tx in transactions) {
-      if (tx.type == 'expense' && tx.date.year == currentYear && tx.date.month == currentMonth) {
-        dailyExpenses[tx.date.day] = (dailyExpenses[tx.date.day] ?? 0) + tx.amount;
+      if (tx.type == 'expense' &&
+          tx.date.year == currentYear &&
+          tx.date.month == currentMonth) {
+        dailyExpenses[tx.date.day] =
+            (dailyExpenses[tx.date.day] ?? 0) + tx.amount;
       }
     }
 
     List<FlSpot> spots = [];
-    
+
     final daysInMonth = DateTime(currentYear, currentMonth + 1, 0).day;
     final currentDay = now.day;
 

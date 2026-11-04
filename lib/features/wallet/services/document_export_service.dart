@@ -17,14 +17,16 @@ class DocumentExportService {
     required Uint8List decryptedBytes,
     String? secureDocNumber,
   }) async {
-    final isPdfBytes = decryptedBytes.length >= 4 &&
+    final isPdfBytes =
+        decryptedBytes.length >= 4 &&
         decryptedBytes[0] == 0x25 &&
         decryptedBytes[1] == 0x50 &&
         decryptedBytes[2] == 0x44 &&
         decryptedBytes[3] == 0x46;
     final isPdf = isPdfBytes || document.mimeType.contains('pdf');
     final tempDir = await getTemporaryDirectory();
-    final fileName = 'spendz_export_${document.documentName.replaceAll(RegExp(r'[^a-zA-Z0-9_\-]'), '_')}_${const Uuid().v4().substring(0, 8)}.pdf';
+    final fileName =
+        'spendz_export_${document.documentName.replaceAll(RegExp(r'[^a-zA-Z0-9_\-]'), '_')}_${const Uuid().v4().substring(0, 8)}.pdf';
     final targetFile = File('${tempDir.path}/$fileName');
 
     if (isPdf && decryptedBytes.isNotEmpty) {
@@ -49,10 +51,22 @@ class DocumentExportService {
     final borderColor = PdfColor(220, 224, 218);
 
     // Fonts
-    final titleFont = PdfStandardFont(PdfFontFamily.helvetica, 18, style: PdfFontStyle.bold);
-    final subtitleFont = PdfStandardFont(PdfFontFamily.helvetica, 11, style: PdfFontStyle.bold);
+    final titleFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      18,
+      style: PdfFontStyle.bold,
+    );
+    final subtitleFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      11,
+      style: PdfFontStyle.bold,
+    );
     final regularFont = PdfStandardFont(PdfFontFamily.helvetica, 10);
-    final boldFont = PdfStandardFont(PdfFontFamily.helvetica, 10, style: PdfFontStyle.bold);
+    final boldFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      10,
+      style: PdfFontStyle.bold,
+    );
     final captionFont = PdfStandardFont(PdfFontFamily.helvetica, 8);
 
     double currentY = 0;
@@ -81,7 +95,9 @@ class DocumentExportService {
     );
     currentY += 26;
 
-    final categoryDisplay = document.category.replaceAll('_', ' ').toUpperCase();
+    final categoryDisplay = document.category
+        .replaceAll('_', ' ')
+        .toUpperCase();
     graphics.drawString(
       'Category: $categoryDisplay',
       subtitleFont,
@@ -96,12 +112,27 @@ class DocumentExportService {
       metadataRows.add(MapEntry('Document Number', secureDocNumber));
     }
     if (document.issueDate != null) {
-      metadataRows.add(MapEntry('Issue Date', DateFormat('dd MMM yyyy').format(document.issueDate!)));
+      metadataRows.add(
+        MapEntry(
+          'Issue Date',
+          DateFormat('dd MMM yyyy').format(document.issueDate!),
+        ),
+      );
     }
     if (document.expiryDate != null) {
-      metadataRows.add(MapEntry('Expiry Date', DateFormat('dd MMM yyyy').format(document.expiryDate!)));
+      metadataRows.add(
+        MapEntry(
+          'Expiry Date',
+          DateFormat('dd MMM yyyy').format(document.expiryDate!),
+        ),
+      );
     }
-    metadataRows.add(MapEntry('Exported On', DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now())));
+    metadataRows.add(
+      MapEntry(
+        'Exported On',
+        DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now()),
+      ),
+    );
 
     // Draw Metadata Table
     for (final entry in metadataRows) {
@@ -176,7 +207,12 @@ class DocumentExportService {
         // Draw light border around image
         graphics.drawRectangle(
           pen: PdfPen(borderColor, width: 1),
-          bounds: Rect.fromLTWH(imgX - 1, currentY - 1, imgWidth + 2, imgHeight + 2),
+          bounds: Rect.fromLTWH(
+            imgX - 1,
+            currentY - 1,
+            imgWidth + 2,
+            imgHeight + 2,
+          ),
         );
 
         graphics.drawImage(
@@ -185,7 +221,9 @@ class DocumentExportService {
         );
         currentY += imgHeight + 8;
       } catch (e) {
-        debugPrint('[DocumentExportService] Error rendering bitmap into PDF: $e');
+        debugPrint(
+          '[DocumentExportService] Error rendering bitmap into PDF: $e',
+        );
       }
     } else {
       // Virtual ID Card representation when no physical file attached
@@ -212,7 +250,8 @@ class DocumentExportService {
       // Card Content
       final contentY = currentY + 38;
       final displayHolder = document.holderName ?? 'Verified Cardholder';
-      final displayNumber = secureDocNumber ?? document.maskedIdentifier ?? '•••• •••• ••••';
+      final displayNumber =
+          secureDocNumber ?? document.maskedIdentifier ?? '•••• •••• ••••';
 
       graphics.drawString(
         'NAME: $displayHolder',
@@ -257,8 +296,12 @@ class DocumentExportService {
   }) async {
     try {
       final ext = document.mimeType.contains('pdf') ? 'pdf' : 'jpg';
-      final cleanName = document.documentName.replaceAll(RegExp(r'[^a-zA-Z0-9_\-]'), '_');
-      final fileName = '${cleanName}_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.$ext';
+      final cleanName = document.documentName.replaceAll(
+        RegExp(r'[^a-zA-Z0-9_\-]'),
+        '_',
+      );
+      final fileName =
+          '${cleanName}_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.$ext';
 
       Directory? targetDir;
       if (Platform.isAndroid) {

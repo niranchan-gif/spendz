@@ -8,24 +8,34 @@ class AppColors {
   // ─── LIGHT PALETTE ──────────────────────────────────────────────────────────
   /// Primary background: #F2F6F2
   static const Color backgroundLightMode = Color(0xFFF2F6F2);
+
   /// Primary surface: #FFFFFF
   static const Color surfaceLightMode = Color(0xFFFFFFFF);
+
   /// Secondary surface: #E8F0E9
   static const Color surfaceSecondaryLightMode = Color(0xFFE8F0E9);
+
   /// Primary brand anchor: #174D3B
   static const Color primaryLightMode = Color(0xFF174D3B);
+
   /// Emerald accent: #42A982
   static const Color emeraldAccentLightMode = Color(0xFF42A982);
+
   /// Sage accent: #A9C7B0
   static const Color sageLightMode = Color(0xFFA9C7B0);
+
   /// Champagne highlight: #D6B779
   static const Color champagneLightMode = Color(0xFFD6B779);
+
   /// Primary text: #19271F
   static const Color textPrimaryLightMode = Color(0xFF19271F);
+
   /// Secondary text: #718076
   static const Color textSecondaryLightMode = Color(0xFF718076);
+
   /// Border: #DFE8E0
   static const Color borderLightMode = Color(0xFFDFE8E0);
+
   /// Divider
   static const Color dividerLightMode = Color(0xFFE5EDE6);
 
@@ -37,24 +47,34 @@ class AppColors {
   // ─── DARK PALETTE ───────────────────────────────────────────────────────────
   /// Primary dark background: #0C1712
   static const Color backgroundDarkMode = Color(0xFF0C1712);
+
   /// Primary surface: #14231B
   static const Color surfaceDarkMode = Color(0xFF14231B);
+
   /// Secondary surface: #1B3025
   static const Color surfaceSecondaryDarkMode = Color(0xFF1B3025);
+
   /// Primary brand anchor: #48B98B
   static const Color primaryDarkMode = Color(0xFF48B98B);
+
   /// Emerald accent: #65D0A4
   static const Color emeraldAccentDarkMode = Color(0xFF65D0A4);
+
   /// Sage accent: #A8C7B0
   static const Color sageDarkMode = Color(0xFFA8C7B0);
+
   /// Champagne highlight: #E6C587
   static const Color champagneDarkMode = Color(0xFFE6C587);
+
   /// Primary text: #F2F6F2
   static const Color textPrimaryDarkMode = Color(0xFFF2F6F2);
+
   /// Secondary text: #A2B3A7
   static const Color textSecondaryDarkMode = Color(0xFFA2B3A7);
+
   /// Border: #304638
   static const Color borderDarkMode = Color(0xFF304638);
+
   /// Divider
   static const Color dividerDarkMode = Color(0xFF22362A);
 
@@ -118,7 +138,9 @@ class AppColors {
   }
 
   static Color getSecondarySurface(BuildContext context) {
-    return isDark(context) ? surfaceSecondaryDarkMode : surfaceSecondaryLightMode;
+    return isDark(context)
+        ? surfaceSecondaryDarkMode
+        : surfaceSecondaryLightMode;
   }
 
   static Color getSurfaceVariant(BuildContext context) {
@@ -126,7 +148,9 @@ class AppColors {
   }
 
   static Color getSurfaceContainer(BuildContext context) {
-    return isDark(context) ? surfaceContainerDarkMode : surfaceContainerLightMode;
+    return isDark(context)
+        ? surfaceContainerDarkMode
+        : surfaceContainerLightMode;
   }
 
   static Color getEmeraldAccent(BuildContext context) {
@@ -178,24 +202,24 @@ class AppColors {
   }
 
   // ─── GLASS SYSTEM COLORS ────────────────────────────────────────────────────
-  /// Translucent background tint for glass surfaces
+  /// Translucent background tint for glass surfaces (Smoked Obsidian in Dark, Frosted White in Light)
   static Color getGlassBackground(BuildContext context) {
     return isDark(context)
-        ? const Color(0xFF14231B).withAlpha(190)
-        : const Color(0xFFFFFFFF).withAlpha(205);
+        ? const Color(0xFF0F1A14).withAlpha(200)
+        : const Color(0xFFFFFFFF).withAlpha(215);
   }
 
-  /// Subtle perimeter border for glass components
+  /// Subtle perimeter border for glass components (Specular Refractive Hairline)
   static Color getGlassBorder(BuildContext context) {
     return isDark(context)
-        ? const Color(0xFF65D0A4).withAlpha(35)
+        ? Colors.white.withAlpha(25)
         : const Color(0xFFFFFFFF).withAlpha(220);
   }
 
   /// Specular ambient highlight color for glass gradients
   static Color getGlassHighlight(BuildContext context) {
     return isDark(context)
-        ? Colors.white.withAlpha(20)
+        ? Colors.white.withAlpha(30)
         : Colors.white.withAlpha(90);
   }
 }

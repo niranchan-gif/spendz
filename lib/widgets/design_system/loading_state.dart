@@ -23,7 +23,9 @@ class LoadingState extends StatelessWidget {
               height: 32,
               child: CircularProgressIndicator(
                 strokeWidth: 2.8,
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.getPrimary(context)),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  AppColors.getPrimary(context),
+                ),
               ),
             ),
             if (message != null) ...[
@@ -40,4 +42,3 @@ class LoadingState extends StatelessWidget {
     );
   }
 }
-

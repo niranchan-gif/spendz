@@ -13,7 +13,8 @@ class WalletPassProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  List<WalletPassModel> get favoritePasses => _passes.where((p) => p.isFavorite).toList();
+  List<WalletPassModel> get favoritePasses =>
+      _passes.where((p) => p.isFavorite).toList();
 
   WalletPassProvider() {
     loadPasses();
@@ -107,4 +108,3 @@ class WalletPassProvider with ChangeNotifier {
     }
   }
 }
-

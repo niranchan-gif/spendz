@@ -50,9 +50,9 @@ class ErrorState extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             Text(
               title,
-              style: AppTextStyles.getHeading3(context).copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+              style: AppTextStyles.getHeading3(
+                context,
+              ).copyWith(fontWeight: FontWeight.w700),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.xs),
@@ -76,4 +76,3 @@ class ErrorState extends StatelessWidget {
     );
   }
 }
-

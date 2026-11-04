@@ -23,9 +23,12 @@ class WalletProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  List<WalletCardModel> get favoriteCards => _cards.where((c) => c.isFavorite).toList();
-  List<WalletDocumentModel> get favoriteDocuments => _documents.where((d) => d.isFavorite).toList();
-  List<WalletPassModel> get favoritePasses => _passes.where((p) => p.isFavorite).toList();
+  List<WalletCardModel> get favoriteCards =>
+      _cards.where((c) => c.isFavorite).toList();
+  List<WalletDocumentModel> get favoriteDocuments =>
+      _documents.where((d) => d.isFavorite).toList();
+  List<WalletPassModel> get favoritePasses =>
+      _passes.where((p) => p.isFavorite).toList();
 
   List<WalletDocumentModel> get expiringDocuments =>
       _documents.where((d) => d.isExpiringSoon || d.isExpired).toList();
@@ -185,7 +188,9 @@ class WalletProvider with ChangeNotifier {
 
   List<WalletDocumentModel> getDocumentsByCategory(String category) {
     if (category.toLowerCase() == 'all') return _documents;
-    return _documents.where((d) => d.category.toLowerCase() == category.toLowerCase()).toList();
+    return _documents
+        .where((d) => d.category.toLowerCase() == category.toLowerCase())
+        .toList();
   }
 
   WalletCardModel? getCardById(String id) {

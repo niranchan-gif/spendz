@@ -31,12 +31,8 @@ class GlassDialog extends StatelessWidget {
       context: context,
       barrierDismissible: barrierDismissible,
       barrierColor: Colors.black.withAlpha(120),
-      builder: (ctx) => GlassDialog(
-        title: title,
-        icon: icon,
-        actions: actions,
-        child: child,
-      ),
+      builder: (ctx) =>
+          GlassDialog(title: title, icon: icon, actions: actions, child: child),
     );
   }
 
@@ -60,7 +56,9 @@ class GlassDialog extends StatelessWidget {
                   : const Color(0xFFFFFFFF).withAlpha(240),
               borderRadius: BorderRadius.circular(AppRadius.xl),
               border: Border.all(
-                color: isDark ? Colors.white.withAlpha(35) : Colors.white.withAlpha(230),
+                color: isDark
+                    ? Colors.white.withAlpha(35)
+                    : Colors.white.withAlpha(230),
                 width: 1.2,
               ),
               boxShadow: [
@@ -106,4 +104,3 @@ class GlassDialog extends StatelessWidget {
     );
   }
 }
-

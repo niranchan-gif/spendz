@@ -76,4 +76,3 @@ class GlassIconButton extends StatelessWidget {
     return button;
   }
 }
-

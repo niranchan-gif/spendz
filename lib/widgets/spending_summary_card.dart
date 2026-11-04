@@ -33,7 +33,10 @@ class SpendingSummaryCard extends StatelessWidget {
                 style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withAlpha(30),
                   borderRadius: BorderRadius.circular(20),

@@ -1,7 +1,8 @@
 class WalletPassModel {
   final String id;
   final String title;
-  final String passType; // 'qr_code', 'barcode', 'event_ticket', 'boarding_pass', 'membership', 'loyalty'
+  final String
+  passType; // 'qr_code', 'barcode', 'event_ticket', 'boarding_pass', 'membership', 'loyalty'
   final String encryptedCodePath; // Column 'encrypted_code_path' in DB
   final String codeFormat; // 'QR_CODE', 'CODE_128', 'AZTEC', 'PDF_417'
   final String? issuer;
@@ -51,7 +52,9 @@ class WalletPassModel {
       encryptedCodePath: map['encrypted_code_path'] ?? map['code_data'] ?? '',
       codeFormat: map['code_format'] ?? 'QR_CODE',
       issuer: map['issuer'],
-      validUntil: map['valid_until'] != null ? DateTime.tryParse(map['valid_until']) : null,
+      validUntil: map['valid_until'] != null
+          ? DateTime.tryParse(map['valid_until'])
+          : null,
       notes: map['notes'],
       isFavorite: map['is_favorite'] == 1,
       createdAt: DateTime.parse(map['created_at']),

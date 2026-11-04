@@ -31,11 +31,8 @@ class GlassBottomSheet extends StatelessWidget {
       isScrollControlled: isScrollControlled,
       backgroundColor: Colors.transparent,
       elevation: 0,
-      builder: (ctx) => GlassBottomSheet(
-        title: title,
-        trailing: trailing,
-        child: child,
-      ),
+      builder: (ctx) =>
+          GlassBottomSheet(title: title, trailing: trailing, child: child),
     );
   }
 
@@ -47,7 +44,9 @@ class GlassBottomSheet extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.only(bottom: bottomInset),
       child: ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.sheet)),
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(AppRadius.sheet),
+        ),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
           child: Container(
@@ -55,18 +54,26 @@ class GlassBottomSheet extends StatelessWidget {
               color: isDark
                   ? const Color(0xFF14231B).withAlpha(235)
                   : const Color(0xFFFFFFFF).withAlpha(240),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.sheet)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(AppRadius.sheet),
+              ),
               border: Border(
                 top: BorderSide(
-                  color: isDark ? Colors.white.withAlpha(40) : Colors.white.withAlpha(240),
+                  color: isDark
+                      ? Colors.white.withAlpha(40)
+                      : Colors.white.withAlpha(240),
                   width: 1.2,
                 ),
                 left: BorderSide(
-                  color: isDark ? Colors.white.withAlpha(20) : Colors.white.withAlpha(180),
+                  color: isDark
+                      ? Colors.white.withAlpha(20)
+                      : Colors.white.withAlpha(180),
                   width: 0.8,
                 ),
                 right: BorderSide(
-                  color: isDark ? Colors.white.withAlpha(20) : Colors.white.withAlpha(180),
+                  color: isDark
+                      ? Colors.white.withAlpha(20)
+                      : Colors.white.withAlpha(180),
                   width: 0.8,
                 ),
               ),
@@ -81,7 +88,10 @@ class GlassBottomSheet extends StatelessWidget {
             child: SafeArea(
               top: false,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.md,
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,7 +102,9 @@ class GlassBottomSheet extends StatelessWidget {
                         width: 44,
                         height: 4.5,
                         decoration: BoxDecoration(
-                          color: AppColors.getTextSecondary(context).withAlpha(70),
+                          color: AppColors.getTextSecondary(
+                            context,
+                          ).withAlpha(70),
                           borderRadius: BorderRadius.circular(3),
                         ),
                       ),
