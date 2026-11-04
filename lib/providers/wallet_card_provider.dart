@@ -90,6 +90,54 @@ class WalletCardProvider with ChangeNotifier {
     }
   }
 
+  Future<void> setDefaultCard(String id) async {
+    try {
+      await _repository.setDefaultCard(id);
+      await loadCards();
+    } catch (e) {
+      _error = 'Failed to set default card: $e';
+      notifyListeners();
+    }
+  }
+
+  Future<void> updateCardTheme(String id, String themeId) async {
+    try {
+      await _repository.updateThemeAndLayout(id, themeId: themeId);
+      await loadCards();
+    } catch (e) {
+      _error = 'Failed to update theme: $e';
+      notifyListeners();
+    }
+  }
+
+  Future<void> updateCardLayout(String id, String layoutId) async {
+    try {
+      await _repository.updateThemeAndLayout(id, layoutId: layoutId);
+      await loadCards();
+    } catch (e) {
+      _error = 'Failed to update layout: $e';
+      notifyListeners();
+    }
+  }
+
+  Future<void> reorderCards(int oldIndex, int newIndex) async {
+    try {
+      if (oldIndex < newIndex) {
+        newIndex -= 1;
+      }
+      final item = _cards.removeAt(oldIndex);
+      _cards.insert(newIndex, item);
+      notifyListeners();
+
+      final ids = _cards.map((c) => c.id).toList();
+      await _repository.updateOrder(ids);
+      await loadCards();
+    } catch (e) {
+      _error = 'Failed to reorder cards: $e';
+      notifyListeners();
+    }
+  }
+
   WalletCardModel? getCardById(String id) {
     try {
       return _cards.firstWhere((c) => c.id == id);

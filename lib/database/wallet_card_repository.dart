@@ -16,7 +16,7 @@ class WalletCardRepository {
     final db = await dbHelper.database;
     final maps = await db.query(
       'wallet_cards',
-      orderBy: 'is_favorite DESC, created_at DESC',
+      orderBy: 'is_default DESC, display_order ASC, is_favorite DESC, created_at DESC',
     );
     return maps.map((m) => WalletCardModel.fromMap(m)).toList();
   }
@@ -79,6 +79,52 @@ class WalletCardRepository {
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  Future<void> setDefaultCard(String id) async {
+    final db = await dbHelper.database;
+    await db.transaction((txn) async {
+      await txn.update('wallet_cards', {'is_default': 0});
+      await txn.update(
+        'wallet_cards',
+        {'is_default': 1, 'updated_at': DateTime.now().toIso8601String()},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    });
+  }
+
+  Future<int> updateThemeAndLayout(String id, {String? themeId, String? layoutId}) async {
+    final db = await dbHelper.database;
+    final Map<String, dynamic> updates = {
+      'updated_at': DateTime.now().toIso8601String(),
+    };
+    if (themeId != null) {
+      updates['theme_gradient'] = themeId;
+    }
+    if (layoutId != null) {
+      updates['card_layout_id'] = layoutId;
+    }
+    return await db.update(
+      'wallet_cards',
+      updates,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<void> updateOrder(List<String> cardIds) async {
+    final db = await dbHelper.database;
+    final batch = db.batch();
+    for (int i = 0; i < cardIds.length; i++) {
+      batch.update(
+        'wallet_cards',
+        {'display_order': i, 'updated_at': DateTime.now().toIso8601String()},
+        where: 'id = ?',
+        whereArgs: [cardIds[i]],
+      );
+    }
+    await batch.commit(noResult: true);
   }
 
   /// Deletes a card and safely unlinks associated transactions (setting their card_id to NULL).

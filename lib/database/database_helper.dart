@@ -37,6 +37,9 @@ class DatabaseHelper {
     await _addColumnIfNotExists(db, 'wallet_documents', 'holder_name', 'TEXT');
     await _addColumnIfNotExists(db, 'wallet_documents', 'encrypted_fields', 'TEXT');
     await _addColumnIfNotExists(db, 'wallet_documents', 'attachment_type', "TEXT DEFAULT 'none'");
+    await _addColumnIfNotExists(db, 'wallet_cards', 'card_layout_id', "TEXT DEFAULT 'minimal_luxury'");
+    await _addColumnIfNotExists(db, 'wallet_cards', 'display_order', "INTEGER DEFAULT 0");
+    await _addColumnIfNotExists(db, 'wallet_cards', 'is_default', "INTEGER DEFAULT 0");
   }
 
   Future<void> _addColumnIfNotExists(
@@ -208,12 +211,16 @@ class DatabaseHelper {
         card_type TEXT NOT NULL,
         card_network TEXT NOT NULL,
         theme_gradient TEXT NOT NULL,
+        card_layout_id TEXT NOT NULL DEFAULT 'minimal_luxury',
+        display_order INTEGER NOT NULL DEFAULT 0,
         is_favorite INTEGER NOT NULL DEFAULT 0,
+        is_default INTEGER NOT NULL DEFAULT 0,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       )
     ''');
     await db.execute('CREATE INDEX idx_wallet_cards_fav ON wallet_cards (is_favorite)');
+    await db.execute('CREATE INDEX idx_wallet_cards_order ON wallet_cards (display_order)');
 
     // 4. Wallet Documents
     await db.execute('''

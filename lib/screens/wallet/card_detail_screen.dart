@@ -19,6 +19,10 @@ import '../../widgets/design_system/loading_state.dart';
 import '../../widgets/design_system/primary_button.dart';
 import '../../widgets/design_system/reusable_card.dart';
 import 'widgets/wallet_card_widget.dart';
+import 'card_studio/card_studio_theme.dart';
+import 'card_studio/card_studio_layout.dart';
+import 'card_studio/card_theme_sheet.dart';
+import 'card_studio/card_layout_sheet.dart';
 
 class CardDetailScreen extends StatefulWidget {
   final WalletCardModel card;
@@ -83,8 +87,8 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     int expiryYear = _currentCard.expiryYear;
     String cardType = _currentCard.cardType;
     String themeGradient = _currentCard.themeGradient;
+    String cardLayoutId = _currentCard.cardLayoutId;
 
-    final themes = ['emerald', 'midnight', 'obsidian', 'amethyst', 'crimson', 'amber'];
     final cardTypes = ['credit', 'debit', 'atm', 'membership', 'loyalty', 'custom'];
 
     showModalBottomSheet(
@@ -207,13 +211,32 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                       const SizedBox(height: AppSpacing.sm),
                       Wrap(
                         spacing: 8,
-                        children: themes.map((t) {
-                          final isSelected = themeGradient == t;
+                        runSpacing: 8,
+                        children: CardStudioTheme.allThemes.map((t) {
+                          final isSelected = themeGradient == t.id;
                           return ChoiceChip(
-                            label: Text(t.toUpperCase()),
+                            label: Text(t.name),
+                            selected: isSelected,
+                            avatar: CircleAvatar(backgroundColor: t.primaryAccent, radius: 6),
+                            onSelected: (selected) {
+                              if (selected) setModalState(() => themeGradient = t.id);
+                            },
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Text('Card Layout', style: AppTextStyles.labelMedium),
+                      const SizedBox(height: AppSpacing.sm),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: CardStudioLayout.allLayouts.map((l) {
+                          final isSelected = cardLayoutId == l.id;
+                          return ChoiceChip(
+                            label: Text(l.name),
                             selected: isSelected,
                             onSelected: (selected) {
-                              if (selected) setModalState(() => themeGradient = t);
+                              if (selected) setModalState(() => cardLayoutId = l.id);
                             },
                           );
                         }).toList(),
@@ -256,6 +279,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                               expiryYear: expiryYear,
                               cardType: cardType,
                               themeGradient: themeGradient,
+                              cardLayoutId: cardLayoutId,
                               lastFour: lastFour,
                               maskedNumber: maskedNumber,
                               updatedAt: DateTime.now(),
@@ -355,6 +379,35 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                 allowReveal: true,
                 onTap: _showEditCardDialog,
               ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+
+            // Quick Theme & Layout Customization Chips
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ActionChip(
+                  avatar: const Icon(Icons.palette_outlined, size: 16),
+                  label: Text(CardStudioTheme.getTheme(_currentCard.themeGradient).name),
+                  onPressed: () async {
+                    await CardThemeSheet.show(context, _currentCard);
+                    if (!context.mounted) return;
+                    final updated = context.read<WalletCardProvider>().getCardById(_currentCard.id);
+                    if (updated != null && mounted) setState(() => _currentCard = updated);
+                  },
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                ActionChip(
+                  avatar: const Icon(Icons.view_quilt_outlined, size: 16),
+                  label: Text(CardStudioLayout.getLayout(_currentCard.cardLayoutId).name),
+                  onPressed: () async {
+                    await CardLayoutSheet.show(context, _currentCard);
+                    if (!context.mounted) return;
+                    final updated = context.read<WalletCardProvider>().getCardById(_currentCard.id);
+                    if (updated != null && mounted) setState(() => _currentCard = updated);
+                  },
+                ),
+              ],
             ),
             const SizedBox(height: AppSpacing.md),
 

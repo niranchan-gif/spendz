@@ -9,8 +9,11 @@ class WalletCardModel {
   final int expiryYear;
   final String cardType; // 'debit', 'credit', 'atm', 'membership', 'loyalty', 'custom'
   final String cardNetwork; // 'visa', 'mastercard', 'rupay', 'amex', 'other'
-  final String themeGradient; // e.g., 'emerald', 'midnight', 'obsidian', 'amethyst', 'crimson'
+  final String themeGradient; // e.g., 'midnight_emerald', 'obsidian_black', 'royal_amethyst', 'ocean_sapphire', etc.
+  final String cardLayoutId; // e.g. 'minimal_luxury', 'bold_gradient', 'metallic_premium', 'modern_geometric', 'dark_minimal'
+  final int displayOrder;
   final bool isFavorite;
+  final bool isDefault;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -25,11 +28,17 @@ class WalletCardModel {
     required this.expiryYear,
     this.cardType = 'credit',
     this.cardNetwork = 'visa',
-    this.themeGradient = 'emerald',
+    this.themeGradient = 'midnight_emerald',
+    this.cardLayoutId = 'minimal_luxury',
+    this.displayOrder = 0,
     this.isFavorite = false,
+    this.isDefault = false,
     required this.createdAt,
     required this.updatedAt,
   });
+
+  /// Compatibility alias for card_theme_id
+  String get cardThemeId => themeGradient;
 
   Map<String, dynamic> toMap() {
     return {
@@ -44,7 +53,10 @@ class WalletCardModel {
       'card_type': cardType,
       'card_network': cardNetwork,
       'theme_gradient': themeGradient,
+      'card_layout_id': cardLayoutId,
+      'display_order': displayOrder,
       'is_favorite': isFavorite ? 1 : 0,
+      'is_default': isDefault ? 1 : 0,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -62,8 +74,11 @@ class WalletCardModel {
       expiryYear: map['expiry_year'] ?? 30,
       cardType: map['card_type'] ?? 'credit',
       cardNetwork: map['card_network'] ?? 'visa',
-      themeGradient: map['theme_gradient'] ?? 'emerald',
+      themeGradient: map['card_theme_id'] ?? map['theme_gradient'] ?? 'midnight_emerald',
+      cardLayoutId: map['card_layout_id'] ?? 'minimal_luxury',
+      displayOrder: map['display_order'] ?? 0,
       isFavorite: map['is_favorite'] == 1,
+      isDefault: map['is_default'] == 1,
       createdAt: DateTime.parse(map['created_at']),
       updatedAt: DateTime.parse(map['updated_at']),
     );
@@ -81,7 +96,10 @@ class WalletCardModel {
     String? cardType,
     String? cardNetwork,
     String? themeGradient,
+    String? cardLayoutId,
+    int? displayOrder,
     bool? isFavorite,
+    bool? isDefault,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -97,7 +115,10 @@ class WalletCardModel {
       cardType: cardType ?? this.cardType,
       cardNetwork: cardNetwork ?? this.cardNetwork,
       themeGradient: themeGradient ?? this.themeGradient,
+      cardLayoutId: cardLayoutId ?? this.cardLayoutId,
+      displayOrder: displayOrder ?? this.displayOrder,
       isFavorite: isFavorite ?? this.isFavorite,
+      isDefault: isDefault ?? this.isDefault,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

@@ -7,7 +7,6 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:spendz/database/database_helper.dart';
 import 'package:spendz/database/wallet_document_repository.dart';
-import 'package:spendz/features/wallet/security/secure_number_service.dart';
 import 'package:spendz/features/wallet/security/wallet_auth_service.dart';
 import 'package:spendz/features/wallet/security/wallet_key_service.dart';
 import 'package:spendz/features/wallet/services/document_vault_service.dart';
@@ -45,7 +44,6 @@ void main() {
   late Directory tempCacheDir;
   late WalletDocumentRepository docRepo;
   late DocumentVaultService vaultService;
-  late SecureNumberService secureNumberService;
   late WalletKeyService keyService;
   late FakeWalletAuthService authService;
 
@@ -63,7 +61,6 @@ void main() {
       customVaultDirectory: tempVaultDir.path,
       customTempDirectory: tempCacheDir.path,
     );
-    secureNumberService = SecureNumberService();
     authService = FakeWalletAuthService();
 
     final db = await DatabaseHelper.instance.database;
