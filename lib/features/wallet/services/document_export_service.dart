@@ -17,12 +17,17 @@ class DocumentExportService {
     required Uint8List decryptedBytes,
     String? secureDocNumber,
   }) async {
-    final isPdf = document.mimeType.contains('pdf');
+    final isPdfBytes = decryptedBytes.length >= 4 &&
+        decryptedBytes[0] == 0x25 &&
+        decryptedBytes[1] == 0x50 &&
+        decryptedBytes[2] == 0x44 &&
+        decryptedBytes[3] == 0x46;
+    final isPdf = isPdfBytes || document.mimeType.contains('pdf');
     final tempDir = await getTemporaryDirectory();
     final fileName = 'spendz_export_${document.documentName.replaceAll(RegExp(r'[^a-zA-Z0-9_\-]'), '_')}_${const Uuid().v4().substring(0, 8)}.pdf';
     final targetFile = File('${tempDir.path}/$fileName');
 
-    if (isPdf) {
+    if (isPdf && decryptedBytes.isNotEmpty) {
       // If the original was already a PDF, write it directly
       await targetFile.writeAsBytes(decryptedBytes, flush: true);
       return targetFile;
@@ -143,43 +148,91 @@ class DocumentExportService {
     );
     currentY += 16;
 
-    // Scanned Image Section
-    graphics.drawString(
-      'ORIGINAL SCANNED DOCUMENT',
-      subtitleFont,
-      brush: PdfSolidBrush(secondaryColor),
-      bounds: Rect.fromLTWH(0, currentY, pageSize.width, 16),
-    );
-    currentY += 20;
+    if (decryptedBytes.isNotEmpty) {
+      // Scanned Image Section
+      graphics.drawString(
+        'ORIGINAL SCANNED DOCUMENT',
+        subtitleFont,
+        brush: PdfSolidBrush(secondaryColor),
+        bounds: Rect.fromLTWH(0, currentY, pageSize.width, 16),
+      );
+      currentY += 20;
 
-    try {
-      final pdfBitmap = PdfBitmap(decryptedBytes);
-      final remainingHeight = pageSize.height - currentY - 24;
+      try {
+        final pdfBitmap = PdfBitmap(decryptedBytes);
+        final remainingHeight = pageSize.height - currentY - 24;
 
-      // Calculate aspect-ratio preserved dimensions
-      double imgWidth = pageSize.width;
-      double imgHeight = (pdfBitmap.height / pdfBitmap.width) * imgWidth;
+        // Calculate aspect-ratio preserved dimensions
+        double imgWidth = pageSize.width;
+        double imgHeight = (pdfBitmap.height / pdfBitmap.width) * imgWidth;
 
-      if (imgHeight > remainingHeight) {
-        imgHeight = remainingHeight;
-        imgWidth = (pdfBitmap.width / pdfBitmap.height) * imgHeight;
+        if (imgHeight > remainingHeight) {
+          imgHeight = remainingHeight;
+          imgWidth = (pdfBitmap.width / pdfBitmap.height) * imgHeight;
+        }
+
+        final imgX = (pageSize.width - imgWidth) / 2;
+
+        // Draw light border around image
+        graphics.drawRectangle(
+          pen: PdfPen(borderColor, width: 1),
+          bounds: Rect.fromLTWH(imgX - 1, currentY - 1, imgWidth + 2, imgHeight + 2),
+        );
+
+        graphics.drawImage(
+          pdfBitmap,
+          Rect.fromLTWH(imgX, currentY, imgWidth, imgHeight),
+        );
+        currentY += imgHeight + 8;
+      } catch (e) {
+        debugPrint('[DocumentExportService] Error rendering bitmap into PDF: $e');
       }
-
-      final imgX = (pageSize.width - imgWidth) / 2;
-
-      // Draw light border around image
+    } else {
+      // Virtual ID Card representation when no physical file attached
+      currentY += 10;
+      final cardRect = Rect.fromLTWH(0, currentY, pageSize.width, 130);
       graphics.drawRectangle(
-        pen: PdfPen(borderColor, width: 1),
-        bounds: Rect.fromLTWH(imgX - 1, currentY - 1, imgWidth + 2, imgHeight + 2),
+        brush: PdfSolidBrush(PdfColor(245, 248, 244)),
+        pen: PdfPen(secondaryColor, width: 1.5),
+        bounds: cardRect,
       );
 
-      graphics.drawImage(
-        pdfBitmap,
-        Rect.fromLTWH(imgX, currentY, imgWidth, imgHeight),
+      // Card Header
+      graphics.drawRectangle(
+        brush: PdfSolidBrush(primaryColor),
+        bounds: Rect.fromLTWH(0, currentY, pageSize.width, 28),
       );
-      currentY += imgHeight + 8;
-    } catch (e) {
-      debugPrint('[DocumentExportService] Error rendering bitmap into PDF: $e');
+      graphics.drawString(
+        'VIRTUAL ${document.category.replaceAll("_", " ").toUpperCase()} CARD',
+        subtitleFont,
+        brush: PdfSolidBrush(PdfColor(255, 255, 255)),
+        bounds: Rect.fromLTWH(12, currentY + 6, pageSize.width - 24, 18),
+      );
+
+      // Card Content
+      final contentY = currentY + 38;
+      final displayHolder = document.holderName ?? 'Verified Cardholder';
+      final displayNumber = secureDocNumber ?? document.maskedIdentifier ?? '•••• •••• ••••';
+
+      graphics.drawString(
+        'NAME: $displayHolder',
+        boldFont,
+        brush: PdfSolidBrush(textColor),
+        bounds: Rect.fromLTWH(16, contentY, pageSize.width - 32, 16),
+      );
+      graphics.drawString(
+        'NUMBER: $displayNumber',
+        boldFont,
+        brush: PdfSolidBrush(secondaryColor),
+        bounds: Rect.fromLTWH(16, contentY + 22, pageSize.width - 32, 16),
+      );
+      graphics.drawString(
+        'AUTHENTIC SPENDZ 2.0 DIGITAL VAULT RECORD • HARDWARE BACKED',
+        captionFont,
+        brush: PdfSolidBrush(mutedTextColor),
+        bounds: Rect.fromLTWH(16, contentY + 54, pageSize.width - 32, 14),
+      );
+      currentY += 150;
     }
 
     // Footer

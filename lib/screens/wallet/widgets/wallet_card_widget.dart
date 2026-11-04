@@ -200,48 +200,60 @@ class WalletCardWidget extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withAlpha(30),
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(color: Colors.white.withAlpha(40)),
-                                  ),
-                                  child: Text(
-                                    card.issuerName.toUpperCase(),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 1.0,
+                            Expanded(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withAlpha(30),
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(color: Colors.white.withAlpha(40)),
+                                    ),
+                                    child: Text(
+                                      card.issuerName.toUpperCase(),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 1.0,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  card.cardType.toUpperCase(),
-                                  style: TextStyle(
-                                    color: Colors.white.withAlpha(180),
-                                    fontSize: 9.5,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 0.6,
+                                  const SizedBox(width: 6),
+                                  Flexible(
+                                    child: Text(
+                                      card.cardType.toUpperCase(),
+                                      style: TextStyle(
+                                        color: Colors.white.withAlpha(180),
+                                        fontSize: 9.5,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 0.6,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
+                            const SizedBox(width: 6),
                             Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 if (card.nickname.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.only(right: 6),
-                                    child: Text(
-                                      card.nickname,
-                                      style: TextStyle(
-                                        color: Colors.white.withAlpha(170),
-                                        fontSize: 10.5,
-                                        fontWeight: FontWeight.w500,
+                                  ConstrainedBox(
+                                    constraints: const BoxConstraints(maxWidth: 90),
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(right: 6),
+                                      child: Text(
+                                        card.nickname,
+                                        style: TextStyle(
+                                          color: Colors.white.withAlpha(170),
+                                          fontSize: 10.5,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                   ),

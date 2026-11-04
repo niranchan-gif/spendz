@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
@@ -28,15 +29,25 @@ class CardsScreen extends StatefulWidget {
 class _CardsScreenState extends State<CardsScreen> {
   String _selectedFilter = 'all';
   final SecureNumberService _secureNumberService = SecureNumberService();
+  late PageController _pageController;
+  int _currentCardIndex = 0;
+  bool _isStackedDeckView = true;
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(viewportFraction: 0.88);
     if (widget.openAddDialog) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _showAddCardDialog(context);
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   void _showAddCardDialog(BuildContext context) {
@@ -334,6 +345,14 @@ class _CardsScreenState extends State<CardsScreen> {
         title: Text('Card Studio', style: AppTextStyles.getHeading2(context)),
         actions: [
           IconButton(
+            icon: Icon(
+              _isStackedDeckView ? Icons.view_agenda_outlined : Icons.style_rounded,
+              color: AppColors.getTextSecondary(context),
+            ),
+            tooltip: _isStackedDeckView ? 'Switch to List View' : 'Switch to Stacked Deck',
+            onPressed: () => setState(() => _isStackedDeckView = !_isStackedDeckView),
+          ),
+          IconButton(
             icon: Icon(Icons.add_circle_outline, color: AppColors.getPrimary(context)),
             tooltip: 'Add Card',
             onPressed: () => _showAddCardDialog(context),
@@ -370,7 +389,7 @@ class _CardsScreenState extends State<CardsScreen> {
                 ),
               ),
 
-              // Cards List
+              // Cards Display: Stacked Swipeable Deck vs Classic List
               Expanded(
                 child: filteredCards.isEmpty
                     ? EmptyState(
@@ -380,30 +399,361 @@ class _CardsScreenState extends State<CardsScreen> {
                         actionLabel: 'Add Your First Card',
                         onAction: () => _showAddCardDialog(context),
                       )
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
-                        itemCount: filteredCards.length,
-                        itemBuilder: (context, index) {
-                          final card = filteredCards[index];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                            child: Center(
-                              child: WalletCardWidget(
-                                card: card,
-                                onTap: () => _openCardDetail(context, card),
-                                onFavoriteToggle: () {
-                                  context.read<WalletCardProvider>().toggleCardFavorite(card.id);
-                                  context.read<WalletProvider>().loadWallet();
-                                },
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+                    : (_isStackedDeckView
+                        ? _buildStackedCardDeck(context, filteredCards)
+                        : ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+                            itemCount: filteredCards.length,
+                            itemBuilder: (context, index) {
+                              final card = filteredCards[index];
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                                child: Center(
+                                  child: WalletCardWidget(
+                                    card: card,
+                                    onTap: () => _openCardDetail(context, card),
+                                    onFavoriteToggle: () {
+                                      context.read<WalletCardProvider>().toggleCardFavorite(card.id);
+                                      context.read<WalletProvider>().loadWallet();
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
+                          )),
               ),
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildStackedCardDeck(BuildContext context, List<WalletCardModel> cards) {
+    if (_currentCardIndex >= cards.length) {
+      _currentCardIndex = cards.length - 1;
+    }
+    if (_currentCardIndex < 0) {
+      _currentCardIndex = 0;
+    }
+
+    final activeCard = cards[_currentCardIndex];
+
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        children: [
+          const SizedBox(height: AppSpacing.sm),
+
+          // 1. Stacked Swipeable PageView (Seamless swipe to next card)
+          SizedBox(
+            height: 240,
+            child: PageView.builder(
+              controller: _pageController,
+              itemCount: cards.length,
+              physics: const BouncingScrollPhysics(),
+              onPageChanged: (index) {
+                setState(() => _currentCardIndex = index);
+              },
+              itemBuilder: (context, index) {
+                final card = cards[index];
+
+                return AnimatedBuilder(
+                  animation: _pageController,
+                  builder: (context, child) {
+                    double pageOffset = 0.0;
+                    if (_pageController.position.haveDimensions) {
+                      pageOffset = (_pageController.page ?? _pageController.initialPage.toDouble()) - index;
+                    } else {
+                      pageOffset = (_currentCardIndex - index).toDouble();
+                    }
+
+                    // Tactile Stack transformation: smooth scale, depth offset & opacity
+                    final scale = (1.0 - (pageOffset.abs() * 0.08)).clamp(0.88, 1.0);
+                    final opacity = (1.0 - (pageOffset.abs() * 0.25)).clamp(0.4, 1.0);
+                    final translateY = pageOffset.abs() * 10.0;
+
+                    return Transform.translate(
+                      offset: Offset(0, translateY),
+                      child: Transform.scale(
+                        scale: scale,
+                        child: Opacity(
+                          opacity: opacity,
+                          child: child,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Center(
+                    child: WalletCardWidget(
+                      card: card,
+                      allowReveal: true,
+                      onTap: () => _openCardDetail(context, card),
+                      onFavoriteToggle: () {
+                        context.read<WalletCardProvider>().toggleCardFavorite(card.id);
+                        context.read<WalletProvider>().loadWallet();
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.xs),
+
+          // 2. Stack Indicators & Page Counter ("Card X of Y")
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Card ${_currentCardIndex + 1} of ${cards.length}',
+                style: AppTextStyles.caption.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.getTextSecondary(context),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(cards.length, (dotIdx) {
+                  final isActive = dotIdx == _currentCardIndex;
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    width: isActive ? 18 : 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: isActive
+                          ? AppColors.primary
+                          : AppColors.getTextSecondary(context).withAlpha(60),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  );
+                }),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: AppSpacing.md),
+
+          // 3. Quick Action Dock for the Active Card
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: AppColors.getSurface(context),
+                borderRadius: BorderRadius.circular(AppRadius.card),
+                border: Border.all(color: AppColors.getBorder(context)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildDeckActionButton(
+                    context,
+                    icon: Icons.info_outline_rounded,
+                    label: 'Card Details',
+                    onTap: () => _openCardDetail(context, activeCard),
+                  ),
+                  _buildDeckActionButton(
+                    context,
+                    icon: activeCard.isFavorite ? Icons.star_rounded : Icons.star_outline_rounded,
+                    label: activeCard.isFavorite ? 'Favorited' : 'Favorite',
+                    color: activeCard.isFavorite ? Colors.amber : null,
+                    onTap: () {
+                      context.read<WalletCardProvider>().toggleCardFavorite(activeCard.id);
+                      context.read<WalletProvider>().loadWallet();
+                    },
+                  ),
+                  _buildDeckActionButton(
+                    context,
+                    icon: Icons.copy_rounded,
+                    label: 'Copy Number',
+                    onTap: () async {
+                      final fullNum = await _secureNumberService.getCardFullNumber(activeCard.id);
+                      final numToCopy = fullNum ?? activeCard.lastFour;
+                      await Clipboard.setData(ClipboardData(text: numToCopy));
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Card number copied: $numToCopy'),
+                            backgroundColor: AppColors.primary,
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.lg),
+
+          // 4. Studio Cards Stack Tray (Tap to select card in stack)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Cards in Deck (${cards.length})',
+                  style: AppTextStyles.labelLarge.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.getTextPrimary(context),
+                  ),
+                ),
+                Text(
+                  'Swipe to switch',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.getTextSecondary(context),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
+            itemCount: cards.length,
+            separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.xs),
+            itemBuilder: (context, idx) {
+              final cardItem = cards[idx];
+              final isCurrent = idx == _currentCardIndex;
+
+              return InkWell(
+                onTap: () {
+                  setState(() => _currentCardIndex = idx);
+                  _pageController.animateToPage(
+                    idx,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic,
+                  );
+                },
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: isCurrent
+                        ? AppColors.primary.withAlpha(20)
+                        : AppColors.getSurface(context),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    border: Border.all(
+                      color: isCurrent
+                          ? AppColors.primary
+                          : AppColors.getBorder(context),
+                      width: isCurrent ? 1.5 : 1.0,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 38,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(4),
+                          color: isCurrent ? AppColors.primary : AppColors.getTextSecondary(context).withAlpha(40),
+                        ),
+                        child: Center(
+                          child: Text(
+                            cardItem.cardNetwork.toUpperCase(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              cardItem.nickname,
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.getTextPrimary(context),
+                              ),
+                            ),
+                            Text(
+                              '•••• ${cardItem.lastFour} • ${cardItem.issuerName}',
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.getTextSecondary(context),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (isCurrent)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Text(
+                            'ACTIVE',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        )
+                      else
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 18,
+                          color: AppColors.getTextSecondary(context),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: AppSpacing.xl),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeckActionButton(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    Color? color,
+  }) {
+    final textColor = AppColors.getTextPrimary(context);
+    final iconColor = color ?? AppColors.primary;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 20, color: iconColor),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: AppTextStyles.caption.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+                color: textColor,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

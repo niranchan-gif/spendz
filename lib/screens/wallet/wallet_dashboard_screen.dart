@@ -679,17 +679,39 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
       itemBuilder: (context, i) {
         final cat = categories[i];
         final catId = cat['id'] as String;
-        final count = docs.where((d) => d.category.toLowerCase() == catId).length;
+        final matchingDocs = docs.where((d) => d.category.toLowerCase() == catId.toLowerCase()).toList();
+        final count = matchingDocs.length;
 
         return Material(
           color: surfaceColor,
           borderRadius: BorderRadius.circular(AppRadius.md),
           child: InkWell(
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const DocumentsScreen()),
-              );
+              if (matchingDocs.length == 1) {
+                // Exactly 1 document exists: take user directly to that document (Aadhaar, PAN, etc.)
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => DocumentPreviewScreen(document: matchingDocs.first),
+                  ),
+                );
+              } else if (matchingDocs.length > 1) {
+                // Multiple documents exist: take user to documents list filtered to this category
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => DocumentsScreen(initialCategory: catId),
+                  ),
+                );
+              } else {
+                // No document exists yet: open creation form directly pre-selected for this category
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => DocumentCreationScreen(initialCategory: catId),
+                  ),
+                );
+              }
             },
             borderRadius: BorderRadius.circular(AppRadius.md),
             child: Container(

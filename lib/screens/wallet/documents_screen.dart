@@ -17,8 +17,13 @@ import 'widgets/document_vault_tile.dart';
 
 class DocumentsScreen extends StatefulWidget {
   final bool openAddDialog;
+  final String? initialCategory;
 
-  const DocumentsScreen({super.key, this.openAddDialog = false});
+  const DocumentsScreen({
+    super.key,
+    this.openAddDialog = false,
+    this.initialCategory,
+  });
 
   @override
   State<DocumentsScreen> createState() => _DocumentsScreenState();
@@ -33,6 +38,9 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.initialCategory != null) {
+      _selectedCategory = widget.initialCategory!;
+    }
     if (widget.openAddDialog) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _navigateToAddDocument();
@@ -43,13 +51,18 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   void _navigateToAddDocument() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const DocumentCreationScreen()),
+      MaterialPageRoute(
+        builder: (_) => DocumentCreationScreen(
+          initialCategory: _selectedCategory != 'all' ? _selectedCategory : null,
+        ),
+      ),
     );
   }
 
   bool _matchesCategory(String docCategory, String selected) {
     if (selected == 'all') return true;
     final cat = docCategory.toLowerCase();
+    if (selected.toLowerCase() == cat) return true;
 
     switch (selected) {
       case 'identity':
@@ -65,7 +78,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       case 'others':
         return cat == 'other' || cat == 'certificate';
       default:
-        return cat == selected;
+        return cat == selected.toLowerCase();
     }
   }
 

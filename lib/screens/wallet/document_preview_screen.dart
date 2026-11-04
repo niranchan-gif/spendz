@@ -147,49 +147,135 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
     }
   }
 
-  Future<void> _openPdfWithExternalApp() async {
-    if (_stagedPdfFile == null) return;
-    try {
-      final result = await OpenFilex.open(_stagedPdfFile!.path);
-      if (result.type != ResultType.done && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Could not open PDF viewer: ${result.message}'),
-            backgroundColor: AppColors.error,
+  Future<void> _openDocument() async {
+    if (_currentDocument.hasAttachment) {
+      if (_decryptedImageBytes == null && _stagedPdfFile == null) {
+        await _authenticateAndDecrypt();
+        if (!mounted) return;
+      }
+
+      if (_stagedPdfFile != null) {
+        try {
+          final result = await OpenFilex.open(_stagedPdfFile!.path);
+          if (result.type != ResultType.done && mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Could not open PDF viewer: ${result.message}'),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error opening PDF: $e'), backgroundColor: AppColors.error),
+            );
+          }
+        }
+        return;
+      }
+
+      if (_decryptedImageBytes != null) {
+        // Open full-screen zoomable preview modal
+        showDialog(
+          context: context,
+          builder: (ctx) => Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: const EdgeInsets.all(12),
+            child: Stack(
+              children: [
+                Center(
+                  child: InteractiveViewer(
+                    minScale: 0.5,
+                    maxScale: 5.0,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.memory(
+                        _decryptedImageBytes!,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: CircleAvatar(
+                    backgroundColor: Colors.black54,
+                    child: IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
+        return;
+      }
+    }
+
+    // Document without physical attachment: generate official Virtual Card PDF & open
+    setState(() => _isExporting = true);
+    try {
+      final pdfFile = await _exportService.generateDocumentPdf(
+        document: _currentDocument,
+        decryptedBytes: Uint8List(0),
+        secureDocNumber: _secureDocumentNumber,
+      );
+      if (mounted) {
+        setState(() => _isExporting = false);
+        await OpenFilex.open(pdfFile.path);
       }
     } catch (e) {
       if (mounted) {
+        setState(() => _isExporting = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error opening PDF: $e'),
-            backgroundColor: AppColors.error,
-          ),
+          SnackBar(content: Text('Could not open document: $e'), backgroundColor: AppColors.error),
         );
       }
     }
   }
 
-  Future<void> _downloadOriginal() async {
-    if (!_currentDocument.hasAttachment) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('This document has no physical attachment to download.')),
-      );
-      return;
-    }
-
-    if (_decryptedImageBytes == null && _stagedPdfFile == null) {
-      await _authenticateAndDecrypt();
-      if (!mounted) return;
-      if (_decryptedImageBytes == null && _stagedPdfFile == null) return;
-    }
-
+  Future<void> _saveToPhone() async {
     setState(() => _isExporting = true);
     try {
-      final bytes = _decryptedImageBytes ?? await _stagedPdfFile!.readAsBytes();
-      final defaultName = DocumentScannerService.getDefaultPdfFileName(_currentDocument.category);
+      Uint8List bytes;
+      if (_currentDocument.hasAttachment) {
+        if (_decryptedImageBytes == null && _stagedPdfFile == null) {
+          await _authenticateAndDecrypt();
+          if (!mounted) {
+            setState(() => _isExporting = false);
+            return;
+          }
+        }
 
+        if (_stagedPdfFile != null) {
+          bytes = await _stagedPdfFile!.readAsBytes();
+        } else if (_decryptedImageBytes != null) {
+          bytes = DocumentScannerService().generatePdfFromPages(
+            [_decryptedImageBytes!],
+            title: _currentDocument.documentName,
+          );
+        } else {
+          final pdfFile = await _exportService.generateDocumentPdf(
+            document: _currentDocument,
+            decryptedBytes: Uint8List(0),
+            secureDocNumber: _secureDocumentNumber,
+          );
+          bytes = await pdfFile.readAsBytes();
+        }
+      } else {
+        final pdfFile = await _exportService.generateDocumentPdf(
+          document: _currentDocument,
+          decryptedBytes: Uint8List(0),
+          secureDocNumber: _secureDocumentNumber,
+        );
+        bytes = await pdfFile.readAsBytes();
+      }
+
+      final defaultName = DocumentScannerService.getDefaultPdfFileName(_currentDocument.category);
       final savedPath = await DocumentScannerService().savePdfToPhoneStorage(
         pdfBytes: bytes,
         fileName: defaultName,
@@ -205,10 +291,10 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
                 children: [
                   Icon(Icons.check_circle_rounded, color: AppColors.success),
                   SizedBox(width: 8),
-                  Text('Document Downloaded'),
+                  Text('Saved to Device'),
                 ],
               ),
-              content: Text('Saved to phone storage:\n\n$savedPath\n\nYou can access it using your phone\'s Files or Downloads app.'),
+              content: Text('Document successfully saved to phone storage:\n\n$savedPath\n\nYou can access it using your phone\'s Files or Downloads app.'),
               actions: [
                 TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
                 ElevatedButton.icon(
@@ -233,68 +319,18 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
       if (mounted) {
         setState(() => _isExporting = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Download error: $e'), backgroundColor: AppColors.error),
-        );
-      }
-    }
-  }
-
-  Future<void> _exportPdf() async {
-    if (!_currentDocument.hasAttachment) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('This document has no physical attachment to export.')),
-      );
-      return;
-    }
-
-    if (_decryptedImageBytes == null && _stagedPdfFile == null) {
-      await _authenticateAndDecrypt();
-      if (!mounted) return;
-      if (_decryptedImageBytes == null && _stagedPdfFile == null) return;
-    }
-
-    setState(() => _isExporting = true);
-    try {
-      final bytes = _decryptedImageBytes ?? await _stagedPdfFile!.readAsBytes();
-      final pdfFile = await _exportService.generateDocumentPdf(
-        document: _currentDocument,
-        decryptedBytes: bytes,
-        secureDocNumber: _secureDocumentNumber,
-      );
-
-      if (mounted) {
-        setState(() => _isExporting = false);
-        await OpenFilex.open(pdfFile.path);
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isExporting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('PDF Export error: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text('Save error: $e'), backgroundColor: AppColors.error),
         );
       }
     }
   }
 
   Future<void> _shareDocument() async {
-    if (!_currentDocument.hasAttachment) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('This document has no physical attachment to share.')),
-      );
-      return;
-    }
-
-    if (_decryptedImageBytes == null && _stagedPdfFile == null) {
-      await _authenticateAndDecrypt();
-      if (!mounted) return;
-      if (_decryptedImageBytes == null && _stagedPdfFile == null) return;
-    }
-
     // Warn user before sharing sensitive document copy
     final proceed = await CustomDialog.showConfirmation(
       context: context,
-      title: 'Share Document Copy?',
-      message: 'You are about to share a decrypted copy of this document. Anyone you send this to will be able to view its contents.',
+      title: 'Share Document?',
+      message: 'You are about to share a copy of "${_currentDocument.documentName}". Anyone you send this to will be able to view its contents.',
       confirmLabel: 'Proceed & Share',
       cancelLabel: 'Cancel',
       icon: Icons.share_rounded,
@@ -304,7 +340,22 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
 
     setState(() => _isExporting = true);
     try {
-      final bytes = _decryptedImageBytes ?? await _stagedPdfFile!.readAsBytes();
+      Uint8List bytes = Uint8List(0);
+      if (_currentDocument.hasAttachment) {
+        if (_decryptedImageBytes == null && _stagedPdfFile == null) {
+          await _authenticateAndDecrypt();
+          if (!mounted) {
+            setState(() => _isExporting = false);
+            return;
+          }
+        }
+        if (_stagedPdfFile != null) {
+          bytes = await _stagedPdfFile!.readAsBytes();
+        } else if (_decryptedImageBytes != null) {
+          bytes = _decryptedImageBytes!;
+        }
+      }
+
       await _exportService.shareDocument(
         document: _currentDocument,
         decryptedBytes: bytes,
@@ -485,11 +536,6 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
             },
           ),
           IconButton(
-            tooltip: 'Edit Document Details',
-            icon: const Icon(Icons.edit_outlined),
-            onPressed: _openEditScreen,
-          ),
-          IconButton(
             tooltip: 'Delete Document',
             icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error),
             onPressed: _deleteDocument,
@@ -562,24 +608,24 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
               ],
               const SizedBox(height: AppSpacing.md),
 
-              // 4. Quick Actions Row
+              // 4. Primary Actions Row (Unified, Non-Repeating)
               Row(
                 children: [
                   Expanded(
                     child: _buildActionButton(
                       context,
-                      icon: Icons.download_rounded,
-                      label: 'Download',
-                      onTap: doc.hasAttachment && !_isExporting ? _downloadOriginal : null,
+                      icon: Icons.visibility_rounded,
+                      label: 'Open',
+                      onTap: !_isExporting ? _openDocument : null,
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: _buildActionButton(
                       context,
-                      icon: Icons.picture_as_pdf_rounded,
-                      label: 'Export PDF',
-                      onTap: doc.hasAttachment && !_isExporting ? _exportPdf : null,
+                      icon: Icons.download_rounded,
+                      label: 'Save to Phone',
+                      onTap: !_isExporting ? _saveToPhone : null,
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
@@ -588,7 +634,7 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
                       context,
                       icon: Icons.share_rounded,
                       label: 'Share',
-                      onTap: doc.hasAttachment && !_isExporting ? _shareDocument : null,
+                      onTap: !_isExporting ? _shareDocument : null,
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
@@ -677,48 +723,19 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
                 ),
                 const SizedBox(height: AppSpacing.sm),
 
-                Container(
-                  height: 320,
-                  decoration: BoxDecoration(
-                    color: surfaceColor,
-                    borderRadius: BorderRadius.circular(AppRadius.card),
-                    border: Border.all(color: AppColors.getBorder(context)),
+                // Interactive preview container (tap to open full viewer)
+                InkWell(
+                  onTap: _openDocument,
+                  borderRadius: BorderRadius.circular(AppRadius.card),
+                  child: Container(
+                    height: 320,
+                    decoration: BoxDecoration(
+                      color: surfaceColor,
+                      borderRadius: BorderRadius.circular(AppRadius.card),
+                      border: Border.all(color: AppColors.getBorder(context)),
+                    ),
+                    child: _buildPreviewBody(),
                   ),
-                  child: _buildPreviewBody(),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-
-                // Dedicated Actions for Original Copy
-                Row(
-                  children: [
-                    if (doc.isPdf) ...[
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: _openPdfWithExternalApp,
-                          icon: const Icon(Icons.visibility_outlined, size: 16),
-                          label: const Text('View PDF', style: TextStyle(fontSize: 12)),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                        ),
-                        onPressed: !_isExporting ? _downloadOriginal : null,
-                        icon: const Icon(Icons.download_rounded, size: 16),
-                        label: const Text('Save to Phone', style: TextStyle(fontSize: 12)),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton.outlined(
-                      onPressed: !_isExporting ? _shareDocument : null,
-                      icon: const Icon(Icons.share_rounded, size: 18),
-                      tooltip: 'Share Document',
-                    ),
-                  ],
                 ),
               ] else ...[
                 // No attachment: Add Original Copy Card
@@ -971,7 +988,7 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
             ),
             const SizedBox(height: AppSpacing.lg),
             ElevatedButton.icon(
-              onPressed: _openPdfWithExternalApp,
+              onPressed: _openDocument,
               icon: const Icon(Icons.open_in_new_rounded),
               label: const Text('Open with PDF Viewer'),
               style: ElevatedButton.styleFrom(

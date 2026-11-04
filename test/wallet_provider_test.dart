@@ -8,6 +8,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:spendz/database/database_helper.dart';
 import 'package:spendz/providers/wallet_provider.dart';
 import 'package:spendz/models/wallet_card_model.dart';
 import 'package:spendz/models/wallet_document_model.dart';
@@ -23,6 +24,10 @@ void main() {
     late WalletProvider wallet;
 
     setUp(() async {
+      final db = await DatabaseHelper.instance.database;
+      await db.delete('wallet_documents');
+      await db.delete('wallet_cards');
+      await db.delete('wallet_passes');
       wallet = WalletProvider();
       await wallet.loadWallet(); // loads from (empty) in-memory DB
     });
