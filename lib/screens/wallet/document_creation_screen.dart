@@ -517,6 +517,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(
           widget.documentToEdit != null

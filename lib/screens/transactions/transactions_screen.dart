@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 
 import '../../providers/transaction_provider.dart';
 import '../../providers/category_provider.dart';
 import '../../widgets/transaction_tile.dart';
 import '../../widgets/design_system/empty_state.dart';
+import '../../widgets/glass/glass.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_radius.dart';
 import '../../utils/date_formatter.dart';
 import '../../utils/icon_mapper.dart';
+import '../../utils/currency_formatter.dart';
 import 'add_transaction_screen.dart';
 
 class TransactionsScreen extends StatefulWidget {
@@ -39,7 +40,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.fromSeed(
-              seedColor: AppColors.primary,
+              seedColor: AppColors.getPrimary(context),
               brightness: Theme.of(context).brightness,
             ),
           ),
@@ -65,12 +66,25 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final textSecondary = AppColors.getTextSecondary(context);
+    final emerald = AppColors.getEmeraldAccent(context);
+    final isDark = AppColors.isDark(context);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('Activity'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Activity',
+              style: AppTextStyles.getHeading2(context).copyWith(fontWeight: FontWeight.bold),
+            ),
+            Text(
+              'Transactions & Financial Feed',
+              style: AppTextStyles.caption.copyWith(color: AppColors.getTextSecondary(context), fontSize: 11),
+            ),
+          ],
+        ),
         actions: [
           if (_startDate != null || _endDate != null)
             IconButton(
@@ -92,19 +106,22 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'activity_add_tx_fab',
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        elevation: 4,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Add Expense', style: TextStyle(fontWeight: FontWeight.bold)),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
-          );
-        },
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 70),
+        child: FloatingActionButton.extended(
+          heroTag: 'activity_add_tx_fab',
+          backgroundColor: AppColors.getPrimary(context),
+          foregroundColor: Colors.white,
+          elevation: 4,
+          icon: const Icon(Icons.add_rounded),
+          label: const Text('Add Expense', style: TextStyle(fontWeight: FontWeight.bold)),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+            );
+          },
+        ),
       ),
       body: Consumer2<TransactionProvider, CategoryProvider>(
         builder: (context, txProvider, catProvider, child) {
@@ -137,27 +154,57 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           }
 
           if (txProvider.isLoading) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+            return Center(child: CircularProgressIndicator(color: emerald));
           }
+
+          final totalFilteredSpent = transactions
+              .where((t) => t.type == 'expense')
+              .fold(0.0, (sum, t) => sum + t.amount);
 
           return Column(
             children: [
-              // Search Input
+              // Search & Metric Header
               Padding(
                 padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.xs, AppSpacing.lg, AppSpacing.sm),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Search merchant, note, amount...',
-                    prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.close_rounded, size: 18),
-                            onPressed: () => setState(() => _searchQuery = ''),
-                          )
-                        : null,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm + 2),
-                  ),
-                  onChanged: (val) => setState(() => _searchQuery = val),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Search merchant, note, amount...',
+                          prefixIcon: Icon(Icons.search_rounded, size: 20, color: emerald),
+                          suffixIcon: _searchQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.close_rounded, size: 18),
+                                  onPressed: () => setState(() => _searchQuery = ''),
+                                )
+                              : null,
+                          filled: true,
+                          fillColor: isDark
+                              ? const Color(0xFF14231B).withAlpha(190)
+                              : Colors.white.withAlpha(220),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.lg),
+                            borderSide: BorderSide(
+                              color: isDark ? Colors.white.withAlpha(20) : AppColors.getBorder(context),
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.lg),
+                            borderSide: BorderSide(
+                              color: isDark ? Colors.white.withAlpha(20) : AppColors.getBorder(context),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.lg),
+                            borderSide: BorderSide(color: emerald, width: 1.6),
+                          ),
+                        ),
+                        onChanged: (val) => setState(() => _searchQuery = val),
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
@@ -170,24 +217,22 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   itemCount: catProvider.categories.length + 1,
                   separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.sm),
                   itemBuilder: (context, index) {
-                    final surfaceColor = AppColors.getSurface(context);
-                    final borderColor = AppColors.getBorder(context);
-
                     if (index == 0) {
                       final isSelected = _selectedCategoryId == 'all';
                       return ChoiceChip(
                         showCheckmark: false,
-                        label: const Text('All Categories'),
+                        label: Text('All (${txProvider.transactions.length})'),
                         selected: isSelected,
-                        backgroundColor: surfaceColor,
-                        selectedColor: AppColors.primary,
+                        backgroundColor: isDark ? const Color(0xFF14231B) : Colors.white,
+                        selectedColor: emerald.withAlpha(40),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppRadius.full),
-                          side: BorderSide(color: isSelected ? AppColors.primary : borderColor),
+                          side: BorderSide(color: isSelected ? emerald : AppColors.getBorder(context)),
                         ),
-                        labelStyle: AppTextStyles.labelSmall.copyWith(
+                        labelStyle: TextStyle(
+                          fontSize: 12,
                           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          color: isSelected ? Colors.white : textSecondary,
+                          color: isSelected ? emerald : AppColors.getTextSecondary(context),
                         ),
                         onSelected: (_) => setState(() => _selectedCategoryId = 'all'),
                       );
@@ -201,19 +246,20 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       avatar: Icon(
                         IconMapper.getIcon(cat.icon),
                         size: 14,
-                        color: isSelected ? Colors.white : Color(int.tryParse(cat.color) ?? AppColors.primary.toARGB32()),
+                        color: isSelected ? emerald : Color(int.tryParse(cat.color) ?? emerald.toARGB32()),
                       ),
                       label: Text(cat.name),
                       selected: isSelected,
-                      backgroundColor: surfaceColor,
-                      selectedColor: AppColors.primary,
+                      backgroundColor: isDark ? const Color(0xFF14231B) : Colors.white,
+                      selectedColor: emerald.withAlpha(40),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppRadius.full),
-                        side: BorderSide(color: isSelected ? AppColors.primary : borderColor),
+                        side: BorderSide(color: isSelected ? emerald : AppColors.getBorder(context)),
                       ),
-                      labelStyle: AppTextStyles.labelSmall.copyWith(
+                      labelStyle: TextStyle(
+                        fontSize: 12,
                         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                        color: isSelected ? Colors.white : textSecondary,
+                        color: isSelected ? emerald : AppColors.getTextSecondary(context),
                       ),
                       onSelected: (_) => setState(() => _selectedCategoryId = cat.id),
                     );
@@ -221,39 +267,31 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 ),
               ),
 
-              // Active Date Range Pill
-              if (_startDate != null && _endDate != null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 0),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: AppSpacing.md),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withAlpha(20),
-                      borderRadius: BorderRadius.circular(AppRadius.sm),
-                      border: Border.all(color: AppColors.primary.withAlpha(50)),
+              // Active Date Range / Total Filtered Spent Strip
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${transactions.length} Transactions',
+                      style: TextStyle(
+                        color: AppColors.getTextSecondary(context),
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.date_range_rounded, size: 14, color: AppColors.primary),
-                        const SizedBox(width: AppSpacing.xs),
-                        Text(
-                          '${DateFormat('MMM d').format(_startDate!)} - ${DateFormat('MMM d, yyyy').format(_endDate!)}',
-                          style: AppTextStyles.labelSmall.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        GestureDetector(
-                          onTap: _clearDateRange,
-                          child: const Icon(Icons.close_rounded, size: 14, color: AppColors.primary),
-                        ),
-                      ],
+                    Text(
+                      'Total: ${CurrencyFormatter.format(totalFilteredSpent)}',
+                      style: TextStyle(
+                        color: AppColors.getTextPrimary(context),
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
+                  ],
                 ),
+              ),
 
               const SizedBox(height: AppSpacing.xs),
 
@@ -313,18 +351,37 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               if (showHeader)
                                 Padding(
                                   padding: const EdgeInsets.fromLTRB(4, AppSpacing.md, 4, AppSpacing.xs),
-                                  child: Text(
-                                    DateFormatter.formatFullDate(tx.date),
-                                    style: AppTextStyles.labelSmall.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: textSecondary,
-                                      letterSpacing: 0.5,
-                                    ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 6,
+                                        height: 6,
+                                        decoration: BoxDecoration(
+                                          color: emerald,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        DateFormatter.formatFullDate(tx.date),
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.getTextSecondary(context),
+                                          fontSize: 11.5,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              TransactionTile(
-                                transaction: tx,
-                                category: category,
+                              GlassCard(
+                                padding: EdgeInsets.zero,
+                                margin: const EdgeInsets.only(bottom: 6),
+                                child: TransactionTile(
+                                  transaction: tx,
+                                  category: category,
+                                  isCard: false,
+                                ),
                               ),
                             ],
                           );

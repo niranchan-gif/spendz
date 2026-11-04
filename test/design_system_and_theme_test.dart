@@ -18,11 +18,11 @@ void main() {
 
   group('Design System & Dual Theme Tests', () {
     test('AppColors provides proper light and dark palette tokens', () {
-      expect(AppColors.primaryLightMode, const Color(0xFF273822));
-      expect(AppColors.secondaryLightMode, const Color(0xFF4A6242));
-      expect(AppColors.backgroundLightMode, const Color(0xFFF9FAF8));
-      expect(AppColors.primaryDarkMode, const Color(0xFFACC8A2));
-      expect(AppColors.backgroundDarkMode, const Color(0xFF131B11));
+      expect(AppColors.primaryLightMode, const Color(0xFF174D3B));
+      expect(AppColors.secondaryLightMode, const Color(0xFFE8F0E9));
+      expect(AppColors.backgroundLightMode, const Color(0xFFF2F6F2));
+      expect(AppColors.primaryDarkMode, const Color(0xFF48B98B));
+      expect(AppColors.backgroundDarkMode, const Color(0xFF0C1712));
     });
 
     test('AppSpacing adheres to 4-point fintech grid', () {

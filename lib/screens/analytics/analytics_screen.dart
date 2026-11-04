@@ -12,9 +12,8 @@ import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_radius.dart';
 import '../../utils/currency_formatter.dart';
 import '../../utils/icon_mapper.dart';
-import '../../widgets/design_system/reusable_card.dart';
+import '../../widgets/glass/glass.dart';
 import '../../widgets/design_system/empty_state.dart';
-import '../../widgets/design_system/section_header.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
@@ -26,7 +25,7 @@ class AnalyticsScreen extends StatefulWidget {
 class _AnalyticsScreenState extends State<AnalyticsScreen> {
   late DateTime _startDate;
   late DateTime _endDate;
-  int _touchedIndex = -1;
+  int _touchedPieIndex = -1;
 
   @override
   void initState() {
@@ -46,7 +45,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.fromSeed(
-              seedColor: AppColors.primary,
+              seedColor: AppColors.getPrimary(context),
               brightness: Theme.of(context).brightness,
             ),
           ),
@@ -79,13 +78,22 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final textSecondary = AppColors.getTextSecondary(context);
-    final textPrimary = AppColors.getTextPrimary(context);
+    final emerald = AppColors.getEmeraldAccent(context);
+    final isDark = AppColors.isDark(context);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('Analytics'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Insights', style: AppTextStyles.getHeading2(context).copyWith(fontWeight: FontWeight.bold)),
+            Text(
+              'Financial Analytics & Trends',
+              style: AppTextStyles.caption.copyWith(color: AppColors.getTextSecondary(context), fontSize: 11),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.date_range_rounded),
@@ -101,20 +109,52 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             ..sort((a, b) => b.value.compareTo(a.value));
 
           final totalSpent = sortedSpending.fold(0.0, (sum, e) => sum + e.value);
-          final dateString = '${DateFormat('MMM d').format(_startDate)} - ${DateFormat('MMM d').format(_endDate)}';
+          final totalIncome = txProvider.transactions
+              .where((tx) =>
+                  tx.type == 'income' &&
+                  tx.date.isAfter(_startDate.subtract(const Duration(seconds: 1))) &&
+                  tx.date.isBefore(_endDate.add(const Duration(seconds: 1))))
+              .fold(0.0, (sum, tx) => sum + tx.amount);
+
+          final dateString = '${DateFormat('MMM d').format(_startDate)} - ${DateFormat('MMM d, yyyy').format(_endDate)}';
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 100),
             physics: const BouncingScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SectionHeader(
-                  title: 'Category Breakdown',
-                  actionLabel: dateString,
-                  onActionPressed: _selectDateRange,
+                // 1. Date Range Capsule
+                InkWell(
+                  borderRadius: BorderRadius.circular(AppRadius.full),
+                  onTap: _selectDateRange,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: emerald.withAlpha(isDark ? 30 : 20),
+                      borderRadius: BorderRadius.circular(AppRadius.full),
+                      border: Border.all(color: emerald.withAlpha(50)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.calendar_month_outlined, size: 14, color: emerald),
+                        const SizedBox(width: 6),
+                        Text(
+                          dateString,
+                          style: TextStyle(
+                            color: isDark ? emerald : AppColors.primaryLightMode,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: emerald),
+                      ],
+                    ),
+                  ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.md),
 
                 if (spending.isEmpty)
                   Padding(
@@ -130,139 +170,122 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     ),
                   )
                 else ...[
-                  // Summary Banner Card
-                  ReusableCard(
+                  // 2. Summary Hero Panel
+                  GlassPanel(
                     padding: const EdgeInsets.all(AppSpacing.card),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Total Spent This Period',
-                              style: AppTextStyles.caption.copyWith(color: textSecondary),
+                              'Outflow Breakdown',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.getTextSecondary(context),
+                              ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              CurrencyFormatter.format(totalSpent),
-                              style: AppTextStyles.headingLarge.copyWith(
-                                color: textPrimary,
-                                fontWeight: FontWeight.w800,
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: emerald.withAlpha(30),
+                                borderRadius: BorderRadius.circular(AppRadius.full),
+                              ),
+                              child: Text(
+                                '${sortedSpending.length} Categories',
+                                style: TextStyle(
+                                  color: emerald,
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ],
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withAlpha(25),
-                            borderRadius: BorderRadius.circular(AppRadius.full),
-                            border: Border.all(color: AppColors.primary.withAlpha(50)),
-                          ),
-                          child: Text(
-                            '${sortedSpending.length} Categories',
-                            style: AppTextStyles.labelSmall.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        const SizedBox(height: 6),
+                        Text(
+                          CurrencyFormatter.format(totalSpent),
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.8,
+                            color: AppColors.getTextPrimary(context),
                           ),
                         ),
+                        if (totalIncome > 0) ...[
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Icon(Icons.arrow_downward_rounded, size: 12, color: AppColors.getSuccess(context)),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Inflow: ${CurrencyFormatter.format(totalIncome)}',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  color: AppColors.getTextSecondary(context),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),
+
                   const SizedBox(height: AppSpacing.lg),
 
-                  // Bar Chart Card
-                  ReusableCard(
+                  // 3. Donut Distribution Chart
+                  GlassCard(
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Spending by Category',
-                          style: AppTextStyles.labelLarge.copyWith(
+                          'Category Distribution',
+                          style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: textPrimary,
+                            fontSize: 15,
+                            color: AppColors.getTextPrimary(context),
                           ),
                         ),
-                        const SizedBox(height: AppSpacing.lg),
+                        const SizedBox(height: AppSpacing.md),
                         SizedBox(
-                          height: 230,
-                          child: BarChart(
-                            BarChartData(
-                              alignment: BarChartAlignment.spaceAround,
-                              barTouchData: BarTouchData(
-                                enabled: true,
-                                touchTooltipData: BarTouchTooltipData(
-                                  getTooltipColor: (_) => AppColors.getSurface(context),
-                                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                                    final entry = sortedSpending[group.x];
-                                    final category = catProvider.getCategoryById(entry.key);
-                                    final pct = totalSpent > 0 ? (entry.value / totalSpent * 100).toStringAsFixed(1) : '0';
-                                    return BarTooltipItem(
-                                      '${category?.name ?? 'Unknown'}\n${CurrencyFormatter.format(rod.toY)} ($pct%)',
-                                      TextStyle(
-                                        color: AppColors.getTextPrimary(context),
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 12,
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              titlesData: FlTitlesData(
-                                show: true,
-                                bottomTitles: AxisTitles(
-                                  sideTitles: SideTitles(
-                                    showTitles: true,
-                                    reservedSize: 32,
-                                    getTitlesWidget: (value, meta) {
-                                      if (value.toInt() >= sortedSpending.length) return const SizedBox();
-                                      final entry = sortedSpending[value.toInt()];
-                                      final category = catProvider.getCategoryById(entry.key);
-                                      final color = category != null
-                                          ? Color(int.tryParse(category.color) ?? AppColors.primary.toARGB32())
-                                          : textSecondary;
-                                      return Padding(
-                                        padding: const EdgeInsets.only(top: 8.0),
-                                        child: Icon(
-                                          category != null ? IconMapper.getIcon(category.icon) : Icons.help_outline,
-                                          color: color,
-                                          size: 18,
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                                leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          height: 200,
+                          child: PieChart(
+                            PieChartData(
+                              pieTouchData: PieTouchData(
+                                touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                                  setState(() {
+                                    if (!event.isInterestedForInteractions ||
+                                        pieTouchResponse == null ||
+                                        pieTouchResponse.touchedSection == null) {
+                                      _touchedPieIndex = -1;
+                                      return;
+                                    }
+                                    _touchedPieIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
+                                  });
+                                },
                               ),
                               borderData: FlBorderData(show: false),
-                              gridData: const FlGridData(show: false),
-                              barGroups: sortedSpending.asMap().entries.map((entry) {
+                              sectionsSpace: 3,
+                              centerSpaceRadius: 55,
+                              sections: sortedSpending.asMap().entries.map((entry) {
                                 final index = entry.key;
                                 final item = entry.value;
+                                final isTouched = index == _touchedPieIndex;
                                 final category = catProvider.getCategoryById(item.key);
                                 final color = category != null
-                                    ? Color(int.tryParse(category.color) ?? AppColors.primary.toARGB32())
-                                    : textSecondary;
-                                return BarChartGroupData(
-                                  x: index,
-                                  barRods: [
-                                    BarChartRodData(
-                                      toY: item.value,
-                                      color: color,
-                                      width: 20,
-                                      borderRadius: BorderRadius.circular(AppRadius.xs),
-                                      backDrawRodData: BackgroundBarChartRodData(
-                                        show: true,
-                                        toY: sortedSpending.isNotEmpty ? sortedSpending.first.value * 1.1 : 100,
-                                        color: color.withAlpha(20),
-                                      ),
-                                    ),
-                                  ],
+                                    ? Color(int.tryParse(category.color) ?? emerald.toARGB32())
+                                    : emerald;
+
+                                return PieChartSectionData(
+                                  color: color,
+                                  value: item.value,
+                                  title: '',
+                                  radius: isTouched ? 28 : 22,
                                 );
                               }).toList(),
                             ),
@@ -271,81 +294,106 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.xl),
 
-                  // Category Breakdown Detail List
-                  SectionHeader(title: 'Category Breakdown'),
-                  const SizedBox(height: AppSpacing.xs),
+                  const SizedBox(height: AppSpacing.lg),
 
-                  ReusableCard(
+                  // 4. Detailed Category Breakdown Bars
+                  GlassSection(
+                    title: 'Category Details',
+                    subtitle: 'Ranked by highest expense',
                     padding: EdgeInsets.zero,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+
+                  GlassCard(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     child: ListView.separated(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: sortedSpending.length,
-                      separatorBuilder: (context, index) => Divider(
-                        height: 1,
-                        indent: 72,
-                        color: AppColors.getBorder(context),
+                      separatorBuilder: (_, _) => Divider(
+                        height: 16,
+                        thickness: 0.8,
+                        color: AppColors.getBorder(context).withAlpha(80),
                       ),
                       itemBuilder: (context, index) {
                         final item = sortedSpending[index];
                         final category = catProvider.getCategoryById(item.key);
+                        final pct = totalSpent > 0 ? (item.value / totalSpent * 100) : 0.0;
                         final color = category != null
-                            ? Color(int.tryParse(category.color) ?? AppColors.primary.toARGB32())
-                            : textSecondary;
+                            ? Color(int.tryParse(category.color) ?? emerald.toARGB32())
+                            : emerald;
 
-                        final pct = totalSpent > 0 ? (item.value / totalSpent * 100).toStringAsFixed(1) : '0';
-                        final isTouched = index == _touchedIndex;
-
-                        return Material(
-                          color: isTouched ? color.withAlpha(20) : Colors.transparent,
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
-                            leading: Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: color.withAlpha(25),
-                                borderRadius: BorderRadius.circular(AppRadius.sm + 2),
-                                border: Border.all(color: color.withAlpha(50)),
-                              ),
-                              child: Icon(
-                                category != null ? IconMapper.getIcon(category.icon) : Icons.help_outline,
-                                color: color,
-                                size: 22,
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 32,
+                                      height: 32,
+                                      decoration: BoxDecoration(
+                                        color: color.withAlpha(25),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Icon(
+                                        category != null ? IconMapper.getIcon(category.icon) : Icons.category_outlined,
+                                        size: 16,
+                                        color: color,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      category?.name ?? 'Uncategorized',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                        color: AppColors.getTextPrimary(context),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      CurrencyFormatter.format(item.value),
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                        color: AppColors.getTextPrimary(context),
+                                      ),
+                                    ),
+                                    Text(
+                                      '${pct.toStringAsFixed(1)}%',
+                                      style: TextStyle(
+                                        fontSize: 10.5,
+                                        color: AppColors.getTextSecondary(context),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: (pct / 100).clamp(0.0, 1.0),
+                                backgroundColor: isDark ? Colors.white.withAlpha(15) : AppColors.getBorder(context),
+                                valueColor: AlwaysStoppedAnimation<Color>(color),
+                                minHeight: 4,
                               ),
                             ),
-                            title: Text(
-                              category?.name ?? 'Unknown',
-                              style: AppTextStyles.labelLarge.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: textPrimary,
-                              ),
-                            ),
-                            subtitle: Text(
-                              '$pct% of total spending',
-                              style: AppTextStyles.caption.copyWith(color: textSecondary),
-                            ),
-                            trailing: Text(
-                              CurrencyFormatter.format(item.value),
-                              style: AppTextStyles.labelLarge.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: textPrimary,
-                              ),
-                            ),
-                            onTap: () {
-                              setState(() {
-                                _touchedIndex = isTouched ? -1 : index;
-                              });
-                            },
-                          ),
+                          ],
                         );
                       },
                     ),
                   ),
                 ],
-                const SizedBox(height: 100),
               ],
             ),
           );

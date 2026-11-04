@@ -309,7 +309,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                           ),
                         ),
                         Text(
-                          'GOVERNMENT OF INDIA',
+                          'Government of India',
                           style: TextStyle(
                             color: Color(0xFF334155),
                             fontWeight: FontWeight.w700,
@@ -1117,7 +1117,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'भारत गणराज्य / REPUBLIC OF INDIA',
+                          'REPUBLIC OF INDIA / PASSPORT',
                           style: TextStyle(
                             color: Color(0xFFD4AF37),
                             fontWeight: FontWeight.w800,
@@ -1126,7 +1126,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                           ),
                         ),
                         Text(
-                          'PASSPORT / पासपोर्ट',
+                          'भारत गणराज्य / पासपोर्ट',
                           style: TextStyle(
                             color: Colors.white70,
                             fontWeight: FontWeight.bold,
@@ -1705,43 +1705,55 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
 
               const _EmvChipWidget(width: 38, height: 28),
 
-              InkWell(
-                onTap: widget.allowReveal ? _toggleReveal : null,
-                borderRadius: BorderRadius.circular(4),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      displayNumber,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontFamily: 'monospace',
-                        fontSize: 16.5,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 2.2,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: InkWell(
+                  onTap: widget.allowReveal ? _toggleReveal : null,
+                  borderRadius: BorderRadius.circular(4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        displayNumber,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: 'monospace',
+                          fontSize: 16.5,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 2.2,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    Icon(
-                      _isRevealed ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
-                      color: _isRevealed ? Colors.greenAccent : Colors.white60,
-                      size: 14,
-                    ),
-                  ],
+                      const SizedBox(width: 6),
+                      Icon(
+                        _isRevealed ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
+                        color: _isRevealed ? Colors.greenAccent : Colors.white60,
+                        size: 14,
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('CARDHOLDER', style: TextStyle(color: Colors.white54, fontSize: 8, letterSpacing: 0.8)),
-                      Text(holder, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)),
-                    ],
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('CARDHOLDER', style: TextStyle(color: Colors.white54, fontSize: 8, letterSpacing: 0.8)),
+                        Text(
+                          holder,
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ],
+                    ),
                   ),
-                  if (widget.document.expiryDate != null)
+                  if (widget.document.expiryDate != null) ...[
+                    const SizedBox(width: 8),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
@@ -1749,6 +1761,8 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                         Text(DateFormat('MM/yy').format(widget.document.expiryDate!), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)),
                       ],
                     ),
+                  ],
+                  const SizedBox(width: 8),
                   Text(
                     meta.network.isNotEmpty ? meta.network.toUpperCase() : 'PAYMENT',
                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 14, fontStyle: FontStyle.italic),

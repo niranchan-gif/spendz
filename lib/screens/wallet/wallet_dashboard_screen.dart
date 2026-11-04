@@ -11,6 +11,7 @@ import '../../widgets/design_system/reusable_card.dart';
 import '../../widgets/design_system/section_header.dart';
 import '../../widgets/design_system/empty_state.dart';
 import '../../widgets/design_system/app_bottom_sheet.dart';
+import '../../widgets/glass/glass.dart';
 import 'card_detail_screen.dart';
 import 'cards_screen.dart';
 import 'document_preview_screen.dart';
@@ -387,7 +388,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                       const SizedBox(height: AppSpacing.sm),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                        child: ReusableCard(
+                        child: GlassCard(
                           padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
                           child: Column(
                             children: [
@@ -454,6 +455,10 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final emerald = AppColors.getEmeraldAccent(context);
+    final textPrimary = AppColors.getTextPrimary(context);
+    final textSecondary = AppColors.getTextSecondary(context);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.xs),
       child: Row(
@@ -467,27 +472,28 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                   Text(
                     'Digital Wallet',
                     style: AppTextStyles.headingMedium.copyWith(
-                      color: AppColors.getTextPrimary(context),
+                      color: textPrimary,
                       fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withAlpha(25),
+                      color: emerald.withAlpha(25),
                       borderRadius: BorderRadius.circular(AppRadius.xs),
-                      border: Border.all(color: AppColors.primary.withAlpha(60)),
+                      border: Border.all(color: emerald.withAlpha(70), width: 0.8),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.shield_rounded, size: 10, color: AppColors.primary),
+                        Icon(Icons.shield_rounded, size: 10, color: emerald),
                         const SizedBox(width: 4),
                         Text(
                           'AES-256 Vault',
                           style: AppTextStyles.caption.copyWith(
-                            color: AppColors.primary,
+                            color: emerald,
                             fontWeight: FontWeight.bold,
                             fontSize: 10,
                           ),
@@ -501,37 +507,29 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
               Text(
                 'Card Studio • Smart Scanner • Secure Vault',
                 style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.getTextSecondary(context),
+                  color: textSecondary,
                 ),
               ),
             ],
           ),
           Row(
             children: [
-              IconButton(
-                onPressed: () {
+              GlassIconButton(
+                icon: Icons.security_rounded,
+                tooltip: 'Security Settings',
+                onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const WalletSecuritySettingsScreen()),
                   );
                 },
-                icon: Icon(
-                  Icons.security_rounded,
-                  color: AppColors.getTextSecondary(context),
-                  size: 22,
-                ),
-                tooltip: 'Security Settings',
               ),
-              IconButton(
-                onPressed: () => _showAddOptions(context),
-                icon: Container(
-                  padding: const EdgeInsets.all(AppSpacing.xs + 2),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                  ),
-                  child: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
-                ),
+              const SizedBox(width: AppSpacing.xs),
+              GlassIconButton(
+                icon: Icons.add_rounded,
+                tooltip: 'Add to Wallet',
+                color: emerald,
+                onTap: () => _showAddOptions(context),
               ),
             ],
           ),
@@ -605,45 +603,35 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     required Color color,
     required VoidCallback onTap,
   }) {
-    final surfaceColor = AppColors.getSurface(context);
-    final borderColor = AppColors.getBorder(context);
     final textPrimary = AppColors.getTextPrimary(context);
 
-    return Material(
-      color: surfaceColor,
-      borderRadius: BorderRadius.circular(AppRadius.card),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.card),
-            border: Border.all(color: borderColor, width: 1),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.xs + 2),
-                decoration: BoxDecoration(
-                  color: color.withAlpha(25),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: color, size: 20),
+    return GlassCard(
+      padding: EdgeInsets.zero,
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.xs + 2),
+              decoration: BoxDecoration(
+                color: color.withAlpha(25),
+                shape: BoxShape.circle,
               ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                label,
-                style: AppTextStyles.labelSmall.copyWith(
-                  color: textPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              label,
+              style: AppTextStyles.labelSmall.copyWith(
+                color: textPrimary,
+                fontWeight: FontWeight.w600,
               ),
-            ],
-          ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
       ),
     );
@@ -661,8 +649,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
       {'id': 'certificate', 'label': 'Certificates', 'icon': Icons.workspace_premium_outlined},
     ];
 
-    final surfaceColor = AppColors.getSurface(context);
-    final borderColor = AppColors.getBorder(context);
+    final emerald = AppColors.getEmeraldAccent(context);
     final textPrimary = AppColors.getTextPrimary(context);
     final textSecondary = AppColors.getTextSecondary(context);
 
@@ -682,77 +669,71 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         final matchingDocs = docs.where((d) => d.category.toLowerCase() == catId.toLowerCase()).toList();
         final count = matchingDocs.length;
 
-        return Material(
-          color: surfaceColor,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          child: InkWell(
-            onTap: () {
-              if (matchingDocs.length == 1) {
-                // Exactly 1 document exists: take user directly to that document (Aadhaar, PAN, etc.)
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => DocumentPreviewScreen(document: matchingDocs.first),
-                  ),
-                );
-              } else if (matchingDocs.length > 1) {
-                // Multiple documents exist: take user to documents list filtered to this category
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => DocumentsScreen(initialCategory: catId),
-                  ),
-                );
-              } else {
-                // No document exists yet: open creation form directly pre-selected for this category
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => DocumentCreationScreen(initialCategory: catId),
-                  ),
-                );
-              }
-            },
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            child: Container(
-              padding: const EdgeInsets.all(AppSpacing.xs + 2),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppRadius.md),
-                border: Border.all(
-                  color: count > 0 ? AppColors.primary.withAlpha(70) : borderColor,
+        return GlassCard(
+          padding: EdgeInsets.zero,
+          border: Border.all(
+            color: count > 0 ? emerald.withAlpha(120) : AppColors.getGlassBorder(context),
+            width: count > 0 ? 1.2 : 0.8,
+          ),
+          onTap: () {
+            if (matchingDocs.length == 1) {
+              // Exactly 1 document exists: take user directly to that document (Aadhaar, PAN, etc.)
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => DocumentPreviewScreen(document: matchingDocs.first),
                 ),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    cat['icon'] as IconData,
-                    color: count > 0 ? AppColors.primary : textSecondary,
-                    size: 22,
+              );
+            } else if (matchingDocs.length > 1) {
+              // Multiple documents exist: take user to documents list filtered to this category
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => DocumentsScreen(initialCategory: catId),
+                ),
+              );
+            } else {
+              // No document exists yet: open creation form directly pre-selected for this category
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => DocumentCreationScreen(initialCategory: catId),
+                ),
+              );
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xs + 2),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  cat['icon'] as IconData,
+                  color: count > 0 ? emerald : textSecondary,
+                  size: 22,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  cat['label'] as String,
+                  style: AppTextStyles.caption.copyWith(
+                    color: textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 10,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    cat['label'] as String,
-                    style: AppTextStyles.caption.copyWith(
-                      color: textPrimary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 10,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '$count item${count == 1 ? "" : "s"}',
+                  style: AppTextStyles.caption.copyWith(
+                    fontSize: 9,
+                    color: count > 0 ? emerald : textSecondary.withAlpha(150),
+                    fontWeight: count > 0 ? FontWeight.bold : FontWeight.normal,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '$count item${count == 1 ? "" : "s"}',
-                    style: AppTextStyles.caption.copyWith(
-                      fontSize: 9,
-                      color: count > 0 ? AppColors.primary : textSecondary.withAlpha(150),
-                      fontWeight: count > 0 ? FontWeight.bold : FontWeight.normal,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );

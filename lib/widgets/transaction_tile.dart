@@ -15,12 +15,14 @@ class TransactionTile extends StatelessWidget {
   final TransactionModel transaction;
   final CategoryModel? category;
   final VoidCallback? onTap;
+  final bool isCard;
 
   const TransactionTile({
     super.key,
     required this.transaction,
     this.category,
     this.onTap,
+    this.isCard = false,
   });
 
   @override
@@ -77,20 +79,40 @@ class TransactionTile extends StatelessWidget {
           ),
         );
       },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        decoration: BoxDecoration(
-          color: surfaceColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: borderColor, width: 1),
-        ),
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-          child: ListTile(
-            onTap: onTap ?? () => _showTransactionDetails(context),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: isCard
+          ? Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                color: surfaceColor,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: borderColor, width: 1),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
+                child: _buildTile(context, iconData, iconColor, textPrimary, textSecondary, amountColor, isIncome),
+              ),
+            )
+          : Material(
+              color: Colors.transparent,
+              child: _buildTile(context, iconData, iconColor, textPrimary, textSecondary, amountColor, isIncome),
+            ),
+    );
+  }
+
+  Widget _buildTile(
+    BuildContext context,
+    IconData iconData,
+    Color iconColor,
+    Color textPrimary,
+    Color textSecondary,
+    Color amountColor,
+    bool isIncome,
+  ) {
+    return ListTile(
+      onTap: onTap ?? () => _showTransactionDetails(context),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             leading: Container(
               width: 48,
               height: 48,
@@ -225,11 +247,8 @@ class TransactionTile extends StatelessWidget {
               ],
             ),
           ),
-        ),
-      ),
-    ),
-  );
-}
+    );
+  }
 
   void _showCategoryPicker(BuildContext context) {
     final catProvider = context.read<CategoryProvider>();

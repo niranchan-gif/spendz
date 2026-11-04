@@ -1,70 +1,76 @@
 import 'package:flutter/material.dart';
 
-/// Central color design tokens for Spendz 2.0 Fintech Design System.
+/// Central color design tokens for Spendz 2.0 Glassmorphism Fintech Design System.
 ///
-/// Refined with Deep Olive Green, Muted Sage, Warm Off-White, and accessible
-/// semantic indicators across both Light and Dark themes.
+/// Features authentic Light and Dark palettes with Deep Olive/Emerald,
+/// Sage, Champagne, and tailored glass tokens for translucent surfaces.
 class AppColors {
   // ─── LIGHT PALETTE ──────────────────────────────────────────────────────────
-  /// Deep Olive Green — primary brand anchor
-  static const Color primaryLightMode = Color(0xFF273822);
-  /// Muted Sage accent
-  static const Color secondaryLightMode = Color(0xFF4A6242);
-  /// Warm Off-White background
-  static const Color backgroundLightMode = Color(0xFFF9FAF8);
-  /// Clean White surface
+  /// Primary background: #F2F6F2
+  static const Color backgroundLightMode = Color(0xFFF2F6F2);
+  /// Primary surface: #FFFFFF
   static const Color surfaceLightMode = Color(0xFFFFFFFF);
-  /// Layered surface for cards and segmented items
-  static const Color surfaceVariantLightMode = Color(0xFFF0F3EE);
-  /// Container highlight surface
-  static const Color surfaceContainerLightMode = Color(0xFFE5ECE2);
+  /// Secondary surface: #E8F0E9
+  static const Color surfaceSecondaryLightMode = Color(0xFFE8F0E9);
+  /// Primary brand anchor: #174D3B
+  static const Color primaryLightMode = Color(0xFF174D3B);
+  /// Emerald accent: #42A982
+  static const Color emeraldAccentLightMode = Color(0xFF42A982);
+  /// Sage accent: #A9C7B0
+  static const Color sageLightMode = Color(0xFFA9C7B0);
+  /// Champagne highlight: #D6B779
+  static const Color champagneLightMode = Color(0xFFD6B779);
+  /// Primary text: #19271F
+  static const Color textPrimaryLightMode = Color(0xFF19271F);
+  /// Secondary text: #718076
+  static const Color textSecondaryLightMode = Color(0xFF718076);
+  /// Border: #DFE8E0
+  static const Color borderLightMode = Color(0xFFDFE8E0);
+  /// Divider
+  static const Color dividerLightMode = Color(0xFFE5EDE6);
 
-  /// Deep Charcoal for maximum contrast
-  static const Color textPrimaryLightMode = Color(0xFF161C14);
-  /// Muted Slate Grey for secondary metadata
-  static const Color textSecondaryLightMode = Color(0xFF5A6657);
-  /// Hint text
-  static const Color textHintLightMode = Color(0xFF869283);
-
-  /// Subtle border
-  static const Color borderLightMode = Color(0xFFD8E1D5);
-  /// Divider line
-  static const Color dividerLightMode = Color(0xFFE5ECE2);
+  static const Color surfaceVariantLightMode = surfaceSecondaryLightMode;
+  static const Color surfaceContainerLightMode = surfaceSecondaryLightMode;
+  static const Color secondaryLightMode = surfaceSecondaryLightMode;
+  static const Color textHintLightMode = Color(0xFF8FA094);
 
   // ─── DARK PALETTE ───────────────────────────────────────────────────────────
-  /// Soft Sage glow — primary brand anchor in dark mode
-  static const Color primaryDarkMode = Color(0xFFACC8A2);
-  static const Color primaryLightDarkMode = Color(0xFFC7DEBE);
-  static const Color primaryDarkDarkMode = Color(0xFF86A57B);
+  /// Primary dark background: #0C1712
+  static const Color backgroundDarkMode = Color(0xFF0C1712);
+  /// Primary surface: #14231B
+  static const Color surfaceDarkMode = Color(0xFF14231B);
+  /// Secondary surface: #1B3025
+  static const Color surfaceSecondaryDarkMode = Color(0xFF1B3025);
+  /// Primary brand anchor: #48B98B
+  static const Color primaryDarkMode = Color(0xFF48B98B);
+  /// Emerald accent: #65D0A4
+  static const Color emeraldAccentDarkMode = Color(0xFF65D0A4);
+  /// Sage accent: #A8C7B0
+  static const Color sageDarkMode = Color(0xFFA8C7B0);
+  /// Champagne highlight: #E6C587
+  static const Color champagneDarkMode = Color(0xFFE6C587);
+  /// Primary text: #F2F6F2
+  static const Color textPrimaryDarkMode = Color(0xFFF2F6F2);
+  /// Secondary text: #A2B3A7
+  static const Color textSecondaryDarkMode = Color(0xFFA2B3A7);
+  /// Border: #304638
+  static const Color borderDarkMode = Color(0xFF304638);
+  /// Divider
+  static const Color dividerDarkMode = Color(0xFF22362A);
 
-  /// Deep Night Olive background
-  static const Color backgroundDarkMode = Color(0xFF131B11);
-  /// Elevated Olive Charcoal surface
-  static const Color surfaceDarkMode = Color(0xFF1B2618);
-  /// Surface variant for grouped items
-  static const Color surfaceVariantDarkMode = Color(0xFF243320);
-  /// Deep container highlight
-  static const Color surfaceContainerDarkMode = Color(0xFF2C3E28);
-
-  /// Pristine White
-  static const Color textPrimaryDarkMode = Color(0xFFF6F8F5);
-  /// Muted Canopy Green
-  static const Color textSecondaryDarkMode = Color(0xFFA2B2A0);
-  /// Hint text
-  static const Color textHintDarkMode = Color(0xFF728070);
-
-  /// Subtle dark border
-  static const Color borderDarkMode = Color(0xFF384934);
-  /// Dark divider
-  static const Color dividerDarkMode = Color(0xFF263323);
+  static const Color surfaceVariantDarkMode = surfaceSecondaryDarkMode;
+  static const Color surfaceContainerDarkMode = surfaceSecondaryDarkMode;
+  static const Color secondaryDarkMode = surfaceSecondaryDarkMode;
+  static const Color textHintDarkMode = Color(0xFF6E8073);
 
   // ─── STATIC CONSTANTS (Backward Compatible Defaults) ────────────────────────
-  // Existing dark-mode constants preserved for full compatibility
   static const Color primary = primaryDarkMode;
-  static const Color primaryLight = primaryLightDarkMode;
-  static const Color primaryDark = primaryDarkDarkMode;
-  static const Color secondary = secondaryLightMode;
-  static const Color accent = primaryLightDarkMode;
+  static const Color primaryLight = emeraldAccentDarkMode;
+  static const Color primaryDark = Color(0xFF2E8A64);
+  static const Color secondary = emeraldAccentLightMode;
+  static const Color accent = emeraldAccentDarkMode;
+  static const Color sage = sageDarkMode;
+  static const Color champagne = champagneDarkMode;
 
   static const Color background = backgroundDarkMode;
   static const Color surface = surfaceDarkMode;
@@ -77,23 +83,19 @@ class AppColors {
   static const Color border = borderDarkMode;
   static const Color divider = dividerDarkMode;
 
-  // ─── SEMANTIC INDICATORS (WCAG AA/AAA Compliant) ─────────────────────────────
-  /// Positive / Income / Success
+  // ─── SEMANTIC INDICATORS ─────────────────────────────────────────────────────
   static const Color success = Color(0xFF16A34A);
   static const Color successLight = Color(0xFFD1FAE5);
   static const Color successDark = Color(0xFF22C55E);
 
-  /// Negative / Expense / Error
   static const Color error = Color(0xFFDC2626);
   static const Color errorLight = Color(0xFFFEE2E2);
   static const Color errorDark = Color(0xFFF87171);
 
-  /// Warning / Pending / Expiry Attention
   static const Color warning = Color(0xFFD97706);
   static const Color warningLight = Color(0xFFFEF3C7);
   static const Color warningDark = Color(0xFFFBBF24);
 
-  /// Information / Bank / Cloud Sync
   static const Color info = Color(0xFF2563EB);
   static const Color infoLight = Color(0xFFDBEAFE);
   static const Color infoDark = Color(0xFF60A5FA);
@@ -115,12 +117,28 @@ class AppColors {
     return isDark(context) ? surfaceDarkMode : surfaceLightMode;
   }
 
+  static Color getSecondarySurface(BuildContext context) {
+    return isDark(context) ? surfaceSecondaryDarkMode : surfaceSecondaryLightMode;
+  }
+
   static Color getSurfaceVariant(BuildContext context) {
     return isDark(context) ? surfaceVariantDarkMode : surfaceVariantLightMode;
   }
 
   static Color getSurfaceContainer(BuildContext context) {
     return isDark(context) ? surfaceContainerDarkMode : surfaceContainerLightMode;
+  }
+
+  static Color getEmeraldAccent(BuildContext context) {
+    return isDark(context) ? emeraldAccentDarkMode : emeraldAccentLightMode;
+  }
+
+  static Color getSage(BuildContext context) {
+    return isDark(context) ? sageDarkMode : sageLightMode;
+  }
+
+  static Color getChampagne(BuildContext context) {
+    return isDark(context) ? champagneDarkMode : champagneLightMode;
   }
 
   static Color getTextPrimary(BuildContext context) {
@@ -157,5 +175,27 @@ class AppColors {
 
   static Color getInfo(BuildContext context) {
     return isDark(context) ? infoDark : info;
+  }
+
+  // ─── GLASS SYSTEM COLORS ────────────────────────────────────────────────────
+  /// Translucent background tint for glass surfaces
+  static Color getGlassBackground(BuildContext context) {
+    return isDark(context)
+        ? const Color(0xFF14231B).withAlpha(190)
+        : const Color(0xFFFFFFFF).withAlpha(205);
+  }
+
+  /// Subtle perimeter border for glass components
+  static Color getGlassBorder(BuildContext context) {
+    return isDark(context)
+        ? const Color(0xFF65D0A4).withAlpha(35)
+        : const Color(0xFFFFFFFF).withAlpha(220);
+  }
+
+  /// Specular ambient highlight color for glass gradients
+  static Color getGlassHighlight(BuildContext context) {
+    return isDark(context)
+        ? Colors.white.withAlpha(20)
+        : Colors.white.withAlpha(90);
   }
 }
