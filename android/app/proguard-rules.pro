@@ -19,3 +19,4 @@
 # Biometrics
 -dontwarn androidx.biometric.**
 -keep class androidx.biometric.** { *; }
+
