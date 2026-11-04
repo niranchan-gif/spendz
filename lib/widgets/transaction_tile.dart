@@ -70,68 +70,73 @@ class TransactionTile extends StatelessWidget {
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
+        child: Material(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
-        ),
-        child: ListTile(
-          onTap: onTap ?? () => _showTransactionDetails(context),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          leading: Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: iconColor.withAlpha(20),
-              borderRadius: BorderRadius.circular(14),
+          child: ListTile(
+            onTap: onTap ?? () => _showTransactionDetails(context),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            leading: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: iconColor.withAlpha(20),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(iconData, color: iconColor, size: 24),
             ),
-            child: Icon(iconData, color: iconColor, size: 24),
-          ),
-          title: Text(
-            category?.name ?? 'Uncategorized',
-            style: AppTextStyles.labelLarge,
-          ),
-          subtitle: Consumer<WalletProvider>(
-            builder: (context, wallet, _) {
-              final card = transaction.cardId != null ? wallet.getCardById(transaction.cardId!) : null;
-              return Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        _getScrubbedName(),
-                        style: AppTextStyles.bodySmall,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (card != null) ...[
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withAlpha(25),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: AppColors.primary.withAlpha(40)),
+            title: Text(
+              category?.name ?? 'Uncategorized',
+              style: AppTextStyles.labelLarge,
+            ),
+            subtitle: Consumer<WalletProvider>(
+              builder: (context, wallet, _) {
+                final card = transaction.cardId != null ? wallet.getCardById(transaction.cardId!) : null;
+                return Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _getScrubbedName(),
+                          style: AppTextStyles.bodySmall,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.credit_card, size: 10, color: AppColors.primary),
-                            const SizedBox(width: 3),
-                            Text(
-                              '${card.issuerName} • ${card.lastFour}',
-                              style: const TextStyle(fontSize: 9, color: AppColors.primary, fontWeight: FontWeight.bold),
+                      ),
+                      if (card != null) ...[
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withAlpha(25),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: AppColors.primary.withAlpha(40)),
                             ),
-                          ],
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.credit_card, size: 10, color: AppColors.primary),
+                                const SizedBox(width: 3),
+                                Flexible(
+                                  child: Text(
+                                    '${card.issuerName} • ${card.lastFour}',
+                                    style: const TextStyle(fontSize: 9, color: AppColors.primary, fontWeight: FontWeight.bold),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ],
-                  ],
-                ),
-              );
-            },
-          ),
+                  ),
+                );
+              },
+            ),
           trailing: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 160),
             child: Column(
@@ -203,8 +208,9 @@ class TransactionTile extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   void _showCategoryPicker(BuildContext context) {
     final catProvider = context.read<CategoryProvider>();

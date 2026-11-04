@@ -12,6 +12,7 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
+  bool _hasNavigated = false;
 
   late Animation<double> _bgGlowAnimation;
   late Animation<double> _logoOpacity;
@@ -72,7 +73,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   }
 
   void _navigateToApp() {
-    if (mounted) {
+    if (mounted && !_hasNavigated) {
+      _hasNavigated = true;
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
@@ -95,7 +97,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: AnimatedBuilder(
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: _navigateToApp,
+        child: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
           return Stack(
@@ -204,6 +209,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
           );
         },
       ),
-    );
-  }
+    ),
+  );
+}
 }

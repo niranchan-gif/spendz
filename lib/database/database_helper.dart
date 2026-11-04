@@ -31,17 +31,36 @@ class DatabaseHelper {
     );
   }
 
+  Future<void> _addColumnIfNotExists(
+    Database db,
+    String table,
+    String column,
+    String columnDef,
+  ) async {
+    try {
+      final info = await db.rawQuery('PRAGMA table_info($table)');
+      final columnExists = info.any(
+        (col) => (col['name'] as String?)?.toLowerCase() == column.toLowerCase(),
+      );
+      if (!columnExists) {
+        await db.execute('ALTER TABLE $table ADD COLUMN $column $columnDef');
+      }
+    } catch (_) {
+      // Safe fallback if column already exists or table structure differs
+    }
+  }
+
   Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      await db.execute('ALTER TABLE transactions ADD COLUMN owed_amount REAL DEFAULT 0.0');
+      await _addColumnIfNotExists(db, 'transactions', 'owed_amount', 'REAL DEFAULT 0.0');
     }
     if (oldVersion < 3) {
-      await db.execute('ALTER TABLE transactions ADD COLUMN expected_payments INTEGER DEFAULT 0');
-      await db.execute('ALTER TABLE transactions ADD COLUMN linked_payments INTEGER DEFAULT 0');
+      await _addColumnIfNotExists(db, 'transactions', 'expected_payments', 'INTEGER DEFAULT 0');
+      await _addColumnIfNotExists(db, 'transactions', 'linked_payments', 'INTEGER DEFAULT 0');
     }
     if (oldVersion < 4) {
-      // 1. Add nullable card_id column to transactions
-      await db.execute('ALTER TABLE transactions ADD COLUMN card_id TEXT');
+      // 1. Add nullable card_id column to transactions idempotently
+      await _addColumnIfNotExists(db, 'transactions', 'card_id', 'TEXT');
       await db.execute('CREATE INDEX IF NOT EXISTS idx_transactions_card_id ON transactions (card_id)');
 
       // 2. Create wallet_cards table
