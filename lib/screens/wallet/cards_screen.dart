@@ -8,6 +8,7 @@ import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../../features/wallet/security/secure_number_service.dart';
+import '../../features/wallet/security/wallet_auth_service.dart';
 import '../../features/wallet/security/wallet_key_service.dart';
 import '../../models/wallet_card_model.dart';
 import '../../models/wallet_document_model.dart';
@@ -815,6 +816,23 @@ class _CardsScreenState extends State<CardsScreen> {
                     icon: Icons.copy_rounded,
                     label: 'Copy Number',
                     onTap: () async {
+                      // Biometric authentication required to view/copy private number
+                      final authService = context.read<WalletAuthService>();
+                      final authenticated = await authService.authenticate(
+                        localizedReason: 'Authenticate with biometrics to copy private number',
+                      );
+                      if (!authenticated) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(authService.lastErrorMessage ?? 'Biometric authentication required to access private number.'),
+                              backgroundColor: AppColors.error,
+                            ),
+                          );
+                        }
+                        return;
+                      }
+
                       String numToCopy = activeCard.maskedNumber;
                       if (activeCard.type == StudioCardType.payment) {
                         final fullNum = await _secureNumberService.getCardFullNumber(activeCard.id);

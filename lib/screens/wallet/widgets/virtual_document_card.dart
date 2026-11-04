@@ -1,6 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
+import '../../../features/wallet/security/secure_number_service.dart';
+import '../../../features/wallet/security/wallet_auth_service.dart';
 import '../../../models/wallet_document_model.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
@@ -19,12 +23,17 @@ import '../../../app/theme/app_radius.dart';
 /// - Voter ID / EPIC (Election Commission of India layout)
 /// - Payment Cards (Brushed metal finish, EMV chip, contactless symbol, network badge)
 /// - Generic / Certificates (Sleek vault certificate layout)
-class VirtualDocumentCard extends StatelessWidget {
+///
+/// Features hardware-backed Biometric Tap-to-Reveal:
+/// Masked by default, private numbers require biometric authentication to reveal,
+/// with automatic 30s session timeout and background re-masking.
+class VirtualDocumentCard extends StatefulWidget {
   final WalletDocumentModel document;
   final VoidCallback? onTap;
   final VoidCallback? onFavoriteToggle;
   final bool showShadow;
   final bool isInteractive;
+  final bool allowReveal;
 
   const VirtualDocumentCard({
     super.key,
@@ -33,7 +42,119 @@ class VirtualDocumentCard extends StatelessWidget {
     this.onFavoriteToggle,
     this.showShadow = true,
     this.isInteractive = true,
+    this.allowReveal = true,
   });
+
+  @override
+  State<VirtualDocumentCard> createState() => _VirtualDocumentCardState();
+}
+
+class _VirtualDocumentCardState extends State<VirtualDocumentCard>
+    with WidgetsBindingObserver {
+  bool _isRevealed = false;
+  String? _unmaskedNumber;
+  Timer? _sessionTimer;
+  final SecureNumberService _secureNumberService = SecureNumberService();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _sessionTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+      _maskNumber();
+    }
+  }
+
+  void _maskNumber() {
+    _sessionTimer?.cancel();
+    _sessionTimer = null;
+    if (mounted) {
+      setState(() {
+        _isRevealed = false;
+        _unmaskedNumber = null;
+      });
+    }
+  }
+
+  Future<void> _toggleReveal() async {
+    if (_isRevealed) {
+      _maskNumber();
+      return;
+    }
+
+    WalletAuthService? authService;
+    try {
+      authService = context.read<WalletAuthService>();
+    } catch (_) {}
+
+    if (authService != null) {
+      final authenticated = await authService.authenticate(
+        localizedReason: 'Authenticate with biometrics to reveal private document number',
+      );
+      if (!authenticated) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(authService.lastErrorMessage ?? 'Biometric authentication required to reveal private number.'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+        return;
+      }
+    }
+
+    final fullNumber = await _secureNumberService.getDocumentFullNumber(widget.document.id);
+    if (!mounted) return;
+
+    if (fullNumber != null && fullNumber.isNotEmpty) {
+      setState(() {
+        _isRevealed = true;
+        _unmaskedNumber = fullNumber;
+      });
+
+      _sessionTimer?.cancel();
+      _sessionTimer = Timer(const Duration(seconds: 30), () {
+        if (mounted) _maskNumber();
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No unmasked number found in secure storage.')),
+      );
+    }
+  }
+
+  String _formatRevealedNumber(String category, String raw) {
+    final clean = raw.replaceAll(' ', '').trim();
+    switch (category.toLowerCase()) {
+      case 'aadhaar':
+        if (clean.length == 12) {
+          return '${clean.substring(0, 4)} ${clean.substring(4, 8)} ${clean.substring(8, 12)}';
+        }
+        return raw;
+      case 'debit_card':
+      case 'credit_card':
+        if (clean.length == 16) {
+          return '${clean.substring(0, 4)} ${clean.substring(4, 8)} ${clean.substring(8, 12)} ${clean.substring(12, 16)}';
+        }
+        return raw;
+      case 'pan':
+        return raw.toUpperCase();
+      default:
+        return raw;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +170,7 @@ class VirtualDocumentCard extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: AppSpacing.sm),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppRadius.card + 4),
-            boxShadow: showShadow
+            boxShadow: widget.showShadow
                 ? [
                     BoxShadow(
                       color: Colors.black.withAlpha(55),
@@ -69,7 +190,7 @@ class VirtualDocumentCard extends StatelessWidget {
             color: Colors.transparent,
             borderRadius: BorderRadius.circular(AppRadius.card + 4),
             child: InkWell(
-              onTap: onTap,
+              onTap: widget.onTap,
               borderRadius: BorderRadius.circular(AppRadius.card + 4),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(AppRadius.card + 4),
@@ -83,7 +204,7 @@ class VirtualDocumentCard extends StatelessWidget {
   }
 
   Widget _buildCardContent(BuildContext context) {
-    switch (document.category.toLowerCase()) {
+    switch (widget.document.category.toLowerCase()) {
       case 'debit_card':
       case 'credit_card':
         return _buildPaymentCard(context);
@@ -112,8 +233,11 @@ class VirtualDocumentCard extends StatelessWidget {
   // ==========================================
   Widget _buildAadhaarCard(BuildContext context) {
     final meta = _parseCardMetadata();
-    final holder = meta.holder.isNotEmpty ? meta.holder : document.documentName;
-    final number = meta.number.isNotEmpty ? meta.number : '•••• •••• ••••';
+    final holder = meta.holder.isNotEmpty ? meta.holder : widget.document.documentName;
+    final defaultNumber = meta.number.isNotEmpty ? meta.number : '•••• •••• 4567';
+    final displayNumber = (_isRevealed && _unmaskedNumber != null)
+        ? _formatRevealedNumber('aadhaar', _unmaskedNumber!)
+        : defaultNumber;
 
     return Stack(
       children: [
@@ -164,14 +288,12 @@ class VirtualDocumentCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Ashoka Lion Capital Emblem
                   const SizedBox(
                     width: 26,
                     height: 32,
                     child: CustomPaint(painter: _AshokaEmblemPainter(color: Color(0xFF1E293B))),
                   ),
                   const SizedBox(width: 8),
-                  // Bilingual Govt of India
                   const Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -274,7 +396,6 @@ class VirtualDocumentCard extends StatelessWidget {
                         alignment: Alignment.center,
                         children: [
                           const Icon(Icons.person, color: Color(0xFF94A3B8), size: 34),
-                          // Subtle UIDAI corner mark
                           Positioned(
                             bottom: 1,
                             right: 2,
@@ -315,7 +436,7 @@ class VirtualDocumentCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            meta.dob.isNotEmpty ? 'DOB / जन्म: ${meta.dob}' : (document.issueDate != null ? 'Issue: ${DateFormat('dd/MM/yyyy').format(document.issueDate!)}' : 'DOB: ••/••/••••'),
+                            meta.dob.isNotEmpty ? 'DOB / जन्म: ${meta.dob}' : (widget.document.issueDate != null ? 'Issue: ${DateFormat('dd/MM/yyyy').format(widget.document.issueDate!)}' : 'DOB: ••/••/••••'),
                             style: const TextStyle(color: Color(0xFF475569), fontSize: 9.5, fontWeight: FontWeight.w600),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -343,41 +464,56 @@ class VirtualDocumentCard extends StatelessWidget {
                 ),
               ),
 
-              // Bottom Aadhaar Number with Authentic Red Underline
+              // Bottom Aadhaar Number with Biometric Tap-to-Reveal
               Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
+                child: InkWell(
+                  onTap: widget.allowReveal ? _toggleReveal : null,
+                  borderRadius: BorderRadius.circular(6),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.fingerprint_rounded, color: Color(0xFF15803D), size: 16),
-                        const SizedBox(width: 6),
-                        Text(
-                          number,
-                          style: const TextStyle(
-                            color: Color(0xFF0F172A),
-                            fontWeight: FontWeight.w900,
-                            fontSize: 16,
-                            letterSpacing: 2.2,
-                            fontFamily: 'monospace',
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              _isRevealed ? Icons.lock_open_rounded : Icons.fingerprint_rounded,
+                              color: _isRevealed ? const Color(0xFF16A34A) : const Color(0xFF15803D),
+                              size: 16,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              displayNumber,
+                              style: const TextStyle(
+                                color: Color(0xFF0F172A),
+                                fontWeight: FontWeight.w900,
+                                fontSize: 16,
+                                letterSpacing: 2.2,
+                                fontFamily: 'monospace',
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Icon(
+                              _isRevealed ? Icons.visibility_rounded : Icons.visibility_off_rounded,
+                              color: _isRevealed ? const Color(0xFF0284C7) : const Color(0xFF94A3B8),
+                              size: 14,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        // UIDAI Authentic Red Underline Bar
+                        Container(
+                          width: 140,
+                          height: 2,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFDC2626),
+                            borderRadius: BorderRadius.circular(1),
                           ),
                         ),
-                        const SizedBox(width: 6),
-                        const Icon(Icons.verified_user_rounded, color: Color(0xFF0284C7), size: 14),
                       ],
                     ),
-                    const SizedBox(height: 2),
-                    // UIDAI Authentic Red Underline Bar
-                    Container(
-                      width: 140,
-                      height: 2,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFDC2626),
-                        borderRadius: BorderRadius.circular(1),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
 
@@ -396,7 +532,7 @@ class VirtualDocumentCard extends StatelessWidget {
         ),
 
         // Favorite Toggle Icon
-        if (onFavoriteToggle != null)
+        if (widget.onFavoriteToggle != null)
           Positioned(
             top: 6,
             right: 6,
@@ -411,8 +547,11 @@ class VirtualDocumentCard extends StatelessWidget {
   // ==========================================
   Widget _buildPanCard(BuildContext context) {
     final meta = _parseCardMetadata();
-    final holder = meta.holder.isNotEmpty ? meta.holder.toUpperCase() : document.documentName.toUpperCase();
-    final number = meta.number.isNotEmpty ? meta.number : 'ABCDE1234F';
+    final holder = meta.holder.isNotEmpty ? meta.holder.toUpperCase() : widget.document.documentName.toUpperCase();
+    final defaultNumber = meta.number.isNotEmpty ? meta.number : 'ABCDE••••F';
+    final displayNumber = (_isRevealed && _unmaskedNumber != null)
+        ? _formatRevealedNumber('pan', _unmaskedNumber!)
+        : defaultNumber;
     final father = meta.father.isNotEmpty ? meta.father.toUpperCase() : 'GOVT RECORD';
 
     return Stack(
@@ -472,7 +611,6 @@ class VirtualDocumentCard extends StatelessWidget {
 
                   const SizedBox(width: 4),
 
-                  // Metallic Gold Ashoka Lion Emblem
                   const SizedBox(
                     width: 18,
                     height: 22,
@@ -515,7 +653,6 @@ class VirtualDocumentCard extends StatelessWidget {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Photo Frame + Signature Box
                         Column(
                           children: [
                             Container(
@@ -547,7 +684,6 @@ class VirtualDocumentCard extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 3),
-                            // Simulated Signature Strip
                             Container(
                               width: 44,
                               height: 14,
@@ -595,14 +731,13 @@ class VirtualDocumentCard extends StatelessWidget {
                               const SizedBox(height: 3),
                               const Text('जन्म की तारीख / Date of Birth', style: TextStyle(color: Color(0xFF475569), fontSize: 7.5, fontWeight: FontWeight.bold)),
                               Text(
-                                meta.dob.isNotEmpty ? meta.dob : (document.issueDate != null ? DateFormat('dd/MM/yyyy').format(document.issueDate!) : '••/••/••••'),
+                                meta.dob.isNotEmpty ? meta.dob : (widget.document.issueDate != null ? DateFormat('dd/MM/yyyy').format(widget.document.issueDate!) : '••/••/••••'),
                                 style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w700, fontSize: 10),
                               ),
                             ],
                           ),
                         ),
 
-                        // Right Hologram Seal + QR
                         const Column(
                           children: [
                             _HologramSealWidget(size: 24),
@@ -613,44 +748,52 @@ class VirtualDocumentCard extends StatelessWidget {
                       ],
                     ),
 
-                    // Bottom Permanent Account Number Area
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withAlpha(200),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: const Color(0xFF0284C7).withAlpha(80), width: 0.8),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'स्थायी लेखा संख्या / Permanent Account Number',
-                                  style: TextStyle(color: Color(0xFF334155), fontSize: 7.5, fontWeight: FontWeight.w800),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 1),
-                                Text(
-                                  number,
-                                  style: const TextStyle(
-                                    color: Color(0xFF0F172A),
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 2.4,
-                                    fontFamily: 'monospace',
+                    // Bottom Permanent Account Number Area with Biometric Reveal
+                    InkWell(
+                      onTap: widget.allowReveal ? _toggleReveal : null,
+                      borderRadius: BorderRadius.circular(6),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withAlpha(200),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFF0284C7).withAlpha(80), width: 0.8),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'स्थायी लेखा संख्या / Permanent Account Number',
+                                    style: TextStyle(color: Color(0xFF334155), fontSize: 7.5, fontWeight: FontWeight.w800),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
+                                  const SizedBox(height: 1),
+                                  Text(
+                                    displayNumber,
+                                    style: const TextStyle(
+                                      color: Color(0xFF0F172A),
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 2.4,
+                                      fontFamily: 'monospace',
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          const Icon(Icons.shield_outlined, color: Color(0xFF0284C7), size: 18),
-                        ],
+                            const SizedBox(width: 8),
+                            Icon(
+                              _isRevealed ? Icons.lock_open_rounded : Icons.shield_outlined,
+                              color: _isRevealed ? const Color(0xFF16A34A) : const Color(0xFF0284C7),
+                              size: 18,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -660,7 +803,7 @@ class VirtualDocumentCard extends StatelessWidget {
           ],
         ),
 
-        if (onFavoriteToggle != null)
+        if (widget.onFavoriteToggle != null)
           Positioned(
             top: 2,
             right: 4,
@@ -675,8 +818,11 @@ class VirtualDocumentCard extends StatelessWidget {
   // ==========================================
   Widget _buildDrivingLicenceCard(BuildContext context) {
     final meta = _parseCardMetadata();
-    final holder = meta.holder.isNotEmpty ? meta.holder.toUpperCase() : document.documentName.toUpperCase();
-    final number = meta.number.isNotEmpty ? meta.number : 'DL-••••4321';
+    final holder = meta.holder.isNotEmpty ? meta.holder.toUpperCase() : widget.document.documentName.toUpperCase();
+    final defaultNumber = meta.number.isNotEmpty ? meta.number : 'DL-••••4321';
+    final displayNumber = (_isRevealed && _unmaskedNumber != null)
+        ? _unmaskedNumber!
+        : defaultNumber;
 
     return Stack(
       children: [
@@ -755,17 +901,17 @@ class VirtualDocumentCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                     decoration: BoxDecoration(
-                      color: (document.isExpired ? Colors.red : const Color(0xFF10B981)).withAlpha(40),
+                      color: (widget.document.isExpired ? Colors.red : const Color(0xFF10B981)).withAlpha(40),
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(
-                        color: document.isExpired ? Colors.redAccent : const Color(0xFF34D399),
+                        color: widget.document.isExpired ? Colors.redAccent : const Color(0xFF34D399),
                         width: 0.8,
                       ),
                     ),
                     child: Text(
-                      document.isExpired ? 'EXPIRED' : 'ACTIVE',
+                      widget.document.isExpired ? 'EXPIRED' : 'ACTIVE',
                       style: TextStyle(
-                        color: document.isExpired ? Colors.redAccent : const Color(0xFF34D399),
+                        color: widget.document.isExpired ? Colors.redAccent : const Color(0xFF34D399),
                         fontSize: 8.5,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 0.5,
@@ -779,7 +925,6 @@ class VirtualDocumentCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Gold EMV Smart Chip + Photo
                   Column(
                     children: [
                       const _EmvChipWidget(width: 36, height: 26),
@@ -799,23 +944,40 @@ class VirtualDocumentCard extends StatelessWidget {
 
                   const SizedBox(width: 12),
 
-                  // Licence Number & Specifications
+                  // Licence Number with Biometric Reveal
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text('LICENCE NUMBER', style: TextStyle(color: Colors.white54, fontSize: 8, letterSpacing: 0.8)),
-                        Text(
-                          number,
-                          style: const TextStyle(
-                            color: Color(0xFFFDE047),
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.6,
-                            fontFamily: 'monospace',
+                        InkWell(
+                          onTap: widget.allowReveal ? _toggleReveal : null,
+                          borderRadius: BorderRadius.circular(4),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  displayNumber,
+                                  style: const TextStyle(
+                                    color: Color(0xFFFDE047),
+                                    fontSize: 14.5,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 1.6,
+                                    fontFamily: 'monospace',
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Icon(
+                                _isRevealed ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
+                                color: _isRevealed ? Colors.greenAccent : const Color(0xFFFDE047).withAlpha(180),
+                                size: 14,
+                              ),
+                            ],
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
                         const Text('HOLDER NAME', style: TextStyle(color: Colors.white54, fontSize: 8, letterSpacing: 0.8)),
@@ -826,7 +988,6 @@ class VirtualDocumentCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 5),
-                        // Authorized Vehicle Class Badges (LMV, MCWG, etc.)
                         Row(
                           children: [
                             _buildVehicleClassBadge('LMV'),
@@ -843,8 +1004,6 @@ class VirtualDocumentCard extends StatelessWidget {
                   ),
 
                   const SizedBox(width: 6),
-
-                  // MoRTH Smart Hologram Seal
                   const _HologramSealWidget(size: 32),
                 ],
               ),
@@ -858,7 +1017,7 @@ class VirtualDocumentCard extends StatelessWidget {
                     children: [
                       const Text('ISSUED ON', style: TextStyle(color: Colors.white54, fontSize: 7.5)),
                       Text(
-                        document.issueDate != null ? DateFormat('dd MMM yyyy').format(document.issueDate!) : '•• ••• ••••',
+                        widget.document.issueDate != null ? DateFormat('dd MMM yyyy').format(widget.document.issueDate!) : '•• ••• ••••',
                         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10),
                       ),
                     ],
@@ -868,7 +1027,7 @@ class VirtualDocumentCard extends StatelessWidget {
                     children: [
                       const Text('VALID TILL (NT)', style: TextStyle(color: Colors.white54, fontSize: 7.5)),
                       Text(
-                        document.expiryDate != null ? DateFormat('dd MMM yyyy').format(document.expiryDate!) : 'NON-TRANSPORT',
+                        widget.document.expiryDate != null ? DateFormat('dd MMM yyyy').format(widget.document.expiryDate!) : 'NON-TRANSPORT',
                         style: const TextStyle(color: Color(0xFFFDE047), fontWeight: FontWeight.bold, fontSize: 10),
                       ),
                     ],
@@ -879,7 +1038,7 @@ class VirtualDocumentCard extends StatelessWidget {
           ),
         ),
 
-        if (onFavoriteToggle != null)
+        if (widget.onFavoriteToggle != null)
           Positioned(
             top: 6,
             right: 6,
@@ -909,8 +1068,11 @@ class VirtualDocumentCard extends StatelessWidget {
   // ==========================================
   Widget _buildPassportCard(BuildContext context) {
     final meta = _parseCardMetadata();
-    final holder = meta.holder.isNotEmpty ? meta.holder.toUpperCase() : document.documentName.toUpperCase();
-    final number = meta.number.isNotEmpty ? meta.number : 'J••••678';
+    final holder = meta.holder.isNotEmpty ? meta.holder.toUpperCase() : widget.document.documentName.toUpperCase();
+    final defaultNumber = meta.number.isNotEmpty ? meta.number : 'J••••678';
+    final displayNumber = (_isRevealed && _unmaskedNumber != null)
+        ? _unmaskedNumber!
+        : defaultNumber;
 
     return Stack(
       children: [
@@ -925,7 +1087,6 @@ class VirtualDocumentCard extends StatelessWidget {
           ),
         ),
 
-        // Gold Foil Perimeter Border with Inset
         Positioned.fill(
           child: Container(
             margin: const EdgeInsets.all(5),
@@ -942,7 +1103,6 @@ class VirtualDocumentCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Header: Bilingual Republic of India + Ashoka Emblem
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -991,7 +1151,7 @@ class VirtualDocumentCard extends StatelessWidget {
                 ],
               ),
 
-              // Passport Number & Holder Info
+              // Passport Number with Biometric Reveal
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -999,14 +1159,29 @@ class VirtualDocumentCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text('PASSPORT NO.', style: TextStyle(color: Color(0xFFD4AF37), fontSize: 8, letterSpacing: 0.8)),
-                      Text(
-                        number,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.8,
-                          fontFamily: 'monospace',
+                      InkWell(
+                        onTap: widget.allowReveal ? _toggleReveal : null,
+                        borderRadius: BorderRadius.circular(4),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              displayNumber,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.8,
+                                fontFamily: 'monospace',
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Icon(
+                              _isRevealed ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
+                              color: _isRevealed ? Colors.greenAccent : const Color(0xFFD4AF37),
+                              size: 14,
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -1044,13 +1219,13 @@ class VirtualDocumentCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (document.expiryDate != null)
+                  if (widget.document.expiryDate != null)
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         const Text('EXPIRY DATE', style: TextStyle(color: Colors.white54, fontSize: 7.5)),
                         Text(
-                          DateFormat('dd/MM/yyyy').format(document.expiryDate!),
+                          DateFormat('dd/MM/yyyy').format(widget.document.expiryDate!),
                           style: const TextStyle(color: Color(0xFFD4AF37), fontWeight: FontWeight.bold, fontSize: 11),
                         ),
                       ],
@@ -1081,7 +1256,7 @@ class VirtualDocumentCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${number.replaceAll(RegExp(r'[^A-Z0-9]'), '')}<0IND9001015M3001014<<<<<<<<<<<<<<06'.padRight(44, '<').substring(0, 36),
+                      '${defaultNumber.replaceAll(RegExp(r'[^A-Z0-9]'), '')}<0IND9001015M3001014<<<<<<<<<<<<<<06'.padRight(44, '<').substring(0, 36),
                       style: const TextStyle(
                         color: Color(0xFFCBD5E1),
                         fontFamily: 'monospace',
@@ -1097,7 +1272,7 @@ class VirtualDocumentCard extends StatelessWidget {
           ),
         ),
 
-        if (onFavoriteToggle != null)
+        if (widget.onFavoriteToggle != null)
           Positioned(
             top: 6,
             right: 6,
@@ -1112,12 +1287,14 @@ class VirtualDocumentCard extends StatelessWidget {
   // ==========================================
   Widget _buildRcCard(BuildContext context) {
     final meta = _parseCardMetadata();
-    final holder = meta.holder.isNotEmpty ? meta.holder : document.documentName;
-    final number = meta.number.isNotEmpty ? meta.number : 'MH 02 AB 1234';
+    final holder = meta.holder.isNotEmpty ? meta.holder : widget.document.documentName;
+    final defaultNumber = meta.number.isNotEmpty ? meta.number : 'MH 02 AB 1234';
+    final displayNumber = (_isRevealed && _unmaskedNumber != null)
+        ? _unmaskedNumber!
+        : defaultNumber;
 
     return Stack(
       children: [
-        // Background: Deep automotive mahogany gradient
         Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -1153,44 +1330,54 @@ class VirtualDocumentCard extends StatelessWidget {
 
               // High Security Registration Plate (HSRP) representation
               Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFEF08A),
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: Colors.black, width: 1.5),
-                    boxShadow: [
-                      BoxShadow(color: Colors.black.withAlpha(60), blurRadius: 6, offset: const Offset(0, 3)),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1E3A8A),
-                          borderRadius: BorderRadius.circular(2),
+                child: InkWell(
+                  onTap: widget.allowReveal ? _toggleReveal : null,
+                  borderRadius: BorderRadius.circular(4),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF08A),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: Colors.black, width: 1.5),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withAlpha(60), blurRadius: 6, offset: const Offset(0, 3)),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1E3A8A),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                          child: const Column(
+                            children: [
+                              Icon(Icons.circle, size: 4, color: Colors.amber),
+                              Text('IND', style: TextStyle(color: Colors.white, fontSize: 6.5, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
                         ),
-                        child: const Column(
-                          children: [
-                            Icon(Icons.circle, size: 4, color: Colors.amber),
-                            Text('IND', style: TextStyle(color: Colors.white, fontSize: 6.5, fontWeight: FontWeight.bold)),
-                          ],
+                        const SizedBox(width: 8),
+                        Text(
+                          displayNumber,
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 2.2,
+                            fontFamily: 'monospace',
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        number,
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 2.2,
-                          fontFamily: 'monospace',
+                        const SizedBox(width: 6),
+                        Icon(
+                          _isRevealed ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
+                          color: _isRevealed ? Colors.green : Colors.black54,
+                          size: 14,
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -1211,13 +1398,13 @@ class VirtualDocumentCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (document.expiryDate != null)
+                  if (widget.document.expiryDate != null)
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         const Text('FITNESS UPTO', style: TextStyle(color: Colors.white54, fontSize: 7.5)),
                         Text(
-                          DateFormat('MM/yy').format(document.expiryDate!),
+                          DateFormat('MM/yy').format(widget.document.expiryDate!),
                           style: const TextStyle(color: Color(0xFFFDE047), fontWeight: FontWeight.bold, fontSize: 11),
                         ),
                       ],
@@ -1228,7 +1415,7 @@ class VirtualDocumentCard extends StatelessWidget {
           ),
         ),
 
-        if (onFavoriteToggle != null)
+        if (widget.onFavoriteToggle != null)
           Positioned(
             top: 6,
             right: 6,
@@ -1243,13 +1430,15 @@ class VirtualDocumentCard extends StatelessWidget {
   // ==========================================
   Widget _buildInsuranceCard(BuildContext context) {
     final meta = _parseCardMetadata();
-    final holder = meta.holder.isNotEmpty ? meta.holder : document.documentName;
-    final number = meta.number.isNotEmpty ? meta.number : 'POL-••••1122';
+    final holder = meta.holder.isNotEmpty ? meta.holder : widget.document.documentName;
+    final defaultNumber = meta.number.isNotEmpty ? meta.number : 'POL-••••1122';
+    final displayNumber = (_isRevealed && _unmaskedNumber != null)
+        ? _unmaskedNumber!
+        : defaultNumber;
     final provider = meta.issuer.isNotEmpty ? meta.issuer : (meta.provider.isNotEmpty ? meta.provider : 'INSURANCE POLICY');
 
     return Stack(
       children: [
-        // Background: Deep ocean teal gradient
         Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -1296,16 +1485,33 @@ class VirtualDocumentCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text('POLICY NUMBER', style: TextStyle(color: Colors.white60, fontSize: 8, letterSpacing: 0.8)),
-                  Text(
-                    number,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.8,
-                      fontFamily: 'monospace',
+                  InkWell(
+                    onTap: widget.allowReveal ? _toggleReveal : null,
+                    borderRadius: BorderRadius.circular(4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            displayNumber,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.8,
+                              fontFamily: 'monospace',
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Icon(
+                          _isRevealed ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
+                          color: _isRevealed ? Colors.greenAccent : Colors.white60,
+                          size: 14,
+                        ),
+                      ],
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -1326,15 +1532,15 @@ class VirtualDocumentCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (document.expiryDate != null)
+                  if (widget.document.expiryDate != null)
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         const Text('VALID THRU', style: TextStyle(color: Colors.white60, fontSize: 8)),
                         Text(
-                          DateFormat('dd MMM yyyy').format(document.expiryDate!),
+                          DateFormat('dd MMM yyyy').format(widget.document.expiryDate!),
                           style: TextStyle(
-                            color: document.isExpired ? Colors.redAccent : const Color(0xFF2DD4BF),
+                            color: widget.document.isExpired ? Colors.redAccent : const Color(0xFF2DD4BF),
                             fontWeight: FontWeight.bold,
                             fontSize: 11,
                           ),
@@ -1347,7 +1553,7 @@ class VirtualDocumentCard extends StatelessWidget {
           ),
         ),
 
-        if (onFavoriteToggle != null)
+        if (widget.onFavoriteToggle != null)
           Positioned(
             top: 6,
             right: 6,
@@ -1362,8 +1568,11 @@ class VirtualDocumentCard extends StatelessWidget {
   // ==========================================
   Widget _buildVoterIdCard(BuildContext context) {
     final meta = _parseCardMetadata();
-    final holder = meta.holder.isNotEmpty ? meta.holder : document.documentName;
-    final number = meta.number.isNotEmpty ? meta.number : 'EPIC •••••••';
+    final holder = meta.holder.isNotEmpty ? meta.holder : widget.document.documentName;
+    final defaultNumber = meta.number.isNotEmpty ? meta.number : 'EPIC •••••••';
+    final displayNumber = (_isRevealed && _unmaskedNumber != null)
+        ? _unmaskedNumber!
+        : defaultNumber;
 
     return Stack(
       children: [
@@ -1395,14 +1604,29 @@ class VirtualDocumentCard extends StatelessWidget {
               ),
 
               Center(
-                child: Text(
-                  number,
-                  style: const TextStyle(
-                    color: Color(0xFFFDE047),
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 2.0,
-                    fontFamily: 'monospace',
+                child: InkWell(
+                  onTap: widget.allowReveal ? _toggleReveal : null,
+                  borderRadius: BorderRadius.circular(4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        displayNumber,
+                        style: const TextStyle(
+                          color: Color(0xFFFDE047),
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 2.0,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Icon(
+                        _isRevealed ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
+                        color: _isRevealed ? Colors.greenAccent : const Color(0xFFFDE047),
+                        size: 14,
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -1421,7 +1645,7 @@ class VirtualDocumentCard extends StatelessWidget {
           ),
         ),
 
-        if (onFavoriteToggle != null)
+        if (widget.onFavoriteToggle != null)
           Positioned(
             top: 6,
             right: 6,
@@ -1435,12 +1659,15 @@ class VirtualDocumentCard extends StatelessWidget {
   // 8. AUTHENTIC PAYMENT CARD (CREDIT / DEBIT)
   // ==========================================
   Widget _buildPaymentCard(BuildContext context) {
-    final isCredit = document.category.toLowerCase() == 'credit_card';
+    final isCredit = widget.document.category.toLowerCase() == 'credit_card';
     final cardColor1 = isCredit ? const Color(0xFF1E293B) : const Color(0xFF1E3A8A);
     final cardColor2 = isCredit ? const Color(0xFF0F172A) : const Color(0xFF0F2042);
     final meta = _parseCardMetadata();
-    final holder = meta.holder.isNotEmpty ? meta.holder.toUpperCase() : document.documentName.toUpperCase();
-    final number = meta.number.isNotEmpty ? meta.number : '•••• •••• •••• ••••';
+    final holder = meta.holder.isNotEmpty ? meta.holder.toUpperCase() : widget.document.documentName.toUpperCase();
+    final defaultNumber = meta.number.isNotEmpty ? meta.number : '•••• •••• •••• ••••';
+    final displayNumber = (_isRevealed && _unmaskedNumber != null)
+        ? _formatRevealedNumber('payment', _unmaskedNumber!)
+        : defaultNumber;
     final bank = meta.issuer.isNotEmpty ? meta.issuer : (meta.bank.isNotEmpty ? meta.bank : (isCredit ? 'CREDIT CARD' : 'DEBIT CARD'));
 
     return Stack(
@@ -1478,14 +1705,29 @@ class VirtualDocumentCard extends StatelessWidget {
 
               const _EmvChipWidget(width: 38, height: 28),
 
-              Text(
-                number,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'monospace',
-                  fontSize: 16.5,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2.2,
+              InkWell(
+                onTap: widget.allowReveal ? _toggleReveal : null,
+                borderRadius: BorderRadius.circular(4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      displayNumber,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontFamily: 'monospace',
+                        fontSize: 16.5,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 2.2,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Icon(
+                      _isRevealed ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
+                      color: _isRevealed ? Colors.greenAccent : Colors.white60,
+                      size: 14,
+                    ),
+                  ],
                 ),
               ),
 
@@ -1499,12 +1741,12 @@ class VirtualDocumentCard extends StatelessWidget {
                       Text(holder, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)),
                     ],
                   ),
-                  if (document.expiryDate != null)
+                  if (widget.document.expiryDate != null)
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         const Text('VALID THRU', style: TextStyle(color: Colors.white54, fontSize: 8, letterSpacing: 0.8)),
-                        Text(DateFormat('MM/yy').format(document.expiryDate!), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)),
+                        Text(DateFormat('MM/yy').format(widget.document.expiryDate!), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)),
                       ],
                     ),
                   Text(
@@ -1517,7 +1759,7 @@ class VirtualDocumentCard extends StatelessWidget {
           ),
         ),
 
-        if (onFavoriteToggle != null)
+        if (widget.onFavoriteToggle != null)
           Positioned(
             top: 6,
             right: 6,
@@ -1532,8 +1774,11 @@ class VirtualDocumentCard extends StatelessWidget {
   // ==========================================
   Widget _buildGenericDocCard(BuildContext context) {
     final meta = _parseCardMetadata();
-    final isPdf = document.mimeType.contains('pdf');
-    final holder = meta.holder.isNotEmpty ? meta.holder : document.documentName;
+    final isPdf = widget.document.mimeType.contains('pdf');
+    final holder = meta.holder.isNotEmpty ? meta.holder : widget.document.documentName;
+    final displayNumber = (_isRevealed && _unmaskedNumber != null)
+        ? _unmaskedNumber!
+        : meta.number;
 
     return Stack(
       children: [
@@ -1561,7 +1806,7 @@ class VirtualDocumentCard extends StatelessWidget {
                       Icon(isPdf ? Icons.picture_as_pdf_rounded : Icons.description_rounded, color: Colors.white, size: 20),
                       const SizedBox(width: 8),
                       Text(
-                        document.category.replaceAll('_', ' ').toUpperCase(),
+                        widget.document.category.replaceAll('_', ' ').toUpperCase(),
                         style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.bold, fontSize: 11),
                       ),
                     ],
@@ -1573,15 +1818,30 @@ class VirtualDocumentCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    document.documentName,
+                    widget.document.documentName,
                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15.5),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (meta.number.isNotEmpty)
-                    Text(
-                      meta.number,
-                      style: const TextStyle(color: Colors.white70, fontFamily: 'monospace', fontSize: 12),
+                  if (displayNumber.isNotEmpty)
+                    InkWell(
+                      onTap: widget.allowReveal ? _toggleReveal : null,
+                      borderRadius: BorderRadius.circular(4),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            displayNumber,
+                            style: const TextStyle(color: Colors.white70, fontFamily: 'monospace', fontSize: 12),
+                          ),
+                          const SizedBox(width: 6),
+                          Icon(
+                            _isRevealed ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
+                            color: _isRevealed ? Colors.greenAccent : Colors.white60,
+                            size: 12,
+                          ),
+                        ],
+                      ),
                     ),
                 ],
               ),
@@ -1590,11 +1850,11 @@ class VirtualDocumentCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(holder, style: const TextStyle(color: Colors.white70, fontSize: 11)),
-                  if (document.expiryDate != null)
+                  if (widget.document.expiryDate != null)
                     Text(
-                      'Exp: ${DateFormat('dd MMM yyyy').format(document.expiryDate!)}',
+                      'Exp: ${DateFormat('dd MMM yyyy').format(widget.document.expiryDate!)}',
                       style: TextStyle(
-                        color: document.isExpired ? Colors.redAccent : Colors.white70,
+                        color: widget.document.isExpired ? Colors.redAccent : Colors.white70,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                       ),
@@ -1605,7 +1865,7 @@ class VirtualDocumentCard extends StatelessWidget {
           ),
         ),
 
-        if (onFavoriteToggle != null)
+        if (widget.onFavoriteToggle != null)
           Positioned(
             top: 6,
             right: 6,
@@ -1618,19 +1878,19 @@ class VirtualDocumentCard extends StatelessWidget {
   Widget _buildFavoriteButton({required bool isDarkTheme}) {
     return IconButton(
       icon: Icon(
-        document.isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
-        color: document.isFavorite ? Colors.amber : (isDarkTheme ? Colors.white60 : Colors.black45),
+        widget.document.isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
+        color: widget.document.isFavorite ? Colors.amber : (isDarkTheme ? Colors.white60 : Colors.black45),
         size: 20,
       ),
-      onPressed: onFavoriteToggle,
+      onPressed: widget.onFavoriteToggle,
       padding: EdgeInsets.zero,
       constraints: const BoxConstraints(),
     );
   }
 
   _ParsedMetadata _parseCardMetadata() {
-    String holder = document.holderName ?? '';
-    String number = document.maskedIdentifier ?? '';
+    String holder = widget.document.holderName ?? '';
+    String number = widget.document.maskedIdentifier ?? '';
     String issuer = '';
     String network = '';
     String father = '';
@@ -1640,8 +1900,8 @@ class VirtualDocumentCard extends StatelessWidget {
     String provider = '';
     final List<String> vehicleClasses = [];
 
-    if (document.description != null) {
-      final lines = document.description!.split('\n');
+    if (widget.document.description != null) {
+      final lines = widget.document.description!.split('\n');
       for (final line in lines) {
         final trimmed = line.trim();
         if (holder.isEmpty && trimmed.startsWith('Holder:')) {
@@ -1744,7 +2004,6 @@ class _EmvChipWidget extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          // Circuit Trace Dividers
           Positioned(
             top: 0,
             bottom: 0,
@@ -1876,14 +2135,10 @@ class _QrMatrixPainter extends CustomPainter {
     final h = size.height;
     final finderSize = w * 0.32;
 
-    // Draw Top-Left Finder Square
     _drawFinderSquare(canvas, 0, 0, finderSize, paint);
-    // Draw Top-Right Finder Square
     _drawFinderSquare(canvas, w - finderSize, 0, finderSize, paint);
-    // Draw Bottom-Left Finder Square
     _drawFinderSquare(canvas, 0, h - finderSize, finderSize, paint);
 
-    // Draw Interior Data Matrix dots
     final dotSize = w * 0.08;
     for (int i = 0; i < 4; i++) {
       for (int j = 0; j < 4; j++) {
@@ -1898,14 +2153,12 @@ class _QrMatrixPainter extends CustomPainter {
   }
 
   void _drawFinderSquare(Canvas canvas, double x, double y, double s, Paint paint) {
-    // Outer border
     final outerPaint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
       ..strokeWidth = s * 0.25;
     canvas.drawRect(Rect.fromLTWH(x + 1, y + 1, s - 2, s - 2), outerPaint);
 
-    // Inner dot
     final innerPaint = Paint()
       ..color = color
       ..style = PaintingStyle.fill;
@@ -1932,7 +2185,6 @@ class _AshokaEmblemPainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // Center Lion Head & Crown
     final headPath = Path();
     headPath.moveTo(w * 0.5, 0);
     headPath.lineTo(w * 0.35, h * 0.15);
@@ -1943,7 +2195,6 @@ class _AshokaEmblemPainter extends CustomPainter {
     headPath.close();
     canvas.drawPath(headPath, paint);
 
-    // Left Lion Profile
     final leftLion = Path();
     leftLion.moveTo(w * 0.25, h * 0.12);
     leftLion.lineTo(w * 0.1, h * 0.25);
@@ -1953,7 +2204,6 @@ class _AshokaEmblemPainter extends CustomPainter {
     leftLion.close();
     canvas.drawPath(leftLion, paint);
 
-    // Right Lion Profile
     final rightLion = Path();
     rightLion.moveTo(w * 0.75, h * 0.12);
     rightLion.lineTo(w * 0.9, h * 0.25);
@@ -1963,7 +2213,6 @@ class _AshokaEmblemPainter extends CustomPainter {
     rightLion.close();
     canvas.drawPath(rightLion, paint);
 
-    // Abacus Base
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(w * 0.15, h * 0.48, w * 0.7, h * 0.12),
@@ -1972,7 +2221,6 @@ class _AshokaEmblemPainter extends CustomPainter {
       paint,
     );
 
-    // Central Ashoka Chakra circle
     final strokePaint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
@@ -1980,7 +2228,6 @@ class _AshokaEmblemPainter extends CustomPainter {
     canvas.drawCircle(Offset(w * 0.5, h * 0.72), w * 0.18, strokePaint);
     canvas.drawCircle(Offset(w * 0.5, h * 0.72), 1.5, paint);
 
-    // Lotus Base Platform
     final lotusPath = Path();
     lotusPath.moveTo(w * 0.1, h * 0.96);
     lotusPath.lineTo(w * 0.9, h * 0.96);
@@ -2003,7 +2250,6 @@ class _UidaiSunburstPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
 
-    // Draw sunburst rays
     final rayPaint = Paint()
       ..color = const Color(0xFFDC2626)
       ..style = PaintingStyle.stroke
@@ -2016,7 +2262,6 @@ class _UidaiSunburstPainter extends CustomPainter {
       canvas.drawLine(p1, p2, rayPaint);
     }
 
-    // Central biometric arch
     final archPaint = Paint()
       ..color = const Color(0xFFFF9933)
       ..style = PaintingStyle.fill;
@@ -2042,7 +2287,6 @@ class _SecurityWatermarkPainter extends CustomPainter {
 
     final center = Offset(size.width * 0.5, size.height * 0.5);
 
-    // Draw concentric safety arches
     for (double r = 30; r < size.width * 0.8; r += 24) {
       canvas.drawCircle(center, r, paint);
     }

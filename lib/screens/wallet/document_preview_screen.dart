@@ -338,6 +338,24 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
 
     if (proceed != true || !mounted) return;
 
+    // Strict biometric authentication required to share any document
+    final authService = context.read<WalletAuthService>();
+    final authenticated = await authService.authenticate(
+      localizedReason: 'Authenticate with biometrics to share "${_currentDocument.documentName}"',
+    );
+
+    if (!mounted) return;
+
+    if (!authenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authService.lastErrorMessage ?? 'Biometric authentication is required to share documents.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isExporting = true);
     try {
       Uint8List bytes = Uint8List(0);
@@ -595,15 +613,22 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
                 ),
               ),
 
-              // 3. Biometric Protected Number Field
-              if (_secureDocumentNumber != null && _secureDocumentNumber!.isNotEmpty) ...[
+              // 3. Biometric Protected Number Field (Biometric authentication required to reveal)
+              if (doc.maskedIdentifier != null || _secureDocumentNumber != null) ...[
                 const SizedBox(height: AppSpacing.sm),
                 SecureProtectedField(
                   label: '${doc.category.toUpperCase().replaceAll("_", " ")} NUMBER',
-                  maskedValue: doc.maskedIdentifier ?? (_secureDocumentNumber!.length > 4
+                  maskedValue: doc.maskedIdentifier ?? (_secureDocumentNumber != null && _secureDocumentNumber!.length > 4
                       ? '•••• •••• ${_secureDocumentNumber!.substring(_secureDocumentNumber!.length - 4)}'
                       : '••••••••'),
-                  onRetrieveProtectedValue: () => _secureNumberService.getDocumentFullNumber(doc.id),
+                  showCopyButton: true,
+                  onRetrieveProtectedValue: () async {
+                    final num = await _secureNumberService.getDocumentFullNumber(doc.id);
+                    if (num != null && num.isNotEmpty) {
+                      return num;
+                    }
+                    return doc.maskedIdentifier;
+                  },
                 ),
               ],
               const SizedBox(height: AppSpacing.md),
