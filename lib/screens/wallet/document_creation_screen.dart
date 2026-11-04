@@ -1536,10 +1536,14 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Original Document Attachment',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Text(
+                  'Original Document Attachment',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               if (hasAttachment)
@@ -1638,31 +1642,6 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
                           style: TextStyle(fontSize: 12),
                         ),
                       ),
-                      if (_attachmentPayload!.pdfBytes != null) ...[
-                        const SizedBox(width: 4),
-                        TextButton.icon(
-                          onPressed: () async {
-                            final saved = await _scannerService
-                                .savePdfToPhoneStorage(
-                                  pdfBytes: _attachmentPayload!.pdfBytes!,
-                                  fileName: _attachmentPayload!.fileName,
-                                );
-                            if (saved != null && mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Saved copy to: $saved'),
-                                  backgroundColor: AppColors.success,
-                                ),
-                              );
-                            }
-                          },
-                          icon: const Icon(Icons.download_rounded, size: 16),
-                          label: const Text(
-                            'Save to Phone',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        ),
-                      ],
                     ],
                   ),
                 ],

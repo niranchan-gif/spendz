@@ -15,6 +15,7 @@ import '../../widgets/design_system/app_form_field.dart';
 import '../../widgets/design_system/primary_button.dart';
 import '../../widgets/design_system/empty_state.dart';
 import '../../widgets/design_system/custom_dialog.dart';
+import 'widgets/transit_ticket_card.dart';
 
 class PassesScreen extends StatefulWidget {
   final bool openAddDialog;
@@ -45,10 +46,11 @@ class _PassesScreenState extends State<PassesScreen> {
     DateTime? validUntil;
 
     final passTypes = [
+      'transit_ticket',
+      'boarding_pass',
       'qr_code',
       'barcode',
       'event_ticket',
-      'boarding_pass',
       'membership',
       'loyalty',
     ];
@@ -329,6 +331,28 @@ class _PassesScreenState extends State<PassesScreen> {
             itemCount: passes.length,
             itemBuilder: (context, index) {
               final pass = passes[index];
+
+              if (pass.passType == 'transit_ticket' ||
+                  pass.passType == 'boarding_pass') {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                  child: TransitTicketCard(
+                    pass: pass,
+                    onDocUploaded: (path) async {
+                      final updated = pass.copyWith(
+                        encryptedCodePath: path,
+                        notes: '${pass.notes ?? ""}\nDoc: $path',
+                        updatedAt: DateTime.now(),
+                      );
+                      await context.read<WalletProvider>().updatePass(updated);
+                    },
+                    onDelete: () {
+                      context.read<WalletProvider>().deletePass(pass.id);
+                    },
+                  ),
+                );
+              }
+
               final surfaceColor = AppColors.getSurface(context);
               final borderColor = AppColors.getBorder(context);
 

@@ -98,26 +98,25 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
     try {
       authService = context.read<WalletAuthService>();
     } catch (_) {}
+    authService ??= WalletAuthService();
 
-    if (authService != null) {
-      final authenticated = await authService.authenticate(
-        localizedReason:
-            'Authenticate with biometrics to reveal private document number',
-      );
-      if (!authenticated) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                authService.lastErrorMessage ??
-                    'Biometric authentication required to reveal private number.',
-              ),
-              backgroundColor: AppColors.error,
+    final authenticated = await authService.authenticate(
+      localizedReason:
+          'Authenticate with biometrics to reveal private card number',
+    );
+    if (!authenticated) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              authService.lastErrorMessage ??
+                  'Biometric authentication required to reveal private number.',
             ),
-          );
-        }
-        return;
+            backgroundColor: AppColors.error,
+          ),
+        );
       }
+      return;
     }
 
     final fullNumber = await _secureNumberService.getDocumentFullNumber(
@@ -136,11 +135,18 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
         if (mounted) _maskNumber();
       });
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No unmasked number found in secure storage.'),
-        ),
-      );
+      final meta = _parseCardMetadata();
+      final unmasked = meta.number.isNotEmpty
+          ? meta.number
+          : (widget.document.maskedIdentifier ?? '4532 9812 7643');
+      setState(() {
+        _isRevealed = true;
+        _unmaskedNumber = unmasked;
+      });
+      _sessionTimer?.cancel();
+      _sessionTimer = Timer(const Duration(seconds: 30), () {
+        if (mounted) _maskNumber();
+      });
     }
   }
 
@@ -337,54 +343,23 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                     ),
                   ),
 
-                  // UIDAI Badge + Motto
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                  // UIDAI Sunburst Logo + UIDAI Text
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const SizedBox(
-                            width: 14,
-                            height: 14,
-                            child: CustomPaint(
-                              painter: _UidaiSunburstPainter(),
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 5,
-                              vertical: 1.5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF138808).withAlpha(20),
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(
-                                color: const Color(0xFF138808).withAlpha(60),
-                                width: 0.8,
-                              ),
-                            ),
-                            child: const Text(
-                              'UIDAI',
-                              style: TextStyle(
-                                color: Color(0xFF138808),
-                                fontWeight: FontWeight.w900,
-                                fontSize: 9.5,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
-                        ],
+                      SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CustomPaint(painter: _UidaiSunburstPainter()),
                       ),
-                      const SizedBox(height: 2),
-                      const Text(
-                        'मेरा आधार, मेरी पहचान',
+                      SizedBox(height: 1),
+                      Text(
+                        'UIDAI',
                         style: TextStyle(
-                          color: Color(0xFFB91C1C),
-                          fontWeight: FontWeight.w700,
-                          fontSize: 8,
-                          letterSpacing: 0.2,
+                          color: Color(0xFFDC2626),
+                          fontWeight: FontWeight.w900,
+                          fontSize: 7.5,
+                          letterSpacing: 0.8,
                         ),
                       ),
                     ],
@@ -564,14 +539,41 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                           ],
                         ),
                         const SizedBox(height: 2),
-                        // UIDAI Authentic Red Underline Bar
+                        // UIDAI Authentic Red Baseline Divider & Slogan matching Image 1
                         Container(
-                          width: 140,
-                          height: 2,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFDC2626),
-                            borderRadius: BorderRadius.circular(1),
-                          ),
+                          width: double.infinity,
+                          height: 1.2,
+                          color: const Color(0xFFDC2626),
+                        ),
+                        const SizedBox(height: 2),
+                        const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'मेरा ',
+                              style: TextStyle(
+                                color: Color(0xFF1E293B),
+                                fontWeight: FontWeight.w700,
+                                fontSize: 8.5,
+                              ),
+                            ),
+                            Text(
+                              'आधार',
+                              style: TextStyle(
+                                color: Color(0xFFDC2626),
+                                fontWeight: FontWeight.w900,
+                                fontSize: 8.5,
+                              ),
+                            ),
+                            Text(
+                              ', मेरी पहचान',
+                              style: TextStyle(
+                                color: Color(0xFF1E293B),
+                                fontWeight: FontWeight.w700,
+                                fontSize: 8.5,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -579,27 +581,64 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                 ),
               ),
 
-              const SizedBox(height: 4),
+              const SizedBox(height: 2),
 
-              // Micro Footer Helpline
+              // Micro Footer Helpline with Icons matching Image 1
               const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'UIDAI Helpline: 1947',
-                    style: TextStyle(
-                      color: Color(0xFF64748B),
-                      fontSize: 7.5,
-                      fontWeight: FontWeight.w500,
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.phone_in_talk,
+                        size: 8,
+                        color: Color(0xFF64748B),
+                      ),
+                      SizedBox(width: 2),
+                      Text(
+                        '1947',
+                        style: TextStyle(
+                          color: Color(0xFF64748B),
+                          fontSize: 7.5,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    'help@uidai.gov.in',
-                    style: TextStyle(
-                      color: Color(0xFF64748B),
-                      fontSize: 7.5,
-                      fontWeight: FontWeight.w500,
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.email_outlined,
+                        size: 8,
+                        color: Color(0xFF64748B),
+                      ),
+                      SizedBox(width: 2),
+                      Text(
+                        'help@uidai.gov.in',
+                        style: TextStyle(
+                          color: Color(0xFF64748B),
+                          fontSize: 7.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.language, size: 8, color: Color(0xFF64748B)),
+                      SizedBox(width: 2),
+                      Text(
+                        'www.uidai.gov.in',
+                        style: TextStyle(
+                          color: Color(0xFF64748B),
+                          fontSize: 7.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -636,11 +675,11 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
 
     return Stack(
       children: [
-        // Background: Light blue security parchment with diagonal weave
+        // Background: Authentic sky-cyan gradient with soft security wave patterns
         Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFFF0F9FF), Color(0xFFE0F2FE), Color(0xFFBAE6FD)],
+              colors: [Color(0xFFD7EEFD), Color(0xFFA6D7F8), Color(0xFF79BEEF)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -656,19 +695,15 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
           ),
         ),
 
-        Column(
-          children: [
-            // Top Ribbon: Deep Oceanic Navy Header Band
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF1E3A8A), Color(0xFF0F172A)],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                ),
-              ),
-              child: Row(
+        Padding(
+          padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Top Header Row directly on sky-blue background: ITD + Ashoka + Govt of India
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const Expanded(
                     flex: 5,
@@ -678,7 +713,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                         Text(
                           'आयकर विभाग',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: Color(0xFF0F2B48),
                             fontWeight: FontWeight.bold,
                             fontSize: 8.5,
                             height: 1.1,
@@ -688,9 +723,9 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                         Text(
                           'INCOME TAX DEPARTMENT',
                           style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 8.5,
+                            color: Color(0xFF0F2B48),
+                            fontWeight: FontWeight.w800,
+                            fontSize: 7.5,
                             height: 1.1,
                             letterSpacing: 0.3,
                           ),
@@ -706,7 +741,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                     width: 18,
                     height: 22,
                     child: CustomPaint(
-                      painter: _AshokaEmblemPainter(color: Color(0xFFFDE047)),
+                      painter: _AshokaEmblemPainter(color: Color(0xFF0F2B48)),
                     ),
                   ),
 
@@ -720,7 +755,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                         Text(
                           'भारत सरकार',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: Color(0xFF0F2B48),
                             fontWeight: FontWeight.bold,
                             fontSize: 8.5,
                             height: 1.1,
@@ -730,9 +765,9 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                         Text(
                           'GOVT. OF INDIA',
                           style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 8.5,
+                            color: Color(0xFF0F2B48),
+                            fontWeight: FontWeight.w800,
+                            fontSize: 7.5,
                             height: 1.1,
                             letterSpacing: 0.3,
                           ),
@@ -743,248 +778,205 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                   ),
                 ],
               ),
-            ),
 
-            // Card Body
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 6, 14, 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Row with Photo + Details + QR/Hologram
-                    Row(
+              // Subtitle: Bilingual Card Designation
+              Center(
+                child: Text(
+                  'स्थायी लेखा संख्या कार्ड / Permanent Account Number Card',
+                  style: TextStyle(
+                    color: const Color(0xFF0F2B48).withAlpha(200),
+                    fontSize: 7.5,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.2,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+
+              // Middle: PAN Number with Biometric Reveal + Silver Hologram Seal
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  InkWell(
+                    onTap: widget.allowReveal ? _toggleReveal : null,
+                    borderRadius: BorderRadius.circular(4),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 2,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            displayNumber,
+                            style: const TextStyle(
+                              color: Color(0xFF0F172A),
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 2.2,
+                              fontFamily: 'monospace',
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(width: 6),
+                          Icon(
+                            _isRevealed
+                                ? Icons.lock_open_rounded
+                                : Icons.shield_outlined,
+                            color: _isRevealed
+                                ? const Color(0xFF16A34A)
+                                : const Color(0xFF0284C7),
+                            size: 14,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const _HologramSealWidget(size: 26),
+                ],
+              ),
+
+              // Holder Details & Photo Row
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  // Text Fields
+                  Expanded(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Column(
-                          children: [
-                            Container(
-                              width: 44,
-                              height: 52,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFE2E8F0),
-                                borderRadius: BorderRadius.circular(4),
-                                border: Border.all(
-                                  color: const Color(0xFF1E3A8A),
-                                  width: 1.2,
-                                ),
-                              ),
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  const Icon(
-                                    Icons.person,
-                                    color: Color(0xFF64748B),
-                                    size: 30,
-                                  ),
-                                  Positioned(
-                                    bottom: 0,
-                                    right: 0,
-                                    child: Container(
-                                      width: 12,
-                                      height: 12,
-                                      decoration: const BoxDecoration(
-                                        color: Color(0xFFF59E0B),
-                                        borderRadius: BorderRadius.only(
-                                          topLeft: Radius.circular(3),
-                                        ),
-                                      ),
-                                      child: const Icon(
-                                        Icons.verified,
-                                        size: 9,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 3),
-                            Container(
-                              width: 44,
-                              height: 14,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(2),
-                                border: Border.all(
-                                  color: const Color(0xFF94A3B8),
-                                  width: 0.6,
-                                ),
-                              ),
-                              alignment: Alignment.center,
-                              child: const Text(
-                                'Signatory',
-                                style: TextStyle(
-                                  fontStyle: FontStyle.italic,
-                                  fontSize: 7,
-                                  color: Color(0xFF1E293B),
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(width: 10),
-
-                        // Center Fields: Name, Father's Name, DOB
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'नाम / Name',
-                                style: TextStyle(
-                                  color: Color(0xFF475569),
-                                  fontSize: 7.5,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                holder,
-                                style: const TextStyle(
-                                  color: Color(0xFF0F172A),
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 11.5,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 3),
-                              const Text(
-                                "पिता का नाम / Father's Name",
-                                style: TextStyle(
-                                  color: Color(0xFF475569),
-                                  fontSize: 7.5,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                father,
-                                style: const TextStyle(
-                                  color: Color(0xFF0F172A),
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 10,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 3),
-                              const Text(
-                                'जन्म की तारीख / Date of Birth',
-                                style: TextStyle(
-                                  color: Color(0xFF475569),
-                                  fontSize: 7.5,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                meta.dob.isNotEmpty
-                                    ? meta.dob
-                                    : (widget.document.issueDate != null
-                                          ? DateFormat(
-                                              'dd/MM/yyyy',
-                                            ).format(widget.document.issueDate!)
-                                          : '••/••/••••'),
-                                style: const TextStyle(
-                                  color: Color(0xFF0F172A),
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 10,
-                                ),
-                              ),
-                            ],
+                        const Text(
+                          'नाम / Name',
+                          style: TextStyle(
+                            color: Color(0xFF334155),
+                            fontSize: 7,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-
-                        const Column(
+                        Text(
+                          holder,
+                          style: const TextStyle(
+                            color: Color(0xFF0F172A),
+                            fontWeight: FontWeight.w800,
+                            fontSize: 11,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        const Text(
+                          "पिता का नाम / Father's Name",
+                          style: TextStyle(
+                            color: Color(0xFF334155),
+                            fontSize: 7,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          father,
+                          style: const TextStyle(
+                            color: Color(0xFF0F172A),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 9.5,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
                           children: [
-                            _HologramSealWidget(size: 24),
-                            SizedBox(height: 4),
-                            _QrMatrixWidget(
-                              label: 'ITD QR',
-                              size: 38,
-                              accentColor: Color(0xFF1E3A8A),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'जन्म की तारीख / DOB',
+                                  style: TextStyle(
+                                    color: Color(0xFF334155),
+                                    fontSize: 7,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  meta.dob.isNotEmpty
+                                      ? meta.dob
+                                      : (widget.document.issueDate != null
+                                            ? DateFormat('dd/MM/yyyy').format(
+                                                widget.document.issueDate!,
+                                              )
+                                            : '••/••/••••'),
+                                  style: const TextStyle(
+                                    color: Color(0xFF0F172A),
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 9.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 14),
+                            // Signature script
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'हस्ताक्षर / Signature',
+                                  style: TextStyle(
+                                    color: Color(0xFF334155),
+                                    fontSize: 6.5,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                                const Text(
+                                  'Sign / हस्ताक्षर',
+                                  style: TextStyle(
+                                    fontStyle: FontStyle.italic,
+                                    fontSize: 8.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF1E293B),
+                                    fontFamily: 'serif',
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
                       ],
                     ),
+                  ),
 
-                    // Bottom Permanent Account Number Area with Biometric Reveal
-                    InkWell(
-                      onTap: widget.allowReveal ? _toggleReveal : null,
-                      borderRadius: BorderRadius.circular(6),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withAlpha(200),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: const Color(0xFF0284C7).withAlpha(80),
-                            width: 0.8,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'स्थायी लेखा संख्या / Permanent Account Number',
-                                    style: TextStyle(
-                                      color: Color(0xFF334155),
-                                      fontSize: 7.5,
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 1),
-                                  Text(
-                                    displayNumber,
-                                    style: const TextStyle(
-                                      color: Color(0xFF0F172A),
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: 2.4,
-                                      fontFamily: 'monospace',
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Icon(
-                              _isRevealed
-                                  ? Icons.lock_open_rounded
-                                  : Icons.shield_outlined,
-                              color: _isRevealed
-                                  ? const Color(0xFF16A34A)
-                                  : const Color(0xFF0284C7),
-                              size: 18,
-                            ),
-                          ],
-                        ),
+                  const SizedBox(width: 8),
+
+                  // Photo Portrait Frame on Right
+                  Container(
+                    width: 44,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE2E8F0),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(
+                        color: const Color(0xFF64748B),
+                        width: 1.0,
                       ),
                     ),
-                  ],
-                ),
+                    child: const Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Icon(Icons.person, color: Color(0xFF64748B), size: 30),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
 
         if (widget.onFavoriteToggle != null)
           Positioned(
             top: 2,
             right: 4,
-            child: _buildFavoriteButton(isDarkTheme: true),
+            child: _buildFavoriteButton(isDarkTheme: false),
           ),
       ],
     );
@@ -1002,287 +994,260 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
     final displayNumber = (_isRevealed && _unmaskedNumber != null)
         ? _unmaskedNumber!
         : defaultNumber;
+    final father = meta.father.isNotEmpty
+        ? meta.father.toUpperCase()
+        : 'RECORD ON FILE';
 
     return Stack(
       children: [
-        // Background: Rich emerald green & dual jade gradient
+        // Background: Authentic light pale cyan/teal-grey smart card finish
         Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF064E3B), Color(0xFF042F2E), Color(0xFF022320)],
+              colors: [Color(0xFFF0FDFE), Color(0xFFE0F7FA), Color(0xFFCFEEF5)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
           ),
         ),
 
-        // Gold Trim Line at top
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: Container(
-            height: 3,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xFFFDE047),
-                  Color(0xFFD97706),
-                  Color(0xFFFDE047),
-                ],
-              ),
+        // Diagonal Guilloche Security Pattern
+        Positioned.fill(
+          child: CustomPaint(
+            painter: _SecurityWatermarkPainter(
+              accentColor: const Color(0xFF0284C7).withAlpha(14),
             ),
           ),
         ),
 
         Padding(
-          padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
+          padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Header Row: Transport Emblem + Union of India + Status Pill
+              // Top Header Row: Ashoka Emblem + Header Titles + State Circle Badge
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  const SizedBox(
+                    width: 18,
+                    height: 22,
+                    child: CustomPaint(
+                      painter: _AshokaEmblemPainter(color: Color(0xFF0F172A)),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   Expanded(
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(
-                          Icons.directions_car_filled_rounded,
-                          color: Color(0xFFFDE047),
-                          size: 18,
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'UNION OF INDIA / भारतीय संघ',
-                                style: TextStyle(
-                                  color: Color(0xFFFDE047),
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 9.5,
-                                  letterSpacing: 0.5,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              Text(
-                                'DRIVING LICENCE',
-                                style: TextStyle(
-                                  color: Colors.white.withAlpha(220),
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 8,
-                                  letterSpacing: 0.5,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
+                        const Text(
+                          'Indian Union Driving Licence',
+                          style: TextStyle(
+                            color: Color(0xFF0F172A),
+                            fontWeight: FontWeight.w800,
+                            fontSize: 10.5,
+                            letterSpacing: 0.2,
                           ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          meta.issuer.isNotEmpty
+                              ? meta.issuer
+                              : 'Issued by Government Of Tamil Nadu',
+                          style: const TextStyle(
+                            color: Color(0xFF334155),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 8.5,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
+                  // State Badge Circle (TN)
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 7,
-                      vertical: 2,
+                    width: 22,
+                    height: 22,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFEA580C),
+                      shape: BoxShape.circle,
                     ),
-                    decoration: BoxDecoration(
-                      color:
-                          (widget.document.isExpired
-                                  ? Colors.red
-                                  : const Color(0xFF10B981))
-                              .withAlpha(40),
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(
-                        color: widget.document.isExpired
-                            ? Colors.redAccent
-                            : const Color(0xFF34D399),
-                        width: 0.8,
-                      ),
-                    ),
-                    child: Text(
-                      widget.document.isExpired ? 'EXPIRED' : 'ACTIVE',
+                    alignment: Alignment.center,
+                    child: const Text(
+                      'TN',
                       style: TextStyle(
-                        color: widget.document.isExpired
-                            ? Colors.redAccent
-                            : const Color(0xFF34D399),
+                        color: Colors.white,
                         fontSize: 8.5,
                         fontWeight: FontWeight.w900,
-                        letterSpacing: 0.5,
                       ),
                     ),
                   ),
                 ],
               ),
 
-              // Middle: Smart Chip + Photo + DL Number + Vehicle Badges
+              // DL Number & Validity Dates
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  InkWell(
+                    onTap: widget.allowReveal ? _toggleReveal : null,
+                    borderRadius: BorderRadius.circular(4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          displayNumber,
+                          style: const TextStyle(
+                            color: Color(0xFF0F172A),
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.4,
+                            fontFamily: 'monospace',
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          _isRevealed
+                              ? Icons.lock_open_rounded
+                              : Icons.lock_outline_rounded,
+                          color: _isRevealed
+                              ? const Color(0xFF16A34A)
+                              : const Color(0xFF0284C7),
+                          size: 13,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    widget.document.expiryDate != null
+                        ? 'Validity: ${DateFormat('dd-MM-yyyy').format(widget.document.expiryDate!)}'
+                        : 'Validity: 04-11-2029',
+                    style: const TextStyle(
+                      color: Color(0xFF475569),
+                      fontSize: 7.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+
+              // Middle Row: Smart Chip + Details + Photo Portrait Frame
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Column(
-                    children: [
-                      const _EmvChipWidget(width: 36, height: 26),
-                      const SizedBox(height: 4),
-                      Container(
-                        width: 36,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: Colors.white12,
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(
-                            color: const Color(0xFFFDE047).withAlpha(100),
-                            width: 0.8,
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.person,
-                          color: Colors.white70,
-                          size: 24,
-                        ),
-                      ),
-                    ],
-                  ),
+                  // Golden Smart Card Chip
+                  const _EmvChipWidget(width: 36, height: 26),
 
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
 
-                  // Licence Number with Biometric Reveal
+                  // Holder Bio Details
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'LICENCE NUMBER',
-                          style: TextStyle(
-                            color: Colors.white54,
-                            fontSize: 8,
-                            letterSpacing: 0.8,
-                          ),
-                        ),
-                        InkWell(
-                          onTap: widget.allowReveal ? _toggleReveal : null,
-                          borderRadius: BorderRadius.circular(4),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  displayNumber,
-                                  style: const TextStyle(
-                                    color: Color(0xFFFDE047),
-                                    fontSize: 14.5,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 1.6,
-                                    fontFamily: 'monospace',
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Icon(
-                                _isRevealed
-                                    ? Icons.lock_open_rounded
-                                    : Icons.lock_outline_rounded,
-                                color: _isRevealed
-                                    ? Colors.greenAccent
-                                    : const Color(0xFFFDE047).withAlpha(180),
-                                size: 14,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'HOLDER NAME',
-                          style: TextStyle(
-                            color: Colors.white54,
-                            fontSize: 8,
-                            letterSpacing: 0.8,
-                          ),
-                        ),
                         Text(
                           holder,
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: Color(0xFF0F172A),
                             fontWeight: FontWeight.w800,
-                            fontSize: 12,
+                            fontSize: 11,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 5),
-                        Row(
-                          children: [
-                            _buildVehicleClassBadge('LMV'),
-                            const SizedBox(width: 4),
-                            _buildVehicleClassBadge('MCWG'),
-                            if (meta.vehicleClasses.isNotEmpty &&
-                                !meta.vehicleClasses.contains('LMV')) ...[
-                              const SizedBox(width: 4),
-                              _buildVehicleClassBadge(
-                                meta.vehicleClasses.first,
-                              ),
-                            ],
-                          ],
+                        const SizedBox(height: 1),
+                        Text(
+                          'DOB: ${meta.dob.isNotEmpty ? meta.dob : "07-04-1970"}   Blood: O+',
+                          style: const TextStyle(
+                            color: Color(0xFF334155),
+                            fontSize: 7.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 1),
+                        Text(
+                          'S/D/W: $father',
+                          style: const TextStyle(
+                            color: Color(0xFF475569),
+                            fontSize: 7.5,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
                   ),
 
                   const SizedBox(width: 6),
-                  const _HologramSealWidget(size: 32),
+
+                  // Photo Portrait Frame with Yellow Security Tint on Right
+                  Container(
+                    width: 42,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF9C3),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(
+                        color: const Color(0xFFCA8A04),
+                        width: 0.8,
+                      ),
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const Icon(
+                          Icons.person,
+                          color: Color(0xFF854D0E),
+                          size: 30,
+                        ),
+                        Positioned(
+                          bottom: 1,
+                          child: Text(
+                            'LICENCE',
+                            style: TextStyle(
+                              fontSize: 5.5,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF854D0E).withAlpha(180),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
 
-              // Bottom Validity Dates Row
+              // Bottom Vehicle Class Badges Row
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'ISSUED ON',
-                        style: TextStyle(color: Colors.white54, fontSize: 7.5),
-                      ),
-                      Text(
-                        widget.document.issueDate != null
-                            ? DateFormat(
-                                'dd MMM yyyy',
-                              ).format(widget.document.issueDate!)
-                            : '•• ••• ••••',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
+                  Flexible(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildVehicleClassBadge('MCWG'),
+                        const SizedBox(width: 3),
+                        _buildVehicleClassBadge('LMV-TR'),
+                        const SizedBox(width: 3),
+                        _buildVehicleClassBadge('TRANS'),
+                      ],
+                    ),
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      const Text(
-                        'VALID TILL (NT)',
-                        style: TextStyle(color: Colors.white54, fontSize: 7.5),
-                      ),
-                      Text(
-                        widget.document.expiryDate != null
-                            ? DateFormat(
-                                'dd MMM yyyy',
-                              ).format(widget.document.expiryDate!)
-                            : 'NON-TRANSPORT',
-                        style: const TextStyle(
-                          color: Color(0xFFFDE047),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
+                  const SizedBox(width: 4),
+                  const Text(
+                    'Licensing Authority',
+                    style: TextStyle(
+                      color: Color(0xFF64748B),
+                      fontSize: 7.5,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -1292,9 +1257,9 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
 
         if (widget.onFavoriteToggle != null)
           Positioned(
-            top: 6,
-            right: 6,
-            child: _buildFavoriteButton(isDarkTheme: true),
+            top: 2,
+            right: 4,
+            child: _buildFavoriteButton(isDarkTheme: false),
           ),
       ],
     );
@@ -1811,27 +1776,39 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
   }
 
   // ==========================================
-  // 6. AUTHENTIC INSURANCE POLICY CARD
+  // 6. AUTHENTIC HEALTH INSURANCE CARD
   // ==========================================
   Widget _buildInsuranceCard(BuildContext context) {
     final meta = _parseCardMetadata();
     final holder = meta.holder.isNotEmpty
         ? meta.holder
-        : widget.document.documentName;
-    final defaultNumber = meta.number.isNotEmpty ? meta.number : 'POL-••••1122';
+        : (widget.document.holderName?.isNotEmpty == true
+              ? widget.document.holderName!
+              : widget.document.documentName);
+    final defaultNumber = meta.number.isNotEmpty
+        ? meta.number
+        : (widget.document.maskedIdentifier?.isNotEmpty == true
+              ? widget.document.maskedIdentifier!
+              : '1234567891234');
     final displayNumber = (_isRevealed && _unmaskedNumber != null)
         ? _unmaskedNumber!
         : defaultNumber;
     final provider = meta.issuer.isNotEmpty
-        ? meta.issuer
-        : (meta.provider.isNotEmpty ? meta.provider : 'INSURANCE POLICY');
+        ? meta.issuer.toUpperCase()
+        : (meta.provider.isNotEmpty
+              ? meta.provider.toUpperCase()
+              : 'GROUP HEALTH SHIELD');
+    final expiryStr = widget.document.expiryDate != null
+        ? DateFormat('dd/MM/yyyy').format(widget.document.expiryDate!)
+        : '31/12/2028';
 
     return Stack(
       children: [
+        // Background: Distinctive Coral Pink / Salmon card matching Image 4
         Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF0F766E), Color(0xFF115E59), Color(0xFF042F2E)],
+              colors: [Color(0xFFFA7070), Color(0xFFF87171), Color(0xFFFB7185)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -1839,150 +1816,161 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
         ),
 
         Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              // Top Header Row: Bold "HEALTH INSURANCE" + Heart with Medical Cross
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
-                        Icons.health_and_safety_rounded,
-                        color: Color(0xFF2DD4BF),
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
                       Text(
-                        provider.toUpperCase(),
-                        style: const TextStyle(
+                        'HEALTH',
+                        style: TextStyle(
                           color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 11.5,
-                          letterSpacing: 0.5,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 15,
+                          letterSpacing: 1.2,
+                          height: 1.05,
                         ),
-                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        'INSURANCE',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 15,
+                          letterSpacing: 1.2,
+                          height: 1.05,
+                        ),
                       ),
                     ],
                   ),
+
+                  // Pink Heart with Medical Cross Badge
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
+                    width: 36,
+                    height: 36,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2DD4BF).withAlpha(30),
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(
-                        color: const Color(0xFF2DD4BF).withAlpha(80),
-                        width: 0.6,
-                      ),
+                      color: Colors.white.withAlpha(225),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(20),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
-                    child: const Text(
-                      'CASHLESS VERIFIED',
-                      style: TextStyle(
-                        color: Color(0xFF2DD4BF),
-                        fontSize: 8,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    child: const Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Icon(
+                          Icons.favorite_rounded,
+                          size: 26,
+                          color: Color(0xFFFDA4AF),
+                        ),
+                        Icon(Icons.add_rounded, size: 15, color: Colors.white),
+                      ],
                     ),
                   ),
                 ],
               ),
 
+              const SizedBox(height: 2),
+
+              // Middle: 4 Distinct White Card Info Pill Containers
               Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'POLICY NUMBER',
-                    style: TextStyle(
-                      color: Colors.white60,
-                      fontSize: 8,
-                      letterSpacing: 0.8,
+                  _buildInsuranceFieldPill(
+                    label: 'CARD NUMBER',
+                    child: InkWell(
+                      onTap: widget.allowReveal ? _toggleReveal : null,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              displayNumber,
+                              style: const TextStyle(
+                                color: Color(0xFF0F172A),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 9.5,
+                                letterSpacing: 1.2,
+                                fontFamily: 'monospace',
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Icon(
+                            _isRevealed
+                                ? Icons.lock_open_rounded
+                                : Icons.shield_outlined,
+                            size: 12,
+                            color: _isRevealed
+                                ? const Color(0xFF16A34A)
+                                : const Color(0xFF0284C7),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  InkWell(
-                    onTap: widget.allowReveal ? _toggleReveal : null,
-                    borderRadius: BorderRadius.circular(4),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Flexible(
+                  const SizedBox(height: 3),
+                  _buildInsuranceFieldPill(
+                    label: 'NAME',
+                    child: Text(
+                      holder,
+                      style: const TextStyle(
+                        color: Color(0xFF0F172A),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 9.5,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  _buildInsuranceFieldPill(
+                    label: 'GROUP',
+                    child: Text(
+                      provider,
+                      style: const TextStyle(
+                        color: Color(0xFF0F172A),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 9,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildInsuranceFieldPill(
+                          label: 'EXPIRY DATE',
                           child: Text(
-                            displayNumber,
+                            expiryStr,
                             style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.8,
-                              fontFamily: 'monospace',
+                              color: Color(0xFF0F172A),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 9.5,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(width: 6),
-                        Icon(
-                          _isRevealed
-                              ? Icons.lock_open_rounded
-                              : Icons.lock_outline_rounded,
-                          color: _isRevealed
-                              ? Colors.greenAccent
-                              : Colors.white60,
-                          size: 14,
-                        ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Barcode with Number matching Image 4
+                      const _BarcodeWidget(
+                        code: '1234567891234',
+                        width: 90,
+                        height: 26,
+                      ),
+                    ],
                   ),
-                ],
-              ),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'INSURED PERSON',
-                          style: TextStyle(color: Colors.white60, fontSize: 8),
-                        ),
-                        Text(
-                          holder,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12.5,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (widget.document.expiryDate != null)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        const Text(
-                          'VALID THRU',
-                          style: TextStyle(color: Colors.white60, fontSize: 8),
-                        ),
-                        Text(
-                          DateFormat(
-                            'dd MMM yyyy',
-                          ).format(widget.document.expiryDate!),
-                          style: TextStyle(
-                            color: widget.document.isExpired
-                                ? Colors.redAccent
-                                : const Color(0xFF2DD4BF),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
                 ],
               ),
             ],
@@ -1991,10 +1979,52 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
 
         if (widget.onFavoriteToggle != null)
           Positioned(
-            top: 6,
-            right: 6,
-            child: _buildFavoriteButton(isDarkTheme: true),
+            top: 2,
+            right: 4,
+            child: _buildFavoriteButton(isDarkTheme: false),
           ),
+      ],
+    );
+  }
+
+  static Widget _buildInsuranceFieldPill({
+    required String label,
+    required Widget child,
+  }) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 82,
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 7.5,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Container(
+            height: 20,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(3),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(15),
+                  blurRadius: 2,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+            ),
+            alignment: Alignment.centerLeft,
+            child: child,
+          ),
+        ),
       ],
     );
   }
@@ -2902,4 +2932,85 @@ class _SecurityWatermarkPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _SecurityWatermarkPainter oldDelegate) =>
       oldDelegate.accentColor != accentColor;
+}
+
+/// Authentic Barcode Graphic Widget for Insurance and Transit Cards
+class _BarcodeWidget extends StatelessWidget {
+  final String code;
+  final double width;
+  final double height;
+
+  const _BarcodeWidget({required this.code, this.width = 90, this.height = 28});
+
+  @override
+  Widget build(BuildContext context) {
+    const color = Color(0xFF1E293B);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          code,
+          style: const TextStyle(
+            fontSize: 7.0,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.8,
+            color: color,
+            fontFamily: 'monospace',
+          ),
+        ),
+        const SizedBox(height: 1),
+        CustomPaint(
+          size: Size(width, height - 10),
+          painter: const _BarcodePainter(color: color),
+        ),
+      ],
+    );
+  }
+}
+
+class _BarcodePainter extends CustomPainter {
+  final Color color;
+  const _BarcodePainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    const barWidths = [
+      2,
+      1,
+      3,
+      1,
+      2,
+      1,
+      1,
+      3,
+      2,
+      1,
+      2,
+      3,
+      1,
+      2,
+      1,
+      3,
+      2,
+      1,
+      1,
+      2,
+    ];
+    double x = 0;
+    for (int i = 0; i < barWidths.length && x < size.width; i++) {
+      final w = barWidths[i] * 1.4;
+      if (i % 2 == 0) {
+        canvas.drawRect(Rect.fromLTWH(x, 0, w, size.height), paint);
+      }
+      x += w + 1.2;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

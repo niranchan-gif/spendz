@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../app/theme/spendz_colors.dart';
+import '../presentation/widgets/spendz_bottom_navigation.dart';
 import '../providers/transaction_provider.dart';
 import '../providers/wallet_provider.dart';
-import '../app/theme/app_colors.dart';
-import '../widgets/glass/glass.dart';
 
 import 'home/home_screen.dart';
 import 'transactions/transactions_screen.dart';
@@ -12,6 +12,9 @@ import 'wallet/wallet_dashboard_screen.dart';
 import 'analytics/analytics_screen.dart';
 import 'profile/profile_screen.dart';
 
+/// Spendz 2.0 Main Navigation Screen.
+/// Seamlessly anchors the five core fintech experiences:
+/// Home, Activity, Wallet, Insights, Profile with a custom floating dock.
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
 
@@ -44,34 +47,34 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.getBackground(context),
-      extendBody: true,
+      backgroundColor: SpendzColors.background(context),
+      extendBody: false,
       body: IndexedStack(index: _currentIndex, children: _screens),
-      bottomNavigationBar: GlassNavigationBar(
+      bottomNavigationBar: SpendzBottomNavigation(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
-        items: const [
-          GlassNavigationItem(
+        destinations: const [
+          SpendzNavigationDestination(
             icon: Icons.home_outlined,
             activeIcon: Icons.home_rounded,
             label: 'Home',
           ),
-          GlassNavigationItem(
+          SpendzNavigationDestination(
             icon: Icons.receipt_long_outlined,
             activeIcon: Icons.receipt_long_rounded,
             label: 'Activity',
           ),
-          GlassNavigationItem(
+          SpendzNavigationDestination(
             icon: Icons.account_balance_wallet_outlined,
             activeIcon: Icons.account_balance_wallet_rounded,
             label: 'Wallet',
           ),
-          GlassNavigationItem(
+          SpendzNavigationDestination(
             icon: Icons.insights_outlined,
             activeIcon: Icons.insights_rounded,
             label: 'Insights',
           ),
-          GlassNavigationItem(
+          SpendzNavigationDestination(
             icon: Icons.person_outline_rounded,
             activeIcon: Icons.person_rounded,
             label: 'Profile',

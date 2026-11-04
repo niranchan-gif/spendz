@@ -251,109 +251,6 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
     }
   }
 
-  Future<void> _saveToPhone() async {
-    setState(() => _isExporting = true);
-    try {
-      Uint8List bytes;
-      if (_currentDocument.hasAttachment) {
-        if (_decryptedImageBytes == null && _stagedPdfFile == null) {
-          await _authenticateAndDecrypt();
-          if (!mounted) {
-            setState(() => _isExporting = false);
-            return;
-          }
-        }
-
-        if (_stagedPdfFile != null) {
-          bytes = await _stagedPdfFile!.readAsBytes();
-        } else if (_decryptedImageBytes != null) {
-          bytes = DocumentScannerService().generatePdfFromPages([
-            _decryptedImageBytes!,
-          ], title: _currentDocument.documentName);
-        } else {
-          final pdfFile = await _exportService.generateDocumentPdf(
-            document: _currentDocument,
-            decryptedBytes: Uint8List(0),
-            secureDocNumber: _secureDocumentNumber,
-          );
-          bytes = await pdfFile.readAsBytes();
-        }
-      } else {
-        final pdfFile = await _exportService.generateDocumentPdf(
-          document: _currentDocument,
-          decryptedBytes: Uint8List(0),
-          secureDocNumber: _secureDocumentNumber,
-        );
-        bytes = await pdfFile.readAsBytes();
-      }
-
-      final defaultName = DocumentScannerService.getDefaultPdfFileName(
-        _currentDocument.category,
-      );
-      final savedPath = await DocumentScannerService().savePdfToPhoneStorage(
-        pdfBytes: bytes,
-        fileName: defaultName,
-      );
-
-      if (mounted) {
-        setState(() => _isExporting = false);
-        if (savedPath != null) {
-          showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Row(
-                children: [
-                  Icon(Icons.check_circle_rounded, color: AppColors.success),
-                  SizedBox(width: 8),
-                  Text('Saved to Device'),
-                ],
-              ),
-              content: Text(
-                'Document successfully saved to phone storage:\n\n$savedPath\n\nYou can access it using your phone\'s Files or Downloads app.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Close'),
-                ),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                  ),
-                  icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                  label: const Text(
-                    'Open File',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    OpenFilex.open(savedPath);
-                  },
-                ),
-              ],
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Save was cancelled or file unchanged.'),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isExporting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Save error: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
-  }
-
   Future<void> _shareDocument() async {
     // Warn user before sharing sensitive document copy
     final proceed = await CustomDialog.showConfirmation(
@@ -733,15 +630,6 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
                   Expanded(
                     child: _buildActionButton(
                       context,
-                      icon: Icons.download_rounded,
-                      label: 'Save to Phone',
-                      onTap: !_isExporting ? _saveToPhone : null,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: _buildActionButton(
-                      context,
                       icon: Icons.share_rounded,
                       label: 'Share',
                       onTap: !_isExporting ? _shareDocument : null,
@@ -911,8 +799,10 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
                         ),
                       ),
                       const SizedBox(height: AppSpacing.md),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      Wrap(
+                        spacing: AppSpacing.sm,
+                        runSpacing: AppSpacing.sm,
+                        alignment: WrapAlignment.center,
                         children: [
                           ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
@@ -926,7 +816,6 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
                             ),
                             label: const Text('Scan Document'),
                           ),
-                          const SizedBox(width: AppSpacing.sm),
                           OutlinedButton.icon(
                             onPressed: () async {
                               final payload = await DocumentScannerService()
@@ -1085,13 +974,18 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Document Information',
-              style: AppTextStyles.headingSmall.copyWith(
-                color: textPrimary,
-                fontWeight: FontWeight.bold,
+            Expanded(
+              child: Text(
+                'Document Information',
+                style: AppTextStyles.headingSmall.copyWith(
+                  color: textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
+            const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(

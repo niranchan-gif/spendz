@@ -463,41 +463,48 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
             const SizedBox(height: AppSpacing.sm),
 
             // Quick Theme & Layout Customization Chips
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ActionChip(
-                  avatar: const Icon(Icons.palette_outlined, size: 16),
-                  label: Text(
-                    CardStudioTheme.getTheme(_currentCard.themeGradient).name,
+            Center(
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                alignment: WrapAlignment.center,
+                children: [
+                  ActionChip(
+                    avatar: const Icon(Icons.palette_outlined, size: 16),
+                    label: Text(
+                      CardStudioTheme.getTheme(_currentCard.themeGradient).name,
+                    ),
+                    onPressed: () async {
+                      await CardThemeSheet.show(context, _currentCard);
+                      if (!context.mounted) return;
+                      final updated = context
+                          .read<WalletCardProvider>()
+                          .getCardById(_currentCard.id);
+                      if (updated != null && mounted) {
+                        setState(() => _currentCard = updated);
+                      }
+                    },
                   ),
-                  onPressed: () async {
-                    await CardThemeSheet.show(context, _currentCard);
-                    if (!context.mounted) return;
-                    final updated = context
-                        .read<WalletCardProvider>()
-                        .getCardById(_currentCard.id);
-                    if (updated != null && mounted)
-                      setState(() => _currentCard = updated);
-                  },
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                ActionChip(
-                  avatar: const Icon(Icons.view_quilt_outlined, size: 16),
-                  label: Text(
-                    CardStudioLayout.getLayout(_currentCard.cardLayoutId).name,
+                  ActionChip(
+                    avatar: const Icon(Icons.view_quilt_outlined, size: 16),
+                    label: Text(
+                      CardStudioLayout.getLayout(
+                        _currentCard.cardLayoutId,
+                      ).name,
+                    ),
+                    onPressed: () async {
+                      await CardLayoutSheet.show(context, _currentCard);
+                      if (!context.mounted) return;
+                      final updated = context
+                          .read<WalletCardProvider>()
+                          .getCardById(_currentCard.id);
+                      if (updated != null && mounted) {
+                        setState(() => _currentCard = updated);
+                      }
+                    },
                   ),
-                  onPressed: () async {
-                    await CardLayoutSheet.show(context, _currentCard);
-                    if (!context.mounted) return;
-                    final updated = context
-                        .read<WalletCardProvider>()
-                        .getCardById(_currentCard.id);
-                    if (updated != null && mounted)
-                      setState(() => _currentCard = updated);
-                  },
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: AppSpacing.md),
 

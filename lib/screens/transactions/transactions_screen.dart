@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-import '../../providers/transaction_provider.dart';
+import '../../app/theme/spendz_colors.dart';
+import '../../app/theme/spendz_spacing.dart';
+import '../../app/theme/spendz_typography.dart';
+import '../../models/transaction_model.dart';
+import '../../presentation/widgets/spendz_amount_text.dart';
+import '../../presentation/widgets/spendz_app_bar.dart';
+import '../../presentation/widgets/spendz_empty_state.dart';
+import '../../presentation/widgets/spendz_surface.dart';
+import '../../presentation/widgets/spendz_text_field.dart';
 import '../../providers/category_provider.dart';
-import '../../widgets/transaction_tile.dart';
-import '../../widgets/design_system/empty_state.dart';
-import '../../widgets/glass/glass.dart';
-import '../../app/theme/app_text_styles.dart';
-import '../../app/theme/app_colors.dart';
-import '../../app/theme/app_spacing.dart';
-import '../../app/theme/app_radius.dart';
-import '../../utils/date_formatter.dart';
+import '../../providers/transaction_provider.dart';
 import '../../utils/icon_mapper.dart';
-import '../../utils/currency_formatter.dart';
 import 'add_transaction_screen.dart';
 
+/// Spendz 2.0 Activity & Transactions Feed Screen.
+/// Clean editorial timeline with search, category filters, and date-grouping.
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key});
 
@@ -23,10 +26,18 @@ class TransactionsScreen extends StatefulWidget {
 }
 
 class _TransactionsScreenState extends State<TransactionsScreen> {
+  final TextEditingController _searchController = TextEditingController();
   DateTime? _startDate;
   DateTime? _endDate;
   String _searchQuery = '';
+  String _selectedType = 'all'; // 'all', 'expense', 'income'
   String _selectedCategoryId = 'all';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   Future<void> _selectDateRange() async {
     final picked = await showDateRangePicker(
@@ -37,11 +48,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           ? DateTimeRange(start: _startDate!, end: _endDate!)
           : null,
       builder: (context, child) {
+        final isDark = SpendzColors.isDark(context);
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.fromSeed(
-              seedColor: AppColors.getPrimary(context),
-              brightness: Theme.of(context).brightness,
+              seedColor: SpendzColors.emerald,
+              brightness: isDark ? Brightness.dark : Brightness.light,
             ),
           ),
           child: child!,
@@ -68,482 +80,246 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final emerald = AppColors.getEmeraldAccent(context);
-    final isDark = AppColors.isDark(context);
-
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Activity',
-              style: AppTextStyles.getHeading2(
-                context,
-              ).copyWith(fontWeight: FontWeight.bold),
-            ),
-            Text(
-              'Transactions & Financial Feed',
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.getTextSecondary(context),
-                fontSize: 11,
-              ),
-            ),
-          ],
-        ),
+      backgroundColor: SpendzColors.background(context),
+      appBar: SpendzAppBar(
+        title: 'Activity',
+        subtitle: 'Transactions & cashflow timeline',
         actions: [
-          IconButton(
-            icon: Icon(Icons.add_circle, color: emerald, size: 26),
-            tooltip: 'Add Expense',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
-              );
-            },
-          ),
-          if (_startDate != null || _endDate != null)
-            IconButton(
-              icon: const Icon(Icons.clear_rounded),
-              tooltip: 'Clear date filter',
-              onPressed: _clearDateRange,
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: SpendzColors.surface(context),
+              border: Border.all(color: SpendzColors.border(context), width: 1),
             ),
-          IconButton(
-            icon: const Icon(Icons.calendar_today_rounded),
-            tooltip: 'Filter by date',
-            onPressed: _selectDateRange,
-          ),
-          IconButton(
-            icon: const Icon(Icons.cloud_download_outlined),
-            tooltip: 'Import from Gmail',
-            onPressed: () {
-              Navigator.pushNamed(context, '/import-review');
-            },
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              icon: Icon(
+                Icons.add_rounded,
+                size: 20,
+                color: SpendzColors.primaryAccent(context),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AddTransactionScreen(),
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
       body: Consumer2<TransactionProvider, CategoryProvider>(
-        builder: (context, txProvider, catProvider, child) {
-          var transactions = txProvider.transactions;
+        builder: (context, txProvider, catProvider, _) {
+          final allTransactions = txProvider.transactions;
 
-          // 1. Search Query Filter
-          if (_searchQuery.trim().isNotEmpty) {
-            final query = _searchQuery.toLowerCase().trim();
-            transactions = transactions.where((tx) {
-              final merchantMatch = (tx.merchant ?? '').toLowerCase().contains(
-                query,
-              );
-              final descMatch = (tx.description ?? '').toLowerCase().contains(
-                query,
-              );
-              final amountMatch = tx.amount.toString().contains(query);
-              final refMatch = (tx.referenceId ?? '').toLowerCase().contains(
-                query,
-              );
-              final methodMatch = (tx.paymentMethod ?? '')
-                  .toLowerCase()
-                  .contains(query);
-              return merchantMatch ||
-                  descMatch ||
-                  amountMatch ||
-                  refMatch ||
-                  methodMatch;
-            }).toList();
+          // Apply filters
+          final filtered = allTransactions.where((t) {
+            // Type filter
+            if (_selectedType != 'all' && t.type != _selectedType) {
+              return false;
+            }
+
+            // Category filter
+            if (_selectedCategoryId != 'all' &&
+                t.categoryId != _selectedCategoryId) {
+              return false;
+            }
+
+            // Date range filter
+            if (_startDate != null && t.date.isBefore(_startDate!)) {
+              return false;
+            }
+            if (_endDate != null && t.date.isAfter(_endDate!)) {
+              return false;
+            }
+
+            // Search filter
+            if (_searchQuery.isNotEmpty) {
+              final q = _searchQuery.toLowerCase();
+              final matchesMerchant =
+                  t.merchant?.toLowerCase().contains(q) ?? false;
+              final matchesDesc =
+                  t.description?.toLowerCase().contains(q) ?? false;
+              final cat = catProvider.getCategoryById(t.categoryId ?? '');
+              final matchesCat = cat?.name.toLowerCase().contains(q) ?? false;
+              if (!matchesMerchant && !matchesDesc && !matchesCat) {
+                return false;
+              }
+            }
+
+            return true;
+          }).toList();
+
+          // Group by Date
+          final Map<String, List<TransactionModel>> grouped = {};
+          for (final t in filtered) {
+            final key = _formatDateGroupKey(t.date);
+            grouped.putIfAbsent(key, () => []).add(t);
           }
-
-          // 2. Category Filter
-          if (_selectedCategoryId != 'all') {
-            transactions = transactions
-                .where((tx) => tx.categoryId == _selectedCategoryId)
-                .toList();
-          }
-
-          // 3. Date Range Filter
-          if (_startDate != null && _endDate != null) {
-            transactions = transactions.where((tx) {
-              return tx.date.isAfter(
-                    _startDate!.subtract(const Duration(seconds: 1)),
-                  ) &&
-                  tx.date.isBefore(_endDate!.add(const Duration(seconds: 1)));
-            }).toList();
-          }
-
-          if (txProvider.isLoading) {
-            return Center(child: CircularProgressIndicator(color: emerald));
-          }
-
-          final totalFilteredSpent = transactions
-              .where((t) => t.type == 'expense')
-              .fold(0.0, (sum, t) => sum + t.amount);
 
           return Column(
             children: [
-              // Search & Metric Header
+              // Search & Filter Bar
               Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.xs,
-                  AppSpacing.lg,
-                  AppSpacing.sm,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: SpendzSpacing.lg,
+                  vertical: SpendzSpacing.sm,
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hintText: 'Search merchant, note, amount...',
-                          prefixIcon: Icon(
-                            Icons.search_rounded,
-                            size: 20,
-                            color: emerald,
-                          ),
-                          suffixIcon: _searchQuery.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(
-                                    Icons.close_rounded,
-                                    size: 18,
-                                  ),
-                                  onPressed: () =>
-                                      setState(() => _searchQuery = ''),
-                                )
-                              : null,
-                          filled: true,
-                          fillColor: isDark
-                              ? const Color(0xFF14231B).withAlpha(190)
-                              : Colors.white.withAlpha(220),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.md,
-                            vertical: 12,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppRadius.lg),
-                            borderSide: BorderSide(
-                              color: isDark
-                                  ? Colors.white.withAlpha(20)
-                                  : AppColors.getBorder(context),
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppRadius.lg),
-                            borderSide: BorderSide(
-                              color: isDark
-                                  ? Colors.white.withAlpha(20)
-                                  : AppColors.getBorder(context),
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppRadius.lg),
-                            borderSide: BorderSide(color: emerald, width: 1.6),
-                          ),
-                        ),
-                        onChanged: (val) => setState(() => _searchQuery = val),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Category Filter Bar
-              SizedBox(
-                height: 44,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.lg,
+                child: SpendzTextField(
+                  controller: _searchController,
+                  hintText: 'Search merchant, category, or note...',
+                  prefixIcon: Icon(
+                    Icons.search_rounded,
+                    size: 20,
+                    color: SpendzColors.textSecondary(context),
                   ),
-                  itemCount: catProvider.categories.length + 1,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(width: AppSpacing.sm),
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      final isSelected = _selectedCategoryId == 'all';
-                      return ChoiceChip(
-                        showCheckmark: false,
-                        label: Text('All (${txProvider.transactions.length})'),
-                        selected: isSelected,
-                        backgroundColor: isDark
-                            ? const Color(0xFF14231B)
-                            : Colors.white,
-                        selectedColor: emerald.withAlpha(40),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.full),
-                          side: BorderSide(
-                            color: isSelected
-                                ? emerald
-                                : AppColors.getBorder(context),
-                          ),
-                        ),
-                        labelStyle: TextStyle(
-                          fontSize: 12,
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                          color: isSelected
-                              ? emerald
-                              : AppColors.getTextSecondary(context),
-                        ),
-                        onSelected: (_) =>
-                            setState(() => _selectedCategoryId = 'all'),
-                      );
-                    }
-
-                    final cat = catProvider.categories[index - 1];
-                    final isSelected = _selectedCategoryId == cat.id;
-
-                    return ChoiceChip(
-                      showCheckmark: false,
-                      avatar: Icon(
-                        IconMapper.getIcon(cat.icon),
-                        size: 14,
-                        color: isSelected
-                            ? emerald
-                            : Color(
-                                int.tryParse(cat.color) ?? emerald.toARGB32(),
-                              ),
-                      ),
-                      label: Text(cat.name),
-                      selected: isSelected,
-                      backgroundColor: isDark
-                          ? const Color(0xFF14231B)
-                          : Colors.white,
-                      selectedColor: emerald.withAlpha(40),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.full),
-                        side: BorderSide(
-                          color: isSelected
-                              ? emerald
-                              : AppColors.getBorder(context),
-                        ),
-                      ),
-                      labelStyle: TextStyle(
-                        fontSize: 12,
-                        fontWeight: isSelected
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        color: isSelected
-                            ? emerald
-                            : AppColors.getTextSecondary(context),
-                      ),
-                      onSelected: (_) =>
-                          setState(() => _selectedCategoryId = cat.id),
-                    );
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear_rounded, size: 18),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() => _searchQuery = '');
+                          },
+                        )
+                      : null,
+                  onChanged: (val) {
+                    setState(() => _searchQuery = val.trim());
                   },
                 ),
               ),
 
-              // Active Date Range / Total Filtered Spent Strip
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.lg,
-                  vertical: AppSpacing.xs,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${transactions.length} Transactions',
-                      style: TextStyle(
-                        color: AppColors.getTextSecondary(context),
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      'Total: ${CurrencyFormatter.format(totalFilteredSpent)}',
-                      style: TextStyle(
-                        color: AppColors.getTextPrimary(context),
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              // Filter Chips Carousel
+              _buildFilterChips(catProvider),
+              const SizedBox(height: SpendzSpacing.xs),
 
-              const SizedBox(height: AppSpacing.xs),
-
-              // Transaction List
+              // Transaction Feed
               Expanded(
-                child: transactions.isEmpty
-                    ? Center(
-                        child: EmptyState(
-                          icon: Icons.receipt_long_outlined,
-                          title: 'No Transactions Found',
-                          subtitle:
-                              _searchQuery.isNotEmpty ||
-                                  _selectedCategoryId != 'all' ||
-                                  _startDate != null
-                              ? 'Try adjusting your search keywords, category or date range.'
-                              : 'Tap "+ Add Expense" below to record your first transaction.',
-                          actionLabel:
-                              _searchQuery.isEmpty &&
-                                  _selectedCategoryId == 'all' &&
-                                  _startDate == null
-                              ? 'Add Expense'
-                              : 'Reset Filters',
-                          onActionPressed: () {
-                            if (_searchQuery.isNotEmpty ||
+                child: filtered.isEmpty
+                    ? SpendzEmptyState(
+                        icon: Icons.receipt_long_outlined,
+                        title: 'No Matching Transactions',
+                        message:
+                            _searchQuery.isNotEmpty ||
                                 _selectedCategoryId != 'all' ||
-                                _startDate != null) {
-                              setState(() {
-                                _searchQuery = '';
-                                _selectedCategoryId = 'all';
-                                _startDate = null;
-                                _endDate = null;
-                              });
-                            } else {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const AddTransactionScreen(),
-                                ),
-                              );
-                            }
-                          },
-                        ),
-                      )
-                    : Builder(
-                        builder: (context) {
-                          // Group transactions by formatted date string
-                          final Map<String, List<dynamic>> dateGroupMap = {};
-                          for (final tx in transactions) {
-                            final key = DateFormatter.formatFullDate(tx.date);
-                            dateGroupMap.putIfAbsent(key, () => []).add(tx);
+                                _selectedType != 'all' ||
+                                _startDate != null
+                            ? 'Try clearing active filters to see all transactions.'
+                            : 'Tap "+" to record your first transaction.',
+                        actionLabel:
+                            _searchQuery.isNotEmpty ||
+                                _selectedCategoryId != 'all' ||
+                                _selectedType != 'all' ||
+                                _startDate != null
+                            ? 'Reset Filters'
+                            : 'Add Transaction',
+                        onAction: () {
+                          if (_searchQuery.isNotEmpty ||
+                              _selectedCategoryId != 'all' ||
+                              _selectedType != 'all' ||
+                              _startDate != null) {
+                            setState(() {
+                              _searchController.clear();
+                              _searchQuery = '';
+                              _selectedType = 'all';
+                              _selectedCategoryId = 'all';
+                              _startDate = null;
+                              _endDate = null;
+                            });
+                          } else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const AddTransactionScreen(),
+                              ),
+                            );
                           }
-                          final groupEntries = dateGroupMap.entries.toList();
+                        },
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: SpendzSpacing.lg,
+                          vertical: SpendzSpacing.sm,
+                        ),
+                        itemCount: grouped.length,
+                        itemBuilder: (context, groupIndex) {
+                          final dateKey = grouped.keys.elementAt(groupIndex);
+                          final items = grouped[dateKey]!;
 
-                          return ListView.builder(
-                            padding: const EdgeInsets.only(
-                              top: AppSpacing.xs,
-                              bottom: 90,
-                              left: AppSpacing.lg,
-                              right: AppSpacing.lg,
-                            ),
-                            physics: const BouncingScrollPhysics(),
-                            itemCount: groupEntries.length,
-                            itemBuilder: (context, groupIndex) {
-                              final entry = groupEntries[groupIndex];
-                              final dateKey = entry.key;
-                              final groupTxs = entry.value;
+                          // Calculate daily net
+                          double dayNet = 0;
+                          for (final i in items) {
+                            if (i.type == 'income') {
+                              dayNet += i.amount;
+                            } else {
+                              dayNet -= i.amount;
+                            }
+                          }
 
-                              final daySpent = groupTxs
-                                  .where((t) => t.type == 'expense')
-                                  .fold(
-                                    0.0,
-                                    (sum, t) => sum + (t.amount as double),
-                                  );
-                              final dayIncome = groupTxs
-                                  .where((t) => t.type == 'income')
-                                  .fold(
-                                    0.0,
-                                    (sum, t) => sum + (t.amount as double),
-                                  );
-
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                      4,
-                                      AppSpacing.md,
-                                      4,
-                                      AppSpacing.xs,
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Container(
-                                              width: 6,
-                                              height: 6,
-                                              decoration: BoxDecoration(
-                                                color: emerald,
-                                                shape: BoxShape.circle,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              dateKey,
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.w700,
-                                                color:
-                                                    AppColors.getTextSecondary(
-                                                      context,
-                                                    ),
-                                                fontSize: 11.5,
-                                                letterSpacing: 0.5,
-                                              ),
-                                            ),
-                                          ],
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Date Group Header
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: SpendzSpacing.sm,
+                                  horizontal: 4,
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      dateKey,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 0.5,
+                                        color: SpendzColors.textSecondary(
+                                          context,
                                         ),
-                                        if (daySpent > 0 || dayIncome > 0)
-                                          Text(
-                                            daySpent > 0
-                                                ? '- ${CurrencyFormatter.format(daySpent)}'
-                                                : '+ ${CurrencyFormatter.format(dayIncome)}',
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w600,
-                                              color: daySpent > 0
-                                                  ? AppColors.getTextSecondary(
-                                                      context,
-                                                    )
-                                                  : AppColors.getSuccess(
-                                                      context,
-                                                    ),
-                                            ),
-                                          ),
-                                      ],
+                                      ),
                                     ),
-                                  ),
-                                  GlassCard(
-                                    padding: EdgeInsets.zero,
-                                    margin: const EdgeInsets.only(
-                                      bottom: AppSpacing.sm,
+                                    SpendzAmountText(
+                                      amount: dayNet,
+                                      variant: dayNet >= 0
+                                          ? SpendzAmountVariant.income
+                                          : SpendzAmountVariant.expense,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      showSign: true,
                                     ),
-                                    child: Column(
-                                      children: List.generate(groupTxs.length, (
-                                        txIndex,
-                                      ) {
-                                        final tx = groupTxs[txIndex];
-                                        final category = tx.categoryId != null
-                                            ? catProvider.getCategoryById(
-                                                tx.categoryId!,
-                                              )
-                                            : null;
-                                        final isLast =
-                                            txIndex == groupTxs.length - 1;
+                                  ],
+                                ),
+                              ),
 
-                                        return Column(
-                                          children: [
-                                            TransactionTile(
-                                              transaction: tx,
-                                              category: category,
-                                              isCard: false,
-                                            ),
-                                            if (!isLast)
-                                              Divider(
-                                                height: 1,
-                                                thickness: 0.5,
-                                                indent: 64,
-                                                endIndent: 16,
-                                                color: isDark
-                                                    ? Colors.white.withAlpha(12)
-                                                    : AppColors.getBorder(
-                                                        context,
-                                                      ).withAlpha(120),
-                                              ),
-                                          ],
-                                        );
-                                      }),
-                                    ),
+                              // Grouped Surface List
+                              SpendzSurface(
+                                padding: EdgeInsets.zero,
+                                child: ListView.separated(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: items.length,
+                                  separatorBuilder: (context, i) => Divider(
+                                    height: 1,
+                                    color: SpendzColors.border(context),
                                   ),
-                                ],
-                              );
-                            },
+                                  itemBuilder: (context, i) {
+                                    final tx = items[i];
+                                    return _buildTransactionRow(
+                                      context,
+                                      tx,
+                                      catProvider,
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: SpendzSpacing.md),
+                            ],
                           );
                         },
                       ),
@@ -553,5 +329,247 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         },
       ),
     );
+  }
+
+  Widget _buildFilterChips(CategoryProvider catProvider) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: SpendzSpacing.lg),
+      child: Row(
+        children: [
+          // Date Range Chip
+          FilterChip(
+            label: Text(
+              _startDate != null && _endDate != null
+                  ? '${DateFormat('dd MMM').format(_startDate!)} - ${DateFormat('dd MMM').format(_endDate!)}'
+                  : 'Date Range',
+            ),
+            selected: _startDate != null,
+            onSelected: (_) {
+              if (_startDate != null) {
+                _clearDateRange();
+              } else {
+                _selectDateRange();
+              }
+            },
+            avatar: Icon(
+              Icons.calendar_today_rounded,
+              size: 14,
+              color: SpendzColors.textPrimary(context),
+            ),
+          ),
+          const SizedBox(width: SpendzSpacing.xs),
+
+          // Type: All
+          ChoiceChip(
+            label: const Text('All'),
+            selected: _selectedType == 'all',
+            onSelected: (selected) {
+              if (selected) setState(() => _selectedType = 'all');
+            },
+          ),
+          const SizedBox(width: SpendzSpacing.xs),
+
+          // Type: Expense
+          ChoiceChip(
+            label: const Text('Expenses'),
+            selected: _selectedType == 'expense',
+            onSelected: (selected) {
+              if (selected) setState(() => _selectedType = 'expense');
+            },
+          ),
+          const SizedBox(width: SpendzSpacing.xs),
+
+          // Type: Income
+          ChoiceChip(
+            label: const Text('Inflow'),
+            selected: _selectedType == 'income',
+            onSelected: (selected) {
+              if (selected) setState(() => _selectedType = 'income');
+            },
+          ),
+          const SizedBox(width: SpendzSpacing.xs),
+
+          // Category Chips
+          ...catProvider.categories.map((c) {
+            final isSelected = _selectedCategoryId == c.id;
+            return Padding(
+              padding: const EdgeInsets.only(right: SpendzSpacing.xs),
+              child: ChoiceChip(
+                label: Text(c.name),
+                selected: isSelected,
+                avatar: Icon(
+                  IconMapper.getIcon(c.icon),
+                  size: 14,
+                  color: isSelected
+                      ? SpendzColors.primaryAccent(context)
+                      : SpendzColors.textSecondary(context),
+                ),
+                onSelected: (selected) {
+                  setState(() {
+                    _selectedCategoryId = selected ? c.id : 'all';
+                  });
+                },
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTransactionRow(
+    BuildContext context,
+    TransactionModel tx,
+    CategoryProvider catProvider,
+  ) {
+    final cat = catProvider.getCategoryById(tx.categoryId ?? '');
+    final isIncome = tx.type == 'income';
+    final timeFormat = DateFormat('hh:mm a');
+
+    return Dismissible(
+      key: Key(tx.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        color: SpendzColors.expense,
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: SpendzSpacing.xl),
+        child: const Icon(Icons.delete_outline_rounded, color: Colors.white),
+      ),
+      confirmDismiss: (direction) async {
+        final title = (tx.merchant != null && tx.merchant!.isNotEmpty)
+            ? tx.merchant!
+            : (cat?.name ?? tx.categoryId ?? 'Transaction');
+        return await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: SpendzColors.surface(context),
+            title: const Text('Delete Transaction?'),
+            content: Text(
+              'Remove "$title" of ₹${tx.amount.toStringAsFixed(2)}?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(color: SpendzColors.expense),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      onDismissed: (_) {
+        context.read<TransactionProvider>().deleteTransaction(tx.id);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Transaction deleted')));
+      },
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: SpendzSpacing.lg,
+            vertical: SpendzSpacing.md,
+          ),
+          child: Row(
+            children: [
+              // Icon
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: isIncome
+                      ? SpendzColors.income.withAlpha(20)
+                      : SpendzColors.surfaceElevated(context),
+                  borderRadius: BorderRadius.circular(SpendzSpacing.radiusMd),
+                  border: Border.all(
+                    color: SpendzColors.border(context),
+                    width: 1,
+                  ),
+                ),
+                child: Icon(
+                  IconMapper.getIcon(cat?.icon ?? 'category'),
+                  size: 18,
+                  color: isIncome
+                      ? SpendzColors.income
+                      : SpendzColors.primaryAccent(context),
+                ),
+              ),
+              const SizedBox(width: SpendzSpacing.md),
+
+              // Title & Category details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      (tx.merchant != null && tx.merchant!.isNotEmpty)
+                          ? tx.merchant!
+                          : (cat?.name ?? tx.categoryId ?? 'Transaction'),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: SpendzColors.textPrimary(context),
+                        letterSpacing: -0.2,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${cat?.name ?? tx.categoryId ?? "General"} • ${tx.paymentMethod ?? "Cash"} • ${timeFormat.format(tx.date)}',
+                      style: SpendzTypography.caption(context),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: SpendzSpacing.sm),
+
+              // Amount
+              SpendzAmountText(
+                amount: tx.amount,
+                variant: isIncome
+                    ? SpendzAmountVariant.income
+                    : SpendzAmountVariant.expense,
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                showSign: true,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatDateGroupKey(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final txDate = DateTime(date.year, date.month, date.day);
+
+    if (txDate == today) {
+      return 'Today, ${DateFormat('dd MMM').format(date)}';
+    } else if (txDate == yesterday) {
+      return 'Yesterday, ${DateFormat('dd MMM').format(date)}';
+    } else if (txDate.year == now.year) {
+      return DateFormat('EEEE, dd MMMM').format(date);
+    } else {
+      return DateFormat('EEEE, dd MMM yyyy').format(date);
+    }
   }
 }

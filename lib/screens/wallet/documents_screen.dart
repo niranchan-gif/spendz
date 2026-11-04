@@ -10,7 +10,6 @@ import '../../providers/wallet_provider.dart';
 import '../../widgets/design_system/empty_state.dart';
 import 'document_creation_screen.dart';
 import 'document_preview_screen.dart';
-import 'wallet_security_settings_screen.dart';
 import 'widgets/virtual_document_card.dart';
 import 'widgets/document_category_chip.dart';
 import 'widgets/document_vault_tile.dart';
@@ -112,18 +111,6 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
             ),
             tooltip: 'Add Document',
             onPressed: _navigateToAddDocument,
-          ),
-          IconButton(
-            icon: const Icon(Icons.shield_outlined),
-            tooltip: 'Vault Security Settings',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const WalletSecuritySettingsScreen(),
-                ),
-              );
-            },
           ),
         ],
       ),

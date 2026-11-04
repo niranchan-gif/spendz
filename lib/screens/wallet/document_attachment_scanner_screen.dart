@@ -477,29 +477,6 @@ class _DocumentAttachmentScannerScreenState
             ),
             const SizedBox(height: AppSpacing.sm),
 
-            // ACTION 2: SAVE TO PHONE STORAGE (MANDATORY)
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                ),
-                icon: const Icon(
-                  Icons.download_rounded,
-                  color: AppColors.primary,
-                ),
-                label: const Text(
-                  'Save PDF to Phone Storage',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                onPressed: () async {
-                  Navigator.pop(ctx);
-                  await _savePdfToPhone(pdfData, fileName);
-                },
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-
             Row(
               children: [
                 // ACTION 3: PREVIEW PDF
@@ -804,8 +781,10 @@ class _DocumentAttachmentScannerScreenState
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              alignment: WrapAlignment.center,
               children: [
                 OutlinedButton.icon(
                   onPressed: _captureFromCamera,
@@ -818,7 +797,6 @@ class _DocumentAttachmentScannerScreenState
                     ),
                   ),
                 ),
-                const SizedBox(width: AppSpacing.sm),
                 OutlinedButton.icon(
                   onPressed: _pickFromGallery,
                   icon: const Icon(Icons.photo_library_rounded, size: 18),

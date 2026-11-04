@@ -16,7 +16,6 @@ import 'package:spendz/database/wallet_document_repository.dart';
 import 'package:spendz/database/wallet_pass_repository.dart';
 import 'package:spendz/features/wallet/security/wallet_auth_service.dart';
 import 'package:spendz/features/wallet/security/wallet_key_service.dart';
-import 'package:spendz/models/category_model.dart';
 import 'package:spendz/models/transaction_model.dart';
 import 'package:spendz/models/wallet_card_model.dart';
 import 'package:spendz/models/wallet_document_model.dart';
@@ -439,7 +438,10 @@ void main() {
       tester.view.physicalSize = const Size(780, 1688);
       tester.view.devicePixelRatio = 2.0;
 
-      final card = (await cardRepo.getAllCards()).first;
+      late WalletCardModel card;
+      await tester.runAsync(() async {
+        card = (await cardRepo.getAllCards()).first;
+      });
 
       // Dark Mode
       final keyDark = GlobalKey();
@@ -474,7 +476,10 @@ void main() {
       tester.view.physicalSize = const Size(780, 1688);
       tester.view.devicePixelRatio = 2.0;
 
-      final doc = (await docRepo.getAllDocuments()).first;
+      late WalletDocumentModel doc;
+      await tester.runAsync(() async {
+        doc = (await docRepo.getAllDocuments()).first;
+      });
 
       // Dark Mode
       final keyDark = GlobalKey();
