@@ -8,6 +8,7 @@ import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../../features/wallet/security/secure_number_service.dart';
+import '../../features/wallet/security/wallet_key_service.dart';
 import '../../features/wallet/services/document_scanner_service.dart';
 import '../../features/wallet/services/document_vault_service.dart';
 import '../../models/wallet_document_model.dart';
@@ -428,12 +429,67 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
       Navigator.pop(context);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save document: $e'), backgroundColor: Colors.redAccent),
-        );
+        if (e is MasterKeyLostException || e.toString().contains('MasterKeyLostException')) {
+          _showMasterKeyLostRecoveryDialog();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to save document: $e'), backgroundColor: Colors.redAccent),
+          );
+        }
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _showMasterKeyLostRecoveryDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+            SizedBox(width: 8),
+            Expanded(child: Text('Encryption Key Missing', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
+          ],
+        ),
+        content: const Text(
+          'Your secure hardware encryption key was not found in secure storage, but older vault documents exist. '
+          'To protect your data, automatic key regeneration was prevented.\n\n'
+          'Would you like to reset your vault security keys? This will initialize a brand-new master encryption key so you can save this card and all future documents.',
+          style: TextStyle(fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Reset Keys & Save Card', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true && mounted) {
+      setState(() => _isSaving = true);
+      try {
+        await _vaultService.resetVault();
+        if (mounted) {
+          await _saveDocument();
+        }
+      } catch (err) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Vault reset failed: $err'), backgroundColor: Colors.redAccent),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _isSaving = false);
+      }
     }
   }
 

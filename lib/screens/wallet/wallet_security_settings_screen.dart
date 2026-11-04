@@ -203,6 +203,43 @@ class _WalletSecuritySettingsScreenState extends State<WalletSecuritySettingsScr
                             : 'Master key will be generated securely inside Keystore/Keychain upon importing your first document.',
                         style: AppTextStyles.bodySmall.copyWith(color: textSecondary),
                       ),
+                      const SizedBox(height: AppSpacing.md),
+                      if (!_hasHardwareKey)
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                          ),
+                          icon: const Icon(Icons.key_rounded, size: 18),
+                          label: const Text('Initialize Encryption Key Now'),
+                          onPressed: () async {
+                            try {
+                              await _keyService.getOrCreateMasterKey(hasExistingVaultDocuments: () => false);
+                              await _loadSecurityStatus();
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Master encryption key generated and verified!'), backgroundColor: AppColors.success),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Initialization error: $e'), backgroundColor: Colors.redAccent),
+                                );
+                              }
+                            }
+                          },
+                        )
+                      else
+                        OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.redAccent,
+                            side: const BorderSide(color: Colors.redAccent),
+                          ),
+                          icon: const Icon(Icons.refresh_rounded, size: 18),
+                          label: const Text('Reset Vault Security Keys'),
+                          onPressed: _showResetVaultDialog,
+                        ),
                     ],
                   ),
                 ),
@@ -357,5 +394,44 @@ class _WalletSecuritySettingsScreenState extends State<WalletSecuritySettingsScr
         Navigator.pop(ctx);
       },
     );
+  }
+
+  Future<void> _showResetVaultDialog() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Reset Vault Security Keys?'),
+        content: const Text(
+          'This will purge unrecoverable encrypted documents and generate a fresh hardware-backed 256-bit encryption key in secure storage.\n\n'
+          'Are you sure you want to proceed?',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Reset Vault', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      try {
+        await _vaultService.resetVault();
+        await _loadSecurityStatus();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Vault reset complete. Fresh master key initialized!'), backgroundColor: AppColors.success),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Vault reset failed: $e'), backgroundColor: Colors.redAccent),
+          );
+        }
+      }
+    }
   }
 }

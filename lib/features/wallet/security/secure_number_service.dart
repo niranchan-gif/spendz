@@ -23,7 +23,7 @@ class SecureNumberService {
     DocumentEncryptionService? encryptionService,
   })  : _secureStorage = secureStorage ??
             const FlutterSecureStorage(
-              aOptions: AndroidOptions(resetOnError: false),
+              aOptions: AndroidOptions(resetOnError: true),
               iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
             ),
         _keyService = keyService ?? WalletKeyService(),
@@ -35,9 +35,7 @@ class SecureNumberService {
     if (sanitized.isEmpty) return;
 
     try {
-      final masterKey = await _keyService.getOrCreateMasterKey(
-        hasExistingVaultDocuments: () => true,
-      );
+      final masterKey = await _keyService.getOrCreateMasterKey();
       final plaintext = utf8.encode(sanitized);
       final encrypted = await _encryptionService.encryptBytes(
         plaintext,
@@ -48,7 +46,7 @@ class SecureNumberService {
         value: base64Encode(encrypted),
       );
     } catch (e) {
-      debugPrint('SecureNumberService: Failed to store encrypted card number securely.');
+      debugPrint('SecureNumberService: Failed to store encrypted card number securely: $e');
     }
   }
 
@@ -85,9 +83,7 @@ class SecureNumberService {
     if (sanitized.isEmpty) return;
 
     try {
-      final masterKey = await _keyService.getOrCreateMasterKey(
-        hasExistingVaultDocuments: () => true,
-      );
+      final masterKey = await _keyService.getOrCreateMasterKey();
       final plaintext = utf8.encode(sanitized);
       final encrypted = await _encryptionService.encryptBytes(
         plaintext,
@@ -98,7 +94,7 @@ class SecureNumberService {
         value: base64Encode(encrypted),
       );
     } catch (e) {
-      debugPrint('SecureNumberService: Failed to store encrypted doc number securely.');
+      debugPrint('SecureNumberService: Failed to store encrypted doc number securely: $e');
     }
   }
 

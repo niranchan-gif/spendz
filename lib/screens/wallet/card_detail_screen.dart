@@ -8,6 +8,7 @@ import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../../database/transaction_dao.dart';
 import '../../features/wallet/security/secure_number_service.dart';
+import '../../features/wallet/security/wallet_key_service.dart';
 import '../../models/transaction_model.dart';
 import '../../models/wallet_card_model.dart';
 import '../../providers/wallet_card_provider.dart';
@@ -235,7 +236,15 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                               if (clean.length >= 4) {
                                 lastFour = clean.substring(clean.length - 4);
                                 maskedNumber = '•••• •••• •••• $lastFour';
-                                await _secureNumberService.saveCardFullNumber(_currentCard.id, clean);
+                                try {
+                                  await _secureNumberService.saveCardFullNumber(_currentCard.id, clean);
+                                } catch (_) {
+                                  try {
+                                    final keyService = WalletKeyService();
+                                    await keyService.resetAndRegenerateMasterKey();
+                                    await _secureNumberService.saveCardFullNumber(_currentCard.id, clean);
+                                  } catch (_) {}
+                                }
                               }
                             }
 

@@ -7,6 +7,7 @@ import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../../features/wallet/security/secure_number_service.dart';
+import '../../features/wallet/security/wallet_key_service.dart';
 import '../../models/wallet_card_model.dart';
 import '../../providers/wallet_card_provider.dart';
 import '../../providers/wallet_provider.dart';
@@ -262,7 +263,15 @@ class _CardsScreenState extends State<CardsScreen> {
 
                             final rawFull = fullNumberController.text.trim();
                             if (rawFull.isNotEmpty) {
-                              await _secureNumberService.saveCardFullNumber(cardId, rawFull);
+                              try {
+                                await _secureNumberService.saveCardFullNumber(cardId, rawFull);
+                              } catch (_) {
+                                try {
+                                  final keyService = WalletKeyService();
+                                  await keyService.resetAndRegenerateMasterKey();
+                                  await _secureNumberService.saveCardFullNumber(cardId, rawFull);
+                                } catch (_) {}
+                              }
                             }
 
                             final card = WalletCardModel(

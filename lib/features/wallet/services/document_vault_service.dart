@@ -5,6 +5,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../database/database_helper.dart';
 import '../../../database/wallet_document_repository.dart';
 import '../../../models/wallet_document_model.dart';
 import '../security/document_encryption_service.dart';
@@ -93,9 +94,7 @@ class DocumentVaultService {
   /// Encrypts an arbitrary metadata map using the master encryption key.
   Future<String> encryptMetadataFields(Map<String, dynamic> fields) async {
     if (fields.isEmpty) return '';
-    final masterKey = await _keyService.getOrCreateMasterKey(
-      hasExistingVaultDocuments: () => true,
-    );
+    final masterKey = await _keyService.getOrCreateMasterKey();
     final jsonStr = jsonEncode(fields);
     final encryptedBytes = await _encryptionService.encryptBytes(
       utf8.encode(jsonStr),
@@ -171,10 +170,7 @@ class DocumentVaultService {
       final finalEncryptedFile = File(p.join(vaultDir.path, '$docId.enc'));
 
       try {
-        final existingDocs = await _documentRepository.getAllDocuments();
-        final masterKey = await _keyService.getOrCreateMasterKey(
-          hasExistingVaultDocuments: () => existingDocs.isNotEmpty,
-        );
+        final masterKey = await _keyService.getOrCreateMasterKey();
 
         final encryptedBytes = await _encryptionService.encryptBytes(
           attachmentBytes,
@@ -280,9 +276,7 @@ class DocumentVaultService {
     final stagingFile = File(p.join(vaultDir.path, '${document.id}_new.tmp'));
     final finalEncryptedFile = File(p.join(vaultDir.path, '${document.id}.enc'));
 
-    final masterKey = await _keyService.getOrCreateMasterKey(
-      hasExistingVaultDocuments: () => true,
-    );
+    final masterKey = await _keyService.getOrCreateMasterKey();
 
     final encryptedBytes = await _encryptionService.encryptBytes(
       fileBytes,
@@ -440,5 +434,28 @@ class DocumentVaultService {
     }
     await _secureNumberService.deleteDocumentFullNumber(documentId);
     await _documentRepository.delete(documentId);
+  }
+
+  /// Completely resets the vault by deleting orphaned files, clearing documents,
+  /// and generating a fresh master key in secure hardware storage.
+  Future<void> resetVault() async {
+    try {
+      final dir = await getVaultDirectory();
+      if (await dir.exists()) {
+        final entities = dir.listSync();
+        for (final entity in entities) {
+          if (entity is File && (entity.path.endsWith('.enc') || entity.path.endsWith('.tmp'))) {
+            await entity.delete().catchError((_) => entity);
+          }
+        }
+      }
+    } catch (_) {}
+
+    try {
+      final db = await DatabaseHelper.instance.database;
+      await db.delete('wallet_documents');
+    } catch (_) {}
+
+    await _keyService.resetAndRegenerateMasterKey();
   }
 }

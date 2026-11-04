@@ -23,6 +23,7 @@ void main() {
   late WalletDocumentRepository repository;
   late DocumentVaultService vaultService;
   late SecureNumberService secureNumberService;
+  late WalletKeyService keyService;
 
   setUpAll(() {
     FlutterSecureStorage.setMockInitialValues({});
@@ -43,7 +44,7 @@ void main() {
     final db = await DatabaseHelper.instance.database;
     await db.delete('wallet_documents');
 
-    final keyService = WalletKeyService(secureStorage: const FlutterSecureStorage());
+    keyService = WalletKeyService(secureStorage: const FlutterSecureStorage());
     await keyService.getOrCreateMasterKey(hasExistingVaultDocuments: () => false);
   });
 
@@ -154,6 +155,27 @@ void main() {
       expect(extra.containsKey('cvv'), isFalse);
       expect(extra.containsKey('pin'), isFalse);
       expect(extra['bank_name'], equals('HDFC Bank'));
+    });
+
+    test('Saving card number and metadata works without MasterKeyLostException on clean setup', () async {
+      // 1. Wipe key to simulate fresh clean setup or reset
+      await keyService.deleteKeyForReset();
+      expect(await keyService.hasMasterKey(), isFalse);
+
+      // 2. Save card full number
+      final secNumService = SecureNumberService(keyService: keyService);
+      await secNumService.saveCardFullNumber('test_card_1', '4532015487965412');
+
+      // 3. Verify key was generated automatically and card number decrypts
+      expect(await keyService.hasMasterKey(), isTrue);
+      final decrypted = await secNumService.getCardFullNumber('test_card_1');
+      expect(decrypted, equals('4532015487965412'));
+
+      // 4. Test encryptMetadataFields on clean setup
+      final encFields = await vaultService.encryptMetadataFields({'test_field': 'val_123'});
+      expect(encFields, isNotEmpty);
+      final decryptedFields = await vaultService.decryptMetadataFields(encFields);
+      expect(decryptedFields['test_field'], equals('val_123'));
     });
   });
 

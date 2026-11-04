@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:cryptography/cryptography.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:sqflite/sqflite.dart';
+import '../../../database/database_helper.dart';
 import 'document_encryption_service.dart';
 
 class MasterKeyLostException extends VaultSecurityException {
@@ -41,7 +43,7 @@ class WalletKeyService {
   })  : _secureStorage = secureStorage ??
             const FlutterSecureStorage(
               aOptions: AndroidOptions(
-                resetOnError: false,
+                resetOnError: true,
               ),
               iOptions: IOSOptions(
                 accessibility: KeychainAccessibility.first_unlock,
@@ -86,12 +88,30 @@ class WalletKeyService {
     }
   }
 
+  /// Checks whether any encrypted documents exist in the SQLite database.
+  static Future<bool> defaultCheckHasEncryptedDocuments() async {
+    try {
+      final db = await DatabaseHelper.instance.database;
+      final result = await db.rawQuery(
+        "SELECT COUNT(*) as count FROM wallet_documents WHERE (encrypted_file_path != '' AND encrypted_file_path != 'none') OR (encrypted_fields IS NOT NULL AND encrypted_fields != '')",
+      );
+      if (result.isNotEmpty) {
+        final count = Sqflite.firstIntValue(result) ?? 0;
+        return count > 0;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Retrieves the existing key, or generates a new 256-bit key if this is a first-time setup.
   ///
-  /// [hasExistingVaultDocuments] must return true if the database currently holds encrypted documents.
+  /// If [hasExistingVaultDocuments] is provided, it is evaluated. Otherwise, checks the database.
   /// If documents exist but the hardware key is missing, throws [MasterKeyLostException].
   Future<List<int>> getOrCreateMasterKey({
-    required bool Function() hasExistingVaultDocuments,
+    bool Function()? hasExistingVaultDocuments,
+    Future<bool> Function()? asyncHasExistingVaultDocuments,
   }) async {
     final existingKey = await getMasterKey();
     if (existingKey != null) {
@@ -99,11 +119,39 @@ class WalletKeyService {
     }
 
     // Key is missing in secure storage. Check if user already has encrypted files.
-    if (hasExistingVaultDocuments()) {
+    bool hasDocs = false;
+    if (hasExistingVaultDocuments != null) {
+      hasDocs = hasExistingVaultDocuments();
+    } else if (asyncHasExistingVaultDocuments != null) {
+      hasDocs = await asyncHasExistingVaultDocuments();
+    } else {
+      hasDocs = await defaultCheckHasEncryptedDocuments();
+    }
+
+    if (hasDocs) {
       throw MasterKeyLostException();
     }
 
     // Clean first-time generation using CSPRNG
+    final secretKey = await _cipher.newSecretKey();
+    final newKeyBytes = await secretKey.extractBytes();
+
+    if (newKeyBytes.length != keyLengthBytes) {
+      throw InvalidKeyException('CSPRNG generated unexpected key length: ${newKeyBytes.length}');
+    }
+
+    final base64Key = base64Encode(newKeyBytes);
+    await _secureStorage.write(key: _keyStorageKey, value: base64Key);
+
+    _cachedKey = List<int>.from(newKeyBytes);
+    return List<int>.unmodifiable(_cachedKey!);
+  }
+
+  /// Forcibly resets and regenerates the master key, wiping any prior key.
+  Future<List<int>> resetAndRegenerateMasterKey() async {
+    _cachedKey = null;
+    await _secureStorage.delete(key: _keyStorageKey);
+
     final secretKey = await _cipher.newSecretKey();
     final newKeyBytes = await secretKey.extractBytes();
 
