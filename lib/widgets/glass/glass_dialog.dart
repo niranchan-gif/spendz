@@ -46,21 +46,13 @@ class GlassDialog extends StatelessWidget {
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppRadius.xl),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-          child: Container(
+        child: Container(
             padding: const EdgeInsets.all(AppSpacing.xl),
             decoration: BoxDecoration(
               color: isDark
                   ? const Color(0xFF14231B).withAlpha(235)
                   : const Color(0xFFFFFFFF).withAlpha(240),
               borderRadius: BorderRadius.circular(AppRadius.xl),
-              border: Border.all(
-                color: isDark
-                    ? Colors.white.withAlpha(35)
-                    : Colors.white.withAlpha(230),
-                width: 1.2,
-              ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withAlpha(isDark ? 90 : 30),
