@@ -118,18 +118,18 @@ class SpendzSurface extends StatelessWidget {
     } else if (showShadow) {
       shadows.add(
         BoxShadow(
-          color: shadowTint.withAlpha(dark ? 48 : (isElevated ? 24 : 15)),
-          offset: Offset(0, isElevated ? 9 : 5),
-          blurRadius: isElevated ? 22 : 14,
-          spreadRadius: -5,
+          color: shadowTint.withAlpha(dark ? 62 : (isElevated ? 42 : 26)),
+          offset: Offset(0, isElevated ? 11 : 7),
+          blurRadius: isElevated ? 26 : 18,
+          spreadRadius: -4,
         ),
       );
       shadows.add(
         BoxShadow(
-          color: dark ? Colors.white.withAlpha(7) : Colors.white.withAlpha(230),
-          offset: const Offset(-1, -1),
-          blurRadius: 2,
-          spreadRadius: -1,
+          color: dark ? Colors.white.withAlpha(10) : Colors.white.withAlpha(245),
+          offset: const Offset(-2, -2),
+          blurRadius: 5,
+          spreadRadius: 0,
         ),
       );
     }
@@ -155,7 +155,19 @@ class SpendzSurface extends StatelessWidget {
       height: height,
       margin: margin,
       decoration: BoxDecoration(
-        color: fill,
+        gradient: sunken
+            ? null
+            : LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color.lerp(fill, Colors.white, dark ? 0.035 : 0.34)!,
+                  fill,
+                  Color.lerp(fill, shadowTint, dark ? 0.12 : 0.055)!,
+                ],
+                stops: const [0, 0.48, 1],
+              ),
+        color: sunken ? fill : null,
         borderRadius: BorderRadius.circular(radius),
         border: Border.all(color: borderColor ?? rim, width: borderWidth),
         boxShadow: shadows,
