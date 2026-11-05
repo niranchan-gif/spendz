@@ -3,9 +3,7 @@ import '../../app/theme/spendz_colors.dart';
 import '../../app/theme/spendz_spacing.dart';
 import '../../screens/profile/profile_screen.dart';
 
-/// Funky Claymorphism Global Top Header Bar for Spendz.
-/// Renders the prominent [ SPENDZ ] orange pill, Screen Title,
-/// notification bell, and profile avatar taking user to settings.
+/// Minimal Spendz header with a matte brand surface and quiet controls.
 class SpendzTopBar extends StatelessWidget {
   final String title;
   final String category;
@@ -23,6 +21,14 @@ class SpendzTopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = SpendzColors.isDark(context);
+    final quietShadow = [
+      BoxShadow(
+        color: Colors.black.withAlpha(isDark ? 32 : 10),
+        blurRadius: 10,
+        offset: const Offset(0, 3),
+        spreadRadius: -3,
+      ),
+    ];
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -32,28 +38,17 @@ class SpendzTopBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Left: SPENDZ Pill + Screen Title
           Row(
             children: [
-              // Bigger, crisp, prominent SPENDZ brand badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 7,
+                ),
                 decoration: BoxDecoration(
-                  color: SpendzColors.tangerine,
-                  borderRadius: BorderRadius.circular(22),
-                  boxShadow: [
-                    BoxShadow(
-                      color: SpendzColors.tangerine.withAlpha(isDark ? 90 : 120),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                    BoxShadow(
-                      color: Colors.white.withAlpha(190),
-                      blurRadius: 3,
-                      offset: const Offset(1, 1),
-                      blurStyle: BlurStyle.inner,
-                    ),
-                  ],
+                  color: SpendzColors.surfaceElevated(context),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: quietShadow,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -62,34 +57,31 @@ class SpendzTopBar extends StatelessWidget {
                       borderRadius: BorderRadius.circular(6),
                       child: Image.asset(
                         'assets/icon.png',
-                        width: 24,
-                        height: 24,
-                        errorBuilder: (_, __, ___) => const Icon(
+                        width: 23,
+                        height: 23,
+                        errorBuilder: (_, __, ___) => Icon(
                           Icons.savings_outlined,
-                          color: Colors.white,
-                          size: 22,
+                          color: SpendzColors.primaryAccent(context),
+                          size: 21,
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Text(
+                    Text(
                       'SPENDZ',
                       style: TextStyle(
                         fontFamily: 'Plus Jakarta Sans',
-                        color: Colors.white,
+                        color: SpendzColors.textPrimary(context),
                         fontWeight: FontWeight.w900,
-                        fontSize: 14.5,
+                        fontSize: 14,
                         letterSpacing: -0.2,
                       ),
                     ),
                   ],
                 ),
               ),
-
             ],
           ),
-
-          // Right: Notifications Button + Avatar
           Row(
             children: [
               Material(
@@ -100,9 +92,12 @@ class SpendzTopBar extends StatelessWidget {
                       () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: const Text('All notifications are up to date'),
+                            content: const Text(
+                              'All notifications are up to date',
+                            ),
                             behavior: SnackBarBehavior.floating,
-                            backgroundColor: SpendzColors.surfaceContainerHigh(context),
+                            backgroundColor:
+                                SpendzColors.surfaceContainerHigh(context),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -114,18 +109,8 @@ class SpendzTopBar extends StatelessWidget {
                     height: 38,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: SpendzColors.surface(context),
-                      border: Border.all(
-                        color: SpendzColors.border(context),
-                        width: 0.8,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withAlpha(isDark ? 40 : 10),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                      color: SpendzColors.surfaceElevated(context),
+                      boxShadow: quietShadow,
                     ),
                     child: Icon(
                       Icons.notifications_none_rounded,
@@ -136,40 +121,28 @@ class SpendzTopBar extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-
-              // Brown/Yellow Circular Avatar - Navigates to Settings/Profile
               GestureDetector(
-                onTap: onProfileTap ?? () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
-                  );
-                },
+                onTap: onProfileTap ??
+                    () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ProfileScreen(),
+                        ),
+                      );
+                    },
                 child: Container(
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: SpendzColors.sunshineYellow,
-                    boxShadow: [
-                      BoxShadow(
-                        color: SpendzColors.sunshineYellow.withAlpha(80),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+                    color: SpendzColors.surfaceElevated(context),
+                    boxShadow: quietShadow,
                   ),
-                  padding: const EdgeInsets.all(2.5),
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: SpendzColors.surface(context),
-                    ),
-                    child: const Icon(
-                      Icons.person_rounded,
-                      size: 18,
-                      color: Colors.white,
-                    ),
+                  child: Icon(
+                    Icons.person_rounded,
+                    size: 19,
+                    color: SpendzColors.primaryAccent(context),
                   ),
                 ),
               ),
@@ -180,4 +153,3 @@ class SpendzTopBar extends StatelessWidget {
     );
   }
 }
-
