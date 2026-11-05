@@ -28,7 +28,7 @@ class SpendzColors {
   /// Canvas Backdrops
   static const Color canvasLight = Color(0xFFF7F8FC);
   static const Color canvasWarmCream = Color(0xFFFDF8F0);
-  static const Color canvasDark = Color(0xFF111C2D);
+  static const Color canvasDark = Color(0xFF101713);
   static const Color canvasDeepDark = Color(0xFF101713);
 
   /// Surfaces (Light Claymorphic Layers - Warm tactile clay, NO empty flat white)
@@ -48,9 +48,9 @@ class SpendzColors {
   static const Color clayLavender = Color(0xFFF3E8FF);
 
   /// Surfaces (Dark Claymorphic Layers)
-  static const Color surfaceDark = Color(0xFF192538);
-  static const Color surfaceElevatedDark = Color(0xFF202F44);
-  static const Color borderDark = Color(0xFF2B3D55);
+  static const Color surfaceDark = Color(0xFF1A211D);
+  static const Color surfaceElevatedDark = Color(0xFF222B25);
+  static const Color borderDark = Color(0xFF29352D);
 
   /// Typography Bases
   static const Color inkSlate = Color(0xFF111C2D);
