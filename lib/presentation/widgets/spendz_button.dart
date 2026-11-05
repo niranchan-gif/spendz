@@ -4,10 +4,7 @@ import '../../app/theme/spendz_spacing.dart';
 
 enum SpendzButtonVariant { primary, secondary, ghost, tonal }
 
-/// Spendz Funky Claymorphism Pill Action Button.
-///
-/// Inflated 3D tactile button with dual chromatic drop shadow, top-left white sheen,
-/// and smooth scale press animation.
+/// Matte pill action button. Brand colours are kept for small icon accents.
 class SpendzButton extends StatefulWidget {
   final String label;
   final VoidCallback? onPressed;
@@ -90,72 +87,30 @@ class _SpendzButtonState extends State<SpendzButton> {
   @override
   Widget build(BuildContext context) {
     final isDark = SpendzColors.isDark(context);
-    final isEnabled = widget.onPressed != null && !widget.isLoading;
+    final enabled = widget.onPressed != null && !widget.isLoading;
+    final ghost = widget.variant == SpendzButtonVariant.ghost;
 
-    Color bgColor;
-    Color fgColor;
-    Color shadowTint;
+    final background = widget.customColor ??
+        (ghost
+            ? Colors.transparent
+            : SpendzColors.surfaceElevated(context));
+    final foreground = widget.customTextColor ??
+        (ghost
+            ? SpendzColors.textPrimary(context)
+            : SpendzColors.textPrimary(context));
 
-    switch (widget.variant) {
-      case SpendzButtonVariant.primary:
-        bgColor = widget.customColor ?? SpendzColors.tangerine;
-        fgColor = widget.customTextColor ?? Colors.white;
-        shadowTint = SpendzColors.tangerine;
-        break;
+    final shadows = !enabled || ghost || _isPressed
+        ? <BoxShadow>[]
+        : <BoxShadow>[
+            BoxShadow(
+              color: Colors.black.withAlpha(isDark ? 34 : 12),
+              blurRadius: 14,
+              offset: const Offset(0, 5),
+              spreadRadius: -3,
+            ),
+          ];
 
-      case SpendzButtonVariant.secondary:
-        bgColor = widget.customColor ?? SpendzColors.sunshineYellow;
-        fgColor = widget.customTextColor ?? const Color(0xFF735500);
-        shadowTint = SpendzColors.sunshineDeep;
-        break;
-
-      case SpendzButtonVariant.tonal:
-        bgColor = widget.customColor ?? SpendzColors.periwinkle;
-        fgColor = widget.customTextColor ?? Colors.white;
-        shadowTint = SpendzColors.periwinkleDeep;
-        break;
-
-      case SpendzButtonVariant.ghost:
-        bgColor = widget.customColor ?? Colors.transparent;
-        fgColor = widget.customTextColor ?? SpendzColors.textPrimary(context);
-        shadowTint = Colors.transparent;
-        break;
-    }
-
-    if (!isEnabled && widget.variant != SpendzButtonVariant.ghost) {
-      bgColor = isDark ? const Color(0xFF233042) : const Color(0xFFE2E8F0);
-      fgColor = isDark ? Colors.white38 : const Color(0xFF94A3B8);
-      shadowTint = Colors.transparent;
-    }
-
-    final List<BoxShadow> shadows = [];
-    if (isEnabled && widget.variant != SpendzButtonVariant.ghost) {
-      if (!_isPressed) {
-        shadows.addAll([
-          BoxShadow(
-            color: shadowTint.withAlpha(isDark ? 70 : 85),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-            spreadRadius: -2,
-          ),
-          BoxShadow(
-            color: shadowTint.withAlpha(isDark ? 40 : 50),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ]);
-      } else {
-        shadows.add(
-          BoxShadow(
-            color: shadowTint.withAlpha(40),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        );
-      }
-    }
-
-    Widget content = Row(
+    final content = Row(
       mainAxisSize: widget.isFullWidth ? MainAxisSize.max : MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -165,21 +120,26 @@ class _SpendzButtonState extends State<SpendzButton> {
             height: 18,
             child: CircularProgressIndicator(
               strokeWidth: 2.2,
-              valueColor: AlwaysStoppedAnimation<Color>(fgColor),
+              valueColor: AlwaysStoppedAnimation<Color>(foreground),
             ),
           )
         else ...[
           if (widget.icon != null) ...[
-            Icon(widget.icon, size: 19, color: fgColor),
+            Icon(
+              widget.icon,
+              size: 19,
+              color: widget.customTextColor ??
+                  SpendzColors.primaryAccent(context),
+            ),
             const SizedBox(width: 8),
           ],
           Text(
             widget.label,
             style: TextStyle(
-              color: fgColor,
+              color: foreground,
               fontWeight: FontWeight.w800,
               fontSize: 14.5,
-              letterSpacing: 0.2,
+              letterSpacing: 0.1,
             ),
           ),
         ],
@@ -187,18 +147,15 @@ class _SpendzButtonState extends State<SpendzButton> {
     );
 
     return AnimatedScale(
-      scale: _isPressed ? 0.96 : 1.0,
-      duration: const Duration(milliseconds: 100),
-      curve: Curves.easeInOut,
+      scale: _isPressed ? 0.98 : 1,
+      duration: const Duration(milliseconds: 110),
+      curve: Curves.easeOut,
       child: Container(
         height: widget.height,
         width: widget.isFullWidth ? double.infinity : null,
         decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(
-            SpendzSpacing.radiusFull,
-          ), // rounded-pill (9999px)
-          
+          color: enabled ? background : SpendzColors.surfaceRecessed(context),
+          borderRadius: BorderRadius.circular(SpendzSpacing.radiusFull),
           boxShadow: shadows,
         ),
         child: Material(
@@ -209,9 +166,11 @@ class _SpendzButtonState extends State<SpendzButton> {
             onHighlightChanged: (pressed) {
               setState(() => _isPressed = pressed);
             },
-            onTap: isEnabled ? widget.onPressed : null,
+            onTap: enabled ? widget.onPressed : null,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: SpendzSpacing.xl),
+              padding: const EdgeInsets.symmetric(
+                horizontal: SpendzSpacing.xl,
+              ),
               child: content,
             ),
           ),
