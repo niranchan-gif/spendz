@@ -65,31 +65,12 @@ class SpendzTextField extends StatelessWidget {
         prefixIcon: prefixIcon,
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: SpendzColors.surface(context),
+        fillColor: SpendzColors.surfaceElevated(context),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: SpendzSpacing.lg,
           vertical: SpendzSpacing.md,
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(SpendzSpacing.radiusMd),
-          borderSide: BorderSide(
-            color: isDark ? SpendzColors.borderDark : SpendzColors.borderLight,
-            width: 1.0,
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(SpendzSpacing.radiusMd),
-          borderSide: BorderSide(
-            color: SpendzColors.primaryAccent(context),
-            width: 1.5,
-          ),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(SpendzSpacing.radiusMd),
-          borderSide: const BorderSide(color: SpendzColors.expense, width: 1.0),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(SpendzSpacing.radiusMd),
+        border: OutlineInputBorder(\n          borderRadius: BorderRadius.circular(SpendzSpacing.radiusMd),\n          borderSide: BorderSide.none,\n        ),\n        enabledBorder: OutlineInputBorder(\n          borderRadius: BorderRadius.circular(SpendzSpacing.radiusMd),\n          borderSide: BorderSide.none,\n        ),\n        focusedBorder: OutlineInputBorder(\n          borderRadius: BorderRadius.circular(SpendzSpacing.radiusMd),\n          borderSide: BorderSide.none,\n        ),\n        errorBorder: OutlineInputBorder(\n          borderRadius: BorderRadius.circular(SpendzSpacing.radiusMd),\n          borderSide: BorderSide.none,\n        ),\n        focusedErrorBorder: OutlineInputBorder(\n          borderRadius: BorderRadius.circular(SpendzSpacing.radiusMd),\n          borderSide: BorderSide.none,\n        ),
           borderSide: const BorderSide(color: SpendzColors.expense, width: 1.5),
         ),
       ),
