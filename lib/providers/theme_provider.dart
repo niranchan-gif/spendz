@@ -1,14 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-/// Spendz Light Theme Provider.
-/// Application strictly uses the Funky Claymorphism Light Palette.
+/// Persists the user's appearance preference.
 class ThemeProvider extends ChangeNotifier {
-  ThemeMode get themeMode => ThemeMode.light;
+  static const String _prefKey = 'spendz_theme_mode';
+  ThemeMode _themeMode = ThemeMode.system;
 
-  bool get isDarkMode => false;
+  ThemeProvider() {
+    _loadThemeMode();
+  }
+
+  ThemeMode get themeMode => _themeMode;
+  bool get isDarkMode => _themeMode == ThemeMode.dark;
+
+  Future<void> _loadThemeMode() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getString(_prefKey);
+      if (saved == 'light') _themeMode = ThemeMode.light;
+      if (saved == 'dark') _themeMode = ThemeMode.dark;
+      if (saved == 'system' || saved == null) _themeMode = ThemeMode.system;
+      notifyListeners();
+    } catch (_) {}
+  }
 
   Future<void> setThemeMode(ThemeMode mode) async {
-    // Application is locked to human-crafted light theme per user request
+    if (_themeMode == mode) return;
+    _themeMode = mode;
     notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final value = switch (mode) {
+        ThemeMode.light => 'light',
+        ThemeMode.dark => 'dark',
+        ThemeMode.system => 'system',
+      };
+      await prefs.setString(_prefKey, value);
+    } catch (_) {}
   }
 }
