@@ -296,7 +296,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
 
         // Card Content
         Padding(
-          padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
+          padding: const EdgeInsets.fromLTRB(12, 5, 12, 3),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -398,7 +398,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                 ],
               ),
 
-              const SizedBox(height: 6),
+              const SizedBox(height: 3),
 
               // Middle Row: Photo Box + Details + QR Tile
               Expanded(
@@ -407,8 +407,8 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                   children: [
                     // Photo Portrait Frame with Security Hologram Border
                     Container(
-                      width: 48,
-                      height: 58,
+                      width: 42,
+                      height: 48,
                       decoration: BoxDecoration(
                         color: const Color(0xFFF1F5F9),
                         borderRadius: BorderRadius.circular(6),
@@ -540,7 +540,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                     // 2D Secure QR Matrix Graphic
                     const _QrMatrixWidget(
                       label: 'Secure QR',
-                      size: 44,
+                      size: 38,
                       accentColor: Color(0xFF0F172A),
                     ),
                   ],
@@ -555,7 +555,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 6,
-                      vertical: 2,
+                      vertical: 1,
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -578,8 +578,8 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                               style: const TextStyle(
                                 color: Color(0xFF0F172A),
                                 fontWeight: FontWeight.w900,
-                                fontSize: 16,
-                                letterSpacing: 2.2,
+                                fontSize: 14.5,
+                                letterSpacing: 2.0,
                                 fontFamily: 'monospace',
                               ),
                             ),
@@ -638,67 +638,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                 ),
               ),
 
-              const SizedBox(height: 2),
 
-              // Micro Footer Helpline with Icons matching Image 1
-              const Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.phone_in_talk,
-                        size: 8,
-                        color: Color(0xFF64748B),
-                      ),
-                      SizedBox(width: 2),
-                      Text(
-                        '1947',
-                        style: TextStyle(
-                          color: Color(0xFF64748B),
-                          fontSize: 7.5,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.email_outlined,
-                        size: 8,
-                        color: Color(0xFF64748B),
-                      ),
-                      SizedBox(width: 2),
-                      Text(
-                        'help@uidai.gov.in',
-                        style: TextStyle(
-                          color: Color(0xFF64748B),
-                          fontSize: 7.5,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.language, size: 8, color: Color(0xFF64748B)),
-                      SizedBox(width: 2),
-                      Text(
-                        'www.uidai.gov.in',
-                        style: TextStyle(
-                          color: Color(0xFF64748B),
-                          fontSize: 7.5,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
             ],
           ),
         ),

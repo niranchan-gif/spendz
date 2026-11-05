@@ -53,16 +53,24 @@ class SpendzTopBar extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.savings_outlined,
-                      color: Colors.white,
-                      size: 16,
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: Image.asset(
+                        'assets/icon.png',
+                        width: 16,
+                        height: 16,
+                        errorBuilder: (_, __, ___) => const Icon(
+                          Icons.savings_outlined,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                      ),
                     ),
-                    SizedBox(width: 4),
-                    Text(
+                    const SizedBox(width: 5),
+                    const Text(
                       'SPENDZ',
                       style: TextStyle(
                         color: Colors.white,

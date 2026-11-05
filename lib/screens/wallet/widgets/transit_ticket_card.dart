@@ -274,45 +274,53 @@ class TransitTicketCard extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withAlpha(35),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.train_rounded,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _effectiveCarrier,
-                            style: const TextStyle(
-                              color: Color(0xFFD1FAE5),
-                              fontWeight: FontWeight.w800,
-                              fontSize: 11,
-                              letterSpacing: 0.8,
-                            ),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withAlpha(35),
+                            shape: BoxShape.circle,
                           ),
-                          const Text(
-                            'TRANSIT BOARDING PASS',
-                            style: TextStyle(
-                              color: Color(0xFF6EE7B7),
-                              fontWeight: FontWeight.w600,
-                              fontSize: 8.5,
-                              letterSpacing: 0.5,
-                            ),
+                          child: const Icon(
+                            Icons.train_rounded,
+                            color: Colors.white,
+                            size: 18,
                           ),
-                        ],
-                      ),
-                    ],
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _effectiveCarrier,
+                                style: const TextStyle(
+                                  color: Color(0xFFD1FAE5),
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 11,
+                                  letterSpacing: 0.8,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const Text(
+                                'TRANSIT BOARDING PASS',
+                                style: TextStyle(
+                                  color: Color(0xFF6EE7B7),
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 8.5,
+                                  letterSpacing: 0.5,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   Row(
                     children: [

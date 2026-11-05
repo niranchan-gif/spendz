@@ -259,37 +259,46 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  'Insights & Analytics',
-                  style: TextStyle(
-                    fontFamily: 'Plus Jakarta Sans',
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: SpendzColors.textPrimary(context),
-                    letterSpacing: -0.4,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      'Insights & Analytics',
+                      style: TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 21,
+                        fontWeight: FontWeight.w800,
+                        color: SpendzColors.textPrimary(context),
+                        letterSpacing: -0.4,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 4),
-                const Text('📊', style: TextStyle(fontSize: 20)),
-              ],
-            ),
-            const SizedBox(height: 2),
-            Text(
-              'Your tactile money playground',
-              style: TextStyle(
-                fontFamily: 'Plus Jakarta Sans',
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: SpendzColors.textSecondary(context),
+                  const SizedBox(width: 4),
+                  const Text('📊', style: TextStyle(fontSize: 18)),
+                ],
               ),
-            ),
-          ],
+              const SizedBox(height: 2),
+              Text(
+                'Your tactile money playground',
+                style: TextStyle(
+                  fontFamily: 'Plus Jakarta Sans',
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w500,
+                  color: SpendzColors.textSecondary(context),
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ],
+          ),
         ),
+        const SizedBox(width: 8),
 
         // Month selector clay pill
         GestureDetector(

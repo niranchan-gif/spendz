@@ -23,7 +23,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'passes_screen.dart';
-import 'widgets/wallet_card_widget.dart';
 import 'widgets/virtual_document_card.dart';
 import 'widgets/transit_ticket_card.dart';
 
@@ -575,8 +574,24 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
       );
     }
 
-    // 2. All payment cards
+    // 2. All payment cards (rendered using unified VirtualDocumentCard template)
     for (final card in cards) {
+      final cardDoc = WalletDocumentModel(
+        id: card.id,
+        documentName: card.nickname.isNotEmpty
+            ? card.nickname
+            : '${card.issuerName} ${card.cardType}',
+        category: card.cardType.toLowerCase().contains('credit')
+            ? 'credit_card'
+            : 'debit_card',
+        holderName: card.cardholderName,
+        maskedIdentifier: card.maskedNumber,
+        description:
+            'Holder: ${card.cardholderName}\nNumber: ${card.maskedNumber}\nExpires: ${card.expiryMonth}/${card.expiryYear}\nIssuer: ${card.issuerName}',
+        issueDate: card.createdAt,
+        createdAt: card.createdAt,
+        updatedAt: card.updatedAt,
+      );
       deckItems.add(
         _CardDeckItem(
           id: 'card_${card.id}',
@@ -593,9 +608,8 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                 MaterialPageRoute(builder: (_) => CardDetailScreen(card: card)),
               );
             },
-            child: WalletCardWidget(
-              card: card,
-              isCompact: false,
+            child: VirtualDocumentCard(
+              document: cardDoc,
               allowReveal: true,
             ),
           ),
@@ -1712,14 +1726,23 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     BuildContext context,
     List<WalletPassModel> passes,
   ) {
-    // Filter valid user transit passes
+    // Filter valid user transit passes and auto-purge tickets 24h past journey
+    final now = DateTime.now();
     final userTransitPasses = passes.where((p) {
       if (p.notes?.contains('8421-950-231') == true ||
           p.encryptedCodePath == '8421-950-231' ||
           p.id == 'sample_transit_pass') {
         return false;
       }
-      return p.passType == 'transit_ticket' || p.passType == 'boarding_pass';
+      if (p.passType != 'transit_ticket' && p.passType != 'boarding_pass') {
+        return false;
+      }
+      final journeyTime = p.validUntil ?? p.createdAt;
+      // Auto-purge passes older than 24 hours from travel/departure time
+      if (now.isAfter(journeyTime.add(const Duration(hours: 24)))) {
+        return false;
+      }
+      return true;
     }).toList();
 
     return Column(
@@ -1807,16 +1830,98 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         ),
         const SizedBox(height: 12),
 
-        // Ticket 1: IRCTC Vande Bharat Express Card
-        _buildVandeBharatTicketCard(context),
-        const SizedBox(height: 12),
-
-        // Ticket 2: Air India Flight Boarding Pass
-        _buildAirIndiaBoardingPass(context),
-
-        // User Custom Added Transit Passes (with 24h purge & doc upload)
-        if (userTransitPasses.isNotEmpty) ...[
-          const SizedBox(height: 12),
+        // If no user tickets available, show clean empty state
+        if (userTransitPasses.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            decoration: BoxDecoration(
+              color: SpendzColors.surface(context),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: SpendzColors.border(context),
+                width: 0.8,
+              ),
+              boxShadow: SpendzColors.clayDropShadow(context),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: SpendzColors.tangerine.withAlpha(20),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.confirmation_number_outlined,
+                    color: SpendzColors.tangerine,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'No tickets available',
+                  style: TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: SpendzColors.textPrimary(context),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Tap "+ Add Pass" to add your train, flight, or bus ticket.',
+                  style: TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: SpendzColors.textSecondary(context),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 14),
+                GestureDetector(
+                  onTap: () => _showAddTransitTicketModal(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: SpendzColors.tangerine,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: SpendzColors.tangerine.withAlpha(60),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.add_rounded, size: 16, color: Colors.white),
+                        SizedBox(width: 4),
+                        Text(
+                          'Add Pass',
+                          style: TextStyle(
+                            fontFamily: 'Plus Jakarta Sans',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          // User Custom Added Transit Passes (with 24h purge & doc upload)
           ...userTransitPasses.map((pass) {
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -1844,929 +1949,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
               ),
             );
           }),
-        ],
       ],
-    );
-  }
-
-  // ─── TICKET 1: IRCTC VANDE BHARAT EXPRESS ─────────────────────────────────────
-  Widget _buildVandeBharatTicketCard(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: SpendzColors.surface(context),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: SpendzColors.border(context),
-          width: 0.8,
-        ),
-        boxShadow: SpendzColors.clayDropShadow(context),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Header: Vande Bharat Exp + Departure
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: SpendzColors.tangerine,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.train_rounded, color: Colors.white, size: 20),
-                  ),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            'VANDE BHARAT EXP',
-                            style: TextStyle(
-                              fontFamily: 'Plus Jakarta Sans',
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w900,
-                              color: SpendzColors.textPrimary(context),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                            decoration: BoxDecoration(
-                              color: SpendzColors.sunshineYellow,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Text(
-                              '#20607',
-                              style: TextStyle(
-                                fontFamily: 'Plus Jakarta Sans',
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF735500),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 1),
-                      const Text(
-                        'IRCTC Confirmed • CNF',
-                        style: TextStyle(
-                          fontFamily: 'Plus Jakarta Sans',
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w700,
-                          color: SpendzColors.tangerine,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'DEPARTURE',
-                    style: TextStyle(
-                      fontFamily: 'Plus Jakarta Sans',
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w700,
-                      color: SpendzColors.textSecondary(context),
-                      letterSpacing: 0.8,
-                    ),
-                  ),
-                  const Text(
-                    'Tomorrow 05:45 AM',
-                    style: TextStyle(
-                      fontFamily: 'Plus Jakarta Sans',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900,
-                      color: SpendzColors.tangerine,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Route Visual Box
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: SpendzColors.surfaceRecessed(context),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'ORIGIN',
-                      style: TextStyle(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w700,
-                        color: SpendzColors.textSecondary(context),
-                      ),
-                    ),
-                    Text(
-                      'MAS',
-                      style: TextStyle(
-                        fontFamily: 'Plus Jakarta Sans',
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                        color: SpendzColors.textPrimary(context),
-                      ),
-                    ),
-                    Text(
-                      'MGR Chennai Ctrl',
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w600,
-                        color: SpendzColors.textSecondary(context),
-                      ),
-                    ),
-                  ],
-                ),
-                Column(
-                  children: [
-                    const Text(
-                      '4h 25m Express',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        color: SpendzColors.tangerine,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Container(
-                          width: 5,
-                          height: 5,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: SpendzColors.tangerine,
-                          ),
-                        ),
-                        Container(
-                          width: 40,
-                          height: 2,
-                          color: SpendzColors.tangerine.withAlpha(100),
-                        ),
-                        const Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 14,
-                          color: SpendzColors.tangerine,
-                        ),
-                        Container(
-                          width: 5,
-                          height: 5,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: SpendzColors.tangerine,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Non-Stop Transit',
-                      style: TextStyle(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w600,
-                        color: SpendzColors.textSecondary(context),
-                      ),
-                    ),
-                  ],
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'DESTINATION',
-                      style: TextStyle(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w700,
-                        color: SpendzColors.textSecondary(context),
-                      ),
-                    ),
-                    Text(
-                      'SBC',
-                      style: TextStyle(
-                        fontFamily: 'Plus Jakarta Sans',
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                        color: SpendzColors.textPrimary(context),
-                      ),
-                    ),
-                    Text(
-                      'KSR Bengaluru',
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w600,
-                        color: SpendzColors.textSecondary(context),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Seat Grid (Coach, Seat, Class, Quota)
-          Row(
-            children: [
-              _buildTicketInfoCell(context, 'Coach', 'B3', isAccent: true),
-              const SizedBox(width: 8),
-              _buildTicketInfoCell(context, 'Seat', '42 (W)'),
-              const SizedBox(width: 8),
-              _buildTicketInfoCell(context, 'Class', 'CC'),
-              const SizedBox(width: 8),
-              _buildTicketInfoCell(context, 'Quota', 'GN'),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Dashed Divider
-          Row(
-            children: [
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final boxWidth = constraints.constrainWidth();
-                    const dashWidth = 5.0;
-                    final dashCount = (boxWidth / (2 * dashWidth)).floor();
-                    return Flex(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      direction: Axis.horizontal,
-                      children: List.generate(dashCount, (_) {
-                        return SizedBox(
-                          width: dashWidth,
-                          height: 1.2,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: SpendzColors.border(context),
-                            ),
-                          ),
-                        );
-                      }),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Bottom Barcode & PNR + Show QR Button
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'PNR NUMBER',
-                    style: TextStyle(
-                      fontFamily: 'Plus Jakarta Sans',
-                      fontSize: 9,
-                      fontWeight: FontWeight.w700,
-                      color: SpendzColors.textSecondary(context),
-                      letterSpacing: 0.6,
-                    ),
-                  ),
-                  Text(
-                    '8421-950-231',
-                    style: TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                      color: SpendzColors.textPrimary(context),
-                    ),
-                  ),
-                ],
-              ),
-              // Barcode Graphic
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: SpendzColors.surfaceRecessed(context),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Container(width: 2, height: 20, color: SpendzColors.textPrimary(context)),
-                    const SizedBox(width: 2),
-                    Container(width: 1, height: 20, color: SpendzColors.textPrimary(context)),
-                    const SizedBox(width: 3),
-                    Container(width: 3, height: 20, color: SpendzColors.textPrimary(context)),
-                    const SizedBox(width: 1),
-                    Container(width: 1, height: 20, color: SpendzColors.textPrimary(context)),
-                    const SizedBox(width: 2),
-                    Container(width: 2, height: 20, color: SpendzColors.textPrimary(context)),
-                    const SizedBox(width: 3),
-                    Container(width: 4, height: 20, color: SpendzColors.textPrimary(context)),
-                    const SizedBox(width: 1),
-                    Container(width: 1, height: 20, color: SpendzColors.textPrimary(context)),
-                  ],
-                ),
-              ),
-              GestureDetector(
-                onTap: () {
-                  _showQrCodeDialog(
-                    context,
-                    title: 'Vande Bharat Express',
-                    code: 'PNR: 8421-950-231\nMAS -> SBC\nCoach B3 Seat 42',
-                  );
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: SpendzColors.tangerine,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: SpendzColors.tangerine.withAlpha(80),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.qr_code_scanner_rounded, size: 14, color: Colors.white),
-                      SizedBox(width: 4),
-                      Text(
-                        'Show QR',
-                        style: TextStyle(
-                          fontFamily: 'Plus Jakarta Sans',
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ─── TICKET 2: AIR INDIA FLIGHT BOARDING PASS ────────────────────────────────
-  Widget _buildAirIndiaBoardingPass(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: SpendzColors.surface(context),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: SpendzColors.border(context),
-          width: 0.8,
-        ),
-        boxShadow: SpendzColors.clayDropShadow(context),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Header: Air India AI-804 + Boarding Time
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFDC2626),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.flight_takeoff_rounded, color: Colors.white, size: 20),
-                  ),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            'AIR INDIA',
-                            style: TextStyle(
-                              fontFamily: 'Plus Jakarta Sans',
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w900,
-                              color: SpendzColors.textPrimary(context),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFEE2E2),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Text(
-                              'AI-804',
-                              style: TextStyle(
-                                fontFamily: 'Plus Jakarta Sans',
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFFDC2626),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 1),
-                      const Text(
-                        'Boarding Pass • Economy',
-                        style: TextStyle(
-                          fontFamily: 'Plus Jakarta Sans',
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFFDC2626),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'BOARDING TIME',
-                    style: TextStyle(
-                      fontFamily: 'Plus Jakarta Sans',
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w700,
-                      color: SpendzColors.textSecondary(context),
-                      letterSpacing: 0.8,
-                    ),
-                  ),
-                  const Text(
-                    '07:15 AM',
-                    style: TextStyle(
-                      fontFamily: 'Plus Jakarta Sans',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900,
-                      color: Color(0xFFDC2626),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Route Visual Box: DEL -> BLR
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: SpendzColors.surfaceRecessed(context),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'NEW DELHI',
-                      style: TextStyle(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w700,
-                        color: SpendzColors.textSecondary(context),
-                      ),
-                    ),
-                    Text(
-                      'DEL',
-                      style: TextStyle(
-                        fontFamily: 'Plus Jakarta Sans',
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                        color: SpendzColors.textPrimary(context),
-                      ),
-                    ),
-                    Text(
-                      'Terminal T3',
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w600,
-                        color: SpendzColors.textSecondary(context),
-                      ),
-                    ),
-                  ],
-                ),
-                Column(
-                  children: [
-                    const Text(
-                      '2h 45m Direct',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFFDC2626),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Container(
-                          width: 5,
-                          height: 5,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Color(0xFFDC2626),
-                          ),
-                        ),
-                        Container(
-                          width: 40,
-                          height: 2,
-                          color: const Color(0xFFDC2626).withAlpha(100),
-                        ),
-                        const Icon(
-                          Icons.flight_rounded,
-                          size: 14,
-                          color: Color(0xFFDC2626),
-                        ),
-                        Container(
-                          width: 5,
-                          height: 5,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Color(0xFFDC2626),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Gate Closes 07:45 AM',
-                      style: TextStyle(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w600,
-                        color: SpendzColors.textSecondary(context),
-                      ),
-                    ),
-                  ],
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'BENGALURU',
-                      style: TextStyle(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w700,
-                        color: SpendzColors.textSecondary(context),
-                      ),
-                    ),
-                    Text(
-                      'BLR',
-                      style: TextStyle(
-                        fontFamily: 'Plus Jakarta Sans',
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                        color: SpendzColors.textPrimary(context),
-                      ),
-                    ),
-                    Text(
-                      'Terminal T2',
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w600,
-                        color: SpendzColors.textSecondary(context),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Flight Seat & Gate Grid
-          Row(
-            children: [
-              _buildTicketInfoCell(context, 'Gate', '14B', isAccent: true),
-              const SizedBox(width: 8),
-              _buildTicketInfoCell(context, 'Seat', '12A'),
-              const SizedBox(width: 8),
-              _buildTicketInfoCell(context, 'Zone', '2'),
-              const SizedBox(width: 8),
-              _buildTicketInfoCell(context, 'Seq', '034'),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Bottom Passenger & Actions
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'PASSENGER',
-                    style: TextStyle(
-                      fontFamily: 'Plus Jakarta Sans',
-                      fontSize: 9,
-                      fontWeight: FontWeight.w700,
-                      color: SpendzColors.textSecondary(context),
-                      letterSpacing: 0.6,
-                    ),
-                  ),
-                  Text(
-                    'SHARMA / AARAV MR',
-                    style: TextStyle(
-                      fontFamily: 'Plus Jakarta Sans',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900,
-                      color: SpendzColors.textPrimary(context),
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text(
-                            'Digital Boarding Pass stored in vault ✈️',
-                          ),
-                          behavior: SnackBarBehavior.floating,
-                          backgroundColor: SpendzColors.surfaceContainerHigh(
-                            context,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: SpendzColors.surface(context),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: SpendzColors.border(context),
-                          width: 0.8,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.file_download_outlined,
-                            size: 14,
-                            color: SpendzColors.textPrimary(context),
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            'Pass',
-                            style: TextStyle(
-                              fontFamily: 'Plus Jakarta Sans',
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: SpendzColors.textPrimary(context),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () {
-                      _showQrCodeDialog(
-                        context,
-                        title: 'Air India Boarding Barcode',
-                        code:
-                            'M1SHARMA/AARAV MR      EAI804 24OCT DELBLR 12A 034',
-                        isBarcode: true,
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFDC2626),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFFDC2626).withAlpha(80),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.qr_code_2_rounded,
-                            size: 14,
-                            color: Colors.white,
-                          ),
-                          SizedBox(width: 3),
-                          Text(
-                            'Barcode',
-                            style: TextStyle(
-                              fontFamily: 'Plus Jakarta Sans',
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTicketInfoCell(
-    BuildContext context,
-    String label,
-    String value, {
-    bool isAccent = false,
-  }) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: SpendzColors.surface(context),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: SpendzColors.border(context),
-            width: 0.8,
-          ),
-        ),
-        child: Column(
-          children: [
-            Text(
-              label.toUpperCase(),
-              style: TextStyle(
-                fontFamily: 'Plus Jakarta Sans',
-                fontSize: 8.5,
-                fontWeight: FontWeight.w700,
-                color: SpendzColors.textSecondary(context),
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              value,
-              style: TextStyle(
-                fontFamily: 'Plus Jakarta Sans',
-                fontSize: 13,
-                fontWeight: FontWeight.w900,
-                color: isAccent
-                    ? SpendzColors.tangerine
-                    : SpendzColors.textPrimary(context),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showQrCodeDialog(
-    BuildContext context, {
-    required String title,
-    required String code,
-    bool isBarcode = false,
-  }) {
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          backgroundColor: SpendzColors.surface(context),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          title: Text(
-            title,
-            style: TextStyle(
-              fontFamily: 'Plus Jakarta Sans',
-              fontWeight: FontWeight.w800,
-              fontSize: 18,
-              color: SpendzColors.textPrimary(context),
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withAlpha(20),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: isBarcode
-                    ? Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: List.generate(24, (i) {
-                              final w = (i % 3 == 0)
-                                  ? 3.0
-                                  : ((i % 2 == 0) ? 1.5 : 2.0);
-                              return Container(
-                                width: w,
-                                height: 50,
-                                margin: const EdgeInsets.symmetric(horizontal: 1.5),
-                                color: Colors.black,
-                              );
-                            }),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            code,
-                            style: const TextStyle(
-                              fontFamily: 'monospace',
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ],
-                      )
-                    : Column(
-                        children: [
-                          const Icon(
-                            Icons.qr_code_2_rounded,
-                            size: 140,
-                            color: Colors.black,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            code,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontFamily: 'monospace',
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ],
-                      ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Show this code to transit staff or gate scanner',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: SpendzColors.textSecondary(context),
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Close'),
-            ),
-          ],
-        );
-      },
     );
   }
 

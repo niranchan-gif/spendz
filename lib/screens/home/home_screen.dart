@@ -283,18 +283,22 @@ class _HomeScreenState extends State<HomeScreen> {
                             width: 1,
                           ),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              Icons.trending_up_rounded,
+                              monthlyIncome > 0
+                                  ? Icons.trending_up_rounded
+                                  : Icons.shield_outlined,
                               size: 14,
                               color: SpendzColors.periwinkleDark,
                             ),
-                            SizedBox(width: 4),
+                            const SizedBox(width: 4),
                             Text(
-                              '+14.2% this cycle 🚀',
-                              style: TextStyle(
+                              monthlyIncome > 0
+                                  ? '+${(monthlyIncome > monthlyExpenses ? ((monthlyIncome - monthlyExpenses) / monthlyIncome * 100).toStringAsFixed(1) : "0.0")}% saved 🚀'
+                                  : 'Dynamic Ledger ✨',
+                              style: const TextStyle(
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.w800,
                                 color: SpendzColors.periwinkleDark,
@@ -305,7 +309,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'vs. last cycle',
+                        monthlyIncome > 0 ? 'vs. last cycle' : 'Real-time verified',
                         style: TextStyle(
                           fontSize: 11,
                           color: SpendzColors.textSecondary(context),
@@ -569,9 +573,49 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ─── 4. WEEKLY VIBES & FLOW CLAY CHART ──────────────────────────────────────
   Widget _buildWeeklyVibesCard(BuildContext context) {
-    return Consumer<DashboardProvider>(
-      builder: (context, dashboard, _) {
+    return Consumer2<DashboardProvider, TransactionProvider>(
+      builder: (context, dashboard, txProvider, _) {
         final currentMonth = DateFormat('MMM yyyy').format(DateTime.now());
+        final now = DateTime.now();
+
+        // Dynamically compute real weekly spending from transactions
+        final monthExpenses = txProvider.transactions.where((tx) =>
+          tx.type == 'expense' &&
+          tx.date.year == now.year &&
+          tx.date.month == now.month
+        ).toList();
+
+        double w1Spent = 0;
+        double w2Spent = 0;
+        double w3Spent = 0;
+        double w4Spent = 0;
+
+        for (final tx in monthExpenses) {
+          final day = tx.date.day;
+          if (day <= 7) {
+            w1Spent += tx.amount;
+          } else if (day <= 14) {
+            w2Spent += tx.amount;
+          } else if (day <= 21) {
+            w3Spent += tx.amount;
+          } else {
+            w4Spent += tx.amount;
+          }
+        }
+
+        final maxWeekly = [w1Spent, w2Spent, w3Spent, w4Spent].reduce((a, b) => a > b ? a : b);
+        final baseMax = maxWeekly > 0 ? maxWeekly : 1.0;
+
+        String formatAmount(double val) {
+          if (val <= 0) return '₹0';
+          if (val >= 1000) return '₹${(val / 1000).toStringAsFixed(1)}k';
+          return '₹${val.toStringAsFixed(0)}';
+        }
+
+        final w1Pct = maxWeekly > 0 ? (w1Spent / baseMax).clamp(0.12, 1.0) : 0.08;
+        final w2Pct = maxWeekly > 0 ? (w2Spent / baseMax).clamp(0.12, 1.0) : 0.08;
+        final w3Pct = maxWeekly > 0 ? (w3Spent / baseMax).clamp(0.12, 1.0) : 0.08;
+        final w4Pct = maxWeekly > 0 ? (w4Spent / baseMax).clamp(0.12, 1.0) : 0.08;
 
         return SpendzSurface(
           padding: const EdgeInsets.all(SpendzSpacing.lg),
@@ -640,30 +684,30 @@ class _HomeScreenState extends State<HomeScreen> {
                     _buildPillBar(
                       context: context,
                       label: 'W1',
-                      amount: '₹4.2k',
-                      fillPercent: 0.48,
+                      amount: formatAmount(w1Spent),
+                      fillPercent: w1Pct,
                       color: SpendzColors.sunshineYellow,
                     ),
                     _buildPillBar(
                       context: context,
                       label: 'W2',
-                      amount: '₹6.8k',
-                      fillPercent: 0.72,
+                      amount: formatAmount(w2Spent),
+                      fillPercent: w2Pct,
                       color: SpendzColors.tangerine,
                     ),
                     _buildPillBar(
                       context: context,
                       label: 'W3',
-                      amount: '₹9.4k',
-                      fillPercent: 0.95,
+                      amount: formatAmount(w3Spent),
+                      fillPercent: w3Pct,
                       color: SpendzColors.periwinkle,
-                      isPeak: true,
+                      isPeak: maxWeekly > 0 && w3Spent == maxWeekly,
                     ),
                     _buildPillBar(
                       context: context,
                       label: 'W4',
-                      amount: '₹5.1k',
-                      fillPercent: 0.58,
+                      amount: formatAmount(w4Spent),
+                      fillPercent: w4Pct,
                       color: SpendzColors.sunshineYellow,
                     ),
                   ],
@@ -671,7 +715,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: SpendzSpacing.sm),
 
-              // Bahamas Goal Pill
+              // Dynamic Stash / Savings Pill
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -691,7 +735,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Goa Holiday Stash',
+                            'Monthly Savings Stash',
                             style: TextStyle(
                               fontSize: 12.5,
                               fontWeight: FontWeight.w800,
@@ -699,9 +743,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                           const SizedBox(height: 1),
-                          const Text(
-                            '🔥 68% saved (₹17,000 of ₹25,000)',
-                            style: TextStyle(
+                          Text(
+                            dashboard.monthlyIncome > 0
+                                ? '🔥 ₹${(dashboard.monthlyIncome - dashboard.monthlyExpenses).clamp(0, double.infinity).toStringAsFixed(0)} retained this month'
+                                : 'Tap to configure budget targets',
+                            style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                               color: Color(0xFF735500),
@@ -794,8 +840,12 @@ class _HomeScreenState extends State<HomeScreen> {
             ? context.read<CategoryProvider>().getCategoryById(topEntry.key)
             : null;
 
-        final categoryName = cat?.name ?? 'Food & Dining';
+        final hasExpenses = topEntry != null && topEntry.value > 0;
+        final categoryName = hasExpenses ? (cat?.name ?? 'General Expense') : 'No expenses recorded';
         final totalSpent = topEntry?.value ?? 0.0;
+        final totalBudget = dashboard.monthlyIncome > 0 ? (dashboard.monthlyIncome * 0.3) : 5000.0;
+        final utilRatio = hasExpenses ? (totalSpent / totalBudget).clamp(0.05, 1.0) : 0.0;
+        final utilPct = hasExpenses ? ((totalSpent / totalBudget) * 100).clamp(1.0, 100.0).toStringAsFixed(0) : '0';
 
         return SpendzSurface(
           padding: const EdgeInsets.all(SpendzSpacing.lg),
@@ -865,18 +915,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 child: FractionallySizedBox(
                   alignment: Alignment.centerLeft,
-                  widthFactor: 0.65,
+                  widthFactor: utilRatio > 0 ? utilRatio : 0.04,
                   child: Container(
                     decoration: BoxDecoration(
-                      color: SpendzColors.tangerine,
+                      color: hasExpenses ? SpendzColors.tangerine : SpendzColors.border(context),
                       borderRadius: BorderRadius.circular(6),
-                      boxShadow: [
-                        BoxShadow(
-                          color: SpendzColors.tangerine.withAlpha(80),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                      boxShadow: hasExpenses
+                          ? [
+                              BoxShadow(
+                                color: SpendzColors.tangerine.withAlpha(80),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ]
+                          : null,
                     ),
                   ),
                 ),
@@ -886,19 +938,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Budget track: Healthy',
+                    hasExpenses ? 'Budget track: Active' : 'Budget track: Inactive',
                     style: TextStyle(
                       fontSize: 10.5,
                       color: SpendzColors.textSecondary(context),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const Text(
-                    '65% Utilized',
+                  Text(
+                    '$utilPct% Utilized',
                     style: TextStyle(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w800,
-                      color: SpendzColors.tangerine,
+                      color: hasExpenses ? SpendzColors.tangerine : SpendzColors.textSecondary(context),
                     ),
                   ),
                 ],
