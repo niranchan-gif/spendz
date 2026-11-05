@@ -88,24 +88,33 @@ class SpendzBottomNavigation extends StatelessWidget {
                             : null,
                         color: isSelected ? null : Colors.transparent,
                         borderRadius: BorderRadius.circular(24),
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: SpendzColors.tangerine.withAlpha(
+                        // Keep the same shadow list shape in both states.
+                        // AnimatedContainer interpolates BoxDecoration values; changing
+                        // from two shadows to null can produce a negative blur mid-tween.
+                        boxShadow: [
+                          BoxShadow(
+                            color: isSelected
+                                ? SpendzColors.tangerine.withAlpha(
                                     isDark ? 105 : 120,
-                                  ),
-                                  blurRadius: 18,
-                                  spreadRadius: -2,
-                                  offset: const Offset(0, 6),
-                                ),
-                                BoxShadow(
-                                  color: Colors.white.withAlpha(220),
-                                  blurRadius: 5,
-                                  offset: const Offset(-2, -2),
-                                  blurStyle: BlurStyle.inner,
-                                ),
-                              ]
-                            : null,
+                                  )
+                                : Colors.transparent,
+                            blurRadius: 18,
+                            spreadRadius: -2,
+                            offset: isSelected
+                                ? const Offset(0, 6)
+                                : Offset.zero,
+                          ),
+                          BoxShadow(
+                            color: isSelected
+                                ? Colors.white.withAlpha(220)
+                                : Colors.transparent,
+                            blurRadius: 5,
+                            offset: isSelected
+                                ? const Offset(-2, -2)
+                                : Offset.zero,
+                            blurStyle: BlurStyle.inner,
+                          ),
+                        ],
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Column(
@@ -121,9 +130,13 @@ class SpendzBottomNavigation extends StatelessWidget {
                                     : const Color(0xFF64748B)),
                           ),
                           const SizedBox(height: 2),
-                          Text(
-                            item.label,
-                            style: TextStyle(
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              item.label,
+                              maxLines: 1,
+                              softWrap: false,
+                              style: TextStyle(
                               fontFamily: 'Plus Jakarta Sans',
                               fontSize: 10,
                               fontWeight: isSelected
@@ -136,6 +149,7 @@ class SpendzBottomNavigation extends StatelessWidget {
                                       : const Color(0xFF64748B)),
                               letterSpacing: 0.1,
                               height: 1.0,
+                              ),
                             ),
                           ),
                         ],
