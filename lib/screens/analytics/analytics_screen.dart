@@ -349,7 +349,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
             decoration: BoxDecoration(
-              color: SpendzColors.surface(context),
+              color: SpendzColors.clayTangerine,
               borderRadius: BorderRadius.circular(22),
               boxShadow: SpendzColors.clayDropShadow(context),
             ),
@@ -414,7 +414,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
             decoration: BoxDecoration(
-              color: SpendzColors.surface(context),
+              color: SpendzColors.clayYellowSoft,
               borderRadius: BorderRadius.circular(22),
               boxShadow: SpendzColors.clayDropShadow(context),
             ),
@@ -568,7 +568,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: SpendzColors.surface(context),
+        color: SpendzColors.clayLavender,
         borderRadius: BorderRadius.circular(24),
         boxShadow: SpendzColors.clayDropShadow(context),
       ),
@@ -813,7 +813,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: SpendzColors.surface(context),
+        color: SpendzColors.clayPeriwinkle,
         borderRadius: BorderRadius.circular(24),
         boxShadow: SpendzColors.clayDropShadow(context),
       ),
@@ -1003,7 +1003,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             child: Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: SpendzColors.surface(context),
+                color: SpendzColors.clayTangerine,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: SpendzColors.clayDropShadow(context),
               ),
