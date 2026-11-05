@@ -1,10 +1,9 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_spacing.dart';
 
-/// Translucent Glass Bottom Sheet Container for Spendz 2.0.
+/// Matte, borderless bottom sheet for the legacy Glass API.
 class GlassBottomSheet extends StatelessWidget {
   final Widget child;
   final String? title;
@@ -31,14 +30,13 @@ class GlassBottomSheet extends StatelessWidget {
       isScrollControlled: isScrollControlled,
       backgroundColor: Colors.transparent,
       elevation: 0,
-      builder: (ctx) =>
+      builder: (_) =>
           GlassBottomSheet(title: title, trailing: trailing, child: child),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = AppColors.isDark(context);
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Padding(
@@ -48,70 +46,64 @@ class GlassBottomSheet extends StatelessWidget {
           top: Radius.circular(AppRadius.sheet),
         ),
         child: Container(
-            decoration: BoxDecoration(
-              color: isDark
-                  ? const Color(0xFF14231B).withAlpha(235)
-                  : const Color(0xFFFFFFFF).withAlpha(240),
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(AppRadius.sheet),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha(isDark ? 80 : 25),
-                  blurRadius: 28,
-                  offset: const Offset(0, -6),
-                ),
-              ],
+          decoration: BoxDecoration(
+            color: AppColors.getSurface(context),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(AppRadius.sheet),
             ),
-            child: SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.lg,
-                  vertical: AppSpacing.md,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Pull Handle
-                    Center(
-                      child: Container(
-                        width: 44,
-                        height: 4.5,
-                        decoration: BoxDecoration(
-                          color: AppColors.getTextSecondary(
-                            context,
-                          ).withAlpha(70),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(AppColors.isDark(context) ? 48 : 16),
+                blurRadius: 24,
+                offset: const Offset(0, -6),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg,
+                vertical: AppSpacing.md,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 42,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppColors.getTextSecondary(context).withAlpha(70),
+                        borderRadius: BorderRadius.circular(3),
                       ),
                     ),
-                    if (title != null) ...[
-                      const SizedBox(height: AppSpacing.md),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              title!,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.getTextPrimary(context),
-                              ),
+                  ),
+                  if (title != null) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            title!,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.getTextPrimary(context),
                             ),
                           ),
-                          ?trailing,
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                    ] else ...[
-                      const SizedBox(height: AppSpacing.md),
-                    ],
-                    Flexible(child: child),
+                        ),
+                        ?trailing,
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                  ] else ...[
+                    const SizedBox(height: AppSpacing.md),
                   ],
-                ),
+                  Flexible(child: child),
+                ],
               ),
             ),
           ),
