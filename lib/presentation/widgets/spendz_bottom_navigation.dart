@@ -79,23 +79,29 @@ class SpendzBottomNavigation extends StatelessWidget {
                       duration: const Duration(milliseconds: 220),
                       curve: Curves.easeOutBack,
                       decoration: BoxDecoration(
-                        color: isSelected
-                            ? SpendzColors.tangerine
-                            : Colors.transparent,
+                        gradient: isSelected
+                            ? const LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [Color(0xFFFFB36F), SpendzColors.tangerine, Color(0xFFEF7C2B)],
+                              )
+                            : null,
+                        color: isSelected ? null : Colors.transparent,
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: isSelected
                             ? [
                                 BoxShadow(
                                   color: SpendzColors.tangerine.withAlpha(
-                                    isDark ? 90 : 100,
+                                    isDark ? 105 : 120,
                                   ),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
+                                  blurRadius: 18,
+                                  spreadRadius: -2,
+                                  offset: const Offset(0, 6),
                                 ),
                                 BoxShadow(
-                                  color: Colors.white.withAlpha(150),
-                                  blurRadius: 2,
-                                  offset: const Offset(1, 1),
+                                  color: Colors.white.withAlpha(220),
+                                  blurRadius: 5,
+                                  offset: const Offset(-2, -2),
                                   blurStyle: BlurStyle.inner,
                                 ),
                               ]
