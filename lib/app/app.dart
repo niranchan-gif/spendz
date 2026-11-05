@@ -13,7 +13,7 @@ import '../providers/wallet_document_provider.dart';
 import '../providers/wallet_pass_provider.dart';
 import '../providers/theme_provider.dart';
 
-import 'theme/app_theme.dart';
+import 'theme/spendz_theme.dart';
 import 'routes/app_routes.dart';
 import '../screens/splash/splash_screen.dart';
 
@@ -33,8 +33,6 @@ class _SpendzAppState extends State<SpendzApp> with WidgetsBindingObserver {
     super.initState();
     _authService = WalletAuthService();
     WidgetsBinding.instance.addObserver(this);
-
-    // Clean up any stale decrypted temporary preview files left from previous sessions
     _vaultService.cleanupAllTemporaryFiles();
   }
 
@@ -80,9 +78,9 @@ class _SpendzAppState extends State<SpendzApp> with WidgetsBindingObserver {
           return MaterialApp(
             title: 'Spendz',
             debugShowCheckedModeBanner: false,
-            theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.lightTheme,
-            themeMode: ThemeMode.light,
+            theme: SpendzTheme.lightTheme,
+            darkTheme: SpendzTheme.darkTheme,
+            themeMode: themeProvider.themeMode,
             home: const SplashScreen(),
             routes: AppRoutes.getRoutes(),
           );
