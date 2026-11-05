@@ -76,9 +76,9 @@ class ImportedTransactionsScreen extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: const Color(0xFFF6F4D2),
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFFF0EBE1), width: 1),
+                            border: Border.all(color: const Color(0xFFE2E0BD), width: 1),
                           ),
                           child: Row(
                             children: [
@@ -138,13 +138,18 @@ class ImportedTransactionsScreen extends StatelessWidget {
                           height: 40,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: SpendzColors.clayCream,
-                            border: Border.all(color: const Color(0xFFE2E8F0)),
-                            boxShadow: [
+                            color: const Color(0xFFCBDFBD),
+                            border: Border.all(color: const Color(0xFFB5CCA7), width: 1.2),
+                            boxShadow: const [
                               BoxShadow(
-                                color: Colors.black.withAlpha(12),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
+                                color: Color(0x1F2C221E),
+                                blurRadius: 4,
+                                offset: Offset(1.5, 2.5),
+                              ),
+                              BoxShadow(
+                                color: Colors.white,
+                                blurRadius: 1.5,
+                                offset: Offset(-1, -1),
                               ),
                             ],
                           ),
@@ -159,13 +164,19 @@ class ImportedTransactionsScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                         decoration: BoxDecoration(
-                          color: SpendzColors.tangerine,
+                          color: const Color(0xFFF19C79),
                           borderRadius: BorderRadius.circular(22),
-                          boxShadow: [
+                          border: Border.all(color: const Color(0xFFD9835E), width: 1.2),
+                          boxShadow: const [
                             BoxShadow(
-                              color: SpendzColors.tangerine.withAlpha(100),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
+                              color: Color(0x1F2C221E),
+                              blurRadius: 4,
+                              offset: Offset(1.5, 2.5),
+                            ),
+                            BoxShadow(
+                              color: Colors.white,
+                              blurRadius: 1.5,
+                              offset: Offset(-1, -1),
                             ),
                           ],
                         ),
@@ -181,7 +192,7 @@ class ImportedTransactionsScreen extends StatelessWidget {
                               'BANK SYNC',
                               style: TextStyle(
                                 fontFamily: 'Plus Jakarta Sans',
-                                color: Colors.white,
+                                color: Color(0xFF2C221E),
                                 fontWeight: FontWeight.w900,
                                 fontSize: 13,
                                 letterSpacing: 0.5,
@@ -204,7 +215,7 @@ class ImportedTransactionsScreen extends StatelessWidget {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('Added $added transactions to activity!'),
-                                backgroundColor: const Color(0xFF0F5B38),
+                                backgroundColor: const Color(0xFFF19C79),
                               ),
                             );
                             Navigator.pop(context);
@@ -213,21 +224,26 @@ class ImportedTransactionsScreen extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFCEF1DE),
+                            color: const Color(0xFFD4E09B),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: const Color(0xFFA5DFC0), width: 1.2),
-                            boxShadow: [
+                            border: Border.all(color: const Color(0xFFBFCC85), width: 1.2),
+                            boxShadow: const [
                               BoxShadow(
-                                color: const Color(0xFF70C99A).withAlpha(60),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
+                                color: Color(0x1F2C221E),
+                                blurRadius: 4,
+                                offset: Offset(1.5, 2.5),
+                              ),
+                              BoxShadow(
+                                color: Colors.white,
+                                blurRadius: 1.5,
+                                offset: Offset(-1, -1),
                               ),
                             ],
                           ),
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.check_circle_rounded, size: 16, color: Color(0xFF0F5B38)),
+                              Icon(Icons.check_circle_rounded, size: 16, color: Color(0xFF2C221E)),
                               SizedBox(width: 4),
                               Text(
                                 'Approve All',
@@ -235,7 +251,7 @@ class ImportedTransactionsScreen extends StatelessWidget {
                                   fontFamily: 'Plus Jakarta Sans',
                                   fontSize: 12,
                                   fontWeight: FontWeight.w800,
-                                  color: Color(0xFF0F5B38),
+                                  color: Color(0xFF2C221E),
                                 ),
                               ),
                             ],
@@ -297,11 +313,12 @@ class ImportedTransactionsScreen extends StatelessWidget {
                             Container(
                               width: 56,
                               height: 56,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFFFECE9),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF6F4D2),
                                 shape: BoxShape.circle,
+                                border: Border.all(color: const Color(0xFFA44A3F), width: 1.5),
                               ),
-                              child: const Icon(Icons.cloud_off_rounded, color: Color(0xFFBA1A1A), size: 28),
+                              child: const Icon(Icons.cloud_off_rounded, color: Color(0xFFA44A3F), size: 28),
                             ),
                             const SizedBox(height: 14),
                             Text(
@@ -329,8 +346,21 @@ class ImportedTransactionsScreen extends StatelessWidget {
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                                 decoration: BoxDecoration(
-                                  color: SpendzColors.tangerine,
+                                  color: const Color(0xFFF19C79),
                                   borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: const Color(0xFFD9835E), width: 1.2),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Color(0x1F2C221E),
+                                      blurRadius: 4,
+                                      offset: Offset(1.5, 2.5),
+                                    ),
+                                    BoxShadow(
+                                      color: Colors.white,
+                                      blurRadius: 1.5,
+                                      offset: Offset(-1, -1),
+                                    ),
+                                  ],
                                 ),
                                 child: const Text(
                                   'Retry Sync',
@@ -338,7 +368,7 @@ class ImportedTransactionsScreen extends StatelessWidget {
                                     fontFamily: 'Plus Jakarta Sans',
                                     fontSize: 13,
                                     fontWeight: FontWeight.w800,
-                                    color: Colors.white,
+                                    color: Color(0xFF2C221E),
                                   ),
                                 ),
                               ),
@@ -359,14 +389,19 @@ class ImportedTransactionsScreen extends StatelessWidget {
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                           decoration: BoxDecoration(
-                            color: SpendzColors.clayCream,
+                            color: const Color(0xFFF6F4D2),
                             borderRadius: BorderRadius.circular(28),
-                            border: Border.all(color: const Color(0xFFF0EBE1), width: 1.2),
-                            boxShadow: [
+                            border: Border.all(color: const Color(0xFFE2E0BD), width: 1.5),
+                            boxShadow: const [
                               BoxShadow(
-                                color: Colors.black.withAlpha(12),
-                                blurRadius: 16,
-                                offset: const Offset(0, 6),
+                                color: Color(0x1F2C221E),
+                                blurRadius: 8,
+                                offset: Offset(2, 4),
+                              ),
+                              BoxShadow(
+                                color: Colors.white,
+                                blurRadius: 2,
+                                offset: Offset(-1, -1),
                               ),
                             ],
                           ),
@@ -376,11 +411,12 @@ class ImportedTransactionsScreen extends StatelessWidget {
                               Container(
                                 width: 56,
                                 height: 56,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFCEF1DE),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFCBDFBD),
                                   shape: BoxShape.circle,
+                                  border: Border.all(color: const Color(0xFFB5CCA7), width: 1.2),
                                 ),
-                                child: const Icon(Icons.check_circle_rounded, color: Color(0xFF0F5B38), size: 30),
+                                child: const Icon(Icons.check_circle_rounded, color: Color(0xFF2C221E), size: 30),
                               ),
                               const SizedBox(height: 14),
                               Text(
@@ -409,13 +445,19 @@ class ImportedTransactionsScreen extends StatelessWidget {
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                                   decoration: BoxDecoration(
-                                    color: SpendzColors.tangerine,
+                                    color: const Color(0xFFF19C79),
                                     borderRadius: BorderRadius.circular(20),
-                                    boxShadow: [
+                                    border: Border.all(color: const Color(0xFFD9835E), width: 1.2),
+                                    boxShadow: const [
                                       BoxShadow(
-                                        color: SpendzColors.tangerine.withAlpha(80),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 3),
+                                        color: Color(0x1F2C221E),
+                                        blurRadius: 4,
+                                        offset: Offset(1.5, 2.5),
+                                      ),
+                                      BoxShadow(
+                                        color: Colors.white,
+                                        blurRadius: 1.5,
+                                        offset: Offset(-1, -1),
                                       ),
                                     ],
                                   ),
@@ -425,7 +467,7 @@ class ImportedTransactionsScreen extends StatelessWidget {
                                       fontFamily: 'Plus Jakarta Sans',
                                       fontSize: 13,
                                       fontWeight: FontWeight.w800,
-                                      color: Colors.white,
+                                      color: Color(0xFF2C221E),
                                     ),
                                   ),
                                 ),
@@ -453,20 +495,25 @@ class ImportedTransactionsScreen extends StatelessWidget {
 
                       final amountColor = isParent
                           ? SpendzColors.tertiarySky
-                          : (isExpense ? const Color(0xFFBA1A1A) : const Color(0xFF0F5B38));
+                          : (isExpense ? const Color(0xFFA44A3F) : const Color(0xFF4C6B22));
                       final amountPrefix = isExpense ? '-' : '+';
 
                       return Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: SpendzColors.clayCream,
+                          color: const Color(0xFFCBDFBD),
                           borderRadius: BorderRadius.circular(22),
-                          border: Border.all(color: const Color(0xFFF0EBE1), width: 1.2),
-                          boxShadow: [
+                          border: Border.all(color: const Color(0xFFB5CCA7), width: 1.2),
+                          boxShadow: const [
                             BoxShadow(
-                              color: Colors.black.withAlpha(12),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
+                              color: Color(0x1F2C221E),
+                              blurRadius: 5,
+                              offset: Offset(2, 3),
+                            ),
+                            BoxShadow(
+                              color: Colors.white,
+                              blurRadius: 1.5,
+                              offset: Offset(-1, -1),
                             ),
                           ],
                         ),
@@ -518,9 +565,9 @@ class ImportedTransactionsScreen extends StatelessWidget {
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: Colors.white,
+                                      color: const Color(0xFFF6F4D2),
                                       borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                                      border: Border.all(color: const Color(0xFFE2E0BD), width: 1),
                                     ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
@@ -560,13 +607,14 @@ class ImportedTransactionsScreen extends StatelessWidget {
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFFFFECE9),
+                                          color: const Color(0xFFF6F4D2),
                                           borderRadius: BorderRadius.circular(14),
+                                          border: Border.all(color: const Color(0xFFA44A3F), width: 1.2),
                                         ),
                                         child: const Icon(
                                           Icons.close_rounded,
                                           size: 15,
-                                          color: Color(0xFFBA1A1A),
+                                          color: Color(0xFFA44A3F),
                                         ),
                                       ),
                                     ),
@@ -579,7 +627,7 @@ class ImportedTransactionsScreen extends StatelessWidget {
                                           ScaffoldMessenger.of(context).showSnackBar(
                                             const SnackBar(
                                               content: Text('Transaction added!'),
-                                              backgroundColor: Color(0xFF0F5B38),
+                                              backgroundColor: Color(0xFFF19C79),
                                             ),
                                           );
                                         }
@@ -587,8 +635,9 @@ class ImportedTransactionsScreen extends StatelessWidget {
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFFCEF1DE),
+                                          color: const Color(0xFFD4E09B),
                                           borderRadius: BorderRadius.circular(14),
+                                          border: Border.all(color: const Color(0xFFBFCC85), width: 1.2),
                                         ),
                                         child: const Row(
                                           mainAxisSize: MainAxisSize.min,
@@ -596,7 +645,7 @@ class ImportedTransactionsScreen extends StatelessWidget {
                                             Icon(
                                               Icons.check_rounded,
                                               size: 14,
-                                              color: Color(0xFF0F5B38),
+                                              color: Color(0xFF2C221E),
                                             ),
                                             SizedBox(width: 3),
                                             Text(
@@ -605,7 +654,7 @@ class ImportedTransactionsScreen extends StatelessWidget {
                                                 fontFamily: 'Plus Jakarta Sans',
                                                 fontSize: 11.5,
                                                 fontWeight: FontWeight.w800,
-                                                color: Color(0xFF0F5B38),
+                                                color: Color(0xFF2C221E),
                                               ),
                                             ),
                                           ],

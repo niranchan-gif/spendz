@@ -136,13 +136,32 @@ class SpendzSurface extends StatelessWidget {
             SpendzClayTone.sunken => SpendzColors.surfaceRecessed(context),
           };
 
+    final defaultBorderColor = switch (tone) {
+      SpendzClayTone.tangerine => const Color(0xFFD9835E),
+      SpendzClayTone.sunshine => const Color(0xFFBFCC85),
+      SpendzClayTone.periwinkle => const Color(0xFFB5CCA7),
+      SpendzClayTone.neutral => isElevated ? const Color(0xFFB5CCA7) : const Color(0xFFE2E0BD),
+      SpendzClayTone.sunken => const Color(0xFFD8D2AA),
+    };
+
+    final effectiveBorder = Border.all(
+      color: borderColor ?? defaultBorderColor,
+      width: borderWidth,
+    );
+
     final shadows = showShadow && !isRecessed
         ? <BoxShadow>[
             BoxShadow(
-              color: Colors.black.withAlpha(isDark ? 34 : 12),
-              blurRadius: isElevated ? 18 : 12,
-              offset: Offset(0, isElevated ? 6 : 4),
-              spreadRadius: -3,
+              color: const Color(0xFF2C221E).withAlpha(16),
+              blurRadius: isElevated ? 8 : 5,
+              offset: Offset(2, isElevated ? 4 : 2.5),
+              spreadRadius: 0,
+            ),
+            const BoxShadow(
+              color: Color(0xFFFFFFFF),
+              blurRadius: 2,
+              offset: Offset(-1, -1),
+              spreadRadius: 0.5,
             ),
           ]
         : <BoxShadow>[];
@@ -170,8 +189,9 @@ class SpendzSurface extends StatelessWidget {
       height: height,
       margin: margin,
       decoration: BoxDecoration(
-        color: surfaceColor,
+        color: color ?? surfaceColor,
         borderRadius: BorderRadius.circular(radius),
+        border: effectiveBorder,
         boxShadow: shadows,
       ),
       clipBehavior: Clip.antiAlias,

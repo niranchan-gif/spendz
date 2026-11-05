@@ -2,187 +2,185 @@ import 'package:flutter/material.dart';
 
 /// Spendz Funky Claymorphism Brand Palette & Semantic Theme Tokens.
 ///
-/// Tangerine Punch, Sunshine Yellow, Periwinkle Sky Blue, Soft Cream,
-/// and Deep Slate Ink with dual chromatic shadow accents.
+/// Palette strictly limited to:
+/// - Warm Chartreuse: #D4E09B
+/// - Soft Cream Butter: #F6F4D2
+/// - Pale Pistachio: #CBDFBD
+/// - Coral Terracotta: #F19C79
+/// - Deep Crimson Brick: #A44A3F
+///
+/// Matte tactile surfaces with defined borders, layered elevation,
+/// and subtle physical shadows (NO translucent boxes, NO glows).
 class SpendzColors {
-  // ─── STITCH CLAYMORPHISM PALETTE ──────────────────────────────────────────
-  /// Tangerine Punch primary energy driver: #FF933E
-  static const Color tangerine = Color(0xFFFF933E);
-  static const Color tangerineDeep = Color(0xFF954A00);
-  static const Color tangerineLight = Color(0xFFFFDCC6);
-  static const Color tangerineDark = Color(0xFF6A3300);
+  // ─── THE 5 CORE FUNKY CLAY PALETTE COLORS ────────────────────────────────
+  /// 1. Warm Chartreuse Olive: #D4E09B
+  static const Color chartreuse = Color(0xFFD4E09B);
 
-  /// Sunshine Yellow secondary highlight: #FECA55 / #FFCB56
-  static const Color sunshineYellow = Color(0xFFFECA55);
-  static const Color sunshineDeep = Color(0xFF795900);
-  static const Color sunshineLight = Color(0xFFFFDF9F);
-  static const Color softButter = Color(0xFFFFE9A9);
+  /// 2. Soft Cream Butter: #F6F4D2
+  static const Color cream = Color(0xFFF6F4D2);
 
-  /// Periwinkle Sky Blue accent: #73A5CA / #82B4DA
-  static const Color periwinkle = Color(0xFF73A5CA);
-  static const Color periwinkleDeep = Color(0xFF2E6385);
-  static const Color periwinkleLight = Color(0xFFC9E6FF);
-  static const Color periwinkleDark = Color(0xFF024667);
-  static const Color tertiarySky = periwinkle;
+  /// 3. Pale Pistachio Mint Clay: #CBDFBD
+  static const Color pistachio = Color(0xFFCBDFBD);
 
-  /// Canvas Backdrops
-  static const Color canvasLight = Color(0xFFF7F8FC);
-  static const Color canvasWarmCream = Color(0xFFFDF8F0);
-  static const Color canvasDark = Color(0xFF101713);
-  static const Color canvasDeepDark = Color(0xFF101713);
+  /// 4. Coral Terracotta Action / Outflow: #F19C79
+  static const Color terracotta = Color(0xFFF19C79);
 
-  /// Surfaces (Light Claymorphic Layers - Warm tactile clay, NO empty flat white)
-  static const Color surfaceLowest = Color(0xFFFFFDF9);
-  static const Color surfaceLow = Color(0xFFF4F6FD);
-  static const Color surfaceContainerColor = Color(0xFFEBF1FD);
-  static const Color surfaceHigh = Color(0xFFE2EAFA);
-  static const Color surfaceHighest = Color(0xFFD8E3FB);
+  /// 5. Deep Crimson Brick Accent / Dark Clay: #A44A3F
+  static const Color brick = Color(0xFFA44A3F);
 
-  /// Tactile Claymorphism Pastel Tile Fills (Color Theory)
-  static const Color clayYellow = Color(0xFFFECA55);
-  static const Color clayYellowSoft = Color(0xFFFFF5D6);
-  static const Color clayCream = Color(0xFFFFFBF2);
-  static const Color clayPeriwinkle = Color(0xFFEAF2F9);
-  static const Color clayTangerine = Color(0xFFFFF1E6);
-  static const Color clayMint = Color(0xFFEDF8F2);
-  static const Color clayLavender = Color(0xFFF3E8FF);
+  /// Matte Espresso Ink for high-contrast crisp readability on light clay
+  static const Color espresso = Color(0xFF2C221E);
+  static const Color espressoMuted = Color(0xFF63564F);
 
-  /// Surfaces (Dark Claymorphic Layers)
-  static const Color surfaceDark = Color(0xFF1A211D);
-  static const Color surfaceElevatedDark = Color(0xFF222B25);
-  static const Color borderDark = Color(0xFF29352D);
+  // ─── SEMANTIC BRAND MAPPING ──────────────────────────────────────────────
+  static const Color tangerine = terracotta; // #F19C79
+  static const Color tangerineDeep = brick; // #A44A3F
+  static const Color tangerineLight = cream; // #F6F4D2
+  static const Color tangerineDark = brick; // #A44A3F
 
-  /// Dark matte accent surfaces for dashboard tiles and coloured cards.
-  /// These retain the brand hue without using bright or pastel fills.
-  static const Color matteTangerine = Color(0xFF392319);
-  static const Color matteSunshine = Color(0xFF352D1C);
-  static const Color mattePeriwinkle = Color(0xFF202D35);
-  static const Color matteMint = Color(0xFF203027);
-  static const Color matteNeutral = Color(0xFF202923);
+  static const Color sunshineYellow = chartreuse; // #D4E09B
+  static const Color sunshineDeep = espresso;
+  static const Color sunshineLight = cream;
+  static const Color softButter = cream;
+
+  static const Color periwinkle = pistachio; // #CBDFBD
+  static const Color periwinkleDeep = brick; // #A44A3F
+  static const Color periwinkleLight = cream;
+  static const Color periwinkleDark = espresso;
+  static const Color tertiarySky = pistachio; // #CBDFBD
+
+  /// Canvas Backdrops (Matte Cream #F6F4D2)
+  static const Color canvasLight = cream;
+  static const Color canvasWarmCream = cream;
+  static const Color canvasDark = cream; // Consistent matte light clay
+  static const Color canvasDeepDark = cream;
+
+  /// Surfaces (Tactile Matte Clay Layers - Defined by palette)
+  static const Color surfaceLowest = cream; // #F6F4D2
+  static const Color surfaceLow = pistachio; // #CBDFBD
+  static const Color surfaceContainerColor = pistachio; // #CBDFBD
+  static const Color surfaceHigh = chartreuse; // #D4E09B
+  static const Color surfaceHighest = terracotta; // #F19C79
+
+  /// Tactile Claymorphism Tile Fills
+  static const Color clayYellow = chartreuse; // #D4E09B
+  static const Color clayYellowSoft = cream; // #F6F4D2
+  static const Color clayCream = cream; // #F6F4D2
+  static const Color clayPeriwinkle = pistachio; // #CBDFBD
+  static const Color clayTangerine = terracotta; // #F19C79
+  static const Color clayMint = pistachio; // #CBDFBD
+  static const Color clayLavender = chartreuse; // #D4E09B
+
+  /// Surfaces (Matte Clay Accents)
+  static const Color surfaceDark = pistachio;
+  static const Color surfaceElevatedDark = cream;
+  static const Color borderDark = Color(0xFFB5CCA7);
+
+  static const Color matteTangerine = terracotta;
+  static const Color matteSunshine = chartreuse;
+  static const Color mattePeriwinkle = pistachio;
+  static const Color matteMint = pistachio;
+  static const Color matteNeutral = cream;
 
   /// Typography Bases
-  static const Color inkSlate = Color(0xFF111C2D);
-  static const Color inkSlateVariant = Color(0xFF554337);
-  static const Color inkOutline = Color(0xFF897365);
-  static const Color inkOutlineVariant = Color(0xFFDCC1B2);
+  static const Color inkSlate = espresso;
+  static const Color inkSlateVariant = brick;
+  static const Color inkOutline = espressoMuted;
+  static const Color inkOutlineVariant = Color(0xFFB5CCA7);
 
   // ─── SEMANTIC INDICATORS ───────────────────────────────────────────────────
-  /// Vibrant Expense / Coral: #E06A55 / #BA1A1A
-  static const Color expense = Color(0xFFE06A55);
-  static const Color error = expense;
-  static const Color errorContainer = Color(0xFFFFDAD6);
-
-  /// Healthy Inflow / Growth Emerald: #16A34A / #286B50
-  static const Color income = Color(0xFF16A34A);
-
-  /// Warning / Gold: #D99B26
-  static const Color warning = Color(0xFFD99B26);
-
-  /// Info / Tech: #2E6385
-  static const Color info = Color(0xFF2E6385);
+  static const Color expense = brick; // #A44A3F
+  static const Color error = brick;
+  static const Color errorContainer = terracotta;
+  static const Color income = Color(0xFF4C6B22); // Deep chartreuse olive
+  static const Color warning = terracotta;
+  static const Color info = pistachio;
 
   // ─── BACKWARD COMPATIBILITY ALIASES ───────────────────────────────────────
-  static const Color forestGreen = tangerineDeep;
-  static const Color emerald = tangerine;
-  static const Color mint = sunshineYellow;
-  static const Color olive = periwinkle;
-  static const Color sage = periwinkleLight;
-  static const Color softBackground = canvasLight;
+  static const Color forestGreen = brick;
+  static const Color emerald = chartreuse;
+  static const Color mint = pistachio;
+  static const Color olive = chartreuse;
+  static const Color sage = pistachio;
+  static const Color softBackground = cream;
   static const Color surfaceLight = surfaceLowest;
   static const Color surfaceElevatedLight = surfaceLow;
-  static const Color borderLight = surfaceHigh;
-  static const Color textPrimaryLight = inkSlate;
-  static const Color textSecondaryLight = inkOutline;
-  static const Color backgroundDark = canvasDark;
-  static const Color textPrimaryDark = Color(0xFFF1F5EF);
-  static const Color textSecondaryDark = Color(0xFF9AA89B);
+  static const Color borderLight = Color(0xFFB5CCA7);
+  static const Color textPrimaryLight = espresso;
+  static const Color textSecondaryLight = espressoMuted;
+  static const Color backgroundDark = cream;
+  static const Color textPrimaryDark = espresso;
+  static const Color textSecondaryDark = espressoMuted;
 
   // ─── DYNAMIC CONTEXT HELPERS ───────────────────────────────────────────────
-  static bool isDark(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark;
+  static bool isDark(BuildContext context) => false; // User requested strictly matte light theme
 
-  static Color background(BuildContext context) =>
-      isDark(context) ? canvasDark : canvasLight;
+  static Color background(BuildContext context) => cream;
 
-  static Color surface(BuildContext context) =>
-      isDark(context) ? surfaceDark : surfaceLowest;
+  static Color surface(BuildContext context) => cream;
 
-  static Color surfaceElevated(BuildContext context) =>
-      isDark(context) ? surfaceElevatedDark : surfaceLow;
+  static Color surfaceElevated(BuildContext context) => pistachio;
 
-  static Color surfaceRecessed(BuildContext context) =>
-      isDark(context) ? const Color(0xFF141E2D) : surfaceLow;
+  static Color surfaceRecessed(BuildContext context) => Color(0xFFE2E0BD);
 
-  static Color surfaceContainerLow(BuildContext context) =>
-      isDark(context) ? const Color(0xFF162030) : surfaceLow;
+  static Color surfaceContainerLow(BuildContext context) => cream;
 
-  static Color surfaceContainer(BuildContext context) =>
-      isDark(context) ? const Color(0xFF1D2A40) : surfaceContainerColor;
+  static Color surfaceContainer(BuildContext context) => pistachio;
 
-  static Color surfaceContainerHigh(BuildContext context) =>
-      isDark(context) ? const Color(0xFF223149) : surfaceHigh;
+  static Color surfaceContainerHigh(BuildContext context) => chartreuse;
 
-  static Color surfaceContainerHighest(BuildContext context) =>
-      isDark(context) ? const Color(0xFF283A55) : surfaceHighest;
+  static Color surfaceContainerHighest(BuildContext context) => terracotta;
 
-  static Color border(BuildContext context) =>
-      isDark(context) ? borderDark : surfaceHigh;
+  static Color border(BuildContext context) => Color(0xFFB5CCA7);
 
-  static Color textPrimary(BuildContext context) =>
-      isDark(context) ? textPrimaryDark : inkSlate;
+  static Color textPrimary(BuildContext context) => espresso;
 
-  static Color textSecondary(BuildContext context) =>
-      isDark(context) ? textSecondaryDark : inkOutline;
+  static Color textSecondary(BuildContext context) => espressoMuted;
 
-  static Color primaryAccent(BuildContext context) => tangerine;
+  static Color primaryAccent(BuildContext context) => terracotta;
 
-  static Color secondaryAccent(BuildContext context) => sunshineYellow;
+  static Color secondaryAccent(BuildContext context) => chartreuse;
 
-  static Color tertiaryAccent(BuildContext context) => periwinkle;
+  static Color tertiaryAccent(BuildContext context) => pistachio;
 
-  // ─── AUTHENTIC CLAYMORPHISM DROP SHADOWS & HIGHLIGHTS ─────────────────────
+  // ─── AUTHENTIC MATTE CLAY DROP SHADOWS (NO GLOWS) ─────────────────────────
   static List<BoxShadow> clayDropShadow(
     BuildContext context, {
-    double blur = 24.0,
-    double spread = -4.0,
-    Offset offset = const Offset(0, 10),
+    double blur = 6.0,
+    double spread = 0.0,
+    Offset offset = const Offset(2.0, 3.5),
   }) {
-    final dark = isDark(context);
     return [
       BoxShadow(
-        color: dark
-            ? Colors.black.withAlpha(90)
-            : const Color(0xFF1E293B).withAlpha(18),
+        color: const Color(0xFF2C221E).withAlpha(18),
         offset: offset,
         blurRadius: blur,
         spreadRadius: spread,
       ),
-      BoxShadow(
-        color: dark
-            ? const Color(0xFF2E6385).withAlpha(20)
-            : tangerine.withAlpha(15),
-        offset: Offset(0, offset.dy / 2),
-        blurRadius: blur / 2,
-        spreadRadius: -2,
+      const BoxShadow(
+        color: Color(0xFFFFFFFF),
+        offset: Offset(-1.5, -1.5),
+        blurRadius: 2.0,
+        spreadRadius: 0.5,
       ),
     ];
   }
 
   static List<BoxShadow> clayInnerSheen({
     Color highlightColor = Colors.white,
-    double opacity = 0.9,
+    double opacity = 0.6,
   }) {
     return [
       BoxShadow(
         color: highlightColor.withAlpha((opacity * 255).round()),
-        offset: const Offset(2.5, 2.5),
-        blurRadius: 4.0,
+        offset: const Offset(1.5, 1.5),
+        blurRadius: 2.5,
         blurStyle: BlurStyle.inner,
       ),
       BoxShadow(
-        color: const Color(0xFF1E293B).withAlpha(10),
-        offset: const Offset(-2.5, -2.5),
-        blurRadius: 4.0,
+        color: const Color(0xFF2C221E).withAlpha(12),
+        offset: const Offset(-1.5, -1.5),
+        blurRadius: 2.5,
         blurStyle: BlurStyle.inner,
       ),
     ];

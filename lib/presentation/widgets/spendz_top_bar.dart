@@ -20,13 +20,16 @@ class SpendzTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = SpendzColors.isDark(context);
-    final quietShadow = [
+    const quietShadow = [
       BoxShadow(
-        color: Colors.black.withAlpha(isDark ? 32 : 10),
-        blurRadius: 10,
-        offset: const Offset(0, 3),
-        spreadRadius: -3,
+        color: Color(0x1F2C221E),
+        blurRadius: 4,
+        offset: Offset(1.5, 2.5),
+      ),
+      BoxShadow(
+        color: Colors.white,
+        blurRadius: 1.5,
+        offset: Offset(-1, -1),
       ),
     ];
 
@@ -46,8 +49,9 @@ class SpendzTopBar extends StatelessWidget {
                   vertical: 7,
                 ),
                 decoration: BoxDecoration(
-                  color: SpendzColors.surfaceElevated(context),
+                  color: const Color(0xFFF19C79), // Coral Terracotta
                   borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFD9835E), width: 1.2),
                   boxShadow: quietShadow,
                 ),
                 child: Row(
@@ -71,7 +75,7 @@ class SpendzTopBar extends StatelessWidget {
                       'SPENDZ',
                       style: TextStyle(
                         fontFamily: 'Plus Jakarta Sans',
-                        color: SpendzColors.textPrimary(context),
+                        color: const Color(0xFF2C221E),
                         fontWeight: FontWeight.w900,
                         fontSize: 14,
                         letterSpacing: -0.2,
@@ -109,7 +113,8 @@ class SpendzTopBar extends StatelessWidget {
                     height: 38,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: SpendzColors.surfaceElevated(context),
+                      color: const Color(0xFFCBDFBD), // Pistachio
+                      border: Border.all(color: const Color(0xFFB5CCA7), width: 1.2),
                       boxShadow: quietShadow,
                     ),
                     child: Icon(
@@ -136,7 +141,8 @@ class SpendzTopBar extends StatelessWidget {
                   height: 38,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: SpendzColors.surfaceElevated(context),
+                    color: const Color(0xFFD4E09B), // Chartreuse
+                    border: Border.all(color: const Color(0xFFBFCC85), width: 1.2),
                     boxShadow: quietShadow,
                   ),
                   child: Icon(

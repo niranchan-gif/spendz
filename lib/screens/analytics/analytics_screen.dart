@@ -263,25 +263,17 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Flexible(
-                    child: Text(
-                      'Insights & Analytics',
-                      style: TextStyle(
-                        fontFamily: 'Plus Jakarta Sans',
-                        fontSize: 21,
-                        fontWeight: FontWeight.w800,
-                        color: SpendzColors.textPrimary(context),
-                        letterSpacing: -0.4,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  const Text('📊', style: TextStyle(fontSize: 18)),
-                ],
+              Text(
+                'Insights & Analytics',
+                style: TextStyle(
+                  fontFamily: 'Plus Jakarta Sans',
+                  fontSize: 21,
+                  fontWeight: FontWeight.w800,
+                  color: SpendzColors.textPrimary(context),
+                  letterSpacing: -0.4,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
               const SizedBox(height: 2),
               Text(
@@ -306,9 +298,21 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
             decoration: BoxDecoration(
-              color: SpendzColors.surface(context),
+              color: const Color(0xFFF6F4D2),
               borderRadius: BorderRadius.circular(20),
-              boxShadow: SpendzColors.clayDropShadow(context),
+              border: Border.all(color: const Color(0xFFE2E0BD), width: 1.2),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x1F2C221E),
+                  blurRadius: 4,
+                  offset: Offset(1.5, 2.5),
+                ),
+                BoxShadow(
+                  color: Colors.white,
+                  blurRadius: 1.5,
+                  offset: Offset(-1, -1),
+                ),
+              ],
             ),
             child: Row(
               children: [
@@ -325,7 +329,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 const Icon(
                   Icons.expand_more_rounded,
                   size: 16,
-                  color: SpendzColors.tangerine,
+                  color: Color(0xFF2C221E),
                 ),
               ],
             ),
@@ -349,9 +353,21 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
             decoration: BoxDecoration(
-              color: SpendzColors.surface(context),
+              color: const Color(0xFFD4E09B),
               borderRadius: BorderRadius.circular(22),
-              boxShadow: SpendzColors.clayDropShadow(context),
+              border: Border.all(color: const Color(0xFFBFCC85), width: 1.2),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x1F2C221E),
+                  blurRadius: 4,
+                  offset: Offset(1.5, 2.5),
+                ),
+                BoxShadow(
+                  color: Colors.white,
+                  blurRadius: 1.5,
+                  offset: Offset(-1, -1),
+                ),
+              ],
             ),
             child: Column(
               children: [
@@ -360,35 +376,23 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   height: 32,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: SpendzColors.tertiarySky.withAlpha(40),
-                    boxShadow: [
-                      BoxShadow(
-                        color: SpendzColors.tertiarySky.withAlpha(60),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                      BoxShadow(
-                        color: Colors.black.withAlpha(12),
-                        blurRadius: 2,
-                        offset: const Offset(1, 1),
-                        blurStyle: BlurStyle.inner,
-                      ),
-                    ],
+                    color: const Color(0xFFF6F4D2),
+                    border: Border.all(color: const Color(0xFFE2E0BD), width: 1.2),
                   ),
                   child: const Icon(
                     Icons.south_west_rounded,
                     size: 16,
-                    color: SpendzColors.tertiarySky,
+                    color: Color(0xFF4C6B22),
                   ),
                 ),
                 const SizedBox(height: 6),
-                Text(
+                const Text(
                   'Income',
                   style: TextStyle(
                     fontFamily: 'Plus Jakarta Sans',
                     fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: SpendzColors.textSecondary(context),
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF2C221E),
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -397,8 +401,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   style: const TextStyle(
                     fontFamily: 'Plus Jakarta Sans',
                     fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: SpendzColors.tertiarySky,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF2C221E),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -443,7 +447,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   child: const Icon(
                     Icons.north_east_rounded,
                     size: 16,
-                    color: SpendzColors.tangerine,
+                    color: Color(0xFF2C221E),
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -474,24 +478,24 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         ),
         const SizedBox(width: 8),
 
-        // Saved Capsule (Sunshine Yellow highlight)
+        // Saved Capsule (Pistachio highlight)
         Expanded(
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
             decoration: BoxDecoration(
-              color: SpendzColors.sunshineYellow,
+              color: const Color(0xFFCBDFBD),
               borderRadius: BorderRadius.circular(22),
-              boxShadow: [
+              border: Border.all(color: const Color(0xFFB5CCA7), width: 1.2),
+              boxShadow: const [
                 BoxShadow(
-                  color: SpendzColors.sunshineYellow.withAlpha(90),
-                  blurRadius: 14,
-                  offset: const Offset(0, 5),
+                  color: Color(0x1F2C221E),
+                  blurRadius: 4,
+                  offset: Offset(1.5, 2.5),
                 ),
                 BoxShadow(
-                  color: Colors.white.withAlpha(200),
-                  blurRadius: 3,
-                  offset: const Offset(2, 2),
-                  blurStyle: BlurStyle.inner,
+                  color: Colors.white,
+                  blurRadius: 1.5,
+                  offset: Offset(-1, -1),
                 ),
               ],
             ),
@@ -502,19 +506,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   height: 32,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withAlpha(180),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withAlpha(10),
-                        blurRadius: 2,
-                        offset: const Offset(1, 1),
-                      ),
-                    ],
+                    color: const Color(0xFFF6F4D2),
+                    border: Border.all(color: const Color(0xFFE2E0BD), width: 1.2),
                   ),
                   child: const Icon(
                     Icons.savings_rounded,
                     size: 16,
-                    color: Color(0xFF735500),
+                    color: Color(0xFF2C221E),
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -524,7 +522,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     fontFamily: 'Plus Jakarta Sans',
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF735500),
+                    color: Color(0xFF2C221E),
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -533,8 +531,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   style: const TextStyle(
                     fontFamily: 'Plus Jakarta Sans',
                     fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF735500),
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF2C221E),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -555,22 +553,31 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     CategoryProvider catProvider,
   ) {
     final colors = [
-      SpendzColors.tangerine,
-      SpendzColors.tertiarySky,
-      SpendzColors.sunshineYellow,
-      SpendzColors.periwinkle,
-      const Color(0xFFFF6B6B),
-      const Color(0xFF4ECDC4),
-      const Color(0xFF82B4DA),
-      const Color(0xFFFFDCC6),
+      const Color(0xFFF19C79), // Terracotta
+      const Color(0xFFD4E09B), // Chartreuse
+      const Color(0xFFCBDFBD), // Pistachio
+      const Color(0xFFA44A3F), // Brick
+      const Color(0xFFF6F4D2), // Cream
     ];
 
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: SpendzColors.surface(context),
+        color: const Color(0xFFF6F4D2),
         borderRadius: BorderRadius.circular(24),
-        boxShadow: SpendzColors.clayDropShadow(context),
+        border: Border.all(color: const Color(0xFFE2E0BD), width: 1.5),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x1F2C221E),
+            blurRadius: 6,
+            offset: Offset(2, 3.5),
+          ),
+          BoxShadow(
+            color: Colors.white,
+            blurRadius: 1.5,
+            offset: Offset(-1, -1),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -583,7 +590,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   const Icon(
                     Icons.donut_large_rounded,
                     size: 18,
-                    color: SpendzColors.tangerine,
+                    color: Color(0xFFF19C79),
                   ),
                   const SizedBox(width: 6),
                   Text(
@@ -668,18 +675,19 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     height: 100,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: SpendzColors.surfaceContainerLow(context),
-                      boxShadow: [
+                      color: const Color(0xFFCBDFBD),
+                      border: Border.all(color: const Color(0xFFB5CCA7), width: 1.5),
+                      boxShadow: const [
                         BoxShadow(
-                          color: Colors.black.withAlpha(20),
-                          blurRadius: 4,
-                          offset: const Offset(2, 2),
+                          color: Color(0x1F2C221E),
+                          blurRadius: 3,
+                          offset: Offset(1.5, 1.5),
                           blurStyle: BlurStyle.inner,
                         ),
                         BoxShadow(
-                          color: Colors.white.withAlpha(220),
-                          blurRadius: 4,
-                          offset: const Offset(-2, -2),
+                          color: Colors.white,
+                          blurRadius: 2,
+                          offset: Offset(-1, -1),
                           blurStyle: BlurStyle.inner,
                         ),
                       ],
@@ -742,8 +750,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: SpendzColors.surfaceContainerLow(context),
+                  color: const Color(0xFFCBDFBD),
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFB5CCA7), width: 1),
                 ),
                 child: Row(
                   children: [
@@ -753,13 +762,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: color,
-                        boxShadow: [
-                          BoxShadow(
-                            color: color.withAlpha(100),
-                            blurRadius: 4,
-                            offset: const Offset(0, 1),
-                          ),
-                        ],
+                        border: Border.all(color: const Color(0xFF2C221E).withAlpha(40), width: 0.8),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -813,9 +816,21 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: SpendzColors.surface(context),
+        color: const Color(0xFFF6F4D2),
         borderRadius: BorderRadius.circular(24),
-        boxShadow: SpendzColors.clayDropShadow(context),
+        border: Border.all(color: const Color(0xFFE2E0BD), width: 1.5),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x1F2C221E),
+            blurRadius: 6,
+            offset: Offset(2, 3.5),
+          ),
+          BoxShadow(
+            color: Colors.white,
+            blurRadius: 1.5,
+            offset: Offset(-1, -1),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -854,15 +869,16 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: SpendzColors.sunshineYellow.withAlpha(40),
+                  color: const Color(0xFFF6F4D2),
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2E0BD), width: 1),
                 ),
                 child: Row(
                   children: [
                     const Icon(
                       Icons.trending_up_rounded,
                       size: 13,
-                      color: Color(0xFF735500),
+                      color: Color(0xFF2C221E),
                     ),
                     const SizedBox(width: 4),
                     Text(
@@ -871,7 +887,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                         fontFamily: 'Plus Jakarta Sans',
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF735500),
+                        color: Color(0xFF2C221E),
                       ),
                     ),
                   ],
@@ -952,8 +968,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       BarChartRodData(
                         toY: amount,
                         color: isCurrent
-                            ? SpendzColors.tangerine
-                            : SpendzColors.surfaceContainerHighest(context),
+                            ? const Color(0xFFF19C79)
+                            : const Color(0xFFD4E09B),
                         width: 16,
                         borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(8),
@@ -1003,9 +1019,21 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             child: Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: SpendzColors.surface(context),
+                color: const Color(0xFFF6F4D2),
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: SpendzColors.clayDropShadow(context),
+                border: Border.all(color: const Color(0xFFE2E0BD), width: 1.2),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x1F2C221E),
+                    blurRadius: 4,
+                    offset: Offset(1.5, 2.5),
+                  ),
+                  BoxShadow(
+                    color: Colors.white,
+                    blurRadius: 1.5,
+                    offset: Offset(-1, -1),
+                  ),
+                ],
               ),
               child: Column(
                 children: [
@@ -1018,8 +1046,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: index == 0
-                              ? SpendzColors.tangerine
-                              : SpendzColors.surfaceContainerHigh(context),
+                              ? const Color(0xFFF19C79)
+                              : const Color(0xFFCBDFBD),
                         ),
                         alignment: Alignment.center,
                         child: Text(
@@ -1028,9 +1056,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             fontFamily: 'Plus Jakarta Sans',
                             fontSize: 12,
                             fontWeight: FontWeight.w800,
-                            color: index == 0
-                                ? Colors.white
-                                : SpendzColors.textSecondary(context),
+                            color: const Color(0xFF2C221E),
                           ),
                         ),
                       ),
@@ -1042,7 +1068,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             ? IconMapper.getIcon(category.icon)
                             : Icons.category_outlined,
                         size: 18,
-                        color: SpendzColors.tangerine,
+                        color: const Color(0xFF2C221E),
                       ),
                       const SizedBox(width: 8),
 
@@ -1096,10 +1122,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                         ),
                         valueColor: AlwaysStoppedAnimation<Color>(
                           index == 0
-                              ? SpendzColors.tangerine
+                              ? const Color(0xFFF19C79)
                               : index == 1
-                              ? SpendzColors.tertiarySky
-                              : SpendzColors.sunshineYellow,
+                              ? const Color(0xFFD4E09B)
+                              : const Color(0xFFA44A3F),
                         ),
                       ),
                     ),
@@ -1118,20 +1144,19 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: SpendzColors.matteSunshine, // Dark matte sunshine tone
+        color: const Color(0xFFD4E09B),
         borderRadius: BorderRadius.circular(24),
-        border: null,
-        boxShadow: [
+        border: Border.all(color: const Color(0xFFBFCC85), width: 1.2),
+        boxShadow: const [
           BoxShadow(
-            color: const Color(0xFFFBBF24).withAlpha(40),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
+            color: Color(0x1F2C221E),
+            blurRadius: 6,
+            offset: Offset(2, 3.5),
           ),
           BoxShadow(
-            color: Colors.white.withAlpha(200),
-            blurRadius: 3,
-            offset: const Offset(1, 1),
-            blurStyle: BlurStyle.inner,
+            color: Colors.white,
+            blurRadius: 1.5,
+            offset: Offset(-1, -1),
           ),
         ],
       ),
@@ -1142,46 +1167,41 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: SpendzColors.surfaceElevated(context),
+              color: const Color(0xFFF6F4D2),
               shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha(12),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              border: Border.all(color: const Color(0xFFE2E0BD), width: 1.2),
             ),
             child: const Center(
-              child: Text(
-                '🌱',
-                style: TextStyle(fontSize: 20),
+              child: Icon(
+                Icons.insights_rounded,
+                size: 20,
+                color: Color(0xFF2C221E),
               ),
             ),
           ),
           const SizedBox(width: 12),
-          Expanded(
+          const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Smart Insight',
                   style: TextStyle(
                     fontFamily: 'Plus Jakarta Sans',
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF78350F),
+                    color: Color(0xFF2C221E),
                     letterSpacing: -0.2,
                   ),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
-                  'You spent \$142 less on dining out on weekends compared to last month!',
+                  'Automated spend analytics active. Category distributions are balanced.',
                   style: TextStyle(
                     fontFamily: 'Plus Jakarta Sans',
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF92400E).withAlpha(220),
+                    color: Color(0xFF4C6B22),
                     height: 1.3,
                   ),
                 ),

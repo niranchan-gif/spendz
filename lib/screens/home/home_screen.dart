@@ -92,16 +92,21 @@ class _HomeScreenState extends State<HomeScreen> {
         return Container(
           padding: const EdgeInsets.all(SpendzSpacing.lg),
           decoration: BoxDecoration(
-            color: SpendzColors.matteTangerine,
+            color: const Color(0xFFCBDFBD), // Pale Pistachio
             borderRadius: BorderRadius.circular(28),
-            boxShadow: [
+            border: Border.all(color: const Color(0xFFB5CCA7), width: 1.5),
+            boxShadow: const [
               BoxShadow(
-                color: const Color(0xFF1E293B).withAlpha(20),
-                blurRadius: 18,
-                offset: const Offset(0, 8),
+                color: Color(0x242C221E),
+                blurRadius: 8,
+                offset: Offset(2.5, 4),
+              ),
+              BoxShadow(
+                color: Colors.white,
+                blurRadius: 2,
+                offset: Offset(-1.5, -1.5),
               ),
             ],
-            border: null,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -323,8 +328,9 @@ class _HomeScreenState extends State<HomeScreen> {
             context: context,
             icon: Icons.add_rounded,
             label: 'Add',
-            bgColor: SpendzColors.tangerine,
-            iconColor: Colors.white,
+            bgColor: const Color(0xFFF19C79),
+            borderColor: const Color(0xFFD9835E),
+            iconColor: const Color(0xFF2C221E),
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
@@ -336,8 +342,9 @@ class _HomeScreenState extends State<HomeScreen> {
             context: context,
             icon: Icons.sync_rounded,
             label: 'Sync to Bank',
-            bgColor: SpendzColors.tertiarySky,
-            iconColor: Colors.white,
+            bgColor: const Color(0xFFD4E09B),
+            borderColor: const Color(0xFFBFCC85),
+            iconColor: const Color(0xFF2C221E),
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
@@ -351,8 +358,9 @@ class _HomeScreenState extends State<HomeScreen> {
             context: context,
             icon: Icons.credit_card_rounded,
             label: 'Cards',
-            bgColor: SpendzColors.sunshineYellow,
-            iconColor: const Color(0xFF735500),
+            bgColor: const Color(0xFFCBDFBD),
+            borderColor: const Color(0xFFB5CCA7),
+            iconColor: const Color(0xFF2C221E),
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
@@ -366,8 +374,9 @@ class _HomeScreenState extends State<HomeScreen> {
             context: context,
             icon: Icons.lock_outline_rounded,
             label: 'Vault',
-            bgColor: const Color(0xFFDDD6FE),
-            iconColor: const Color(0xFF4C1D95),
+            bgColor: const Color(0xFFA44A3F),
+            borderColor: const Color(0xFF883B32),
+            iconColor: Colors.white,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
@@ -385,6 +394,7 @@ class _HomeScreenState extends State<HomeScreen> {
     required IconData icon,
     required String label,
     required Color bgColor,
+    required Color borderColor,
     required Color iconColor,
     required VoidCallback onTap,
   }) {
@@ -398,21 +408,21 @@ class _HomeScreenState extends State<HomeScreen> {
             decoration: BoxDecoration(
               color: bgColor,
               borderRadius: BorderRadius.circular(20),
-              boxShadow: [
+              border: Border.all(color: borderColor, width: 1.2),
+              boxShadow: const [
                 BoxShadow(
-                  color: bgColor.withAlpha(80),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
+                  color: Color(0x222C221E),
+                  blurRadius: 5,
+                  offset: Offset(2, 3),
                 ),
                 BoxShadow(
-                  color: Colors.white.withAlpha(160),
-                  blurRadius: 2,
-                  offset: const Offset(1, 1),
-                  blurStyle: BlurStyle.inner,
+                  color: Colors.white,
+                  blurRadius: 1.5,
+                  offset: Offset(-1, -1),
                 ),
               ],
             ),
-            child: Icon(icon, color: SpendzColors.textSecondary(context), size: 24),
+            child: Icon(icon, color: iconColor, size: 24),
           ),
         ),
         const SizedBox(height: 6),
@@ -648,15 +658,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ? SpendzColors.periwinkleLight
                                 : SpendzColors.sunshineLight,
                             borderRadius: BorderRadius.circular(14),
-                            boxShadow: [
+                            border: Border.all(
+                              color: isIncome ? const Color(0xFFBFCC85) : const Color(0xFFD9835E),
+                              width: 1.0,
+                            ),
+                            boxShadow: const [
                               BoxShadow(
-                                color:
-                                    (isIncome
-                                            ? SpendzColors.periwinkle
-                                            : SpendzColors.sunshineYellow)
-                                        .withAlpha(40),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
+                                color: Color(0x1A2C221E),
+                                blurRadius: 3,
+                                offset: Offset(1, 1.5),
                               ),
                             ],
                           ),
@@ -727,19 +737,22 @@ class _HomeScreenState extends State<HomeScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   decoration: BoxDecoration(
-                    color: SpendzColors.surface(context),
+                    color: const Color(0xFFCBDFBD), // Pistachio
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: SpendzColors.border(context),
-                      width: 0.8,
+                      color: const Color(0xFFB5CCA7),
+                      width: 1.2,
                     ),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(
-                        color: Colors.black.withAlpha(
-                          SpendzColors.isDark(context) ? 30 : 8,
-                        ),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
+                        color: Color(0x222C221E),
+                        blurRadius: 5,
+                        offset: Offset(2, 3),
+                      ),
+                      BoxShadow(
+                        color: Colors.white,
+                        blurRadius: 1.5,
+                        offset: Offset(-1, -1),
                       ),
                     ],
                   ),

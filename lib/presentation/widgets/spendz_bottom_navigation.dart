@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../app/theme/spendz_colors.dart';
 
 class SpendzNavigationDestination {
   final IconData icon;
@@ -28,8 +27,6 @@ class SpendzBottomNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = SpendzColors.isDark(context);
-
     return SafeArea(
       top: false,
       child: Padding(
@@ -38,14 +35,19 @@ class SpendzBottomNavigation extends StatelessWidget {
           height: 64,
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
           decoration: BoxDecoration(
-            color: SpendzColors.surface(context),
+            color: const Color(0xFFF6F4D2), // Cream
             borderRadius: BorderRadius.circular(26),
-            boxShadow: [
+            border: Border.all(color: const Color(0xFFE2E0BD), width: 1.2),
+            boxShadow: const [
               BoxShadow(
-                color: Colors.black.withAlpha(isDark ? 38 : 12),
-                blurRadius: 18,
-                offset: const Offset(0, 6),
-                spreadRadius: -4,
+                color: Color(0x1F2C221E),
+                blurRadius: 6,
+                offset: Offset(2, 3),
+              ),
+              BoxShadow(
+                color: Colors.white,
+                blurRadius: 2,
+                offset: Offset(-1, -1),
               ),
             ],
           ),
@@ -53,7 +55,6 @@ class SpendzBottomNavigation extends StatelessWidget {
             children: List.generate(destinations.length, (index) {
               final item = destinations[index];
               final selected = index == currentIndex;
-              final muted = SpendzColors.textSecondary(context);
 
               return Expanded(
                 child: Material(
@@ -66,7 +67,7 @@ class SpendzBottomNavigation extends StatelessWidget {
                       curve: Curves.easeOut,
                       decoration: BoxDecoration(
                         color: selected
-                            ? SpendzColors.surfaceElevated(context)
+                            ? const Color(0xFFF19C79) // Coral Terracotta
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(18),
                       ),
@@ -77,9 +78,7 @@ class SpendzBottomNavigation extends StatelessWidget {
                           Icon(
                             selected ? item.activeIcon : item.icon,
                             size: 20,
-                            color: selected
-                                ? SpendzColors.primaryAccent(context)
-                                : muted,
+                            color: selected ? const Color(0xFF2C221E) : const Color(0xFF63564F),
                           ),
                           const SizedBox(height: 3),
                           Text(
@@ -91,9 +90,7 @@ class SpendzBottomNavigation extends StatelessWidget {
                               fontSize: 10,
                               fontWeight:
                                   selected ? FontWeight.w800 : FontWeight.w600,
-                              color: selected
-                                  ? SpendzColors.textPrimary(context)
-                                  : muted,
+                              color: selected ? const Color(0xFF2C221E) : const Color(0xFF63564F),
                               letterSpacing: 0.1,
                               height: 1.0,
                             ),

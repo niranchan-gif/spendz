@@ -410,19 +410,19 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 vertical: 3,
               ),
               decoration: BoxDecoration(
-                color: SpendzColors.clayYellow,
+                color: const Color(0xFFD4E09B), // Chartreuse
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: [
+                border: Border.all(color: const Color(0xFFBFCC85), width: 1.2),
+                boxShadow: const [
                   BoxShadow(
-                    color: SpendzColors.clayYellow.withAlpha(90),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
+                    color: Color(0x1F2C221E),
+                    blurRadius: 4,
+                    offset: Offset(1.5, 2),
                   ),
-                  const BoxShadow(
+                  BoxShadow(
                     color: Colors.white,
-                    blurRadius: 2,
-                    offset: Offset(1, 1),
-                    blurStyle: BlurStyle.inner,
+                    blurRadius: 1.5,
+                    offset: Offset(-1, -1),
                   ),
                 ],
               ),
@@ -434,7 +434,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     height: 6,
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Color(0xFF735500),
+                      color: Color(0xFF2C221E),
                     ),
                   ),
                   const SizedBox(width: 5),
@@ -444,7 +444,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       fontFamily: 'Plus Jakarta Sans',
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF735500),
+                      color: Color(0xFF2C221E),
                     ),
                   ),
                 ],
@@ -469,25 +469,24 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: SpendzColors.clayPeriwinkle,
+                  color: const Color(0xFFCBDFBD), // Pistachio
                   borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
+                  border: Border.all(
+                    color: const Color(0xFFB5CCA7),
+                    width: 1.2,
+                  ),
+                  boxShadow: const [
                     BoxShadow(
-                      color: SpendzColors.periwinkle.withAlpha(60),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
+                      color: Color(0x1F2C221E),
+                      blurRadius: 4,
+                      offset: Offset(1.5, 2),
                     ),
-                    const BoxShadow(
+                    BoxShadow(
                       color: Colors.white,
-                      blurRadius: 2,
-                      offset: Offset(1, 1),
-                      blurStyle: BlurStyle.inner,
+                      blurRadius: 1.5,
+                      offset: Offset(-1, -1),
                     ),
                   ],
-                  border: Border.all(
-                    color: SpendzColors.periwinkle.withAlpha(90),
-                    width: 1,
-                  ),
                 ),
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
@@ -495,7 +494,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     Icon(
                       Icons.sync_rounded,
                       size: 16,
-                      color: SpendzColors.periwinkleDark,
+                      color: Color(0xFF2C221E),
                     ),
                     SizedBox(width: 4),
                     Text(
@@ -504,7 +503,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         fontFamily: 'Plus Jakarta Sans',
                         fontSize: 11.5,
                         fontWeight: FontWeight.w800,
-                        color: SpendzColors.periwinkleDark,
+                        color: Color(0xFF2C221E),
                       ),
                     ),
                   ],
@@ -525,23 +524,23 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: SpendzColors.tangerine,
+                  color: const Color(0xFFF19C79), // Coral Terracotta
                   shape: BoxShape.circle,
-                  boxShadow: [
+                  border: Border.all(color: const Color(0xFFD9835E), width: 1.2),
+                  boxShadow: const [
                     BoxShadow(
-                      color: SpendzColors.tangerine.withAlpha(110),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
+                      color: Color(0x222C221E),
+                      blurRadius: 5,
+                      offset: Offset(2, 3),
                     ),
-                    const BoxShadow(
+                    BoxShadow(
                       color: Colors.white,
-                      blurRadius: 2,
-                      offset: Offset(1, 1),
-                      blurStyle: BlurStyle.inner,
+                      blurRadius: 1.5,
+                      offset: Offset(-1, -1),
                     ),
                   ],
                 ),
-                child: const Icon(Icons.add_rounded, color: Colors.white, size: 24),
+                child: const Icon(Icons.add_rounded, color: Color(0xFF2C221E), size: 24),
               ),
             ),
           ],
@@ -565,23 +564,22 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: SpendzColors.clayYellow,
+              color: const Color(0xFFF19C79), // Coral Terracotta
               borderRadius: BorderRadius.circular(22),
               border: Border.all(
-                color: const Color(0xFFE5B23A),
+                color: const Color(0xFFD9835E),
                 width: 1.2,
               ),
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
-                  color: const Color(0xFFD49E1E).withAlpha(120),
-                  blurRadius: 12,
-                  offset: const Offset(0, 5),
+                  color: Color(0x1F2C221E),
+                  blurRadius: 4,
+                  offset: Offset(1.5, 2.5),
                 ),
-                const BoxShadow(
+                BoxShadow(
                   color: Colors.white,
-                  blurRadius: 2,
-                  offset: Offset(1, 1),
-                  blurStyle: BlurStyle.inner,
+                  blurRadius: 1.5,
+                  offset: Offset(-1, -1),
                 ),
               ],
             ),
@@ -609,7 +607,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         color: Colors.white.withAlpha(220),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF735500).withAlpha(40),
+                            color: const Color(0xFFA44A3F),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -665,23 +663,22 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: SpendzColors.clayPeriwinkle,
+              color: const Color(0xFFD4E09B), // Chartreuse
               borderRadius: BorderRadius.circular(22),
               border: Border.all(
-                color: const Color(0xFFD4E3F1),
+                color: const Color(0xFFBFCC85),
                 width: 1.2,
               ),
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
-                  color: const Color(0xFFB5CCE0).withAlpha(110),
-                  blurRadius: 12,
-                  offset: const Offset(0, 5),
+                  color: Color(0x1F2C221E),
+                  blurRadius: 4,
+                  offset: Offset(1.5, 2.5),
                 ),
-                const BoxShadow(
+                BoxShadow(
                   color: Colors.white,
-                  blurRadius: 2,
-                  offset: Offset(1, 1),
-                  blurStyle: BlurStyle.inner,
+                  blurRadius: 1.5,
+                  offset: Offset(-1, -1),
                 ),
               ],
             ),
@@ -698,7 +695,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.5,
-                        color: Color(0xFF4A657E),
+                        color: const Color(0xFF2C221E),
                       ),
                     ),
                     Container(
@@ -718,7 +715,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       child: const Icon(
                         Icons.arrow_upward_rounded,
                         size: 15,
-                        color: Color(0xFF2C5070),
+                        color: const Color(0xFF2C221E),
                       ),
                     ),
                   ],
@@ -730,7 +727,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     fontFamily: 'Plus Jakarta Sans',
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF1E4265),
+                    color: const Color(0xFF2C221E),
                     letterSpacing: -0.4,
                   ),
                 ),
@@ -750,7 +747,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       fontFamily: 'Plus Jakarta Sans',
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF4A657E),
+                      color: const Color(0xFF2C221E),
                     ),
                   ),
                 ),
@@ -965,23 +962,26 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? activeColor : SpendzColors.surface(context),
+          color: isSelected ? const Color(0xFFF19C79) : const Color(0xFFCBDFBD),
           borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? const Color(0xFFD9835E) : const Color(0xFFB5CCA7),
+            width: 1.2,
+          ),
           boxShadow: isSelected
-              ? [
+              ? const [
                   BoxShadow(
-                    color: activeColor.withAlpha(90),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+                    color: Color(0x1F2C221E),
+                    blurRadius: 4,
+                    offset: Offset(1.5, 2.5),
                   ),
                   BoxShadow(
-                    color: Colors.white.withAlpha(180),
-                    blurRadius: 3,
-                    offset: const Offset(1, 1),
-                    blurStyle: BlurStyle.inner,
+                    color: Colors.white,
+                    blurRadius: 1.5,
+                    offset: Offset(-1, -1),
                   ),
                 ]
-              : SpendzColors.clayDropShadow(context),
+              : null,
         ),
         child: Text(
           label,
@@ -989,7 +989,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             fontFamily: 'Plus Jakarta Sans',
             fontSize: 12,
             fontWeight: FontWeight.w700,
-            color: isSelected ? textColor : SpendzColors.textPrimary(context),
+            color: isSelected ? const Color(0xFFF6F4D2) : const Color(0xFF2C221E),
           ),
         ),
       ),
@@ -1029,24 +1029,27 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 ),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? SpendzColors.tangerine
-                      : SpendzColors.surface(context),
+                      ? const Color(0xFFD4E09B)
+                      : const Color(0xFFF6F4D2),
                   borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isSelected ? const Color(0xFFBFCC85) : const Color(0xFFE2E0BD),
+                    width: 1.2,
+                  ),
                   boxShadow: isSelected
-                      ? [
+                      ? const [
                           BoxShadow(
-                            color: SpendzColors.tangerine.withAlpha(80),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
+                            color: Color(0x1A2C221E),
+                            blurRadius: 3,
+                            offset: Offset(1, 1.5),
+                          ),
+                          BoxShadow(
+                            color: Colors.white,
+                            blurRadius: 1,
+                            offset: Offset(-1, -1),
                           ),
                         ]
-                      : [
-                          BoxShadow(
-                            color: Colors.black.withAlpha(8),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+                      : null,
                 ),
                 child: Row(
                   children: [

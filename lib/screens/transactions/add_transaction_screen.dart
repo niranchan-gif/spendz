@@ -111,8 +111,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Transaction saved ⚡️'),
+        content: Text('Transaction saved'),
         behavior: SnackBarBehavior.floating,
+        backgroundColor: Color(0xFFF19C79),
       ),
     );
   }
@@ -157,9 +158,21 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                           width: 42,
                           height: 42,
                           decoration: BoxDecoration(
-                            color: SpendzColors.surface(context),
+                            color: const Color(0xFFCBDFBD),
                             shape: BoxShape.circle,
-                            boxShadow: SpendzColors.clayDropShadow(context),
+                            border: Border.all(color: const Color(0xFFB5CCA7), width: 1.2),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x1F2C221E),
+                                blurRadius: 4,
+                                offset: Offset(1.5, 2.5),
+                              ),
+                              BoxShadow(
+                                color: Colors.white,
+                                blurRadius: 1.5,
+                                offset: Offset(-1, -1),
+                              ),
+                            ],
                           ),
                           child: Icon(
                             Icons.close_rounded,
@@ -168,21 +181,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                           ),
                         ),
                       ),
-                      Row(
-                        children: [
-                          Text(
-                            'New Transaction',
-                            style: TextStyle(
-                              fontFamily: 'Plus Jakarta Sans',
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: SpendzColors.textPrimary(context),
-                              letterSpacing: -0.3,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          const Text('💸', style: TextStyle(fontSize: 18)),
-                        ],
+                      Text(
+                        'New Transaction',
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: SpendzColors.textPrimary(context),
+                          letterSpacing: -0.3,
+                        ),
                       ),
                       const SizedBox(width: 42), // Balance spacer
                     ],
@@ -193,19 +200,20 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: SpendzColors.surfaceContainerLow(context),
+                      color: const Color(0xFFF6F4D2),
                       borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
+                      border: Border.all(color: const Color(0xFFE2E0BD), width: 1.2),
+                      boxShadow: const [
                         BoxShadow(
-                          color: Colors.black.withAlpha(15),
-                          offset: const Offset(2, 2),
-                          blurRadius: 4,
+                          color: Color(0x1F2C221E),
+                          offset: Offset(1.5, 1.5),
+                          blurRadius: 3,
                           blurStyle: BlurStyle.inner,
                         ),
                         BoxShadow(
-                          color: Colors.white.withAlpha(200),
-                          offset: const Offset(-2, -2),
-                          blurRadius: 4,
+                          color: Colors.white,
+                          offset: Offset(-1, -1),
+                          blurRadius: 2,
                           blurStyle: BlurStyle.inner,
                         ),
                       ],
@@ -215,17 +223,20 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         _buildModeTab(
                           'Expense',
                           'expense',
-                          SpendzColors.tangerine,
+                          const Color(0xFFF19C79),
+                          const Color(0xFFD9835E),
                         ),
                         _buildModeTab(
                           'Income',
                           'income',
-                          SpendzColors.tertiarySky,
+                          const Color(0xFFD4E09B),
+                          const Color(0xFFBFCC85),
                         ),
                         _buildModeTab(
                           'Transfer',
                           'transfer',
-                          SpendzColors.sunshineYellow,
+                          const Color(0xFFCBDFBD),
+                          const Color(0xFFB5CCA7),
                         ),
                       ],
                     ),
@@ -239,9 +250,21 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       vertical: 24,
                     ),
                     decoration: BoxDecoration(
-                      color: SpendzColors.surface(context),
+                      color: const Color(0xFFCBDFBD),
                       borderRadius: BorderRadius.circular(26),
-                      boxShadow: SpendzColors.clayDropShadow(context),
+                      border: Border.all(color: const Color(0xFFB5CCA7), width: 1.5),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x1F2C221E),
+                          blurRadius: 6,
+                          offset: Offset(2, 3.5),
+                        ),
+                        BoxShadow(
+                          color: Colors.white,
+                          blurRadius: 1.5,
+                          offset: Offset(-1, -1),
+                        ),
+                      ],
                     ),
                     child: Column(
                       children: [
@@ -250,13 +273,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                           crossAxisAlignment: CrossAxisAlignment.baseline,
                           textBaseline: TextBaseline.alphabetic,
                           children: [
-                            Text(
+                            const Text(
                               '₹',
                               style: TextStyle(
                                 fontFamily: 'Plus Jakarta Sans',
                                 fontSize: 32,
-                                fontWeight: FontWeight.w800,
-                                color: SpendzColors.tangerine,
+                                fontWeight: FontWeight.w900,
+                                color: Color(0xFFA44A3F),
                               ),
                             ),
                             const SizedBox(width: 4),
@@ -280,24 +303,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                               vertical: 5,
                             ),
                             decoration: BoxDecoration(
-                              color: SpendzColors.sunshineYellow.withAlpha(40),
+                              color: const Color(0xFFF6F4D2),
                               borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: const Color(0xFFE2E0BD), width: 1),
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Text('✨', style: TextStyle(fontSize: 12)),
-                                const SizedBox(width: 5),
-                                Text(
-                                  'Category: ${_selectedCategory!.name}',
-                                  style: const TextStyle(
-                                    fontFamily: 'Plus Jakarta Sans',
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF735500),
-                                  ),
-                                ),
-                              ],
+                            child: Text(
+                              'Category: ${_selectedCategory!.name}',
+                              style: const TextStyle(
+                                fontFamily: 'Plus Jakarta Sans',
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF2C221E),
+                              ),
                             ),
                           ),
                       ],
@@ -310,19 +327,20 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     height: 50,
                     padding: const EdgeInsets.symmetric(horizontal: 14),
                     decoration: BoxDecoration(
-                      color: SpendzColors.surfaceContainerLow(context),
+                      color: const Color(0xFFF6F4D2),
                       borderRadius: BorderRadius.circular(18),
-                      boxShadow: [
+                      border: Border.all(color: const Color(0xFFE2E0BD), width: 1.2),
+                      boxShadow: const [
                         BoxShadow(
-                          color: Colors.black.withAlpha(15),
-                          offset: const Offset(2, 2),
-                          blurRadius: 4,
+                          color: Color(0x1F2C221E),
+                          offset: Offset(1.5, 1.5),
+                          blurRadius: 3,
                           blurStyle: BlurStyle.inner,
                         ),
                         BoxShadow(
-                          color: Colors.white.withAlpha(220),
-                          offset: const Offset(-2, -2),
-                          blurRadius: 4,
+                          color: Colors.white,
+                          offset: Offset(-1, -1),
+                          blurRadius: 2,
                           blurStyle: BlurStyle.inner,
                         ),
                       ],
@@ -332,7 +350,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         const Icon(
                           Icons.storefront_rounded,
                           size: 20,
-                          color: SpendzColors.tangerine,
+                          color: Color(0xFFA44A3F),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
@@ -385,40 +403,43 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                             ),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? SpendzColors.tangerine
-                                  : SpendzColors.surface(context),
+                                  ? const Color(0xFFF19C79)
+                                  : const Color(0xFFCBDFBD),
                               borderRadius: BorderRadius.circular(20),
-                              boxShadow: isSelected
-                                  ? [
-                                      BoxShadow(
-                                        color: SpendzColors.tangerine.withAlpha(
-                                          90,
-                                        ),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 3),
-                                      ),
-                                    ]
-                                  : SpendzColors.clayDropShadow(context),
+                              border: Border.all(
+                                color: isSelected
+                                    ? const Color(0xFFD9835E)
+                                    : const Color(0xFFB5CCA7),
+                                width: 1.2,
+                              ),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x1F2C221E),
+                                  blurRadius: 4,
+                                  offset: Offset(1.5, 2.5),
+                                ),
+                                BoxShadow(
+                                  color: Colors.white,
+                                  blurRadius: 1.5,
+                                  offset: Offset(-1, -1),
+                                ),
+                              ],
                             ),
                             child: Row(
                               children: [
                                 Icon(
                                   IconMapper.getIcon(cat.icon),
                                   size: 15,
-                                  color: isSelected
-                                      ? Colors.white
-                                      : SpendzColors.textSecondary(context),
+                                  color: const Color(0xFF2C221E),
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
                                   cat.name,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontFamily: 'Plus Jakarta Sans',
                                     fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    color: isSelected
-                                        ? Colors.white
-                                        : SpendzColors.textPrimary(context),
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFF2C221E),
                                   ),
                                 ),
                               ],
@@ -440,9 +461,21 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                           child: Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: SpendzColors.surface(context),
+                              color: const Color(0xFFF6F4D2),
                               borderRadius: BorderRadius.circular(18),
-                              boxShadow: SpendzColors.clayDropShadow(context),
+                              border: Border.all(color: const Color(0xFFE2E0BD), width: 1.2),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x1F2C221E),
+                                  blurRadius: 4,
+                                  offset: Offset(1.5, 2.5),
+                                ),
+                                BoxShadow(
+                                  color: Colors.white,
+                                  blurRadius: 1.5,
+                                  offset: Offset(-1, -1),
+                                ),
+                              ],
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -452,7 +485,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                     const Icon(
                                       Icons.credit_card_rounded,
                                       size: 15,
-                                      color: SpendzColors.tertiarySky,
+                                      color: Color(0xFFA44A3F),
                                     ),
                                     const SizedBox(width: 5),
                                     Text(
@@ -523,9 +556,21 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                           child: Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: SpendzColors.surface(context),
+                              color: const Color(0xFFF6F4D2),
                               borderRadius: BorderRadius.circular(18),
-                              boxShadow: SpendzColors.clayDropShadow(context),
+                              border: Border.all(color: const Color(0xFFE2E0BD), width: 1.2),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x1F2C221E),
+                                  blurRadius: 4,
+                                  offset: Offset(1.5, 2.5),
+                                ),
+                                BoxShadow(
+                                  color: Colors.white,
+                                  blurRadius: 1.5,
+                                  offset: Offset(-1, -1),
+                                ),
+                              ],
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -535,7 +580,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                     const Icon(
                                       Icons.schedule_rounded,
                                       size: 15,
-                                      color: SpendzColors.tangerine,
+                                      color: Color(0xFFF19C79),
                                     ),
                                     const SizedBox(width: 5),
                                     Text(
@@ -591,19 +636,20 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: SpendzColors.surfaceContainerLow(context),
+                      color: const Color(0xFFF6F4D2),
                       borderRadius: BorderRadius.circular(22),
-                      boxShadow: [
+                      border: Border.all(color: const Color(0xFFE2E0BD), width: 1.2),
+                      boxShadow: const [
                         BoxShadow(
-                          color: Colors.black.withAlpha(12),
-                          offset: const Offset(2, 2),
-                          blurRadius: 4,
+                          color: Color(0x1F2C221E),
+                          offset: Offset(1.5, 1.5),
+                          blurRadius: 3,
                           blurStyle: BlurStyle.inner,
                         ),
                         BoxShadow(
-                          color: Colors.white.withAlpha(200),
-                          offset: const Offset(-2, -2),
-                          blurRadius: 4,
+                          color: Colors.white,
+                          offset: Offset(-1, -1),
+                          blurRadius: 2,
                           blurStyle: BlurStyle.inner,
                         ),
                       ],
@@ -654,38 +700,25 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   ),
                   const SizedBox(height: 18),
 
-                  // Save Transaction ⚡️ Inflated Clay Button
+                  // Save Transaction Matte Clay Button
                   GestureDetector(
                     onTap: _saveTransaction,
                     child: Container(
                       height: 54,
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [
-                            SpendzColors.tangerine,
-                            SpendzColors.sunshineYellow,
-                          ],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
+                        color: const Color(0xFFF19C79),
                         borderRadius: BorderRadius.circular(28),
-                        boxShadow: [
+                        border: Border.all(color: const Color(0xFFD9835E), width: 1.5),
+                        boxShadow: const [
                           BoxShadow(
-                            color: SpendzColors.tangerine.withAlpha(120),
-                            blurRadius: 18,
-                            offset: const Offset(0, 8),
+                            color: Color(0x1F2C221E),
+                            blurRadius: 6,
+                            offset: Offset(2, 3.5),
                           ),
                           BoxShadow(
-                            color: Colors.white.withAlpha(180),
-                            blurRadius: 3,
-                            offset: const Offset(2, 2),
-                            blurStyle: BlurStyle.inner,
-                          ),
-                          BoxShadow(
-                            color: const Color(0xFF954A00).withAlpha(60),
-                            blurRadius: 4,
-                            offset: const Offset(-2, -2),
-                            blurStyle: BlurStyle.inner,
+                            color: Colors.white,
+                            blurRadius: 1.5,
+                            offset: Offset(-1, -1),
                           ),
                         ],
                       ),
@@ -698,13 +731,17 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                             style: TextStyle(
                               fontFamily: 'Plus Jakarta Sans',
                               fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF2C221E),
                               letterSpacing: -0.3,
                             ),
                           ),
                           SizedBox(width: 6),
-                          Text('⚡️', style: TextStyle(fontSize: 18)),
+                          Icon(
+                            Icons.check_rounded,
+                            size: 20,
+                            color: Color(0xFF2C221E),
+                          ),
                         ],
                       ),
                     ),
@@ -719,7 +756,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
   }
 
-  Widget _buildModeTab(String label, String mode, Color color) {
+  Widget _buildModeTab(String label, String mode, Color color, Color borderColor) {
     final isSelected = _selectedType == mode;
     return Expanded(
       child: GestureDetector(
@@ -730,18 +767,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           decoration: BoxDecoration(
             color: isSelected ? color : Colors.transparent,
             borderRadius: BorderRadius.circular(20),
+            border: isSelected ? Border.all(color: borderColor, width: 1.2) : null,
             boxShadow: isSelected
-                ? [
+                ? const [
                     BoxShadow(
-                      color: color.withAlpha(90),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
+                      color: Color(0x1F2C221E),
+                      blurRadius: 4,
+                      offset: Offset(1.5, 2.5),
                     ),
                     BoxShadow(
-                      color: Colors.white.withAlpha(180),
-                      blurRadius: 2,
-                      offset: const Offset(1, 1),
-                      blurStyle: BlurStyle.inner,
+                      color: Colors.white,
+                      blurRadius: 1.5,
+                      offset: Offset(-1, -1),
                     ),
                   ]
                 : null,
@@ -752,11 +789,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             style: TextStyle(
               fontFamily: 'Plus Jakarta Sans',
               fontSize: 13,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w800,
               color: isSelected
-                  ? (mode == 'transfer'
-                        ? const Color(0xFF735500)
-                        : Colors.white)
+                  ? const Color(0xFF2C221E)
                   : SpendzColors.textSecondary(context),
             ),
           ),
@@ -772,20 +807,28 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         child: Container(
           height: 48,
           decoration: BoxDecoration(
-            color: SpendzColors.surface(context),
+            color: const Color(0xFFCBDFBD),
             borderRadius: BorderRadius.circular(16),
-            boxShadow: SpendzColors.clayDropShadow(
-              context,
-              blur: 12,
-              offset: const Offset(0, 4),
-            ),
+            border: Border.all(color: const Color(0xFFB5CCA7), width: 1.2),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x1F2C221E),
+                blurRadius: 3,
+                offset: Offset(1, 2),
+              ),
+              BoxShadow(
+                color: Colors.white,
+                blurRadius: 1,
+                offset: Offset(-1, -1),
+              ),
+            ],
           ),
           alignment: Alignment.center,
           child: isAction
               ? const Icon(
                   Icons.backspace_outlined,
                   size: 20,
-                  color: SpendzColors.tangerine,
+                  color: Color(0xFFA44A3F),
                 )
               : Text(
                   key,

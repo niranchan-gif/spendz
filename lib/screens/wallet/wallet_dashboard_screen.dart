@@ -355,18 +355,23 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
-        color: isSelected ? SpendzColors.tangerine : SpendzColors.surface(context),
+        color: isSelected ? const Color(0xFFF19C79) : const Color(0xFFCBDFBD),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isSelected ? SpendzColors.tangerine : SpendzColors.border(context),
-          width: 0.8,
+          color: isSelected ? const Color(0xFFD9835E) : const Color(0xFFB5CCA7),
+          width: 1.2,
         ),
         boxShadow: isSelected
-            ? [
+            ? const [
                 BoxShadow(
-                  color: SpendzColors.tangerine.withAlpha(80),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
+                  color: Color(0x1F2C221E),
+                  blurRadius: 4,
+                  offset: Offset(1.5, 2.5),
+                ),
+                BoxShadow(
+                  color: Colors.white,
+                  blurRadius: 1.5,
+                  offset: Offset(-1, -1),
                 ),
               ]
             : null,
@@ -377,7 +382,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
           fontFamily: 'Plus Jakarta Sans',
           fontSize: 11,
           fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-          color: isSelected ? Colors.white : SpendzColors.textPrimary(context),
+          color: isSelected ? const Color(0xFFF6F4D2) : const Color(0xFF2C221E),
         ),
       ),
     );
@@ -1245,25 +1250,25 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         ),
         const SizedBox(height: 12),
 
-        // Item 1: Aadhaar Card (Funky Peach Clay)
+        // Item 1: Aadhaar Card (Cream Matte Clay)
         _buildDirectoryCardItem(
           context: context,
-          tileBg: const Color(0xFFFFF4EC),
-          tileBorder: const Color(0xFFFFD4B8),
+          tileBg: const Color(0xFFF6F4D2), // Cream
+          tileBorder: const Color(0xFFE2E0BD),
           icon: Icons.fingerprint_rounded,
-          iconBg: SpendzColors.tangerine.withAlpha(25),
-          iconColor: SpendzColors.tangerine,
+          iconBg: const Color(0xFFF19C79), // Coral
+          iconColor: const Color(0xFF2C221E),
           title: aadhaarDoc?.documentName ?? 'Aadhaar Card',
           badgeText: 'UIDAI',
-          badgeBg: SpendzColors.sunshineYellow,
-          badgeColor: const Color(0xFF735500),
+          badgeBg: const Color(0xFFD4E09B), // Chartreuse
+          badgeColor: const Color(0xFF2C221E),
           subtitle: aadhaarDoc != null
               ? 'ID: ${aadhaarDoc.maskedIdentifier != null && aadhaarDoc.maskedIdentifier!.isNotEmpty ? aadhaarDoc.maskedIdentifier : "•••• ••••"} • Biometric Locked'
               : 'Not linked • Tap to add',
           statusWidget: Icon(
             aadhaarDoc != null ? Icons.check_circle_rounded : Icons.add_circle_outline_rounded,
             size: 18,
-            color: SpendzColors.tangerine,
+            color: const Color(0xFFF19C79),
           ),
           onTap: () {
             if (aadhaarDoc != null) {
@@ -1285,25 +1290,25 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         ),
         const SizedBox(height: 10),
 
-        // Item 2: PAN Card (Funky Ice Blue Clay)
+        // Item 2: PAN Card (Pistachio Matte Clay)
         _buildDirectoryCardItem(
           context: context,
-          tileBg: const Color(0xFFEDF6FF),
-          tileBorder: const Color(0xFFBAE0FF),
+          tileBg: const Color(0xFFCBDFBD), // Pistachio
+          tileBorder: const Color(0xFFB5CCA7),
           icon: Icons.badge_outlined,
-          iconBg: SpendzColors.tertiarySky.withAlpha(25),
-          iconColor: SpendzColors.tertiarySky,
+          iconBg: const Color(0xFFD4E09B), // Chartreuse
+          iconColor: const Color(0xFF2C221E),
           title: panDoc?.documentName ?? 'PAN Card',
           badgeText: 'Linked',
-          badgeBg: SpendzColors.tertiarySky.withAlpha(40),
-          badgeColor: SpendzColors.tertiarySky,
+          badgeBg: const Color(0xFFF6F4D2), // Cream
+          badgeColor: const Color(0xFF2C221E),
           subtitle: panDoc != null
               ? 'PAN: ${panDoc.maskedIdentifier != null && panDoc.maskedIdentifier!.isNotEmpty ? panDoc.maskedIdentifier : "••••••••••"} • Income Tax Dept'
               : 'Not linked • Tap to link',
           statusWidget: Icon(
             panDoc != null ? Icons.link_rounded : Icons.add_circle_outline_rounded,
             size: 18,
-            color: SpendzColors.tertiarySky,
+            color: const Color(0xFF4C6B22),
           ),
           onTap: () {
             if (panDoc != null) {
@@ -1325,18 +1330,20 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         ),
         const SizedBox(height: 10),
 
-        // Item 3: Spendz Platinum Debit (Funky Cool Slate Clay)
+        // Item 3: Spendz Platinum Debit (Deep Crimson Brick Matte Clay)
         _buildDirectoryCardItem(
           context: context,
-          tileBg: const Color(0xFFE9EEF7),
-          tileBorder: const Color(0xFFCAD5E8),
+          tileBg: const Color(0xFFA44A3F), // Deep Crimson Brick
+          tileBorder: const Color(0xFF883B32),
+          textColor: const Color(0xFFF6F4D2),
+          subtitleColor: const Color(0xFFF6F4D2).withAlpha(200),
           icon: Icons.credit_card_rounded,
-          iconBg: const Color(0xFF1E293B),
-          iconColor: SpendzColors.sunshineYellow,
+          iconBg: const Color(0xFFD4E09B), // Chartreuse
+          iconColor: const Color(0xFF2C221E),
           title: debitCard?.nickname ?? 'Spendz Platinum Debit',
           badgeText: debitCard != null ? '${debitCard.issuerName} • ${debitCard.cardNetwork}' : 'RuPay Platinum',
-          badgeBg: SpendzColors.surfaceContainerHigh(context),
-          badgeColor: SpendzColors.textSecondary(context),
+          badgeBg: const Color(0xFFF6F4D2),
+          badgeColor: const Color(0xFFA44A3F),
           subtitle: debitCard != null
               ? '${debitCard.maskedNumber.isNotEmpty ? debitCard.maskedNumber : "•••• " + debitCard.lastFour} • Tap & Pay Active'
               : 'Not added • Tap to add',
@@ -1346,13 +1353,13 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                   height: 8,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    color: SpendzColors.tangerine,
+                    color: Color(0xFFD4E09B),
                   ),
                 )
               : const Icon(
                   Icons.add_circle_outline_rounded,
                   size: 18,
-                  color: Color(0xFF1E293B),
+                  color: Color(0xFFF6F4D2),
                 ),
           onTap: () {
             if (debitCard != null) {
@@ -1374,25 +1381,25 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         ),
         const SizedBox(height: 10),
 
-        // Item 4: World Elite Credit (Funky Sunshine Gold Clay)
+        // Item 4: World Elite Credit (Warm Chartreuse Matte Clay)
         _buildDirectoryCardItem(
           context: context,
-          tileBg: const Color(0xFFFFF9E6),
-          tileBorder: const Color(0xFFFFE8A3),
+          tileBg: const Color(0xFFD4E09B), // Chartreuse
+          tileBorder: const Color(0xFFBFCC85),
           icon: Icons.diamond_outlined,
-          iconBg: SpendzColors.sunshineYellow.withAlpha(35),
-          iconColor: const Color(0xFF735500),
+          iconBg: const Color(0xFFF19C79), // Coral
+          iconColor: const Color(0xFF2C221E),
           title: creditCard?.nickname ?? 'World Elite Credit',
           badgeText: creditCard != null ? '${creditCard.issuerName} • ${creditCard.cardNetwork}' : 'Visa Infinite',
-          badgeBg: SpendzColors.sunshineYellow,
-          badgeColor: const Color(0xFF735500),
+          badgeBg: const Color(0xFFA44A3F),
+          badgeColor: const Color(0xFFF6F4D2),
           subtitle: creditCard != null
               ? '${creditCard.maskedNumber.isNotEmpty ? creditCard.maskedNumber : "•••• " + creditCard.lastFour} • Active'
               : 'Not added • Tap to add',
           statusWidget: Icon(
             creditCard != null ? Icons.stars_rounded : Icons.add_circle_outline_rounded,
             size: 18,
-            color: const Color(0xFFB45309),
+            color: const Color(0xFFA44A3F),
           ),
           onTap: () {
             if (creditCard != null) {
@@ -1414,25 +1421,25 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         ),
         const SizedBox(height: 10),
 
-        // Item 5: Star Health Mediclaim (Funky Rose Coral Clay)
+        // Item 5: Star Health Mediclaim (Coral Terracotta Matte Clay)
         _buildDirectoryCardItem(
           context: context,
-          tileBg: const Color(0xFFFFF1F2),
-          tileBorder: const Color(0xFFFFCCD2),
+          tileBg: const Color(0xFFF19C79), // Coral Terracotta
+          tileBorder: const Color(0xFFD9835E),
           icon: Icons.health_and_safety_rounded,
-          iconBg: const Color(0xFFFEE2E2),
-          iconColor: const Color(0xFFDC2626),
+          iconBg: const Color(0xFFA44A3F), // Brick
+          iconColor: const Color(0xFFF6F4D2),
           title: insuranceDoc?.documentName ?? 'Star Health Mediclaim',
           badgeText: 'Coverage',
-          badgeBg: const Color(0xFFFEE2E2),
-          badgeColor: const Color(0xFFDC2626),
+          badgeBg: const Color(0xFFF6F4D2),
+          badgeColor: const Color(0xFFA44A3F),
           subtitle: insuranceDoc != null
               ? 'Policy: ${insuranceDoc.maskedIdentifier != null && insuranceDoc.maskedIdentifier!.isNotEmpty ? insuranceDoc.maskedIdentifier : "Active"} • Cashless Medi-Claim'
               : 'Not added • Tap to add',
           statusWidget: Icon(
             insuranceDoc != null ? Icons.verified_rounded : Icons.add_circle_outline_rounded,
             size: 18,
-            color: const Color(0xFFDC2626),
+            color: const Color(0xFFA44A3F),
           ),
           onTap: () {
             if (insuranceDoc != null) {
@@ -1454,25 +1461,25 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         ),
         const SizedBox(height: 10),
 
-        // Item 6: Voter ID (EPIC) (Funky Periwinkle/Lavender Clay)
+        // Item 6: Voter ID (EPIC) (Pistachio Matte Clay)
         _buildDirectoryCardItem(
           context: context,
-          tileBg: const Color(0xFFF1F0FF),
-          tileBorder: const Color(0xFFD6D1FF),
+          tileBg: const Color(0xFFCBDFBD), // Pistachio
+          tileBorder: const Color(0xFFB5CCA7),
           icon: Icons.how_to_vote_outlined,
-          iconBg: const Color(0xFFE0E7FF),
-          iconColor: SpendzColors.tertiarySky,
+          iconBg: const Color(0xFFF6F4D2), // Cream
+          iconColor: const Color(0xFF2C221E),
           title: voterDoc?.documentName ?? 'Voter ID (EPIC)',
           badgeText: 'ECI Official',
-          badgeBg: const Color(0xFFE0E7FF),
-          badgeColor: const Color(0xFF4338CA),
+          badgeBg: const Color(0xFFD4E09B),
+          badgeColor: const Color(0xFF2C221E),
           subtitle: voterDoc != null
               ? 'EPIC: ${voterDoc.maskedIdentifier != null && voterDoc.maskedIdentifier!.isNotEmpty ? voterDoc.maskedIdentifier : "Verified"} • ECI Official'
               : 'Not added • Tap to add',
           statusWidget: Icon(
             voterDoc != null ? Icons.how_to_vote_rounded : Icons.add_circle_outline_rounded,
             size: 18,
-            color: const Color(0xFF4338CA),
+            color: const Color(0xFF4C6B22),
           ),
           onTap: () {
             if (voterDoc != null) {
@@ -1494,25 +1501,27 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         ),
         const SizedBox(height: 10),
 
-        // Item 7: Indian Passport (Funky Seafoam Mint Clay)
+        // Item 7: Indian Passport (Deep Crimson Brick Matte Clay)
         _buildDirectoryCardItem(
           context: context,
-          tileBg: const Color(0xFFEBF5F5),
-          tileBorder: const Color(0xFFC2E4E4),
+          tileBg: const Color(0xFFA44A3F), // Deep Crimson Brick
+          tileBorder: const Color(0xFF883B32),
+          textColor: const Color(0xFFF6F4D2),
+          subtitleColor: const Color(0xFFF6F4D2).withAlpha(200),
           icon: Icons.public_rounded,
-          iconBg: const Color(0xFF0F172A),
-          iconColor: SpendzColors.sunshineYellow,
+          iconBg: const Color(0xFFF6F4D2),
+          iconColor: const Color(0xFFA44A3F),
           title: passportDoc?.documentName ?? 'Indian Passport',
           badgeText: 'Republic of India',
-          badgeBg: SpendzColors.sunshineYellow,
-          badgeColor: const Color(0xFF735500),
+          badgeBg: const Color(0xFFD4E09B),
+          badgeColor: const Color(0xFF2C221E),
           subtitle: passportDoc != null
               ? '${passportDoc.maskedIdentifier != null && passportDoc.maskedIdentifier!.isNotEmpty ? passportDoc.maskedIdentifier : "Valid"} • Republic of India'
               : 'Not added • Tap to add',
           statusWidget: Icon(
             passportDoc != null ? Icons.public_rounded : Icons.add_circle_outline_rounded,
             size: 18,
-            color: const Color(0xFF0D9488),
+            color: const Color(0xFFD4E09B),
           ),
           onTap: () {
             if (passportDoc != null) {
@@ -1549,6 +1558,8 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     Widget? statusWidget,
     Color? tileBg,
     Color? tileBorder,
+    Color? textColor,
+    Color? subtitleColor,
     required VoidCallback onTap,
   }) {
     return Container(
@@ -1557,9 +1568,20 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: tileBorder ?? SpendzColors.border(context),
-          width: 1.0,
+          width: 1.2,
         ),
-        boxShadow: SpendzColors.clayDropShadow(context),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x1F2C221E),
+            blurRadius: 5,
+            offset: Offset(2, 3),
+          ),
+          BoxShadow(
+            color: Colors.white,
+            blurRadius: 1.5,
+            offset: Offset(-1, -1),
+          ),
+        ],
       ),
       child: Material(
         type: MaterialType.transparency,
@@ -1593,7 +1615,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                                 fontFamily: 'Plus Jakarta Sans',
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w800,
-                                color: SpendzColors.textPrimary(context),
+                                color: textColor ?? SpendzColors.textPrimary(context),
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -1627,7 +1649,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                           fontFamily: 'Plus Jakarta Sans',
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
-                          color: SpendzColors.textSecondary(context),
+                          color: subtitleColor ?? SpendzColors.textSecondary(context),
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1640,7 +1662,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                 Icon(
                   Icons.chevron_right_rounded,
                   size: 18,
-                  color: SpendzColors.textSecondary(context).withAlpha(120),
+                  color: (textColor ?? SpendzColors.textSecondary(context)).withAlpha(120),
                 ),
               ],
             ),
@@ -1722,13 +1744,19 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: SpendzColors.tertiarySky,
+                  color: const Color(0xFFF19C79), // Coral Terracotta
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
+                  border: Border.all(color: const Color(0xFFD9835E), width: 1.2),
+                  boxShadow: const [
                     BoxShadow(
-                      color: SpendzColors.tertiarySky.withAlpha(80),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
+                      color: Color(0x1F2C221E),
+                      blurRadius: 4,
+                      offset: Offset(1.5, 2.5),
+                    ),
+                    BoxShadow(
+                      color: Colors.white,
+                      blurRadius: 1.5,
+                      offset: Offset(-1, -1),
                     ),
                   ],
                 ),

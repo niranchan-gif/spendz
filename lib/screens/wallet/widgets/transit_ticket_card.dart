@@ -240,26 +240,22 @@ class TransitTicketCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        // Full green vibrant emerald gradient
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFF047857), // Deep emerald
-            Color(0xFF065F46), // Forest emerald
-            Color(0xFF022C22), // Midnight emerald base
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: const Color(0xFFCBDFBD), // Pale Pistachio Clay
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: const Color(0xFF34D399).withAlpha(70),
-          width: 1.2,
+          color: const Color(0xFFB5CCA7),
+          width: 1.5,
         ),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: const Color(0xFF047857).withAlpha(50),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
+            color: Color(0x1F2C221E),
+            blurRadius: 6,
+            offset: Offset(2, 3.5),
+          ),
+          BoxShadow(
+            color: Colors.white,
+            blurRadius: 2,
+            offset: Offset(-1, -1),
           ),
         ],
       ),
@@ -269,8 +265,9 @@ class TransitTicketCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // 1. TOP HEADER: Carrier, Train/Flight Icon & Confirmed Badge
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+            Container(
+              color: const Color(0xFFA44A3F), // Deep Crimson Brick
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -279,13 +276,13 @@ class TransitTicketCard extends StatelessWidget {
                       children: [
                         Container(
                           padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(35),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFD4E09B),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
                             Icons.train_rounded,
-                            color: Colors.white,
+                            color: Color(0xFF2C221E),
                             size: 18,
                           ),
                         ),
@@ -297,9 +294,9 @@ class TransitTicketCard extends StatelessWidget {
                               Text(
                                 _effectiveCarrier,
                                 style: const TextStyle(
-                                  color: Color(0xFFD1FAE5),
+                                  color: Color(0xFFF6F4D2),
                                   fontWeight: FontWeight.w800,
-                                  fontSize: 11,
+                                  fontSize: 12,
                                   letterSpacing: 0.8,
                                 ),
                                 maxLines: 1,
@@ -308,8 +305,8 @@ class TransitTicketCard extends StatelessWidget {
                               const Text(
                                 'TRANSIT BOARDING PASS',
                                 style: TextStyle(
-                                  color: Color(0xFF6EE7B7),
-                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFFD4E09B),
+                                  fontWeight: FontWeight.w700,
                                   fontSize: 8.5,
                                   letterSpacing: 0.5,
                                 ),
@@ -330,10 +327,10 @@ class TransitTicketCard extends StatelessWidget {
                           vertical: 3.5,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF10B981).withAlpha(60),
+                          color: const Color(0xFFD4E09B),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: const Color(0xFF34D399),
+                            color: const Color(0xFFBFCC85),
                             width: 0.8,
                           ),
                         ),
@@ -342,14 +339,14 @@ class TransitTicketCard extends StatelessWidget {
                           children: [
                             Icon(
                               Icons.check_circle_rounded,
-                              color: Color(0xFF34D399),
+                              color: Color(0xFF2C221E),
                               size: 12,
                             ),
                             SizedBox(width: 4),
                             Text(
                               'CONFIRMED',
                               style: TextStyle(
-                                color: Color(0xFFECFDF5),
+                                color: Color(0xFF2C221E),
                                 fontSize: 9.5,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 0.6,
@@ -396,11 +393,11 @@ class TransitTicketCard extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.black.withAlpha(40),
+                  color: const Color(0xFFF6F4D2), // Cream
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: Colors.white.withAlpha(20),
-                    width: 0.8,
+                    color: const Color(0xFFE2E0BD),
+                    width: 1.2,
                   ),
                 ),
                 child: Row(
@@ -413,7 +410,7 @@ class TransitTicketCard extends StatelessWidget {
                         const Text(
                           'PNR NUMBER',
                           style: TextStyle(
-                            color: Color(0xFF6EE7B7),
+                            color: const Color(0xFF2C221E),
                             fontWeight: FontWeight.w700,
                             fontSize: 9,
                             letterSpacing: 1.0,
@@ -440,7 +437,7 @@ class TransitTicketCard extends StatelessWidget {
                               Text(
                                 _effectivePnr,
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: const Color(0xFF2C221E),
                                   fontWeight: FontWeight.w900,
                                   fontSize: 16,
                                   fontFamily: 'monospace',
@@ -450,7 +447,7 @@ class TransitTicketCard extends StatelessWidget {
                               const SizedBox(width: 5),
                               const Icon(
                                 Icons.copy_rounded,
-                                color: Color(0xFF34D399),
+                                color: const Color(0xFFF19C79),
                                 size: 13,
                               ),
                             ],
@@ -466,7 +463,7 @@ class TransitTicketCard extends StatelessWidget {
                         const Text(
                           'SEAT / BERTH',
                           style: TextStyle(
-                            color: Color(0xFF6EE7B7),
+                            color: const Color(0xFF2C221E),
                             fontWeight: FontWeight.w700,
                             fontSize: 9,
                             letterSpacing: 1.0,
@@ -479,7 +476,7 @@ class TransitTicketCard extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF10B981).withAlpha(50),
+                            color: const Color(0xFFF19C79),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
@@ -514,7 +511,7 @@ class TransitTicketCard extends StatelessWidget {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withAlpha(15),
+                        color: const Color(0xFFF6F4D2),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(
@@ -531,7 +528,7 @@ class TransitTicketCard extends StatelessWidget {
                               const Text(
                                 'DATE OF TRAVEL',
                                 style: TextStyle(
-                                  color: Color(0xFF6EE7B7),
+                                  color: const Color(0xFF2C221E),
                                   fontSize: 7.5,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -539,7 +536,7 @@ class TransitTicketCard extends StatelessWidget {
                               Text(
                                 formattedDate,
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: const Color(0xFF2C221E),
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -559,7 +556,7 @@ class TransitTicketCard extends StatelessWidget {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withAlpha(15),
+                        color: const Color(0xFFF6F4D2),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(
@@ -576,7 +573,7 @@ class TransitTicketCard extends StatelessWidget {
                               const Text(
                                 'TIME OF TRAVEL',
                                 style: TextStyle(
-                                  color: Color(0xFF6EE7B7),
+                                  color: const Color(0xFF2C221E),
                                   fontSize: 7.5,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -584,7 +581,7 @@ class TransitTicketCard extends StatelessWidget {
                               Text(
                                 _effectiveTime,
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: const Color(0xFF2C221E),
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -635,12 +632,10 @@ class TransitTicketCard extends StatelessWidget {
                                       horizontal: 8,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: const Color(
-                                        0xFF10B981,
-                                      ).withAlpha(60),
+                                      color: const Color(0xFFD4E09B),
                                       borderRadius: BorderRadius.circular(8),
                                       border: Border.all(
-                                        color: const Color(0xFF34D399),
+                                        color: const Color(0xFFBFCC85),
                                         width: 0.8,
                                       ),
                                     ),
@@ -700,10 +695,10 @@ class TransitTicketCard extends StatelessWidget {
                                 horizontal: 8,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.white.withAlpha(25),
+                                color: const Color(0xFFD4E09B),
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: const Color(0xFF34D399).withAlpha(80),
+                                  color: const Color(0xFFBFCC85),
                                   width: 0.8,
                                 ),
                               ),
@@ -761,7 +756,7 @@ class TransitTicketCard extends StatelessWidget {
                     margin: const EdgeInsets.symmetric(
                       horizontal: dashSpace / 2,
                     ),
-                    color: Colors.white.withAlpha(40),
+                    color: const Color(0xFFB5CCA7),
                   );
                 }),
               );

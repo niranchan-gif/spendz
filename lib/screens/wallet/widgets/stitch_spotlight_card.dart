@@ -118,17 +118,17 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
-          boxShadow: [
+          border: Border.all(color: const Color(0xFFB5CCA7), width: 1.5),
+          boxShadow: const [
             BoxShadow(
-              color: const Color(0xFF1E293B).withAlpha(28),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
+              color: Color(0x222C221E),
+              blurRadius: 8,
+              offset: Offset(2.5, 4),
             ),
-            const BoxShadow(
+            BoxShadow(
               color: Colors.white,
               blurRadius: 2,
-              offset: Offset(1, 1),
-              blurStyle: BlurStyle.inner,
+              offset: Offset(-1.5, -1.5),
             ),
           ],
         ),
@@ -174,12 +174,10 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFFFFFFF), Color(0xFFFFFBF5), Color(0xFFFFE9CF)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF6F4D2), // Cream
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFE2E0BD), width: 1.2),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -195,13 +193,7 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: const Color(0xFFFF933E),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFFF933E).withAlpha(90),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                      border: Border.all(color: const Color(0xFFD9835E), width: 1.0),
                     ),
                     child: const Icon(Icons.wb_sunny_rounded, color: Colors.white, size: 16),
                   ),
@@ -474,12 +466,10 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFC9E6FF), Color(0xFFDFF0FF), Color(0xFFFFDF9F)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+      decoration: BoxDecoration(
+        color: const Color(0xFFCBDFBD), // Pistachio
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFB5CCA7), width: 1.2),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -664,12 +654,10 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF263143), Color(0xFF1B2432), Color(0xFF111C2D)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+      decoration: BoxDecoration(
+        color: const Color(0xFFA44A3F), // Deep Crimson Brick
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFF883B32), width: 1.2),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -830,12 +818,10 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFFF933E), Color(0xFFE57A26), Color(0xFF795900)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+      decoration: BoxDecoration(
+        color: const Color(0xFFD4E09B), // Warm Chartreuse
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFBFCC85), width: 1.2),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -983,12 +969,10 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFFFDAD6), Color(0xFFFFECE9), Color(0xFFFFDCC6)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF19C79), // Coral Terracotta
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFD9835E), width: 1.2),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1133,12 +1117,10 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFF0F3FF), Color(0xFFD8E3FB), Color(0xFFC9E6FF)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+      decoration: BoxDecoration(
+        color: const Color(0xFFCBDFBD), // Pistachio
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFB5CCA7), width: 1.2),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1305,12 +1287,10 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF122238), Color(0xFF0D1A2D), Color(0xFF08111E)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+      decoration: BoxDecoration(
+        color: const Color(0xFFA44A3F), // Deep Crimson Brick
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFF883B32), width: 1.2),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,

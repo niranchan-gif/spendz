@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+/// Matte Clay container replacing legacy translucent glass containers.
+/// Provides defined opaque surfaces, tactile borders, and matte drop shadows.
 class GlassContainer extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
@@ -16,7 +18,7 @@ class GlassContainer extends StatelessWidget {
     this.padding,
     this.margin,
     this.borderRadius = 24.0,
-    this.blur = 30.0, // Increased blur for premium feel
+    this.blur = 0.0,
     this.color,
     this.border,
     this.constraints,
@@ -24,35 +26,36 @@ class GlassContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget content = RepaintBoundary(
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(borderRadius),
-            color: color ?? Colors.black.withAlpha(64),
-            border:
-                border ??
-                Border.all(color: Colors.white.withAlpha(25), width: 1.2),
-          ),
-          child: Padding(padding: padding ?? EdgeInsets.zero, child: child),
-        ),
-      ),
-    );
-
-    // Apply shadow
-    content = Container(
+    Widget content = Container(
+      constraints: constraints,
       decoration: BoxDecoration(
+        color: color ?? const Color(0xFFCBDFBD), // Pale Pistachio Clay
         borderRadius: BorderRadius.circular(borderRadius),
-        boxShadow: [
+        border: border ??
+            Border.all(
+              color: const Color(0xFFB5CCA7), // Defined tactile border
+              width: 1.2,
+            ),
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withAlpha(51),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Color(0x222C221E), // Soft matte warm shadow
+            blurRadius: 6,
+            offset: Offset(2, 3),
+          ),
+          BoxShadow(
+            color: Colors.white, // Matte highlight
+            blurRadius: 2,
+            offset: Offset(-1, -1),
           ),
         ],
       ),
-      child: content,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: Padding(
+          padding: padding ?? EdgeInsets.zero,
+          child: child,
+        ),
+      ),
     );
 
     if (margin != null) {
