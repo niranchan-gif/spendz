@@ -6,9 +6,9 @@ import '../../app/theme/spendz_colors.dart';
 import '../../app/theme/spendz_spacing.dart';
 import '../../app/theme/spendz_typography.dart';
 import '../../database/database_helper.dart';
-import '../../presentation/widgets/spendz_app_bar.dart';
 import '../../presentation/widgets/spendz_section_header.dart';
 import '../../presentation/widgets/spendz_surface.dart';
+import '../../presentation/widgets/spendz_top_bar.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/transaction_provider.dart';
 import '../categories/categories_screen.dart';
@@ -27,23 +27,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: SpendzColors.background(context),
-      appBar: SpendzAppBar(
-        title: 'Preferences',
-        subtitle: 'Profile, preferences & application settings',
-        actions: const [],
-      ),
-      body: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, _) {
-          return ListView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: SpendzSpacing.lg,
-              vertical: SpendzSpacing.md,
-            ),
-            physics: const BouncingScrollPhysics(),
-            children: [
-              // 1. Profile Hero Banner
-              _buildProfileHero(context),
-              const SizedBox(height: SpendzSpacing.xl),
+      body: SafeArea(
+        bottom: false,
+        child: Consumer<ThemeProvider>(
+          builder: (context, themeProvider, _) {
+            return ListView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: SpendzSpacing.lg,
+                vertical: SpendzSpacing.sm,
+              ),
+              physics: const BouncingScrollPhysics(),
+              children: [
+                const SpendzTopBar(title: 'Profile'),
+                const SizedBox(height: SpendzSpacing.sm),
+
+                // 1. Profile Hero Banner
+                _buildProfileHero(context),
+                const SizedBox(height: SpendzSpacing.xl),
 
               // 2. Appearance & Theme Section
               _buildThemeSection(context, themeProvider),
@@ -68,8 +68,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           );
         },
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildProfileHero(BuildContext context) {
     final accent = SpendzColors.primaryAccent(context);
