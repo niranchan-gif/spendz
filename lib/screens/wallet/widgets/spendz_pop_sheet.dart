@@ -42,12 +42,6 @@ class SpendzPopSheet extends StatelessWidget {
         borderRadius: const BorderRadius.vertical(
           top: Radius.circular(32), // rounded-3xl
         ),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withAlpha(15)
-              : Colors.white.withAlpha(200),
-          width: 1.5,
-        ),
         boxShadow: [
           BoxShadow(
             color: isDark
