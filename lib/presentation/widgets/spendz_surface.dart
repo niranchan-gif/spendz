@@ -122,16 +122,11 @@ class SpendzSurface extends StatelessWidget {
 
     // Keep the established Spendz palette, but use its matte neutral surface
     // layers for every tile. Accent colours stay in icons, charts and data.
-    final surfaceColor = color == null
-        ? (isRecessed
-            ? SpendzColors.surfaceRecessed(context)
-            : (isElevated
-                ? SpendzColors.surfaceElevated(context)
-                : SpendzColors.surface(context)))
-        : Color.alphaBlend(
-            color!,
-            isDark ? SpendzColors.surfaceDark : SpendzColors.surfaceLowest,
-          );
+    final surfaceColor = isRecessed
+        ? SpendzColors.surfaceRecessed(context)
+        : (isElevated
+            ? SpendzColors.surfaceElevated(context)
+            : SpendzColors.surface(context));
 
     final shadows = showShadow && !isRecessed
         ? <BoxShadow>[
