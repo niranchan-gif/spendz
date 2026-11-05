@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../app/theme/spendz_colors.dart';
 import '../../app/theme/spendz_spacing.dart';
+import '../../screens/profile/profile_screen.dart';
 
-/// Funky Claymorphism Global Top Header Bar for Spendz 2.0.
-/// Renders the [ SPENDZ ] orange pill, OVERVIEW/Screen Title,
-/// white circular notification bell, and yellow/brown avatar ring.
+/// Funky Claymorphism Global Top Header Bar for Spendz.
+/// Renders the prominent [ SPENDZ ] orange pill, Screen Title,
+/// notification bell, and profile avatar taking user to settings.
 class SpendzTopBar extends StatelessWidget {
   final String title;
   final String category;
@@ -14,7 +15,7 @@ class SpendzTopBar extends StatelessWidget {
   const SpendzTopBar({
     super.key,
     required this.title,
-    this.category = 'OVERVIEW',
+    this.category = '',
     this.onNotificationsTap,
     this.onProfileTap,
   });
@@ -34,20 +35,21 @@ class SpendzTopBar extends StatelessWidget {
           // Left: SPENDZ Pill + Screen Title
           Row(
             children: [
+              // Bigger, crisp, prominent SPENDZ brand badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                 decoration: BoxDecoration(
                   color: SpendzColors.tangerine,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(22),
                   boxShadow: [
                     BoxShadow(
-                      color: SpendzColors.tangerine.withAlpha(isDark ? 80 : 100),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
+                      color: SpendzColors.tangerine.withAlpha(isDark ? 90 : 120),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
                     BoxShadow(
-                      color: Colors.white.withAlpha(160),
-                      blurRadius: 2,
+                      color: Colors.white.withAlpha(190),
+                      blurRadius: 3,
                       offset: const Offset(1, 1),
                       blurStyle: BlurStyle.inner,
                     ),
@@ -57,59 +59,33 @@ class SpendzTopBar extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(6),
                       child: Image.asset(
                         'assets/icon.png',
-                        width: 16,
-                        height: 16,
+                        width: 24,
+                        height: 24,
                         errorBuilder: (_, __, ___) => const Icon(
                           Icons.savings_outlined,
                           color: Colors.white,
-                          size: 16,
+                          size: 22,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 5),
+                    const SizedBox(width: 8),
                     const Text(
                       'SPENDZ',
                       style: TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
                         color: Colors.white,
                         fontWeight: FontWeight.w900,
-                        fontSize: 12.5,
-                        letterSpacing: -0.3,
+                        fontSize: 14.5,
+                        letterSpacing: -0.2,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    category.toUpperCase(),
-                    style: TextStyle(
-                      fontFamily: 'Plus Jakarta Sans',
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w700,
-                      color: SpendzColors.textSecondary(context),
-                      letterSpacing: 1.1,
-                    ),
-                  ),
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontFamily: 'Plus Jakarta Sans',
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      color: SpendzColors.textPrimary(context),
-                      letterSpacing: -0.4,
-                      height: 1.1,
-                    ),
-                  ),
-                ],
-              ),
+
             ],
           ),
 
@@ -124,7 +100,7 @@ class SpendzTopBar extends StatelessWidget {
                       () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: const Text('All notifications are up to date! ✨'),
+                            content: const Text('All notifications are up to date'),
                             behavior: SnackBarBehavior.floating,
                             backgroundColor: SpendzColors.surfaceContainerHigh(context),
                             shape: RoundedRectangleBorder(
@@ -161,9 +137,14 @@ class SpendzTopBar extends StatelessWidget {
               ),
               const SizedBox(width: 8),
 
-              // Brown/Yellow Circular Avatar
+              // Brown/Yellow Circular Avatar - Navigates to Settings/Profile
               GestureDetector(
-                onTap: onProfileTap,
+                onTap: onProfileTap ?? () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                  );
+                },
                 child: Container(
                   width: 38,
                   height: 38,

@@ -26,17 +26,26 @@ class SpendzColors {
   static const Color tertiarySky = periwinkle;
 
   /// Canvas Backdrops
-  static const Color canvasLight = Color(0xFFF9F9FF);
-  static const Color canvasWarmCream = Color(0xFFFDF6EC);
+  static const Color canvasLight = Color(0xFFF7F8FC);
+  static const Color canvasWarmCream = Color(0xFFFDF8F0);
   static const Color canvasDark = Color(0xFF111C2D);
   static const Color canvasDeepDark = Color(0xFF101713);
 
-  /// Surfaces (Light Claymorphic Layers)
-  static const Color surfaceLowest = Color(0xFFFFFFFF);
-  static const Color surfaceLow = Color(0xFFF0F3FF);
-  static const Color surfaceContainerColor = Color(0xFFE7EEFF);
-  static const Color surfaceHigh = Color(0xFFDEE8FF);
+  /// Surfaces (Light Claymorphic Layers - Warm tactile clay, NO empty flat white)
+  static const Color surfaceLowest = Color(0xFFFFFDF9);
+  static const Color surfaceLow = Color(0xFFF4F6FD);
+  static const Color surfaceContainerColor = Color(0xFFEBF1FD);
+  static const Color surfaceHigh = Color(0xFFE2EAFA);
   static const Color surfaceHighest = Color(0xFFD8E3FB);
+
+  /// Tactile Claymorphism Pastel Tile Fills (Color Theory)
+  static const Color clayYellow = Color(0xFFFECA55);
+  static const Color clayYellowSoft = Color(0xFFFFF5D6);
+  static const Color clayCream = Color(0xFFFFFBF2);
+  static const Color clayPeriwinkle = Color(0xFFEAF2F9);
+  static const Color clayTangerine = Color(0xFFFFF1E6);
+  static const Color clayMint = Color(0xFFEDF8F2);
+  static const Color clayLavender = Color(0xFFF3E8FF);
 
   /// Surfaces (Dark Claymorphic Layers)
   static const Color surfaceDark = Color(0xFF192538);

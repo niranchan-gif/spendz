@@ -11,6 +11,7 @@ import '../../providers/category_provider.dart';
 import '../../providers/transaction_provider.dart';
 import '../../utils/icon_mapper.dart';
 import 'add_transaction_screen.dart';
+import 'imported_transactions_screen.dart';
 
 /// Spendz Funky Claymorphism Activity & Transactions Feed Screen.
 /// Bulbous tactile clay modules, sunken search wells, dual pods, and live feed.
@@ -143,7 +144,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 const SliverToBoxAdapter(
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
-                    child: SpendzTopBar(title: 'Activity', category: 'OVERVIEW'),
+                    child: SpendzTopBar(title: 'Activity'),
                   ),
                 ),
 
@@ -376,14 +377,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       }, childCount: grouped.length),
                     ),
                   ),
-
-                  // 7. Visual Proof & Audit Reconciliation Card
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-                      child: _buildReconciliationFooter(context),
-                    ),
-                  ),
               ],
             );
           },
@@ -392,7 +385,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     );
   }
 
-  // 1. Header with Activity & Flows ⚡️ and Puffy Add Button
+  // 1. Header with Bank Sync and Add Button
   Widget _buildHeader(BuildContext context, int count) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -400,132 +393,158 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Text(
-                  'Activity & Flows',
-                  style: TextStyle(
-                    fontFamily: 'Plus Jakarta Sans',
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    color: SpendzColors.textPrimary(context),
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                const Text('⚡️', style: TextStyle(fontSize: 22)),
-              ],
+            Text(
+              'Activity & Flows',
+              style: TextStyle(
+                fontFamily: 'Plus Jakarta Sans',
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: SpendzColors.textPrimary(context),
+                letterSpacing: -0.5,
+              ),
             ),
             const SizedBox(height: 4),
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 3,
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 3,
+              ),
+              decoration: BoxDecoration(
+                color: SpendzColors.clayYellow,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: SpendzColors.clayYellow.withAlpha(90),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
                   ),
-                  decoration: BoxDecoration(
-                    color: SpendzColors.sunshineYellow,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: SpendzColors.sunshineYellow.withAlpha(90),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                      BoxShadow(
-                        color: Colors.white.withAlpha(200),
-                        blurRadius: 2,
-                        offset: const Offset(1, 1),
-                        blurStyle: BlurStyle.inner,
-                      ),
-                    ],
+                  const BoxShadow(
+                    color: Colors.white,
+                    blurRadius: 2,
+                    offset: Offset(1, 1),
+                    blurStyle: BlurStyle.inner,
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Color(0xFF735500),
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        '$count this month',
-                        style: const TextStyle(
-                          fontFamily: 'Plus Jakarta Sans',
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF735500),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.auto_awesome,
-                      size: 13,
-                      color: SpendzColors.textSecondary(context),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color(0xFF735500),
                     ),
-                    const SizedBox(width: 3),
-                    Text(
-                      'Live feed',
-                      style: TextStyle(
-                        fontFamily: 'Plus Jakarta Sans',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: SpendzColors.textSecondary(context),
-                      ),
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    '$count transactions',
+                    style: const TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF735500),
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),
 
-        // Floating Puffy Add Button
-        GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
-            );
-          },
-          child: Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: SpendzColors.tangerine,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: SpendzColors.tangerine.withAlpha(110),
-                  blurRadius: 16,
-                  offset: const Offset(0, 8),
+        // Action Buttons: Bank Sync + Add Transaction
+        Row(
+          children: [
+            // Bank Sync from Google Scripts Button
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ImportedTransactionsScreen(),
+                  ),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: SpendzColors.clayPeriwinkle,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: SpendzColors.periwinkle.withAlpha(60),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                    const BoxShadow(
+                      color: Colors.white,
+                      blurRadius: 2,
+                      offset: Offset(1, 1),
+                      blurStyle: BlurStyle.inner,
+                    ),
+                  ],
+                  border: Border.all(
+                    color: SpendzColors.periwinkle.withAlpha(90),
+                    width: 1,
+                  ),
                 ),
-                BoxShadow(
-                  color: Colors.white.withAlpha(180),
-                  blurRadius: 3,
-                  offset: const Offset(2, 2),
-                  blurStyle: BlurStyle.inner,
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.sync_rounded,
+                      size: 16,
+                      color: SpendzColors.periwinkleDark,
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      'Bank Sync',
+                      style: TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w800,
+                        color: SpendzColors.periwinkleDark,
+                      ),
+                    ),
+                  ],
                 ),
-                BoxShadow(
-                  color: const Color(0xFFB85200).withAlpha(80),
-                  blurRadius: 4,
-                  offset: const Offset(-2, -2),
-                  blurStyle: BlurStyle.inner,
-                ),
-              ],
+              ),
             ),
-            child: const Icon(Icons.add_rounded, color: Colors.white, size: 26),
-          ),
+            const SizedBox(width: 8),
+
+            // Floating Puffy Add Button
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+                );
+              },
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: SpendzColors.tangerine,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: SpendzColors.tangerine.withAlpha(110),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                    const BoxShadow(
+                      color: Colors.white,
+                      blurRadius: 2,
+                      offset: Offset(1, 1),
+                      blurStyle: BlurStyle.inner,
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.add_rounded, color: Colors.white, size: 24),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -541,14 +560,30 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   ) {
     return Row(
       children: [
-        // Spent Pod
+        // Spent Pod (Clay Yellow #FECA55)
         Expanded(
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: SpendzColors.surface(context),
+              color: SpendzColors.clayYellow,
               borderRadius: BorderRadius.circular(22),
-              boxShadow: SpendzColors.clayDropShadow(context),
+              border: Border.all(
+                color: const Color(0xFFE5B23A),
+                width: 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFD49E1E).withAlpha(120),
+                  blurRadius: 12,
+                  offset: const Offset(0, 5),
+                ),
+                const BoxShadow(
+                  color: Colors.white,
+                  blurRadius: 2,
+                  offset: Offset(1, 1),
+                  blurStyle: BlurStyle.inner,
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -556,14 +591,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
+                    const Text(
                       'SPENT',
                       style: TextStyle(
                         fontFamily: 'Plus Jakarta Sans',
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.5,
-                        color: SpendzColors.textSecondary(context),
+                        color: Color(0xFF735500),
                       ),
                     ),
                     Container(
@@ -571,25 +606,19 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       height: 28,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: SpendzColors.tangerineLight,
+                        color: Colors.white.withAlpha(220),
                         boxShadow: [
                           BoxShadow(
-                            color: SpendzColors.tangerine.withAlpha(60),
-                            blurRadius: 6,
+                            color: const Color(0xFF735500).withAlpha(40),
+                            blurRadius: 4,
                             offset: const Offset(0, 2),
-                          ),
-                          BoxShadow(
-                            color: Colors.white.withAlpha(200),
-                            blurRadius: 2,
-                            offset: const Offset(1, 1),
-                            blurStyle: BlurStyle.inner,
                           ),
                         ],
                       ),
                       child: const Icon(
                         Icons.arrow_downward_rounded,
                         size: 15,
-                        color: SpendzColors.tangerine,
+                        color: Color(0xFF735500),
                       ),
                     ),
                   ],
@@ -597,11 +626,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 const SizedBox(height: 10),
                 Text(
                   '₹${spent.toStringAsFixed(2)}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'Plus Jakarta Sans',
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
-                    color: SpendzColors.textPrimary(context),
+                    color: Color(0xFF4A3700),
                     letterSpacing: -0.4,
                   ),
                 ),
@@ -612,16 +641,16 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: SpendzColors.surfaceContainerHigh(context),
+                    color: Colors.white.withAlpha(160),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
                     '$expenseCount flows',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontFamily: 'Plus Jakarta Sans',
                       fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: SpendzColors.textSecondary(context),
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF735500),
                     ),
                   ),
                 ),
@@ -631,14 +660,30 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         ),
         const SizedBox(width: 12),
 
-        // Received Pod
+        // Received Pod (Clay Periwinkle #EAF2F9)
         Expanded(
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: SpendzColors.surface(context),
+              color: SpendzColors.clayPeriwinkle,
               borderRadius: BorderRadius.circular(22),
-              boxShadow: SpendzColors.clayDropShadow(context),
+              border: Border.all(
+                color: const Color(0xFFD4E3F1),
+                width: 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFB5CCE0).withAlpha(110),
+                  blurRadius: 12,
+                  offset: const Offset(0, 5),
+                ),
+                const BoxShadow(
+                  color: Colors.white,
+                  blurRadius: 2,
+                  offset: Offset(1, 1),
+                  blurStyle: BlurStyle.inner,
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -646,14 +691,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
+                    const Text(
                       'RECEIVED',
                       style: TextStyle(
                         fontFamily: 'Plus Jakarta Sans',
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.5,
-                        color: SpendzColors.textSecondary(context),
+                        color: Color(0xFF4A657E),
                       ),
                     ),
                     Container(
@@ -661,25 +706,19 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       height: 28,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: SpendzColors.tertiarySky.withAlpha(40),
+                        color: Colors.white.withAlpha(220),
                         boxShadow: [
                           BoxShadow(
-                            color: SpendzColors.tertiarySky.withAlpha(60),
-                            blurRadius: 6,
+                            color: const Color(0xFF4A657E).withAlpha(40),
+                            blurRadius: 4,
                             offset: const Offset(0, 2),
-                          ),
-                          BoxShadow(
-                            color: Colors.white.withAlpha(200),
-                            blurRadius: 2,
-                            offset: const Offset(1, 1),
-                            blurStyle: BlurStyle.inner,
                           ),
                         ],
                       ),
                       child: const Icon(
                         Icons.arrow_upward_rounded,
                         size: 15,
-                        color: SpendzColors.tertiarySky,
+                        color: Color(0xFF2C5070),
                       ),
                     ),
                   ],
@@ -691,7 +730,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     fontFamily: 'Plus Jakarta Sans',
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
-                    color: SpendzColors.tertiarySky,
+                    color: Color(0xFF1E4265),
                     letterSpacing: -0.4,
                   ),
                 ),
@@ -702,7 +741,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: SpendzColors.tertiarySky.withAlpha(25),
+                    color: Colors.white.withAlpha(160),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
@@ -710,8 +749,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     style: const TextStyle(
                       fontFamily: 'Plus Jakarta Sans',
                       fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: SpendzColors.tertiarySky,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF4A657E),
                     ),
                   ),
                 ),
@@ -1134,8 +1173,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: SpendzColors.surface(context),
+            color: SpendzColors.clayCream,
             borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: const Color(0xFFF0EBE1),
+              width: 1,
+            ),
             boxShadow: SpendzColors.clayDropShadow(context),
           ),
           child: Row(
@@ -1255,192 +1298,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  // 7. Visual Proof & Audit Reconciliation Card matching Image 2
-  Widget _buildReconciliationFooter(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: SpendzColors.surface(context),
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(
-          color: SpendzColors.border(context),
-          width: 0.8,
-        ),
-        boxShadow: SpendzColors.clayDropShadow(context),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: SpendzColors.sunshineYellow,
-                      boxShadow: [
-                        BoxShadow(
-                          color: SpendzColors.sunshineYellow.withAlpha(80),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.verified_user_rounded,
-                      color: Color(0xFF735500),
-                      size: 18,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Ledger Verified & Encrypted',
-                        style: TextStyle(
-                          fontFamily: 'Plus Jakarta Sans',
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w800,
-                          color: SpendzColors.textPrimary(context),
-                        ),
-                      ),
-                      const SizedBox(height: 1),
-                      Text(
-                        'AES-256 Cloud Vault • Synced 2m ago',
-                        style: TextStyle(
-                          fontSize: 10.5,
-                          color: SpendzColors.textSecondary(context),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              // Export CSV Button
-              GestureDetector(
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Exporting transactions to CSV... 📥'),
-                      behavior: SnackBarBehavior.floating,
-                      backgroundColor: SpendzColors.surfaceContainerHigh(context),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  );
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                  decoration: BoxDecoration(
-                    color: SpendzColors.surfaceContainerHigh(context),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: SpendzColors.border(context),
-                      width: 0.8,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.file_download_outlined,
-                        size: 15,
-                        color: SpendzColors.textPrimary(context),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Export CSV',
-                        style: TextStyle(
-                          fontFamily: 'Plus Jakarta Sans',
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: SpendzColors.textPrimary(context),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          // Sunken Audit Bar
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: SpendzColors.surfaceRecessed(context),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: SpendzColors.tertiarySky,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    RichText(
-                      text: TextSpan(
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: SpendzColors.textSecondary(context),
-                        ),
-                        children: [
-                          const TextSpan(text: 'Checksum: '),
-                          TextSpan(
-                            text: '#4E92-B7',
-                            style: TextStyle(
-                              fontFamily: 'monospace',
-                              fontWeight: FontWeight.w800,
-                              color: SpendzColors.textPrimary(context),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const Row(
-                  children: [
-                    Text(
-                      '100% RECONCILED',
-                      style: TextStyle(
-                        fontFamily: 'Plus Jakarta Sans',
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w800,
-                        color: SpendzColors.tertiarySky,
-                        letterSpacing: 0.4,
-                      ),
-                    ),
-                    SizedBox(width: 4),
-                    Icon(
-                      Icons.check_circle_rounded,
-                      size: 15,
-                      color: SpendzColors.tertiarySky,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

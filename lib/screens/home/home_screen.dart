@@ -1,3 +1,4 @@
+import '../transactions/imported_transactions_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -54,30 +55,22 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // 0. Global Funky Clay Top Bar
-                const SpendzTopBar(title: 'Home', category: 'OVERVIEW'),
-                const SizedBox(height: SpendzSpacing.sm),
-
-                // 1. Top Greeting Bar with PRO SAVER Badge
-                _buildGreetingHeader(context),
+                const SpendzTopBar(title: 'Home'),
                 const SizedBox(height: SpendzSpacing.md),
 
-                // 2. Sculpted Hero Total Balance Card
+                // 1. Sculpted Hero Total Balance Card
                 _buildHeroBalanceCard(context),
                 const SizedBox(height: SpendzSpacing.lg),
 
-                // 3. 4 Funky Quick Action Clay Buttons
+                // 2. 4 Funky Quick Action Clay Buttons
                 _buildQuickActionButtons(context),
                 const SizedBox(height: SpendzSpacing.lg),
 
-                // 4. Weekly Vibes & Flow Clay Chart
-                _buildWeeklyVibesCard(context),
-                const SizedBox(height: SpendzSpacing.lg),
-
-                // 5. Top Spending Bucket
+                // 3. Top Spending Bucket
                 _buildTopBucketCard(context),
                 const SizedBox(height: SpendzSpacing.lg),
 
-                // 6. Recent Treats & Drops Stream
+                // 4. Recent Treats Stream
                 _buildRecentTreatsSection(context),
                 const SizedBox(height: SpendzSpacing.hero),
               ],
@@ -88,86 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ─── 1. TOP GREETING HEADER ───────────────────────────────────────────────────
-  Widget _buildGreetingHeader(BuildContext context) {
-    final now = DateTime.now();
-    final hour = now.hour;
-    final greeting = hour < 12
-        ? 'Good morning ☀️'
-        : hour < 17
-        ? 'Good afternoon 🌤'
-        : 'Good evening 🌙';
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              greeting,
-              style: TextStyle(
-                fontFamily: 'Plus Jakarta Sans',
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: SpendzColors.textPrimary(context),
-                letterSpacing: -0.5,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              'Your stash is vibing strong today',
-              style: TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w500,
-                color: SpendzColors.textSecondary(context),
-              ),
-            ),
-          ],
-        ),
-
-        // Puffy PRO SAVER Badge
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: SpendzColors.sunshineYellow,
-            borderRadius: BorderRadius.circular(SpendzSpacing.radiusFull),
-            boxShadow: [
-              BoxShadow(
-                color: SpendzColors.sunshineDeep.withAlpha(60),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-            border: Border.all(color: Colors.white.withAlpha(180), width: 1.2),
-          ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.workspace_premium_rounded,
-                size: 15,
-                color: Color(0xFF735500),
-              ),
-              SizedBox(width: 4),
-              Text(
-                'PRO SAVER',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF735500),
-                  letterSpacing: 0.8,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ─── 2. HERO TOTAL BALANCE CARD ──────────────────────────────────────────────
+  // ─── 1. HERO TOTAL BALANCE CARD (YELLOW SPENT POD WITH CLAY POP) ─────────
   Widget _buildHeroBalanceCard(BuildContext context) {
     return Consumer<DashboardProvider>(
       builder: (context, dashboard, _) {
@@ -175,276 +89,248 @@ class _HomeScreenState extends State<HomeScreen> {
         final monthlyIncome = dashboard.monthlyIncome;
         final monthlyExpenses = dashboard.monthlyExpenses;
 
-        return SpendzSurface(
-          isElevated: true,
+        return Container(
           padding: const EdgeInsets.all(SpendzSpacing.lg),
-          borderRadius: 28,
-          child: Stack(
+          decoration: BoxDecoration(
+            color: const Color(0xFFE2F4EA),
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF1E293B).withAlpha(20),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
+              ),
+              const BoxShadow(
+                color: Colors.white,
+                blurRadius: 4,
+                offset: Offset(1, 1),
+                blurStyle: BlurStyle.inner,
+              ),
+            ],
+            border: Border.all(
+              color: const Color(0xFFB8E6CE),
+              width: 1.2,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Decorative background clay blobs
-              Positioned(
-                right: -20,
-                top: -20,
-                child: Container(
-                  width: 110,
-                  height: 110,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: SpendzColors.sunshineYellow.withAlpha(25),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: -20,
-                bottom: -20,
-                child: Container(
-                  width: 90,
-                  height: 90,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: SpendzColors.tangerine.withAlpha(18),
-                  ),
-                ),
-              ),
-
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              // Label & Eye Privacy Toggle
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Label & Eye Privacy Toggle
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(
-                              color: SpendzColors.tangerine,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'TOTAL LIQUID STASH',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.8,
-                              color: SpendzColors.textSecondary(context),
-                            ),
-                          ),
-                        ],
-                      ),
-                      IconButton(
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        icon: Icon(
-                          _isBalanceVisible
-                              ? Icons.visibility_rounded
-                              : Icons.visibility_off_rounded,
-                          size: 19,
-                          color: SpendzColors.textSecondary(context),
-                        ),
-                        onPressed: () {
-                          setState(
-                            () => _isBalanceVisible = !_isBalanceVisible,
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: SpendzSpacing.sm),
-
-                  // Giant Bubbly Amount Display
-                  SpendzAmountText(
-                    amount: totalBalance,
-                    isVisible: _isBalanceVisible,
-                    fontSize: 34,
-                    fontWeight: FontWeight.w900,
-                  ),
-                  const SizedBox(height: SpendzSpacing.xs),
-
-                  // Growth Pill Badge
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 3.5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: SpendzColors.periwinkleLight,
-                          borderRadius: BorderRadius.circular(
-                            SpendzSpacing.radiusFull,
-                          ),
-                          border: Border.all(
-                            color: SpendzColors.periwinkle.withAlpha(60),
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              monthlyIncome > 0
-                                  ? Icons.trending_up_rounded
-                                  : Icons.shield_outlined,
-                              size: 14,
-                              color: SpendzColors.periwinkleDark,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              monthlyIncome > 0
-                                  ? '+${(monthlyIncome > monthlyExpenses ? ((monthlyIncome - monthlyExpenses) / monthlyIncome * 100).toStringAsFixed(1) : "0.0")}% saved 🚀'
-                                  : 'Dynamic Ledger ✨',
-                              style: const TextStyle(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w800,
-                                color: SpendzColors.periwinkleDark,
-                              ),
-                            ),
-                          ],
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: SpendzColors.tangerine,
+                          shape: BoxShape.circle,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        monthlyIncome > 0 ? 'vs. last cycle' : 'Real-time verified',
+                        'Total Balance',
                         style: TextStyle(
-                          fontSize: 11,
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
                           color: SpendzColors.textSecondary(context),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: SpendzSpacing.md),
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    icon: Icon(
+                      _isBalanceVisible
+                          ? Icons.visibility_rounded
+                          : Icons.visibility_off_rounded,
+                      size: 20,
+                      color: SpendzColors.textSecondary(context),
+                    ),
+                    onPressed: () {
+                      setState(() => _isBalanceVisible = !_isBalanceVisible);
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: SpendzSpacing.sm),
 
-                  // Inflow & Outflow Dual Sunken Clay Pods
-                  Row(
-                    children: [
-                      // Inflow Pod
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
+              // Giant Bubbly Amount Display
+              SpendzAmountText(
+                amount: totalBalance,
+                isVisible: _isBalanceVisible,
+                fontSize: 34,
+                fontWeight: FontWeight.w900,
+              ),
+              const SizedBox(height: SpendzSpacing.md),
+
+              // Inflow & Outflow Dual Clay Pods
+              Row(
+                children: [
+                  // Inflow Pod - Funky Fresh Green
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 11,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFCEF1DE),
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF70C99A).withAlpha(60),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
                           ),
-                          decoration: BoxDecoration(
-                            color: SpendzColors.surfaceRecessed(context),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: SpendzColors.border(context),
-                              width: 0.8,
-                            ),
+                          const BoxShadow(
+                            color: Colors.white,
+                            blurRadius: 2,
+                            offset: Offset(1, 1),
+                            blurStyle: BlurStyle.inner,
                           ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  color: SpendzColors.periwinkle,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: const Icon(
-                                  Icons.south_west_rounded,
-                                  size: 16,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Inflow',
-                                      style: TextStyle(
-                                        fontSize: 10.5,
-                                        fontWeight: FontWeight.w700,
-                                        color: SpendzColors.textSecondary(
-                                          context,
-                                        ),
-                                      ),
-                                    ),
-                                    SpendzAmountText(
-                                      amount: monthlyIncome,
-                                      variant: SpendzAmountVariant.income,
-                                      isVisible: _isBalanceVisible,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w800,
-                                      showSign: true,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
+                        ],
+                        border: Border.all(
+                          color: const Color(0xFFA5DFC0),
+                          width: 1.2,
                         ),
                       ),
-                      const SizedBox(width: 10),
-
-                      // Spent Pod
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: SpendzColors.surfaceRecessed(context),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: SpendzColors.border(context),
-                              width: 0.8,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0F5B38),
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF0F5B38).withAlpha(60),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.south_west_rounded,
+                              size: 16,
+                              color: Colors.white,
                             ),
                           ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  color: SpendzColors.tangerine,
-                                  borderRadius: BorderRadius.circular(10),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Inflow',
+                                  style: TextStyle(
+                                    fontFamily: 'Plus Jakarta Sans',
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFF0F5B38),
+                                  ),
                                 ),
-                                child: const Icon(
-                                  Icons.north_east_rounded,
-                                  size: 16,
-                                  color: Colors.white,
+                                SpendzAmountText(
+                                  amount: monthlyIncome,
+                                  variant: SpendzAmountVariant.income,
+                                  isVisible: _isBalanceVisible,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w900,
+                                  showSign: true,
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Spent',
-                                      style: TextStyle(
-                                        fontSize: 10.5,
-                                        fontWeight: FontWeight.w700,
-                                        color: SpendzColors.textSecondary(
-                                          context,
-                                        ),
-                                      ),
-                                    ),
-                                    SpendzAmountText(
-                                      amount: monthlyExpenses,
-                                      variant: SpendzAmountVariant.expense,
-                                      isVisible: _isBalanceVisible,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w800,
-                                      showSign: true,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+
+                  // Spent Pod - Exact Clay Yellow used in cards with tactile pop
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 11,
+                      ),
+                      decoration: BoxDecoration(
+                        color: SpendzColors.clayYellow,
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: [
+                          BoxShadow(
+                            color: SpendzColors.clayYellow.withAlpha(100),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                          const BoxShadow(
+                            color: Colors.white,
+                            blurRadius: 2,
+                            offset: Offset(1, 1),
+                            blurStyle: BlurStyle.inner,
+                          ),
+                        ],
+                        border: Border.all(
+                          color: Colors.white.withAlpha(200),
+                          width: 1.2,
                         ),
                       ),
-                    ],
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF735500),
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withAlpha(25),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.north_east_rounded,
+                              size: 16,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Spent',
+                                  style: TextStyle(
+                                    fontFamily: 'Plus Jakarta Sans',
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFF735500),
+                                  ),
+                                ),
+                                SpendzAmountText(
+                                  amount: monthlyExpenses,
+                                  variant: SpendzAmountVariant.expense,
+                                  isVisible: _isBalanceVisible,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w900,
+                                  showSign: true,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -455,7 +341,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ─── 3. 4 FUNKY QUICK ACTION CLAY BUTTONS ──────────────────────────────────
+  // ─── 2. QUICK ACTION CLAY BUTTONS ───────────────────────────────────────────
   Widget _buildQuickActionButtons(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -475,15 +361,15 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         _buildClayActionPod(
           context: context,
-          icon: Icons.swap_horiz_rounded,
-          label: 'Transfer',
+          icon: Icons.sync_rounded,
+          label: 'Sync to Bank',
           bgColor: SpendzColors.tertiarySky,
           iconColor: Colors.white,
           onTap: () {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => const AddTransactionScreen(),
+                builder: (_) => const ImportedTransactionsScreen(),
               ),
             );
           },
@@ -571,265 +457,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ─── 4. WEEKLY VIBES & FLOW CLAY CHART ──────────────────────────────────────
-  Widget _buildWeeklyVibesCard(BuildContext context) {
-    return Consumer2<DashboardProvider, TransactionProvider>(
-      builder: (context, dashboard, txProvider, _) {
-        final currentMonth = DateFormat('MMM yyyy').format(DateTime.now());
-        final now = DateTime.now();
-
-        // Dynamically compute real weekly spending from transactions
-        final monthExpenses = txProvider.transactions.where((tx) =>
-          tx.type == 'expense' &&
-          tx.date.year == now.year &&
-          tx.date.month == now.month
-        ).toList();
-
-        double w1Spent = 0;
-        double w2Spent = 0;
-        double w3Spent = 0;
-        double w4Spent = 0;
-
-        for (final tx in monthExpenses) {
-          final day = tx.date.day;
-          if (day <= 7) {
-            w1Spent += tx.amount;
-          } else if (day <= 14) {
-            w2Spent += tx.amount;
-          } else if (day <= 21) {
-            w3Spent += tx.amount;
-          } else {
-            w4Spent += tx.amount;
-          }
-        }
-
-        final maxWeekly = [w1Spent, w2Spent, w3Spent, w4Spent].reduce((a, b) => a > b ? a : b);
-        final baseMax = maxWeekly > 0 ? maxWeekly : 1.0;
-
-        String formatAmount(double val) {
-          if (val <= 0) return '₹0';
-          if (val >= 1000) return '₹${(val / 1000).toStringAsFixed(1)}k';
-          return '₹${val.toStringAsFixed(0)}';
-        }
-
-        final w1Pct = maxWeekly > 0 ? (w1Spent / baseMax).clamp(0.12, 1.0) : 0.08;
-        final w2Pct = maxWeekly > 0 ? (w2Spent / baseMax).clamp(0.12, 1.0) : 0.08;
-        final w3Pct = maxWeekly > 0 ? (w3Spent / baseMax).clamp(0.12, 1.0) : 0.08;
-        final w4Pct = maxWeekly > 0 ? (w4Spent / baseMax).clamp(0.12, 1.0) : 0.08;
-
-        return SpendzSurface(
-          padding: const EdgeInsets.all(SpendzSpacing.lg),
-          borderRadius: 26,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.bar_chart_rounded,
-                        color: SpendzColors.tangerine,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Weekly Vibes & Flow',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: SpendzColors.textPrimary(context),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: SpendzColors.surfaceRecessed(context),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      currentMonth,
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w700,
-                        color: SpendzColors.textSecondary(context),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: SpendzSpacing.md),
-
-              // 4 Puffy Clay Pill Bars
-              Container(
-                height: 120,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: SpendzColors.surfaceRecessed(context),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    _buildPillBar(
-                      context: context,
-                      label: 'W1',
-                      amount: formatAmount(w1Spent),
-                      fillPercent: w1Pct,
-                      color: SpendzColors.sunshineYellow,
-                    ),
-                    _buildPillBar(
-                      context: context,
-                      label: 'W2',
-                      amount: formatAmount(w2Spent),
-                      fillPercent: w2Pct,
-                      color: SpendzColors.tangerine,
-                    ),
-                    _buildPillBar(
-                      context: context,
-                      label: 'W3',
-                      amount: formatAmount(w3Spent),
-                      fillPercent: w3Pct,
-                      color: SpendzColors.periwinkle,
-                      isPeak: maxWeekly > 0 && w3Spent == maxWeekly,
-                    ),
-                    _buildPillBar(
-                      context: context,
-                      label: 'W4',
-                      amount: formatAmount(w4Spent),
-                      fillPercent: w4Pct,
-                      color: SpendzColors.sunshineYellow,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: SpendzSpacing.sm),
-
-              // Dynamic Stash / Savings Pill
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: SpendzColors.softButter.withAlpha(90),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: SpendzColors.sunshineDeep.withAlpha(30),
-                    width: 0.8,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    const Text('🌴', style: TextStyle(fontSize: 20)),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Monthly Savings Stash',
-                            style: TextStyle(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w800,
-                              color: SpendzColors.textPrimary(context),
-                            ),
-                          ),
-                          const SizedBox(height: 1),
-                          Text(
-                            dashboard.monthlyIncome > 0
-                                ? '🔥 ₹${(dashboard.monthlyIncome - dashboard.monthlyExpenses).clamp(0, double.infinity).toStringAsFixed(0)} retained this month'
-                                : 'Tap to configure budget targets',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF735500),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Icon(
-                      Icons.chevron_right_rounded,
-                      color: Color(0xFF735500),
-                      size: 20,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildPillBar({
-    required BuildContext context,
-    required String label,
-    required String amount,
-    required double fillPercent,
-    required Color color,
-    bool isPeak = false,
-  }) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        if (isPeak)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-            margin: const EdgeInsets.only(bottom: 2),
-            decoration: BoxDecoration(
-              color: SpendzColors.periwinkleDeep,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: const Text(
-              'PEAK',
-              style: TextStyle(
-                fontSize: 8,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        Container(
-          width: 38,
-          height: 60 * fillPercent,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(19),
-            boxShadow: [
-              BoxShadow(
-                color: color.withAlpha(60),
-                blurRadius: 6,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 5),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 10.5,
-            fontWeight: FontWeight.w800,
-            color: isPeak
-                ? SpendzColors.periwinkleDeep
-                : SpendzColors.textSecondary(context),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ─── 5. TOP SPENDING BUCKET CARD ─────────────────────────────────────────────
+  // ─── 3. TOP SPENDING BUCKET CARD ─────────────────────────────────────────────
   Widget _buildTopBucketCard(BuildContext context) {
     return Consumer<DashboardProvider>(
       builder: (context, dashboard, _) {
@@ -848,6 +476,7 @@ class _HomeScreenState extends State<HomeScreen> {
         final utilPct = hasExpenses ? ((totalSpent / totalBudget) * 100).clamp(1.0, 100.0).toStringAsFixed(0) : '0';
 
         return SpendzSurface(
+          color: SpendzColors.clayCream,
           padding: const EdgeInsets.all(SpendzSpacing.lg),
           borderRadius: 24,
           child: Column(
@@ -983,8 +612,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Recent Treats & Drops',
+                      'Recent Transactions',
                       style: TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
                         color: SpendzColors.textPrimary(context),
@@ -1027,6 +657,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 return Container(
                   margin: const EdgeInsets.only(bottom: 8),
                   child: SpendzSurface(
+                    color: SpendzColors.clayCream,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,
                       vertical: 11,

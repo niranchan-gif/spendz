@@ -45,12 +45,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _buildProfileHero(context),
                 const SizedBox(height: SpendzSpacing.xl),
 
-              // 2. Appearance & Theme Section
-              _buildThemeSection(context, themeProvider),
-              const SizedBox(height: SpendzSpacing.xl),
-
-              // 3. Security & Biometrics Section
-              _buildSecuritySection(context),
+                // 2. Security & Biometrics Section
+                _buildSecuritySection(context),
               const SizedBox(height: SpendzSpacing.xl),
 
               // 4. Data & Categories Section
@@ -143,101 +139,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildThemeSection(BuildContext context, ThemeProvider themeProvider) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SpendzSectionHeader(title: 'Appearance & Theme'),
-        const SizedBox(height: SpendzSpacing.xs),
-        SpendzSurface(
-          padding: const EdgeInsets.all(SpendzSpacing.md),
-          child: Row(
-            children: [
-              _buildThemeOption(
-                context: context,
-                mode: ThemeMode.system,
-                label: 'System',
-                icon: Icons.brightness_auto_rounded,
-                currentMode: themeProvider.themeMode,
-                onSelect: () => themeProvider.setThemeMode(ThemeMode.system),
-              ),
-              const SizedBox(width: SpendzSpacing.sm),
-              _buildThemeOption(
-                context: context,
-                mode: ThemeMode.light,
-                label: 'Light',
-                icon: Icons.light_mode_rounded,
-                currentMode: themeProvider.themeMode,
-                onSelect: () => themeProvider.setThemeMode(ThemeMode.light),
-              ),
-              const SizedBox(width: SpendzSpacing.sm),
-              _buildThemeOption(
-                context: context,
-                mode: ThemeMode.dark,
-                label: 'Dark',
-                icon: Icons.dark_mode_rounded,
-                currentMode: themeProvider.themeMode,
-                onSelect: () => themeProvider.setThemeMode(ThemeMode.dark),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildThemeOption({
-    required BuildContext context,
-    required ThemeMode mode,
-    required String label,
-    required IconData icon,
-    required ThemeMode currentMode,
-    required VoidCallback onSelect,
-  }) {
-    final isSelected = mode == currentMode;
-    final accent = SpendzColors.primaryAccent(context);
-
-    return Expanded(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(SpendzSpacing.radiusMd),
-        onTap: onSelect,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? accent.withAlpha(30) : Colors.transparent,
-            borderRadius: BorderRadius.circular(SpendzSpacing.radiusMd),
-            border: Border.all(
-              color: isSelected ? accent : SpendzColors.border(context),
-              width: isSelected ? 1.5 : 1.0,
-            ),
-          ),
-          child: Column(
-            children: [
-              Icon(
-                icon,
-                size: 20,
-                color: isSelected
-                    ? accent
-                    : SpendzColors.textSecondary(context),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                  color: isSelected
-                      ? accent
-                      : SpendzColors.textPrimary(context),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

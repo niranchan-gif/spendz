@@ -24,12 +24,8 @@ class WalletPassRepository {
       for (final pass in passes) {
         bool shouldDelete = false;
 
-        // 1. Remove default sample ticket (PNR 8421-950-231 or dummy sample tickets)
-        if (pass.notes?.contains('8421-950-231') == true ||
-            pass.encryptedCodePath == '8421-950-231' ||
-            pass.id == 'sample_transit_pass' ||
-            (pass.title.toLowerCase().contains('indian railways') &&
-                pass.notes?.contains('8421-950-231') == true)) {
+        // 1. Remove dummy sample ticket only
+        if (pass.id == 'sample_transit_pass') {
           shouldDelete = true;
         }
 

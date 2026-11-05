@@ -25,7 +25,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 4,
+      version: 5,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onOpen: _onOpenDB,
@@ -69,6 +69,12 @@ class DatabaseHelper {
       'wallet_cards',
       'is_default',
       "INTEGER DEFAULT 0",
+    );
+    await _addColumnIfNotExists(
+      db,
+      'wallet_passes',
+      'notes',
+      'TEXT',
     );
   }
 
@@ -114,6 +120,9 @@ class DatabaseHelper {
         'linked_payments',
         'INTEGER DEFAULT 0',
       );
+    }
+    if (oldVersion < 5) {
+      await _addColumnIfNotExists(db, 'wallet_passes', 'notes', 'TEXT');
     }
     if (oldVersion < 4) {
       // 1. Add nullable card_id column to transactions idempotently

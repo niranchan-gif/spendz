@@ -23,8 +23,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'passes_screen.dart';
-import 'widgets/virtual_document_card.dart';
 import 'widgets/transit_ticket_card.dart';
+import 'widgets/stitch_spotlight_card.dart';
+import '../../providers/wallet_pass_provider.dart';
 
 /// Spendz 2.0 Digital Wallet & Vault Screen.
 /// Clean editorial interface for Payment Cards, Encrypted Documents, and Passes.
@@ -230,15 +231,21 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
               allDocsMap[d.id] = d;
             }
             final documents = allDocsMap.values.toList();
-            final passes = wallet.passes;
-            final expiringDocs = docProvider.expiringDocuments.isNotEmpty
-                ? docProvider.expiringDocuments
-                : wallet.expiringDocuments;
+            final passProvider = context.watch<WalletPassProvider>();
+            final Map<String, WalletPassModel> allPassesMap = {};
+            for (final p in wallet.passes) {
+              allPassesMap[p.id] = p;
+            }
+            for (final p in passProvider.passes) {
+              allPassesMap[p.id] = p;
+            }
+            final passes = allPassesMap.values.toList();
 
             return RefreshIndicator(
               color: SpendzColors.tangerine,
               onRefresh: () async {
                 await wallet.loadWallet();
+                await passProvider.loadPasses();
               },
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -249,155 +256,31 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 0. Global Funky Top Header Bar
-                    const SpendzTopBar(title: 'Wallet', category: 'OVERVIEW'),
+                    // 0. Global Funky Top Header Bar (No OVERVIEW category)
+                    const SpendzTopBar(title: 'Wallet'),
                     const SizedBox(height: SpendzSpacing.sm),
 
-                    // 1. Top Document Alert Banner
-                    _buildTopAlertPill(context, expiringDocs),
+                    // 1. Vault Header & Filter Chips (Renamed to Wallet, removed DigiLocker Synced)
+                    _buildVaultHeader(context, 7),
                     const SizedBox(height: SpendzSpacing.md),
 
-                    // 2. Indian Vault Header & Filter Chips
-                    _buildVaultHeader(context, cards.length + documents.length),
-                    const SizedBox(height: SpendzSpacing.md),
-
-                    // 3. Spotlight Card Carousel
+                    // 2. Spotlight Card Carousel (The 7 Authentic Stitch Cards)
                     _buildCardsSection(context, cards, documents),
                     const SizedBox(height: SpendzSpacing.xl),
 
-                    // 4. Official Cards Directory (Tap to inspect)
+                    // 3. Official Cards Directory (Tap to inspect)
                     _buildOfficialCardsDirectory(context, cards, documents),
                     const SizedBox(height: SpendzSpacing.xl),
 
-                    // 5. Travel & Transit Passes (Live upcoming trips & tickets)
+                    // 4. Travel & Transit Passes (Live upcoming trips & tickets)
                     _buildPassesSection(context, passes),
-                    const SizedBox(height: SpendzSpacing.lg),
-
-                    // 6. 256-Bit Hardware Encrypted Trust Badge
-                    _buildHardwareEncryptedFooter(context),
-                    const SizedBox(height: SpendzSpacing.hero),
+                    const SizedBox(height: SpendzSpacing.xl),
                   ],
                 ),
               ),
             );
           },
         ),
-      ),
-    );
-  }
-
-  // ─── 1. TOP DOCUMENT ALERT BANNER ───────────────────────────────────────────
-  Widget _buildTopAlertPill(
-    BuildContext context,
-    List<WalletDocumentModel> expiringDocs,
-  ) {
-    final first = expiringDocs.isNotEmpty ? expiringDocs.first : null;
-    final title = first != null
-        ? '${first.documentName} renewal due in ${first.expiryDate != null ? first.expiryDate!.difference(DateTime.now()).inDays : 14} days'
-        : 'Driving Licence renewal due in 14 days';
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFEF3C7), // Light amber matching Image 3
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: const Color(0xFFFDE68A),
-          width: 1.0,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFD97706).withAlpha(25),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Color(0xFFEA580C),
-            ),
-            child: const Icon(
-              Icons.warning_amber_rounded,
-              size: 16,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'DOCUMENT ALERT',
-                  style: TextStyle(
-                    fontFamily: 'Plus Jakarta Sans',
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF9A3412),
-                    letterSpacing: 0.8,
-                  ),
-                ),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontFamily: 'Plus Jakarta Sans',
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF78350F),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          GestureDetector(
-            onTap: () {
-              if (first != null) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => DocumentPreviewScreen(document: first),
-                  ),
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Text('Driving Licence details loaded from vault 📄'),
-                    behavior: SnackBarBehavior.floating,
-                    backgroundColor: SpendzColors.surfaceContainerHigh(context),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                );
-              }
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFDE68A),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFF59E0B), width: 0.8),
-              ),
-              child: const Text(
-                'Renew',
-                style: TextStyle(
-                  fontFamily: 'Plus Jakarta Sans',
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF78350F),
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -413,13 +296,13 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
             Row(
               children: [
                 const Icon(
-                  Icons.shield_outlined,
+                  Icons.account_balance_wallet_rounded,
                   color: SpendzColors.tangerine,
                   size: 20,
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'Indian Vault',
+                  'Wallet',
                   style: TextStyle(
                     fontFamily: 'Plus Jakarta Sans',
                     fontSize: 20,
@@ -435,9 +318,9 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                     color: SpendzColors.tangerine,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(
-                    '$totalCount Cards',
-                    style: const TextStyle(
+                  child: const Text(
+                    '7 Cards',
+                    style: TextStyle(
                       fontFamily: 'Plus Jakarta Sans',
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
@@ -446,37 +329,6 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                   ),
                 ),
               ],
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: SpendzColors.tertiarySky.withAlpha(30),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: SpendzColors.tertiarySky.withAlpha(80),
-                  width: 0.8,
-                ),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.lock_rounded,
-                    size: 12,
-                    color: SpendzColors.tertiarySky,
-                  ),
-                  SizedBox(width: 4),
-                  Text(
-                    'DigiLocker Synced',
-                    style: TextStyle(
-                      fontFamily: 'Plus Jakarta Sans',
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: SpendzColors.tertiarySky,
-                    ),
-                  ),
-                ],
-              ),
             ),
           ],
         ),
@@ -537,264 +389,344 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     List<WalletCardModel> cards,
     List<WalletDocumentModel> documents,
   ) {
-    final List<_CardDeckItem> deckItems = [];
+    WalletDocumentModel? findDoc(List<String> keywords) {
+      for (final doc in documents) {
+        final cat = doc.category.toLowerCase();
+        final name = doc.documentName.toLowerCase();
+        for (final k in keywords) {
+          if (cat.contains(k) || name.contains(k)) return doc;
+        }
+      }
+      return null;
+    }
 
-    // 1. All saved vault documents (Aadhaar, PAN, DL, Insurance, Passport, etc.)
-    for (final doc in documents) {
-      deckItems.add(
-        _CardDeckItem(
-          id: 'doc_${doc.id}',
-          title: doc.documentName,
-          subtitle: doc.category.replaceAll('_', ' ').toUpperCase(),
-          icon: _getCategoryIcon(doc.category),
-          color: _getCategoryColor(doc.category),
-          widget: GestureDetector(
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => DocumentPreviewScreen(document: doc),
-                ),
-              );
-              if (!mounted) return;
-              await context.read<WalletProvider>().loadWallet();
-              if (!mounted) return;
-              await context.read<WalletDocumentProvider>().loadDocuments();
-              if (mounted) setState(() {});
-            },
-            child: VirtualDocumentCard(
-              document: doc,
-              allowReveal: true,
-              onFavoriteToggle: () {
-                context.read<WalletProvider>().toggleDocumentFavorite(doc.id);
+    final aadhaarDoc = findDoc(['aadhaar']);
+    final panDoc = findDoc(['pan']);
+    final insuranceDoc = findDoc(['insur', 'medic', 'health']);
+    final voterDoc = findDoc(['voter', 'epic']);
+    final passportDoc = findDoc(['passport']);
+
+    WalletCardModel? debitCard;
+    WalletCardModel? creditCard;
+    for (final c in cards) {
+      final isCredit = c.cardType.toLowerCase().contains('credit') || c.nickname.toLowerCase().contains('credit');
+      if (isCredit && creditCard == null) {
+        creditCard = c;
+      } else if (!isCredit && debitCard == null) {
+        debitCard = c;
+      }
+    }
+    debitCard ??= cards.isNotEmpty ? cards.first : null;
+    if (creditCard == null && cards.length > 1) {
+      creditCard = cards[1];
+    }
+
+    final List<_CardDeckItem> deckItems = [
+      _CardDeckItem(
+        id: 'spotlight_aadhaar',
+        title: aadhaarDoc?.documentName ?? 'Aadhaar Card',
+        subtitle: aadhaarDoc != null
+            ? (aadhaarDoc.holderName?.isNotEmpty == true ? aadhaarDoc.holderName! : 'UIDAI Government ID')
+            : 'Tap to Add & Encrypt',
+        icon: Icons.fingerprint_rounded,
+        color: const Color(0xFFFF933E),
+        widget: aadhaarDoc != null
+            ? StitchSpotlightCard.fromDocument(
+                document: aadhaarDoc,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => DocumentPreviewScreen(document: aadhaarDoc),
+                    ),
+                  );
+                },
+              )
+            : StitchSpotlightCard(
+                cardType: StitchCardType.aadhaar,
+                holderName: 'Tap to Add Aadhaar',
+                maskedNumber: '•••• •••• ••••',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const DocumentCreationScreen(initialCategory: 'aadhaar'),
+                    ),
+                  );
+                },
+              ),
+      ),
+      _CardDeckItem(
+        id: 'spotlight_pan',
+        title: panDoc?.documentName ?? 'PAN Card',
+        subtitle: panDoc != null
+            ? (panDoc.holderName?.isNotEmpty == true ? panDoc.holderName! : 'Income Tax Dept')
+            : 'Tap to Add & Encrypt',
+        icon: Icons.credit_card_rounded,
+        color: const Color(0xFF2E6385),
+        widget: panDoc != null
+            ? StitchSpotlightCard.fromDocument(
+                document: panDoc,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => DocumentPreviewScreen(document: panDoc),
+                    ),
+                  );
+                },
+              )
+            : StitchSpotlightCard(
+                cardType: StitchCardType.pan,
+                holderName: 'Tap to Add PAN Card',
+                maskedNumber: '••••••••••',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const DocumentCreationScreen(initialCategory: 'pan'),
+                    ),
+                  );
+                },
+              ),
+      ),
+      _CardDeckItem(
+        id: 'spotlight_debit',
+        title: debitCard?.nickname ?? 'Spendz Platinum Debit',
+        subtitle: debitCard != null
+            ? '${debitCard.issuerName} • ${debitCard.cardNetwork}'
+            : 'Tap to Add Debit Card',
+        icon: Icons.credit_card_rounded,
+        color: const Color(0xFF263143),
+        widget: debitCard != null
+            ? StitchSpotlightCard.fromCard(
+                card: debitCard,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => CardDetailScreen(card: debitCard!),
+                    ),
+                  );
+                },
+              )
+            : StitchSpotlightCard(
+                cardType: StitchCardType.debit,
+                holderName: 'Tap to Add Debit Card',
+                maskedNumber: '•••• •••• •••• ••••',
+                issuer: 'Debit Card',
+                expiry: 'MM/YY',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const CardsScreen(openAddDialog: true),
+                    ),
+                  );
+                },
+              ),
+      ),
+      _CardDeckItem(
+        id: 'spotlight_credit',
+        title: creditCard?.nickname ?? 'World Elite Credit',
+        subtitle: creditCard != null
+            ? '${creditCard.issuerName} • ${creditCard.cardNetwork}'
+            : 'Tap to Add Credit Card',
+        icon: Icons.diamond_rounded,
+        color: const Color(0xFFFF933E),
+        widget: creditCard != null
+            ? StitchSpotlightCard.fromCard(
+                card: creditCard,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => CardDetailScreen(card: creditCard!),
+                    ),
+                  );
+                },
+              )
+            : StitchSpotlightCard(
+                cardType: StitchCardType.credit,
+                holderName: 'Tap to Add Credit Card',
+                maskedNumber: '•••• •••• •••• ••••',
+                issuer: 'Credit Card',
+                expiry: 'MM/YY',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const CardsScreen(openAddDialog: true),
+                    ),
+                  );
+                },
+              ),
+      ),
+      _CardDeckItem(
+        id: 'spotlight_mediclaim',
+        title: insuranceDoc?.documentName ?? 'Star Health Mediclaim',
+        subtitle: insuranceDoc != null
+            ? (insuranceDoc.holderName?.isNotEmpty == true ? insuranceDoc.holderName! : 'Cashless Medi-Claim')
+            : 'Tap to Add & Encrypt',
+        icon: Icons.medical_services_rounded,
+        color: const Color(0xFFBA1A1A),
+        widget: insuranceDoc != null
+            ? StitchSpotlightCard.fromDocument(
+                document: insuranceDoc,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => DocumentPreviewScreen(document: insuranceDoc),
+                    ),
+                  );
+                },
+              )
+            : StitchSpotlightCard(
+                cardType: StitchCardType.mediclaim,
+                holderName: 'Tap to Add Health Insurance',
+                policyNumber: '••••••••••••',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const DocumentCreationScreen(initialCategory: 'insurance'),
+                    ),
+                  );
+                },
+              ),
+      ),
+      _CardDeckItem(
+        id: 'spotlight_voter',
+        title: voterDoc?.documentName ?? 'Voter ID (EPIC)',
+        subtitle: voterDoc != null
+            ? (voterDoc.holderName?.isNotEmpty == true ? voterDoc.holderName! : 'ECI Official')
+            : 'Tap to Add & Encrypt',
+        icon: Icons.how_to_vote_rounded,
+        color: const Color(0xFF2E6385),
+        widget: voterDoc != null
+            ? StitchSpotlightCard.fromDocument(
+                document: voterDoc,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => DocumentPreviewScreen(document: voterDoc),
+                    ),
+                  );
+                },
+              )
+            : StitchSpotlightCard(
+                cardType: StitchCardType.voterId,
+                holderName: 'Tap to Add Voter ID',
+                epicNumber: '••••••••••',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const DocumentCreationScreen(initialCategory: 'voter_id'),
+                    ),
+                  );
+                },
+              ),
+      ),
+      _CardDeckItem(
+        id: 'spotlight_passport',
+        title: passportDoc?.documentName ?? 'Indian Passport',
+        subtitle: passportDoc != null
+            ? (passportDoc.holderName?.isNotEmpty == true ? passportDoc.holderName! : 'Republic of India')
+            : 'Tap to Add & Encrypt',
+        icon: Icons.public_rounded,
+        color: const Color(0xFF122238),
+        widget: passportDoc != null
+            ? StitchSpotlightCard.fromDocument(
+                document: passportDoc,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => DocumentPreviewScreen(document: passportDoc),
+                    ),
+                  );
+                },
+              )
+            : StitchSpotlightCard(
+                cardType: StitchCardType.passport,
+                holderName: 'Tap to Add Passport',
+                passportNumber: '••••••••',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const DocumentCreationScreen(initialCategory: 'passport'),
+                    ),
+                  );
+                },
+              ),
+      ),
+    ];
+
+    // Include any additional custom documents
+    final matchedDocIds = {
+      if (aadhaarDoc != null) aadhaarDoc.id,
+      if (panDoc != null) panDoc.id,
+      if (insuranceDoc != null) insuranceDoc.id,
+      if (voterDoc != null) voterDoc.id,
+      if (passportDoc != null) passportDoc.id,
+    };
+    for (final customDoc in documents) {
+      if (!matchedDocIds.contains(customDoc.id)) {
+        deckItems.add(
+          _CardDeckItem(
+            id: 'doc_${customDoc.id}',
+            title: customDoc.documentName,
+            subtitle: customDoc.holderName?.isNotEmpty == true ? customDoc.holderName! : customDoc.category.toUpperCase(),
+            icon: Icons.description_rounded,
+            color: const Color(0xFF2E6385),
+            widget: StitchSpotlightCard.fromDocument(
+              document: customDoc,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => DocumentPreviewScreen(document: customDoc),
+                  ),
+                );
               },
             ),
           ),
-        ),
-      );
+        );
+      }
     }
 
-    // 2. All payment cards (rendered using unified VirtualDocumentCard template)
-    for (final card in cards) {
-      final cardDoc = WalletDocumentModel(
-        id: card.id,
-        documentName: card.nickname.isNotEmpty
-            ? card.nickname
-            : '${card.issuerName} ${card.cardType}',
-        category: card.cardType.toLowerCase().contains('credit')
-            ? 'credit_card'
-            : 'debit_card',
-        holderName: card.cardholderName,
-        maskedIdentifier: card.maskedNumber,
-        description:
-            'Holder: ${card.cardholderName}\nNumber: ${card.maskedNumber}\nExpires: ${card.expiryMonth}/${card.expiryYear}\nIssuer: ${card.issuerName}',
-        issueDate: card.createdAt,
-        createdAt: card.createdAt,
-        updatedAt: card.updatedAt,
-      );
-      deckItems.add(
-        _CardDeckItem(
-          id: 'card_${card.id}',
-          title: card.nickname.isNotEmpty
-              ? card.nickname
-              : '${card.issuerName} ${card.cardType}',
-          subtitle: '•••• ${card.lastFour}',
-          icon: Icons.credit_card_rounded,
-          color: const Color(0xFF10B981),
-          widget: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => CardDetailScreen(card: card)),
-              );
-            },
-            child: VirtualDocumentCard(
-              document: cardDoc,
-              allowReveal: true,
+    // Include any additional custom cards
+    final matchedCardIds = {
+      if (debitCard != null) debitCard.id,
+      if (creditCard != null) creditCard.id,
+    };
+    for (final customCard in cards) {
+      if (!matchedCardIds.contains(customCard.id)) {
+        deckItems.add(
+          _CardDeckItem(
+            id: 'card_${customCard.id}',
+            title: customCard.nickname,
+            subtitle: '${customCard.issuerName} • ${customCard.cardNetwork}',
+            icon: Icons.credit_card_rounded,
+            color: const Color(0xFF263143),
+            widget: StitchSpotlightCard.fromCard(
+              card: customCard,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => CardDetailScreen(card: customCard),
+                  ),
+                );
+              },
             ),
           ),
-        ),
-      );
-    }
-
-    // 3. Ensure all core card types (Aadhaar, PAN, DL, Insurance) are available
-    final hasAadhaar = documents.any(
-      (d) => d.category.toLowerCase().contains('aadhaar'),
-    );
-    final hasPan = documents.any(
-      (d) => d.category.toLowerCase().contains('pan'),
-    );
-    final hasDl = documents.any(
-      (d) =>
-          d.category.toLowerCase().contains('driv') ||
-          d.category.toLowerCase().contains('licen'),
-    );
-    final hasInsurance = documents.any(
-      (d) => d.category.toLowerCase().contains('insur'),
-    );
-
-    if (!hasAadhaar) {
-      final templateAadhaar = WalletDocumentModel(
-        id: 'template_aadhaar',
-        documentName: 'Aadhaar Card',
-        category: 'aadhaar',
-        holderName: 'GOVERNMENT OF INDIA',
-        maskedIdentifier: '•••• •••• 9842',
-        description: 'Holder: USER RECORD\nNumber: •••• •••• 9842',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-      deckItems.add(
-        _CardDeckItem(
-          id: 'template_aadhaar',
-          title: 'Aadhaar Card',
-          subtitle: 'UIDAI Government ID',
-          icon: Icons.badge_outlined,
-          color: const Color(0xFFFF9933),
-          widget: GestureDetector(
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) =>
-                      DocumentPreviewScreen(document: templateAadhaar),
-                ),
-              );
-              if (!mounted) return;
-              await context.read<WalletProvider>().loadWallet();
-              if (!mounted) return;
-              await context.read<WalletDocumentProvider>().loadDocuments();
-              if (mounted) setState(() {});
-            },
-            child: VirtualDocumentCard(
-              document: templateAadhaar,
-              allowReveal: true,
-            ),
-          ),
-        ),
-      );
-    }
-
-    if (!hasPan) {
-      final templatePan = WalletDocumentModel(
-        id: 'template_pan',
-        documentName: 'Permanent Account Number',
-        category: 'pan',
-        holderName: 'INCOME TAX DEPT',
-        maskedIdentifier: 'BKAPS••••K',
-        description: 'Holder: USER RECORD\nNumber: BKAPS••••K',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-      deckItems.add(
-        _CardDeckItem(
-          id: 'template_pan',
-          title: 'Permanent Account Number',
-          subtitle: 'Income Tax Dept Card',
-          icon: Icons.credit_card_rounded,
-          color: const Color(0xFF0284C7),
-          widget: GestureDetector(
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => DocumentPreviewScreen(document: templatePan),
-                ),
-              );
-              if (!mounted) return;
-              await context.read<WalletProvider>().loadWallet();
-              if (!mounted) return;
-              await context.read<WalletDocumentProvider>().loadDocuments();
-              if (mounted) setState(() {});
-            },
-            child: VirtualDocumentCard(
-              document: templatePan,
-              allowReveal: true,
-            ),
-          ),
-        ),
-      );
-    }
-
-    if (!hasDl) {
-      final templateDl = WalletDocumentModel(
-        id: 'template_dl',
-        documentName: 'Driving Licence',
-        category: 'driving_license',
-        holderName: 'MOTOR VEHICLE DEPT',
-        maskedIdentifier: 'DL-••••4321',
-        description: 'Holder: USER RECORD\nNumber: DL-••••4321',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-      deckItems.add(
-        _CardDeckItem(
-          id: 'template_dl',
-          title: 'Driving Licence',
-          subtitle: 'Tamil Nadu Transport Dept',
-          icon: Icons.directions_car_rounded,
-          color: const Color(0xFFEA580C),
-          widget: GestureDetector(
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => DocumentPreviewScreen(document: templateDl),
-                ),
-              );
-              if (!mounted) return;
-              await context.read<WalletProvider>().loadWallet();
-              if (!mounted) return;
-              await context.read<WalletDocumentProvider>().loadDocuments();
-              if (mounted) setState(() {});
-            },
-            child: VirtualDocumentCard(document: templateDl, allowReveal: true),
-          ),
-        ),
-      );
-    }
-
-    if (!hasInsurance) {
-      final templateInsurance = WalletDocumentModel(
-        id: 'template_insurance',
-        documentName: 'Health Insurance Card',
-        category: 'insurance',
-        holderName: 'POLICY HOLDER',
-        maskedIdentifier: '•••••••••••••',
-        description:
-            'Holder: USER RECORD\nNumber: •••••••••••••\nProvider: HEALTH SHIELD',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-      deckItems.add(
-        _CardDeckItem(
-          id: 'template_insurance',
-          title: 'Health Insurance Card',
-          subtitle: 'Group Medical Shield',
-          icon: Icons.health_and_safety_rounded,
-          color: const Color(0xFFFA7070),
-          widget: GestureDetector(
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) =>
-                      DocumentPreviewScreen(document: templateInsurance),
-                ),
-              );
-              if (!mounted) return;
-              await context.read<WalletProvider>().loadWallet();
-              if (!mounted) return;
-              await context.read<WalletDocumentProvider>().loadDocuments();
-              if (mounted) setState(() {});
-            },
-            child: VirtualDocumentCard(
-              document: templateInsurance,
-              allowReveal: true,
-            ),
-          ),
-        ),
-      );
+        );
+      }
     }
 
     // Sort according to custom card order if set
@@ -1049,48 +981,6 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     );
   }
 
-  IconData _getCategoryIcon(String category) {
-    switch (category.toLowerCase()) {
-      case 'aadhaar':
-        return Icons.badge_outlined;
-      case 'pan':
-        return Icons.credit_card_rounded;
-      case 'driving_licence':
-      case 'driving_license':
-        return Icons.directions_car_rounded;
-      case 'insurance':
-        return Icons.health_and_safety_rounded;
-      case 'passport':
-        return Icons.menu_book_rounded;
-      case 'voter_id':
-        return Icons.how_to_vote_rounded;
-      case 'rc':
-        return Icons.directions_car_filled_rounded;
-      default:
-        return Icons.description_rounded;
-    }
-  }
-
-  Color _getCategoryColor(String category) {
-    switch (category.toLowerCase()) {
-      case 'aadhaar':
-        return const Color(0xFFFF9933);
-      case 'pan':
-        return const Color(0xFF0284C7);
-      case 'driving_licence':
-      case 'driving_license':
-        return const Color(0xFFEA580C);
-      case 'insurance':
-        return const Color(0xFFFA7070);
-      case 'passport':
-        return const Color(0xFF1E3A8A);
-      case 'voter_id':
-        return const Color(0xFF7C3AED);
-      default:
-        return const Color(0xFF10B981);
-    }
-  }
-
   void _showRearrangeCardsModal(
     BuildContext context,
     List<_CardDeckItem> items,
@@ -1294,103 +1184,37 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     List<WalletCardModel> cards,
     List<WalletDocumentModel> docs,
   ) {
-    // Find documents or fallback to authentic models
-    final aadhaarDoc = docs.firstWhere(
-      (d) => d.category.toLowerCase().contains('aadhaar'),
-      orElse: () => WalletDocumentModel(
-        id: 'template_aadhaar',
-        documentName: 'Aadhaar Card',
-        category: 'aadhaar',
-        holderName: 'Aarav Sharma',
-        maskedIdentifier: '•••• •••• 9842',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    );
+    WalletDocumentModel? findDoc(List<String> keywords) {
+      for (final doc in docs) {
+        final cat = doc.category.toLowerCase();
+        final name = doc.documentName.toLowerCase();
+        for (final k in keywords) {
+          if (cat.contains(k) || name.contains(k)) return doc;
+        }
+      }
+      return null;
+    }
 
-    final panDoc = docs.firstWhere(
-      (d) => d.category.toLowerCase().contains('pan'),
-      orElse: () => WalletDocumentModel(
-        id: 'template_pan',
-        documentName: 'PAN Card',
-        category: 'pan',
-        holderName: 'AARAV SHARMA',
-        maskedIdentifier: 'BKAPS••••K',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    );
+    final aadhaarDoc = findDoc(['aadhaar']);
+    final panDoc = findDoc(['pan']);
+    final insuranceDoc = findDoc(['insur', 'medic', 'health']);
+    final voterDoc = findDoc(['voter', 'epic']);
+    final passportDoc = findDoc(['passport']);
 
-    final insuranceDoc = docs.firstWhere(
-      (d) => d.category.toLowerCase().contains('insur'),
-      orElse: () => WalletDocumentModel(
-        id: 'template_insurance',
-        documentName: 'Star Health Mediclaim',
-        category: 'insurance',
-        holderName: 'Aarav Sharma',
-        maskedIdentifier: 'P/161200/01/2024',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    );
-
-    final voterDoc = docs.firstWhere(
-      (d) => d.category.toLowerCase().contains('voter'),
-      orElse: () => WalletDocumentModel(
-        id: 'template_voter',
-        documentName: 'Voter ID (EPIC)',
-        category: 'voter_id',
-        holderName: 'Aarav Sharma',
-        maskedIdentifier: 'XMB 7291048',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    );
-
-    final passportDoc = docs.firstWhere(
-      (d) => d.category.toLowerCase().contains('passport'),
-      orElse: () => WalletDocumentModel(
-        id: 'template_passport',
-        documentName: 'Indian Passport',
-        category: 'passport',
-        holderName: 'Aarav Sharma',
-        maskedIdentifier: 'Z4829189',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    );
-
-    final debitCard = cards.isNotEmpty
-        ? cards.first
-        : WalletCardModel(
-            id: 'sample_debit',
-            nickname: 'Spendz Platinum Debit',
-            cardholderName: 'AARAV SHARMA',
-            maskedNumber: '•••• •••• •••• 7183',
-            lastFour: '7183',
-            issuerName: 'HDFC Bank',
-            cardType: 'RuPay Platinum',
-            expiryMonth: 12,
-            expiryYear: 28,
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          );
-
-    final creditCard = cards.length > 1
-        ? cards[1]
-        : WalletCardModel(
-            id: 'sample_credit',
-            nickname: 'World Elite Credit',
-            cardholderName: 'AARAV SHARMA',
-            maskedNumber: '•••• •••• •••• 9012',
-            lastFour: '9012',
-            issuerName: 'Visa Infinite',
-            cardType: 'World Elite Credit',
-            expiryMonth: 10,
-            expiryYear: 29,
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          );
+    WalletCardModel? debitCard;
+    WalletCardModel? creditCard;
+    for (final c in cards) {
+      final isCredit = c.cardType.toLowerCase().contains('credit') || c.nickname.toLowerCase().contains('credit');
+      if (isCredit && creditCard == null) {
+        creditCard = c;
+      } else if (!isCredit && debitCard == null) {
+        debitCard = c;
+      }
+    }
+    debitCard ??= cards.isNotEmpty ? cards.first : null;
+    if (creditCard == null && cards.length > 1) {
+      creditCard = cards[1];
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1421,186 +1245,291 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         ),
         const SizedBox(height: 12),
 
-        // Item 1: Aadhaar Card
+        // Item 1: Aadhaar Card (Funky Peach Clay)
         _buildDirectoryCardItem(
           context: context,
+          tileBg: const Color(0xFFFFF4EC),
+          tileBorder: const Color(0xFFFFD4B8),
           icon: Icons.fingerprint_rounded,
           iconBg: SpendzColors.tangerine.withAlpha(25),
           iconColor: SpendzColors.tangerine,
-          title: 'Aadhaar Card',
+          title: aadhaarDoc?.documentName ?? 'Aadhaar Card',
           badgeText: 'UIDAI',
           badgeBg: SpendzColors.sunshineYellow,
           badgeColor: const Color(0xFF735500),
-          subtitle: 'ID: •••• •••• 9842 • Biometric Locked',
-          statusWidget: const Icon(
-            Icons.check_circle_rounded,
+          subtitle: aadhaarDoc != null
+              ? 'ID: ${aadhaarDoc.maskedIdentifier != null && aadhaarDoc.maskedIdentifier!.isNotEmpty ? aadhaarDoc.maskedIdentifier : "•••• ••••"} • Biometric Locked'
+              : 'Not linked • Tap to add',
+          statusWidget: Icon(
+            aadhaarDoc != null ? Icons.check_circle_rounded : Icons.add_circle_outline_rounded,
             size: 18,
             color: SpendzColors.tangerine,
           ),
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => DocumentPreviewScreen(document: aadhaarDoc),
-              ),
-            );
+            if (aadhaarDoc != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => DocumentPreviewScreen(document: aadhaarDoc),
+                ),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const DocumentCreationScreen(initialCategory: 'aadhaar'),
+                ),
+              );
+            }
           },
         ),
         const SizedBox(height: 10),
 
-        // Item 2: PAN Card
+        // Item 2: PAN Card (Funky Ice Blue Clay)
         _buildDirectoryCardItem(
           context: context,
+          tileBg: const Color(0xFFEDF6FF),
+          tileBorder: const Color(0xFFBAE0FF),
           icon: Icons.badge_outlined,
           iconBg: SpendzColors.tertiarySky.withAlpha(25),
           iconColor: SpendzColors.tertiarySky,
-          title: 'PAN Card',
+          title: panDoc?.documentName ?? 'PAN Card',
           badgeText: 'Linked',
           badgeBg: SpendzColors.tertiarySky.withAlpha(40),
           badgeColor: SpendzColors.tertiarySky,
-          subtitle: 'PAN: BKAPS••••K • Income Tax Dept',
-          statusWidget: const Icon(
-            Icons.link_rounded,
+          subtitle: panDoc != null
+              ? 'PAN: ${panDoc.maskedIdentifier != null && panDoc.maskedIdentifier!.isNotEmpty ? panDoc.maskedIdentifier : "••••••••••"} • Income Tax Dept'
+              : 'Not linked • Tap to link',
+          statusWidget: Icon(
+            panDoc != null ? Icons.link_rounded : Icons.add_circle_outline_rounded,
             size: 18,
             color: SpendzColors.tertiarySky,
           ),
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => DocumentPreviewScreen(document: panDoc),
-              ),
-            );
+            if (panDoc != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => DocumentPreviewScreen(document: panDoc),
+                ),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const DocumentCreationScreen(initialCategory: 'pan'),
+                ),
+              );
+            }
           },
         ),
         const SizedBox(height: 10),
 
-        // Item 3: Spendz Platinum Debit
+        // Item 3: Spendz Platinum Debit (Funky Cool Slate Clay)
         _buildDirectoryCardItem(
           context: context,
+          tileBg: const Color(0xFFE9EEF7),
+          tileBorder: const Color(0xFFCAD5E8),
           icon: Icons.credit_card_rounded,
           iconBg: const Color(0xFF1E293B),
           iconColor: SpendzColors.sunshineYellow,
-          title: 'Spendz Platinum Debit',
-          badgeText: 'HDFC • RuPay',
+          title: debitCard?.nickname ?? 'Spendz Platinum Debit',
+          badgeText: debitCard != null ? '${debitCard.issuerName} • ${debitCard.cardNetwork}' : 'RuPay Platinum',
           badgeBg: SpendzColors.surfaceContainerHigh(context),
           badgeColor: SpendzColors.textSecondary(context),
-          subtitle: '•••• 7183 • Tap & Pay Active',
-          statusWidget: Container(
-            width: 8,
-            height: 8,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: SpendzColors.tangerine,
-            ),
-          ),
+          subtitle: debitCard != null
+              ? '${debitCard.maskedNumber.isNotEmpty ? debitCard.maskedNumber : "•••• " + debitCard.lastFour} • Tap & Pay Active'
+              : 'Not added • Tap to add',
+          statusWidget: debitCard != null
+              ? Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: SpendzColors.tangerine,
+                  ),
+                )
+              : const Icon(
+                  Icons.add_circle_outline_rounded,
+                  size: 18,
+                  color: Color(0xFF1E293B),
+                ),
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => CardDetailScreen(card: debitCard),
-              ),
-            );
+            if (debitCard != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CardDetailScreen(card: debitCard!),
+                ),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const CardsScreen(openAddDialog: true),
+                ),
+              );
+            }
           },
         ),
         const SizedBox(height: 10),
 
-        // Item 4: World Elite Credit
+        // Item 4: World Elite Credit (Funky Sunshine Gold Clay)
         _buildDirectoryCardItem(
           context: context,
+          tileBg: const Color(0xFFFFF9E6),
+          tileBorder: const Color(0xFFFFE8A3),
           icon: Icons.diamond_outlined,
           iconBg: SpendzColors.sunshineYellow.withAlpha(35),
           iconColor: const Color(0xFF735500),
-          title: 'World Elite Credit',
-          badgeText: 'Visa Infinite',
+          title: creditCard?.nickname ?? 'World Elite Credit',
+          badgeText: creditCard != null ? '${creditCard.issuerName} • ${creditCard.cardNetwork}' : 'Visa Infinite',
           badgeBg: SpendzColors.sunshineYellow,
           badgeColor: const Color(0xFF735500),
-          subtitle: '•••• 9012 • ₹ 5L Limit • Active',
-          statusWidget: const Icon(
-            Icons.stars_rounded,
+          subtitle: creditCard != null
+              ? '${creditCard.maskedNumber.isNotEmpty ? creditCard.maskedNumber : "•••• " + creditCard.lastFour} • Active'
+              : 'Not added • Tap to add',
+          statusWidget: Icon(
+            creditCard != null ? Icons.stars_rounded : Icons.add_circle_outline_rounded,
             size: 18,
-            color: Color(0xFFB45309),
+            color: const Color(0xFFB45309),
           ),
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => CardDetailScreen(card: creditCard),
-              ),
-            );
+            if (creditCard != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CardDetailScreen(card: creditCard!),
+                ),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const CardsScreen(openAddDialog: true),
+                ),
+              );
+            }
           },
         ),
         const SizedBox(height: 10),
 
-        // Item 5: Star Health Mediclaim
+        // Item 5: Star Health Mediclaim (Funky Rose Coral Clay)
         _buildDirectoryCardItem(
           context: context,
+          tileBg: const Color(0xFFFFF1F2),
+          tileBorder: const Color(0xFFFFCCD2),
           icon: Icons.health_and_safety_rounded,
           iconBg: const Color(0xFFFEE2E2),
           iconColor: const Color(0xFFDC2626),
-          title: 'Star Health Mediclaim',
+          title: insuranceDoc?.documentName ?? 'Star Health Mediclaim',
           badgeText: 'Coverage',
           badgeBg: const Color(0xFFFEE2E2),
           badgeColor: const Color(0xFFDC2626),
-          subtitle: '₹ 15L Cover • Policy: P/161200/...',
-          statusWidget: const Icon(
-            Icons.verified_rounded,
+          subtitle: insuranceDoc != null
+              ? 'Policy: ${insuranceDoc.maskedIdentifier != null && insuranceDoc.maskedIdentifier!.isNotEmpty ? insuranceDoc.maskedIdentifier : "Active"} • Cashless Medi-Claim'
+              : 'Not added • Tap to add',
+          statusWidget: Icon(
+            insuranceDoc != null ? Icons.verified_rounded : Icons.add_circle_outline_rounded,
             size: 18,
-            color: Color(0xFFDC2626),
+            color: const Color(0xFFDC2626),
           ),
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => DocumentPreviewScreen(document: insuranceDoc),
-              ),
-            );
+            if (insuranceDoc != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => DocumentPreviewScreen(document: insuranceDoc),
+                ),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const DocumentCreationScreen(initialCategory: 'insurance'),
+                ),
+              );
+            }
           },
         ),
         const SizedBox(height: 10),
 
-        // Item 6: Voter ID (EPIC)
+        // Item 6: Voter ID (EPIC) (Funky Periwinkle/Lavender Clay)
         _buildDirectoryCardItem(
           context: context,
+          tileBg: const Color(0xFFF1F0FF),
+          tileBorder: const Color(0xFFD6D1FF),
           icon: Icons.how_to_vote_outlined,
-          iconBg: SpendzColors.surfaceContainerHigh(context),
+          iconBg: const Color(0xFFE0E7FF),
           iconColor: SpendzColors.tertiarySky,
-          title: 'Voter ID (EPIC)',
+          title: voterDoc?.documentName ?? 'Voter ID (EPIC)',
           badgeText: 'ECI Official',
-          badgeBg: SpendzColors.surfaceContainerHigh(context),
-          badgeColor: SpendzColors.textSecondary(context),
-          subtitle: 'EPIC: XMB 7291048 • BLR South',
-          statusWidget: null,
+          badgeBg: const Color(0xFFE0E7FF),
+          badgeColor: const Color(0xFF4338CA),
+          subtitle: voterDoc != null
+              ? 'EPIC: ${voterDoc.maskedIdentifier != null && voterDoc.maskedIdentifier!.isNotEmpty ? voterDoc.maskedIdentifier : "Verified"} • ECI Official'
+              : 'Not added • Tap to add',
+          statusWidget: Icon(
+            voterDoc != null ? Icons.how_to_vote_rounded : Icons.add_circle_outline_rounded,
+            size: 18,
+            color: const Color(0xFF4338CA),
+          ),
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => DocumentPreviewScreen(document: voterDoc),
-              ),
-            );
+            if (voterDoc != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => DocumentPreviewScreen(document: voterDoc),
+                ),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const DocumentCreationScreen(initialCategory: 'voter_id'),
+                ),
+              );
+            }
           },
         ),
         const SizedBox(height: 10),
 
-        // Item 7: Indian Passport
+        // Item 7: Indian Passport (Funky Seafoam Mint Clay)
         _buildDirectoryCardItem(
           context: context,
+          tileBg: const Color(0xFFEBF5F5),
+          tileBorder: const Color(0xFFC2E4E4),
           icon: Icons.public_rounded,
           iconBg: const Color(0xFF0F172A),
           iconColor: SpendzColors.sunshineYellow,
-          title: 'Indian Passport',
+          title: passportDoc?.documentName ?? 'Indian Passport',
           badgeText: 'Republic of India',
           badgeBg: SpendzColors.sunshineYellow,
           badgeColor: const Color(0xFF735500),
-          subtitle: 'Z4829189 • Valid till Oct 2032',
-          statusWidget: null,
+          subtitle: passportDoc != null
+              ? '${passportDoc.maskedIdentifier != null && passportDoc.maskedIdentifier!.isNotEmpty ? passportDoc.maskedIdentifier : "Valid"} • Republic of India'
+              : 'Not added • Tap to add',
+          statusWidget: Icon(
+            passportDoc != null ? Icons.public_rounded : Icons.add_circle_outline_rounded,
+            size: 18,
+            color: const Color(0xFF0D9488),
+          ),
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => DocumentPreviewScreen(document: passportDoc),
-              ),
-            );
+            if (passportDoc != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => DocumentPreviewScreen(document: passportDoc),
+                ),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const DocumentCreationScreen(initialCategory: 'passport'),
+                ),
+              );
+            }
           },
         ),
       ],
@@ -1618,15 +1547,17 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     required Color badgeColor,
     required String subtitle,
     Widget? statusWidget,
+    Color? tileBg,
+    Color? tileBorder,
     required VoidCallback onTap,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: SpendzColors.surface(context),
+        color: tileBg ?? SpendzColors.surface(context),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: SpendzColors.border(context),
-          width: 0.8,
+          color: tileBorder ?? SpendzColors.border(context),
+          width: 1.0,
         ),
         boxShadow: SpendzColors.clayDropShadow(context),
       ),
@@ -1675,7 +1606,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                             ),
                             decoration: BoxDecoration(
                               color: badgeBg,
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               badgeText,
@@ -1703,15 +1634,13 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                     ],
                   ),
                 ),
-                if (statusWidget != null) ...[
-                  const SizedBox(width: 6),
-                  statusWidget,
-                ],
+                const SizedBox(width: 8),
+                if (statusWidget != null) statusWidget,
                 const SizedBox(width: 4),
                 Icon(
                   Icons.chevron_right_rounded,
-                  size: 20,
-                  color: SpendzColors.textSecondary(context),
+                  size: 18,
+                  color: SpendzColors.textSecondary(context).withAlpha(120),
                 ),
               ],
             ),
@@ -1729,12 +1658,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     // Filter valid user transit passes and auto-purge tickets 24h past journey
     final now = DateTime.now();
     final userTransitPasses = passes.where((p) {
-      if (p.notes?.contains('8421-950-231') == true ||
-          p.encryptedCodePath == '8421-950-231' ||
-          p.id == 'sample_transit_pass') {
-        return false;
-      }
-      if (p.passType != 'transit_ticket' && p.passType != 'boarding_pass') {
+      if (p.id == 'sample_transit_pass') {
         return false;
       }
       final journeyTime = p.validUntil ?? p.createdAt;
@@ -1953,68 +1877,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     );
   }
 
-  // ─── 6. 256-BIT HARDWARE ENCRYPTED FOOTER TRUST BADGE ───────────────────────
-  Widget _buildHardwareEncryptedFooter(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: SpendzColors.surfaceRecessed(context),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: SpendzColors.border(context),
-          width: 0.8,
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: SpendzColors.tertiarySky.withAlpha(40),
-            ),
-            child: const Icon(
-              Icons.verified_user_rounded,
-              color: SpendzColors.tertiarySky,
-              size: 16,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '256-Bit Hardware Encrypted',
-                  style: TextStyle(
-                    fontFamily: 'Plus Jakarta Sans',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: SpendzColors.textPrimary(context),
-                  ),
-                ),
-                Text(
-                  'Govt standards compliant with Indian UIDAI & RBI guidelines',
-                  style: TextStyle(
-                    fontFamily: 'Plus Jakarta Sans',
-                    fontSize: 10.5,
-                    color: SpendzColors.textSecondary(context),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 6),
-          Icon(
-            Icons.lock_outline_rounded,
-            size: 18,
-            color: SpendzColors.textSecondary(context),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   void _showAddTransitTicketModal(BuildContext context) {
     final carrierController = TextEditingController();
@@ -2335,7 +2198,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                               fontSize: 15,
                             ),
                           ),
-                          onPressed: () {
+                          onPressed: () async {
                             final pnr = pnrController.text.trim().isNotEmpty
                                 ? pnrController.text.trim()
                                 : 'PNR-${const Uuid().v4().substring(0, 8).toUpperCase()}';
@@ -2369,16 +2232,31 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                               updatedAt: DateTime.now(),
                             );
 
-                            context.read<WalletProvider>().addPass(newPass);
-                            Navigator.pop(ctx);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Transit Ticket saved in Digital Passes!',
-                                ),
-                                backgroundColor: Color(0xFF047857),
-                              ),
-                            );
+                            try {
+                              await context.read<WalletProvider>().addPass(newPass);
+                              await context.read<WalletPassProvider>().loadPasses();
+                              await context.read<WalletProvider>().loadWallet();
+                              if (ctx.mounted) Navigator.pop(ctx);
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Transit Ticket saved in Digital Passes!',
+                                    ),
+                                    backgroundColor: Color(0xFF047857),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Failed to save ticket: $e'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            }
                           },
                         ),
                       ),

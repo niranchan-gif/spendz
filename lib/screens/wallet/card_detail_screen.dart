@@ -18,7 +18,7 @@ import '../../widgets/design_system/empty_state.dart';
 import '../../widgets/design_system/loading_state.dart';
 import '../../widgets/design_system/primary_button.dart';
 import '../../widgets/design_system/reusable_card.dart';
-import 'widgets/wallet_card_widget.dart';
+import 'widgets/stitch_spotlight_card.dart';
 import 'card_studio/card_studio_theme.dart';
 import 'card_studio/card_studio_layout.dart';
 import 'card_studio/card_theme_sheet.dart';
@@ -452,12 +452,14 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Card Presentation Widget with Biometric Reveal
+            // Authentic Spotlight Card Presentation (Exact Replica of Wallet Spotlight)
             Center(
-              child: WalletCardWidget(
-                card: _currentCard,
-                allowReveal: true,
-                onTap: _showEditCardDialog,
+              child: AspectRatio(
+                aspectRatio: 1.586,
+                child: StitchSpotlightCard.fromCard(
+                  card: _currentCard,
+                  onTap: _showEditCardDialog,
+                ),
               ),
             ),
             const SizedBox(height: AppSpacing.sm),

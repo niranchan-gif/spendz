@@ -23,7 +23,7 @@ import '../../widgets/design_system/reusable_card.dart';
 import '../../widgets/design_system/custom_dialog.dart';
 import 'document_attachment_scanner_screen.dart';
 import 'document_creation_screen.dart';
-import 'widgets/virtual_document_card.dart';
+import 'widgets/stitch_spotlight_card.dart';
 
 class DocumentPreviewScreen extends StatefulWidget {
   final WalletDocumentModel document;
@@ -561,8 +561,11 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 1. Virtual Document Card Presentation
-              VirtualDocumentCard(document: doc, showShadow: true),
+              // 1. Authentic Spotlight Card Presentation (Exact Replica of Wallet Spotlight)
+              AspectRatio(
+                aspectRatio: 1.586,
+                child: StitchSpotlightCard.fromDocument(document: doc),
+              ),
 
               // 2. Hardware Keystore Banner
               Container(

@@ -81,8 +81,8 @@ class _SpendzAppState extends State<SpendzApp> with WidgetsBindingObserver {
             title: 'Spendz',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
-            themeMode: themeProvider.themeMode,
+            darkTheme: AppTheme.lightTheme,
+            themeMode: ThemeMode.light,
             home: const SplashScreen(),
             routes: AppRoutes.getRoutes(),
           );
