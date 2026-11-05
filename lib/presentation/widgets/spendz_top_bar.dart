@@ -163,7 +163,7 @@ class SpendzTopBar extends StatelessWidget {
                   child: Container(
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Color(0xFF735500),
+                      color: SpendzColors.surface(context),
                     ),
                     child: const Icon(
                       Icons.person_rounded,
