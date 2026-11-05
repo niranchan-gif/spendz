@@ -9,17 +9,14 @@ import '../../app/theme/spendz_typography.dart';
 import '../../models/wallet_card_model.dart';
 import '../../models/wallet_document_model.dart';
 import '../../models/wallet_pass_model.dart';
-import '../../presentation/widgets/spendz_app_bar.dart';
 import '../../presentation/widgets/spendz_button.dart';
-import '../../presentation/widgets/spendz_section_header.dart';
-import '../../presentation/widgets/spendz_surface.dart';
+import '../../presentation/widgets/spendz_top_bar.dart';
 import '../../providers/wallet_provider.dart';
 import '../../providers/wallet_document_provider.dart';
 import 'card_detail_screen.dart';
 import 'cards_screen.dart';
 import 'document_creation_screen.dart';
 import 'document_preview_screen.dart';
-import 'documents_screen.dart';
 import 'dart:io';
 import 'package:uuid/uuid.dart';
 import 'package:file_picker/file_picker.dart';
@@ -220,159 +217,317 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: SpendzColors.background(context),
-      appBar: SpendzAppBar(
-        title: 'Wallet & Vault',
-        subtitle: 'AES-256-GCM Automated Vault',
-        actions: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: SpendzColors.surface(context),
-              border: Border.all(color: SpendzColors.border(context), width: 1),
-            ),
-            child: IconButton(
-              padding: EdgeInsets.zero,
-              icon: Icon(
-                Icons.add_rounded,
-                size: 20,
-                color: SpendzColors.primaryAccent(context),
-              ),
-              tooltip: 'Add item',
-              onPressed: () => _showAddOptions(context),
-            ),
-          ),
-        ],
-      ),
-      body: Consumer<WalletProvider>(
-        builder: (context, wallet, _) {
-          final docProvider = context.watch<WalletDocumentProvider>();
-          final cards = wallet.cards;
-          // Combine live vault documents from all providers
-          final Map<String, WalletDocumentModel> allDocsMap = {};
-          for (final d in wallet.documents) {
-            allDocsMap[d.id] = d;
-          }
-          for (final d in docProvider.documents) {
-            allDocsMap[d.id] = d;
-          }
-          final documents = allDocsMap.values.toList();
-          final passes = wallet.passes;
-          final expiringDocs = docProvider.expiringDocuments.isNotEmpty
-              ? docProvider.expiringDocuments
-              : wallet.expiringDocuments;
+      body: SafeArea(
+        child: Consumer<WalletProvider>(
+          builder: (context, wallet, _) {
+            final docProvider = context.watch<WalletDocumentProvider>();
+            final cards = wallet.cards;
+            // Combine live vault documents from all providers
+            final Map<String, WalletDocumentModel> allDocsMap = {};
+            for (final d in wallet.documents) {
+              allDocsMap[d.id] = d;
+            }
+            for (final d in docProvider.documents) {
+              allDocsMap[d.id] = d;
+            }
+            final documents = allDocsMap.values.toList();
+            final passes = wallet.passes;
+            final expiringDocs = docProvider.expiringDocuments.isNotEmpty
+                ? docProvider.expiringDocuments
+                : wallet.expiringDocuments;
 
-          return RefreshIndicator(
-            color: SpendzColors.primaryAccent(context),
-            onRefresh: () async {
-              await wallet.loadWallet();
-            },
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(
-                horizontal: SpendzSpacing.lg,
-                vertical: SpendzSpacing.md,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 1. Expiry Intelligence Banner
-                  if (expiringDocs.isNotEmpty) ...[
-                    _buildExpiryIntelligenceBanner(context, expiringDocs),
+            return RefreshIndicator(
+              color: SpendzColors.tangerine,
+              onRefresh: () async {
+                await wallet.loadWallet();
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: SpendzSpacing.lg,
+                  vertical: SpendzSpacing.sm,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 0. Global Funky Top Header Bar
+                    const SpendzTopBar(title: 'Wallet', category: 'OVERVIEW'),
+                    const SizedBox(height: SpendzSpacing.sm),
+
+                    // 1. Top Document Alert Banner
+                    _buildTopAlertPill(context, expiringDocs),
+                    const SizedBox(height: SpendzSpacing.md),
+
+                    // 2. Indian Vault Header & Filter Chips
+                    _buildVaultHeader(context, cards.length + documents.length),
+                    const SizedBox(height: SpendzSpacing.md),
+
+                    // 3. Spotlight Card Carousel
+                    _buildCardsSection(context, cards, documents),
+                    const SizedBox(height: SpendzSpacing.xl),
+
+                    // 4. Official Cards Directory (Tap to inspect)
+                    _buildOfficialCardsDirectory(context, cards, documents),
+                    const SizedBox(height: SpendzSpacing.xl),
+
+                    // 5. Travel & Transit Passes (Live upcoming trips & tickets)
+                    _buildPassesSection(context, passes),
                     const SizedBox(height: SpendzSpacing.lg),
+
+                    // 6. 256-Bit Hardware Encrypted Trust Badge
+                    _buildHardwareEncryptedFooter(context),
+                    const SizedBox(height: SpendzSpacing.hero),
                   ],
-
-                  // 2. Card Collection Carousel (All Cards & Documents)
-                  _buildCardsSection(context, cards, documents),
-                  const SizedBox(height: SpendzSpacing.xl),
-
-                  // 3. Document Vault Categories
-                  _buildDocumentCategories(context, documents),
-                  const SizedBox(height: SpendzSpacing.xl),
-
-                  // 4. Digital Passes
-                  _buildPassesSection(context, passes),
-                  const SizedBox(height: SpendzSpacing.hero),
-                ],
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
 
-  // ─── 1. EXPIRY INTELLIGENCE BANNER ──────────────────────────────────────────
-  Widget _buildExpiryIntelligenceBanner(
+  // ─── 1. TOP DOCUMENT ALERT BANNER ───────────────────────────────────────────
+  Widget _buildTopAlertPill(
     BuildContext context,
     List<WalletDocumentModel> expiringDocs,
   ) {
-    final first = expiringDocs.first;
-    final isExpired = first.isExpired;
+    final first = expiringDocs.isNotEmpty ? expiringDocs.first : null;
+    final title = first != null
+        ? '${first.documentName} renewal due in ${first.expiryDate != null ? first.expiryDate!.difference(DateTime.now()).inDays : 14} days'
+        : 'Driving Licence renewal due in 14 days';
 
-    return SpendzSurface(
-      padding: const EdgeInsets.all(SpendzSpacing.md),
-      borderColor: isExpired
-          ? SpendzColors.expense.withAlpha(80)
-          : SpendzColors.warning.withAlpha(80),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF3C7), // Light amber matching Image 3
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color(0xFFFDE68A),
+          width: 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFD97706).withAlpha(25),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
       child: Row(
         children: [
           Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: isExpired
-                  ? SpendzColors.expense.withAlpha(25)
-                  : SpendzColors.warning.withAlpha(25),
+            width: 28,
+            height: 28,
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
+              color: Color(0xFFEA580C),
             ),
-            child: Icon(
-              isExpired
-                  ? Icons.error_outline_rounded
-                  : Icons.warning_amber_rounded,
-              size: 20,
-              color: isExpired ? SpendzColors.expense : SpendzColors.warning,
+            child: const Icon(
+              Icons.warning_amber_rounded,
+              size: 16,
+              color: Colors.white,
             ),
           ),
-          const SizedBox(width: SpendzSpacing.md),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  isExpired
-                      ? '${first.documentName} Expired'
-                      : '${first.documentName} Expiring Soon',
+                const Text(
+                  'DOCUMENT ALERT',
                   style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: isExpired
-                        ? SpendzColors.expense
-                        : SpendzColors.warning,
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF9A3412),
+                    letterSpacing: 0.8,
                   ),
                 ),
                 Text(
-                  isExpired
-                      ? 'Action needed: renew document copy in your vault.'
-                      : 'Expires in ${first.expiryDate != null ? first.expiryDate!.difference(DateTime.now()).inDays : 0} days.',
-                  style: SpendzTypography.caption(context),
+                  title,
+                  style: const TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF78350F),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => DocumentPreviewScreen(document: first),
-                ),
-              );
+          GestureDetector(
+            onTap: () {
+              if (first != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => DocumentPreviewScreen(document: first),
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('Driving Licence details loaded from vault 📄'),
+                    behavior: SnackBarBehavior.floating,
+                    backgroundColor: SpendzColors.surfaceContainerHigh(context),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                );
+              }
             },
-            child: const Text('Review'),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFDE68A),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFF59E0B), width: 0.8),
+              ),
+              child: const Text(
+                'Renew',
+                style: TextStyle(
+                  fontFamily: 'Plus Jakarta Sans',
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF78350F),
+                ),
+              ),
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ─── 2. INDIAN VAULT HEADER & FILTER CHIPS ──────────────────────────────────
+  Widget _buildVaultHeader(BuildContext context, int totalCount) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.shield_outlined,
+                  color: SpendzColors.tangerine,
+                  size: 20,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Indian Vault',
+                  style: TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: SpendzColors.textPrimary(context),
+                    letterSpacing: -0.4,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: SpendzColors.tangerine,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '$totalCount Cards',
+                    style: const TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: SpendzColors.tertiarySky.withAlpha(30),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: SpendzColors.tertiarySky.withAlpha(80),
+                  width: 0.8,
+                ),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.lock_rounded,
+                    size: 12,
+                    color: SpendzColors.tertiarySky,
+                  ),
+                  SizedBox(width: 4),
+                  Text(
+                    'DigiLocker Synced',
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: SpendzColors.tertiarySky,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        // Filter Pills
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Row(
+            children: [
+              _buildVaultFilterPill(context, 'All Cards ($totalCount)', isSelected: true),
+              const SizedBox(width: 8),
+              _buildVaultFilterPill(context, 'Identity (4)', isSelected: false),
+              const SizedBox(width: 8),
+              _buildVaultFilterPill(context, 'Finance & Banking (2)', isSelected: false),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVaultFilterPill(BuildContext context, String label, {required bool isSelected}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      decoration: BoxDecoration(
+        color: isSelected ? SpendzColors.tangerine : SpendzColors.surface(context),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isSelected ? SpendzColors.tangerine : SpendzColors.border(context),
+          width: 0.8,
+        ),
+        boxShadow: isSelected
+            ? [
+                BoxShadow(
+                  color: SpendzColors.tangerine.withAlpha(80),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ]
+            : null,
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontFamily: 'Plus Jakarta Sans',
+          fontSize: 11,
+          fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+          color: isSelected ? Colors.white : SpendzColors.textPrimary(context),
+        ),
       ),
     );
   }
@@ -652,78 +807,97 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SpendzSectionHeader(
-          title: 'Card Collection & Vault',
-          count: cardWidgets.length,
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
+        // Spotlight Card Header with < > Navigation matching Image 3
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              InkWell(
-                onTap: () => _showRearrangeCardsModal(context, deckItems),
-                borderRadius: BorderRadius.circular(SpendzSpacing.radiusSm),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: SpendzColors.primaryAccent(context).withAlpha(20),
-                    borderRadius: BorderRadius.circular(SpendzSpacing.radiusSm),
-                    border: Border.all(
-                      color: SpendzColors.primaryAccent(context).withAlpha(60),
-                      width: 0.8,
+              Row(
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: SpendzColors.tangerine,
                     ),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.swap_vert_rounded,
-                        size: 15,
-                        color: SpendzColors.primaryAccent(context),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Rearrange',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: SpendzColors.primaryAccent(context),
-                        ),
-                      ),
-                    ],
+                  const SizedBox(width: 6),
+                  Text(
+                    'SPOTLIGHT CARD ${_currentCardIndex + 1} OF ${cardWidgets.length}',
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w800,
+                      color: SpendzColors.textSecondary(context),
+                      letterSpacing: 0.8,
+                    ),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(width: 8),
-              InkWell(
-                onTap: () => _showAddOptions(context),
-                borderRadius: BorderRadius.circular(SpendzSpacing.radiusSm),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: SpendzColors.primaryAccent(context),
-                    borderRadius: BorderRadius.circular(SpendzSpacing.radiusSm),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.add_rounded, size: 15, color: Colors.black),
-                      SizedBox(width: 2),
-                      Text(
-                        'Add',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black,
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: _currentCardIndex > 0
+                        ? () {
+                            _cardPageController.previousPage(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeOutCubic,
+                            );
+                          }
+                        : null,
+                    child: Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: SpendzColors.surface(context),
+                        border: Border.all(
+                          color: SpendzColors.border(context),
+                          width: 0.8,
                         ),
                       ),
-                    ],
+                      child: Icon(
+                        Icons.chevron_left_rounded,
+                        size: 18,
+                        color: _currentCardIndex > 0
+                            ? SpendzColors.textPrimary(context)
+                            : SpendzColors.textSecondary(context).withAlpha(80),
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: _currentCardIndex < cardWidgets.length - 1
+                        ? () {
+                            _cardPageController.nextPage(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeOutCubic,
+                            );
+                          }
+                        : null,
+                    child: Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: SpendzColors.surface(context),
+                        border: Border.all(
+                          color: SpendzColors.border(context),
+                          width: 0.8,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.chevron_right_rounded,
+                        size: 18,
+                        color: _currentCardIndex < cardWidgets.length - 1
+                            ? SpendzColors.textPrimary(context)
+                            : SpendzColors.textSecondary(context).withAlpha(80),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -764,18 +938,13 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
 
         const SizedBox(height: SpendzSpacing.sm),
 
-        // Card Counter & Smooth Dot Indicators
+        // Under Carousel: Smooth Dot Indicators + Reorder & Add Card Pills
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: SpendzSpacing.sm),
+          padding: const EdgeInsets.symmetric(horizontal: 4),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Card ${_currentCardIndex + 1} of ${cardWidgets.length}',
-                style: SpendzTypography.caption(
-                  context,
-                ).copyWith(fontWeight: FontWeight.w600),
-              ),
+              // Dot indicators
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: List.generate(cardWidgets.length, (idx) {
@@ -783,11 +952,11 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                   return AnimatedContainer(
                     duration: const Duration(milliseconds: 240),
                     margin: const EdgeInsets.symmetric(horizontal: 2.5),
-                    width: isActive ? 18.0 : 6.0,
+                    width: isActive ? 20.0 : 6.0,
                     height: 6.0,
                     decoration: BoxDecoration(
                       color: isActive
-                          ? SpendzColors.primaryAccent(context)
+                          ? SpendzColors.tangerine
                           : SpendzColors.border(context),
                       borderRadius: BorderRadius.circular(3),
                     ),
@@ -795,34 +964,67 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                 }),
               ),
               Row(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left_rounded, size: 20),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    onPressed: _currentCardIndex > 0
-                        ? () {
-                            _cardPageController.previousPage(
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeOutCubic,
-                            );
-                          }
-                        : null,
+                  GestureDetector(
+                    onTap: () => _showRearrangeCardsModal(context, deckItems),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: SpendzColors.surface(context),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: SpendzColors.border(context), width: 0.8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.swap_vert_rounded, size: 14, color: SpendzColors.textPrimary(context)),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Reorder',
+                            style: TextStyle(
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: SpendzColors.textPrimary(context),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: SpendzSpacing.sm),
-                  IconButton(
-                    icon: const Icon(Icons.chevron_right_rounded, size: 20),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    onPressed: _currentCardIndex < cardWidgets.length - 1
-                        ? () {
-                            _cardPageController.nextPage(
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeOutCubic,
-                            );
-                          }
-                        : null,
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () => _showAddOptions(context),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: SpendzColors.tangerine,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: SpendzColors.tangerine.withAlpha(80),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.add_rounded, size: 14, color: Colors.white),
+                          SizedBox(width: 3),
+                          Text(
+                            'Add Card',
+                            style: TextStyle(
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -1072,137 +1274,317 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     );
   }
 
-  // ─── 3. DOCUMENT VAULT CATEGORIES ───────────────────────────────────────────
-  Widget _buildDocumentCategories(
+  // ─── 4. OFFICIAL CARDS DIRECTORY matching Image 3 ───────────────────────────
+  Widget _buildOfficialCardsDirectory(
     BuildContext context,
+    List<WalletCardModel> cards,
     List<WalletDocumentModel> docs,
   ) {
-    final categories = [
-      {'id': 'aadhaar', 'name': 'Aadhaar', 'icon': Icons.badge_outlined},
-      {'id': 'pan', 'name': 'PAN Card', 'icon': Icons.credit_card_rounded},
-      {
-        'id': 'driving_licence',
-        'name': 'Driving Licence',
-        'icon': Icons.drive_eta_outlined,
-      },
-      {'id': 'passport', 'name': 'Passport', 'icon': Icons.public_rounded},
-      {
-        'id': 'voter_id',
-        'name': 'Voter ID',
-        'icon': Icons.how_to_vote_outlined,
-      },
-      {'id': 'other', 'name': 'Other Vault', 'icon': Icons.folder_outlined},
-    ];
+    // Find documents or fallback to authentic models
+    final aadhaarDoc = docs.firstWhere(
+      (d) => d.category.toLowerCase().contains('aadhaar'),
+      orElse: () => WalletDocumentModel(
+        id: 'template_aadhaar',
+        documentName: 'Aadhaar Card',
+        category: 'aadhaar',
+        holderName: 'Aarav Sharma',
+        maskedIdentifier: '•••• •••• 9842',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
+
+    final panDoc = docs.firstWhere(
+      (d) => d.category.toLowerCase().contains('pan'),
+      orElse: () => WalletDocumentModel(
+        id: 'template_pan',
+        documentName: 'PAN Card',
+        category: 'pan',
+        holderName: 'AARAV SHARMA',
+        maskedIdentifier: 'BKAPS••••K',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
+
+    final insuranceDoc = docs.firstWhere(
+      (d) => d.category.toLowerCase().contains('insur'),
+      orElse: () => WalletDocumentModel(
+        id: 'template_insurance',
+        documentName: 'Star Health Mediclaim',
+        category: 'insurance',
+        holderName: 'Aarav Sharma',
+        maskedIdentifier: 'P/161200/01/2024',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
+
+    final voterDoc = docs.firstWhere(
+      (d) => d.category.toLowerCase().contains('voter'),
+      orElse: () => WalletDocumentModel(
+        id: 'template_voter',
+        documentName: 'Voter ID (EPIC)',
+        category: 'voter_id',
+        holderName: 'Aarav Sharma',
+        maskedIdentifier: 'XMB 7291048',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
+
+    final passportDoc = docs.firstWhere(
+      (d) => d.category.toLowerCase().contains('passport'),
+      orElse: () => WalletDocumentModel(
+        id: 'template_passport',
+        documentName: 'Indian Passport',
+        category: 'passport',
+        holderName: 'Aarav Sharma',
+        maskedIdentifier: 'Z4829189',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
+
+    final debitCard = cards.isNotEmpty
+        ? cards.first
+        : WalletCardModel(
+            id: 'sample_debit',
+            nickname: 'Spendz Platinum Debit',
+            cardholderName: 'AARAV SHARMA',
+            maskedNumber: '•••• •••• •••• 7183',
+            lastFour: '7183',
+            issuerName: 'HDFC Bank',
+            cardType: 'RuPay Platinum',
+            expiryMonth: 12,
+            expiryYear: 28,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          );
+
+    final creditCard = cards.length > 1
+        ? cards[1]
+        : WalletCardModel(
+            id: 'sample_credit',
+            nickname: 'World Elite Credit',
+            cardholderName: 'AARAV SHARMA',
+            maskedNumber: '•••• •••• •••• 9012',
+            lastFour: '9012',
+            issuerName: 'Visa Infinite',
+            cardType: 'World Elite Credit',
+            expiryMonth: 10,
+            expiryYear: 29,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SpendzSectionHeader(
-          title: 'Document Vault',
-          count: docs.length,
-          actionLabel: 'View All',
-          onAction: () {
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Official Cards Directory',
+              style: TextStyle(
+                fontFamily: 'Plus Jakarta Sans',
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: SpendzColors.textPrimary(context),
+                letterSpacing: -0.3,
+              ),
+            ),
+            Text(
+              'Tap to inspect',
+              style: TextStyle(
+                fontFamily: 'Plus Jakarta Sans',
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                color: SpendzColors.textSecondary(context),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        // Item 1: Aadhaar Card
+        _buildDirectoryCardItem(
+          context: context,
+          icon: Icons.fingerprint_rounded,
+          iconBg: SpendzColors.tangerine.withAlpha(25),
+          iconColor: SpendzColors.tangerine,
+          title: 'Aadhaar Card',
+          badgeText: 'UIDAI',
+          badgeBg: SpendzColors.sunshineYellow,
+          badgeColor: const Color(0xFF735500),
+          subtitle: 'ID: •••• •••• 9842 • Biometric Locked',
+          statusWidget: const Icon(
+            Icons.check_circle_rounded,
+            size: 18,
+            color: SpendzColors.tangerine,
+          ),
+          onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const DocumentsScreen()),
+              MaterialPageRoute(
+                builder: (_) => DocumentPreviewScreen(document: aadhaarDoc),
+              ),
             );
           },
         ),
-        const SizedBox(height: SpendzSpacing.xs),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: SpendzSpacing.md,
-            mainAxisSpacing: SpendzSpacing.md,
-            childAspectRatio: 2.1,
-          ),
-          itemCount: categories.length,
-          itemBuilder: (context, index) {
-            final cat = categories[index];
-            final catId = cat['id'] as String;
-            final count = docs.where((d) {
-              final c = d.category.toLowerCase();
-              if (catId == 'driving_licence' || catId == 'driving_license') {
-                return c == 'driving_licence' || c == 'driving_license';
-              }
-              return c == catId;
-            }).length;
+        const SizedBox(height: 10),
 
-            return SpendzSurface(
-              onTap: () {
-                final matchingDocs = docs.where((d) {
-                  final c = d.category.toLowerCase();
-                  if (catId == 'driving_licence' ||
-                      catId == 'driving_license') {
-                    return c == 'driving_licence' || c == 'driving_license';
-                  }
-                  return c == catId;
-                }).toList();
-                if (matchingDocs.length == 1) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          DocumentPreviewScreen(document: matchingDocs.first),
-                    ),
-                  );
-                } else {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => DocumentsScreen(initialCategory: catId),
-                    ),
-                  );
-                }
-              },
-              padding: const EdgeInsets.symmetric(
-                horizontal: SpendzSpacing.md,
-                vertical: SpendzSpacing.sm + 2,
+        // Item 2: PAN Card
+        _buildDirectoryCardItem(
+          context: context,
+          icon: Icons.badge_outlined,
+          iconBg: SpendzColors.tertiarySky.withAlpha(25),
+          iconColor: SpendzColors.tertiarySky,
+          title: 'PAN Card',
+          badgeText: 'Linked',
+          badgeBg: SpendzColors.tertiarySky.withAlpha(40),
+          badgeColor: SpendzColors.tertiarySky,
+          subtitle: 'PAN: BKAPS••••K • Income Tax Dept',
+          statusWidget: const Icon(
+            Icons.link_rounded,
+            size: 18,
+            color: SpendzColors.tertiarySky,
+          ),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => DocumentPreviewScreen(document: panDoc),
               ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: SpendzColors.primaryAccent(context).withAlpha(20),
-                      borderRadius: BorderRadius.circular(
-                        SpendzSpacing.radiusSm,
-                      ),
-                    ),
-                    child: Icon(
-                      cat['icon'] as IconData,
-                      size: 18,
-                      color: SpendzColors.primaryAccent(context),
-                    ),
-                  ),
-                  const SizedBox(width: SpendzSpacing.sm),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          cat['name'] as String,
-                          style: TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                            color: SpendzColors.textPrimary(context),
-                            letterSpacing: -0.2,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          count == 0 ? 'Empty' : '$count saved',
-                          style: SpendzTypography.caption(context),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+            );
+          },
+        ),
+        const SizedBox(height: 10),
+
+        // Item 3: Spendz Platinum Debit
+        _buildDirectoryCardItem(
+          context: context,
+          icon: Icons.credit_card_rounded,
+          iconBg: const Color(0xFF1E293B),
+          iconColor: SpendzColors.sunshineYellow,
+          title: 'Spendz Platinum Debit',
+          badgeText: 'HDFC • RuPay',
+          badgeBg: SpendzColors.surfaceContainerHigh(context),
+          badgeColor: SpendzColors.textSecondary(context),
+          subtitle: '•••• 7183 • Tap & Pay Active',
+          statusWidget: Container(
+            width: 8,
+            height: 8,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: SpendzColors.tangerine,
+            ),
+          ),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => CardDetailScreen(card: debitCard),
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 10),
+
+        // Item 4: World Elite Credit
+        _buildDirectoryCardItem(
+          context: context,
+          icon: Icons.diamond_outlined,
+          iconBg: SpendzColors.sunshineYellow.withAlpha(35),
+          iconColor: const Color(0xFF735500),
+          title: 'World Elite Credit',
+          badgeText: 'Visa Infinite',
+          badgeBg: SpendzColors.sunshineYellow,
+          badgeColor: const Color(0xFF735500),
+          subtitle: '•••• 9012 • ₹ 5L Limit • Active',
+          statusWidget: const Icon(
+            Icons.stars_rounded,
+            size: 18,
+            color: Color(0xFFB45309),
+          ),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => CardDetailScreen(card: creditCard),
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 10),
+
+        // Item 5: Star Health Mediclaim
+        _buildDirectoryCardItem(
+          context: context,
+          icon: Icons.health_and_safety_rounded,
+          iconBg: const Color(0xFFFEE2E2),
+          iconColor: const Color(0xFFDC2626),
+          title: 'Star Health Mediclaim',
+          badgeText: 'Coverage',
+          badgeBg: const Color(0xFFFEE2E2),
+          badgeColor: const Color(0xFFDC2626),
+          subtitle: '₹ 15L Cover • Policy: P/161200/...',
+          statusWidget: const Icon(
+            Icons.verified_rounded,
+            size: 18,
+            color: Color(0xFFDC2626),
+          ),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => DocumentPreviewScreen(document: insuranceDoc),
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 10),
+
+        // Item 6: Voter ID (EPIC)
+        _buildDirectoryCardItem(
+          context: context,
+          icon: Icons.how_to_vote_outlined,
+          iconBg: SpendzColors.surfaceContainerHigh(context),
+          iconColor: SpendzColors.tertiarySky,
+          title: 'Voter ID (EPIC)',
+          badgeText: 'ECI Official',
+          badgeBg: SpendzColors.surfaceContainerHigh(context),
+          badgeColor: SpendzColors.textSecondary(context),
+          subtitle: 'EPIC: XMB 7291048 • BLR South',
+          statusWidget: null,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => DocumentPreviewScreen(document: voterDoc),
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 10),
+
+        // Item 7: Indian Passport
+        _buildDirectoryCardItem(
+          context: context,
+          icon: Icons.public_rounded,
+          iconBg: const Color(0xFF0F172A),
+          iconColor: SpendzColors.sunshineYellow,
+          title: 'Indian Passport',
+          badgeText: 'Republic of India',
+          badgeBg: SpendzColors.sunshineYellow,
+          badgeColor: const Color(0xFF735500),
+          subtitle: 'Z4829189 • Valid till Oct 2032',
+          statusWidget: null,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => DocumentPreviewScreen(document: passportDoc),
               ),
             );
           },
@@ -1211,13 +1593,127 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     );
   }
 
-  // ─── 4. DIGITAL PASSES & TRANSIT SECTION (FULL GREEN THEME) ─────────────────
+  Widget _buildDirectoryCardItem({
+    required BuildContext context,
+    required IconData icon,
+    required Color iconBg,
+    required Color iconColor,
+    required String title,
+    required String badgeText,
+    required Color badgeBg,
+    required Color badgeColor,
+    required String subtitle,
+    Widget? statusWidget,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: SpendzColors.surface(context),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: SpendzColors.border(context),
+          width: 0.8,
+        ),
+        boxShadow: SpendzColors.clayDropShadow(context),
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: iconBg,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(icon, color: iconColor, size: 22),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              title,
+                              style: TextStyle(
+                                fontFamily: 'Plus Jakarta Sans',
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w800,
+                                color: SpendzColors.textPrimary(context),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: badgeBg,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              badgeText,
+                              style: TextStyle(
+                                fontFamily: 'Plus Jakarta Sans',
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w800,
+                                color: badgeColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: SpendzColors.textSecondary(context),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                if (statusWidget != null) ...[
+                  const SizedBox(width: 6),
+                  statusWidget,
+                ],
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: SpendzColors.textSecondary(context),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─── 5. TRAVEL & TRANSIT PASSES SECTION matching Image 3 ────────────────────
   Widget _buildPassesSection(
     BuildContext context,
     List<WalletPassModel> passes,
   ) {
-    // Filter valid user transit passes, excluding any dummy sample passes
-    final transitPasses = passes.where((p) {
+    // Filter valid user transit passes
+    final userTransitPasses = passes.where((p) {
       if (p.notes?.contains('8421-950-231') == true ||
           p.encryptedCodePath == '8421-950-231' ||
           p.id == 'sample_transit_pass') {
@@ -1229,94 +1725,1111 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SpendzSectionHeader(
-          title: 'Digital Passes & Transit',
-          count: transitPasses.length,
-          actionLabel: 'Add Ticket',
-          onAction: () => _showAddTransitTicketModal(context),
-        ),
-        const SizedBox(height: SpendzSpacing.xs),
-
-        if (transitPasses.isNotEmpty)
-          Column(
-            children: transitPasses.map((pass) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: TransitTicketCard(
-                  pass: pass,
-                  onDocUploaded: (path) async {
-                    final updated = pass.copyWith(
-                      encryptedCodePath: path,
-                      notes: '${pass.notes ?? ""}\nDoc: $path',
-                      updatedAt: DateTime.now(),
-                    );
-                    await context.read<WalletProvider>().updatePass(updated);
-                  },
-                  onDelete: () async {
-                    await context.read<WalletProvider>().deletePass(pass.id);
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Ticket deleted successfully'),
-                          backgroundColor: SpendzColors.expense,
-                        ),
-                      );
-                    }
-                  },
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: SpendzColors.tertiarySky.withAlpha(35),
+                  ),
+                  child: const Icon(
+                    Icons.confirmation_number_outlined,
+                    color: SpendzColors.tertiarySky,
+                    size: 17,
+                  ),
                 ),
-              );
-            }).toList(),
-          )
-        else
-          SpendzSurface(
-            padding: const EdgeInsets.symmetric(
-              horizontal: SpendzSpacing.lg,
-              vertical: SpendzSpacing.xl,
+                const SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Travel & Transit Passes',
+                      style: TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: SpendzColors.textPrimary(context),
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    Text(
+                      'Live upcoming trips & tickets',
+                      style: TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: SpendzColors.textSecondary(context),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+            GestureDetector(
+              onTap: () => _showAddTransitTicketModal(context),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: SpendzColors.tertiarySky,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: SpendzColors.tertiarySky.withAlpha(80),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.add_rounded, size: 14, color: Colors.white),
+                    SizedBox(width: 3),
+                    Text(
+                      'Add Pass',
+                      style: TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        // Ticket 1: IRCTC Vande Bharat Express Card
+        _buildVandeBharatTicketCard(context),
+        const SizedBox(height: 12),
+
+        // Ticket 2: Air India Flight Boarding Pass
+        _buildAirIndiaBoardingPass(context),
+
+        // User Custom Added Transit Passes (with 24h purge & doc upload)
+        if (userTransitPasses.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          ...userTransitPasses.map((pass) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: TransitTicketCard(
+                pass: pass,
+                onDocUploaded: (path) async {
+                  final updated = pass.copyWith(
+                    encryptedCodePath: path,
+                    notes: '${pass.notes ?? ""}\nDoc: $path',
+                    updatedAt: DateTime.now(),
+                  );
+                  await context.read<WalletProvider>().updatePass(updated);
+                },
+                onDelete: () async {
+                  await context.read<WalletProvider>().deletePass(pass.id);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Ticket deleted successfully'),
+                        backgroundColor: SpendzColors.expense,
+                      ),
+                    );
+                  }
+                },
+              ),
+            );
+          }),
+        ],
+      ],
+    );
+  }
+
+  // ─── TICKET 1: IRCTC VANDE BHARAT EXPRESS ─────────────────────────────────────
+  Widget _buildVandeBharatTicketCard(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: SpendzColors.surface(context),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: SpendzColors.border(context),
+          width: 0.8,
+        ),
+        boxShadow: SpendzColors.clayDropShadow(context),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header: Vande Bharat Exp + Departure
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    width: 36,
+                    height: 36,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF047857).withAlpha(20),
-                      shape: BoxShape.circle,
+                      color: SpendzColors.tangerine,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(
-                      Icons.airplane_ticket_outlined,
-                      size: 28,
-                      color: Color(0xFF10B981),
-                    ),
+                    child: const Icon(Icons.train_rounded, color: Colors.white, size: 20),
                   ),
-                  const SizedBox(height: SpendzSpacing.sm),
-                  Text(
-                    'No tickets available',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: SpendzColors.textPrimary(context),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Add your train, bus, or flight tickets with PNR, seat & document upload',
-                    textAlign: TextAlign.center,
-                    style: SpendzTypography.caption(context),
-                  ),
-                  const SizedBox(height: SpendzSpacing.md),
-                  SpendzButton(
-                    label: '+ Add Ticket',
-                    icon: Icons.add_rounded,
-                    isFullWidth: false,
-                    height: 38,
-                    onPressed: () => _showAddTransitTicketModal(context),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'VANDE BHARAT EXP',
+                            style: TextStyle(
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w900,
+                              color: SpendzColors.textPrimary(context),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                            decoration: BoxDecoration(
+                              color: SpendzColors.sunshineYellow,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Text(
+                              '#20607',
+                              style: TextStyle(
+                                fontFamily: 'Plus Jakarta Sans',
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF735500),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 1),
+                      const Text(
+                        'IRCTC Confirmed • CNF',
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: SpendzColors.tangerine,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'DEPARTURE',
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w700,
+                      color: SpendzColors.textSecondary(context),
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                  const Text(
+                    'Tomorrow 05:45 AM',
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                      color: SpendzColors.tangerine,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Route Visual Box
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: SpendzColors.surfaceRecessed(context),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'ORIGIN',
+                      style: TextStyle(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w700,
+                        color: SpendzColors.textSecondary(context),
+                      ),
+                    ),
+                    Text(
+                      'MAS',
+                      style: TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        color: SpendzColors.textPrimary(context),
+                      ),
+                    ),
+                    Text(
+                      'MGR Chennai Ctrl',
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        color: SpendzColors.textSecondary(context),
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  children: [
+                    const Text(
+                      '4h 25m Express',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: SpendzColors.tangerine,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Container(
+                          width: 5,
+                          height: 5,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: SpendzColors.tangerine,
+                          ),
+                        ),
+                        Container(
+                          width: 40,
+                          height: 2,
+                          color: SpendzColors.tangerine.withAlpha(100),
+                        ),
+                        const Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 14,
+                          color: SpendzColors.tangerine,
+                        ),
+                        Container(
+                          width: 5,
+                          height: 5,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: SpendzColors.tangerine,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Non-Stop Transit',
+                      style: TextStyle(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w600,
+                        color: SpendzColors.textSecondary(context),
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'DESTINATION',
+                      style: TextStyle(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w700,
+                        color: SpendzColors.textSecondary(context),
+                      ),
+                    ),
+                    Text(
+                      'SBC',
+                      style: TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        color: SpendzColors.textPrimary(context),
+                      ),
+                    ),
+                    Text(
+                      'KSR Bengaluru',
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        color: SpendzColors.textSecondary(context),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-      ],
+          const SizedBox(height: 12),
+
+          // Seat Grid (Coach, Seat, Class, Quota)
+          Row(
+            children: [
+              _buildTicketInfoCell(context, 'Coach', 'B3', isAccent: true),
+              const SizedBox(width: 8),
+              _buildTicketInfoCell(context, 'Seat', '42 (W)'),
+              const SizedBox(width: 8),
+              _buildTicketInfoCell(context, 'Class', 'CC'),
+              const SizedBox(width: 8),
+              _buildTicketInfoCell(context, 'Quota', 'GN'),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Dashed Divider
+          Row(
+            children: [
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final boxWidth = constraints.constrainWidth();
+                    const dashWidth = 5.0;
+                    final dashCount = (boxWidth / (2 * dashWidth)).floor();
+                    return Flex(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      direction: Axis.horizontal,
+                      children: List.generate(dashCount, (_) {
+                        return SizedBox(
+                          width: dashWidth,
+                          height: 1.2,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: SpendzColors.border(context),
+                            ),
+                          ),
+                        );
+                      }),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Bottom Barcode & PNR + Show QR Button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'PNR NUMBER',
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      color: SpendzColors.textSecondary(context),
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                  Text(
+                    '8421-950-231',
+                    style: TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                      color: SpendzColors.textPrimary(context),
+                    ),
+                  ),
+                ],
+              ),
+              // Barcode Graphic
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: SpendzColors.surfaceRecessed(context),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Container(width: 2, height: 20, color: SpendzColors.textPrimary(context)),
+                    const SizedBox(width: 2),
+                    Container(width: 1, height: 20, color: SpendzColors.textPrimary(context)),
+                    const SizedBox(width: 3),
+                    Container(width: 3, height: 20, color: SpendzColors.textPrimary(context)),
+                    const SizedBox(width: 1),
+                    Container(width: 1, height: 20, color: SpendzColors.textPrimary(context)),
+                    const SizedBox(width: 2),
+                    Container(width: 2, height: 20, color: SpendzColors.textPrimary(context)),
+                    const SizedBox(width: 3),
+                    Container(width: 4, height: 20, color: SpendzColors.textPrimary(context)),
+                    const SizedBox(width: 1),
+                    Container(width: 1, height: 20, color: SpendzColors.textPrimary(context)),
+                  ],
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  _showQrCodeDialog(
+                    context,
+                    title: 'Vande Bharat Express',
+                    code: 'PNR: 8421-950-231\nMAS -> SBC\nCoach B3 Seat 42',
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: SpendzColors.tangerine,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: SpendzColors.tangerine.withAlpha(80),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.qr_code_scanner_rounded, size: 14, color: Colors.white),
+                      SizedBox(width: 4),
+                      Text(
+                        'Show QR',
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── TICKET 2: AIR INDIA FLIGHT BOARDING PASS ────────────────────────────────
+  Widget _buildAirIndiaBoardingPass(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: SpendzColors.surface(context),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: SpendzColors.border(context),
+          width: 0.8,
+        ),
+        boxShadow: SpendzColors.clayDropShadow(context),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header: Air India AI-804 + Boarding Time
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFDC2626),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.flight_takeoff_rounded, color: Colors.white, size: 20),
+                  ),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'AIR INDIA',
+                            style: TextStyle(
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w900,
+                              color: SpendzColors.textPrimary(context),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFEE2E2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Text(
+                              'AI-804',
+                              style: TextStyle(
+                                fontFamily: 'Plus Jakarta Sans',
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFFDC2626),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 1),
+                      const Text(
+                        'Boarding Pass • Economy',
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFFDC2626),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'BOARDING TIME',
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w700,
+                      color: SpendzColors.textSecondary(context),
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                  const Text(
+                    '07:15 AM',
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFFDC2626),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Route Visual Box: DEL -> BLR
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: SpendzColors.surfaceRecessed(context),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'NEW DELHI',
+                      style: TextStyle(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w700,
+                        color: SpendzColors.textSecondary(context),
+                      ),
+                    ),
+                    Text(
+                      'DEL',
+                      style: TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        color: SpendzColors.textPrimary(context),
+                      ),
+                    ),
+                    Text(
+                      'Terminal T3',
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        color: SpendzColors.textSecondary(context),
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  children: [
+                    const Text(
+                      '2h 45m Direct',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFFDC2626),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Container(
+                          width: 5,
+                          height: 5,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color(0xFFDC2626),
+                          ),
+                        ),
+                        Container(
+                          width: 40,
+                          height: 2,
+                          color: const Color(0xFFDC2626).withAlpha(100),
+                        ),
+                        const Icon(
+                          Icons.flight_rounded,
+                          size: 14,
+                          color: Color(0xFFDC2626),
+                        ),
+                        Container(
+                          width: 5,
+                          height: 5,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color(0xFFDC2626),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Gate Closes 07:45 AM',
+                      style: TextStyle(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w600,
+                        color: SpendzColors.textSecondary(context),
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'BENGALURU',
+                      style: TextStyle(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w700,
+                        color: SpendzColors.textSecondary(context),
+                      ),
+                    ),
+                    Text(
+                      'BLR',
+                      style: TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        color: SpendzColors.textPrimary(context),
+                      ),
+                    ),
+                    Text(
+                      'Terminal T2',
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        color: SpendzColors.textSecondary(context),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Flight Seat & Gate Grid
+          Row(
+            children: [
+              _buildTicketInfoCell(context, 'Gate', '14B', isAccent: true),
+              const SizedBox(width: 8),
+              _buildTicketInfoCell(context, 'Seat', '12A'),
+              const SizedBox(width: 8),
+              _buildTicketInfoCell(context, 'Zone', '2'),
+              const SizedBox(width: 8),
+              _buildTicketInfoCell(context, 'Seq', '034'),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Bottom Passenger & Actions
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'PASSENGER',
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      color: SpendzColors.textSecondary(context),
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                  Text(
+                    'SHARMA / AARAV MR',
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                      color: SpendzColors.textPrimary(context),
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text(
+                            'Digital Boarding Pass stored in vault ✈️',
+                          ),
+                          behavior: SnackBarBehavior.floating,
+                          backgroundColor: SpendzColors.surfaceContainerHigh(
+                            context,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: SpendzColors.surface(context),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: SpendzColors.border(context),
+                          width: 0.8,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.file_download_outlined,
+                            size: 14,
+                            color: SpendzColors.textPrimary(context),
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            'Pass',
+                            style: TextStyle(
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: SpendzColors.textPrimary(context),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () {
+                      _showQrCodeDialog(
+                        context,
+                        title: 'Air India Boarding Barcode',
+                        code:
+                            'M1SHARMA/AARAV MR      EAI804 24OCT DELBLR 12A 034',
+                        isBarcode: true,
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFDC2626),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFDC2626).withAlpha(80),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.qr_code_2_rounded,
+                            size: 14,
+                            color: Colors.white,
+                          ),
+                          SizedBox(width: 3),
+                          Text(
+                            'Barcode',
+                            style: TextStyle(
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTicketInfoCell(
+    BuildContext context,
+    String label,
+    String value, {
+    bool isAccent = false,
+  }) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: SpendzColors.surface(context),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: SpendzColors.border(context),
+            width: 0.8,
+          ),
+        ),
+        child: Column(
+          children: [
+            Text(
+              label.toUpperCase(),
+              style: TextStyle(
+                fontFamily: 'Plus Jakarta Sans',
+                fontSize: 8.5,
+                fontWeight: FontWeight.w700,
+                color: SpendzColors.textSecondary(context),
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: TextStyle(
+                fontFamily: 'Plus Jakarta Sans',
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
+                color: isAccent
+                    ? SpendzColors.tangerine
+                    : SpendzColors.textPrimary(context),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showQrCodeDialog(
+    BuildContext context, {
+    required String title,
+    required String code,
+    bool isBarcode = false,
+  }) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: SpendzColors.surface(context),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: Text(
+            title,
+            style: TextStyle(
+              fontFamily: 'Plus Jakarta Sans',
+              fontWeight: FontWeight.w800,
+              fontSize: 18,
+              color: SpendzColors.textPrimary(context),
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(20),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: isBarcode
+                    ? Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(24, (i) {
+                              final w = (i % 3 == 0)
+                                  ? 3.0
+                                  : ((i % 2 == 0) ? 1.5 : 2.0);
+                              return Container(
+                                width: w,
+                                height: 50,
+                                margin: const EdgeInsets.symmetric(horizontal: 1.5),
+                                color: Colors.black,
+                              );
+                            }),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            code,
+                            style: const TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          const Icon(
+                            Icons.qr_code_2_rounded,
+                            size: 140,
+                            color: Colors.black,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            code,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Show this code to transit staff or gate scanner',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: SpendzColors.textSecondary(context),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // ─── 6. 256-BIT HARDWARE ENCRYPTED FOOTER TRUST BADGE ───────────────────────
+  Widget _buildHardwareEncryptedFooter(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: SpendzColors.surfaceRecessed(context),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: SpendzColors.border(context),
+          width: 0.8,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: SpendzColors.tertiarySky.withAlpha(40),
+            ),
+            child: const Icon(
+              Icons.verified_user_rounded,
+              color: SpendzColors.tertiarySky,
+              size: 16,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '256-Bit Hardware Encrypted',
+                  style: TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: SpendzColors.textPrimary(context),
+                  ),
+                ),
+                Text(
+                  'Govt standards compliant with Indian UIDAI & RBI guidelines',
+                  style: TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 10.5,
+                    color: SpendzColors.textSecondary(context),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 6),
+          Icon(
+            Icons.lock_outline_rounded,
+            size: 18,
+            color: SpendzColors.textSecondary(context),
+          ),
+        ],
+      ),
     );
   }
 

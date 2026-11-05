@@ -7,12 +7,14 @@ import '../../app/theme/spendz_spacing.dart';
 import '../../presentation/widgets/spendz_amount_text.dart';
 import '../../presentation/widgets/spendz_empty_state.dart';
 import '../../presentation/widgets/spendz_surface.dart';
+import '../../presentation/widgets/spendz_top_bar.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/dashboard_provider.dart';
 import '../../providers/transaction_provider.dart';
 import '../../utils/icon_mapper.dart';
 import '../transactions/add_transaction_screen.dart';
 import '../transactions/transactions_screen.dart';
+import '../wallet/wallet_dashboard_screen.dart';
 
 /// Spendz Funky Claymorphism Home Screen.
 ///
@@ -51,6 +53,10 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // 0. Global Funky Clay Top Bar
+                const SpendzTopBar(title: 'Home', category: 'OVERVIEW'),
+                const SizedBox(height: SpendzSpacing.sm),
+
                 // 1. Top Greeting Bar with PRO SAVER Badge
                 _buildGreetingHeader(context),
                 const SizedBox(height: SpendzSpacing.md),
@@ -445,47 +451,119 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ─── 3. QUICK ACTION CLAY BUTTON (ADD ONLY) ──────────────────────────────
+  // ─── 3. 4 FUNKY QUICK ACTION CLAY BUTTONS ──────────────────────────────────
   Widget _buildQuickActionButtons(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
-        );
-      },
-      child: Container(
-        height: 54,
-        decoration: BoxDecoration(
-          color: SpendzColors.tangerine,
-          borderRadius: BorderRadius.circular(27),
-          boxShadow: [
-            BoxShadow(
-              color: SpendzColors.tangerine.withAlpha(90),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-          border: Border.all(color: Colors.white.withAlpha(160), width: 1.5),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        _buildClayActionPod(
+          context: context,
+          icon: Icons.add_rounded,
+          label: 'Add',
+          bgColor: SpendzColors.tangerine,
+          iconColor: Colors.white,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+            );
+          },
         ),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.add_circle_rounded, color: Colors.white, size: 24),
-            SizedBox(width: 8),
-            Text(
-              'Add Transaction',
-              style: TextStyle(
-                fontFamily: 'Plus Jakarta Sans',
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-                letterSpacing: 0.2,
+        _buildClayActionPod(
+          context: context,
+          icon: Icons.swap_horiz_rounded,
+          label: 'Transfer',
+          bgColor: SpendzColors.tertiarySky,
+          iconColor: Colors.white,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const AddTransactionScreen(),
               ),
-            ),
-          ],
+            );
+          },
         ),
-      ),
+        _buildClayActionPod(
+          context: context,
+          icon: Icons.credit_card_rounded,
+          label: 'Cards',
+          bgColor: SpendzColors.sunshineYellow,
+          iconColor: const Color(0xFF735500),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const WalletDashboardScreen(),
+              ),
+            );
+          },
+        ),
+        _buildClayActionPod(
+          context: context,
+          icon: Icons.lock_outline_rounded,
+          label: 'Vault',
+          bgColor: const Color(0xFFDDD6FE),
+          iconColor: const Color(0xFF4C1D95),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const WalletDashboardScreen(),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildClayActionPod({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required Color bgColor,
+    required Color iconColor,
+    required VoidCallback onTap,
+  }) {
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: onTap,
+          child: Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: bgColor.withAlpha(80),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+                BoxShadow(
+                  color: Colors.white.withAlpha(160),
+                  blurRadius: 2,
+                  offset: const Offset(1, 1),
+                  blurStyle: BlurStyle.inner,
+                ),
+              ],
+            ),
+            child: Icon(icon, color: iconColor, size: 26),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          label,
+          style: TextStyle(
+            fontFamily: 'Plus Jakarta Sans',
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: SpendzColors.textPrimary(context),
+          ),
+        ),
+      ],
     );
   }
 
@@ -560,18 +638,21 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     _buildPillBar(
+                      context: context,
                       label: 'W1',
                       amount: '₹4.2k',
                       fillPercent: 0.48,
                       color: SpendzColors.sunshineYellow,
                     ),
                     _buildPillBar(
+                      context: context,
                       label: 'W2',
                       amount: '₹6.8k',
                       fillPercent: 0.72,
                       color: SpendzColors.tangerine,
                     ),
                     _buildPillBar(
+                      context: context,
                       label: 'W3',
                       amount: '₹9.4k',
                       fillPercent: 0.95,
@@ -579,6 +660,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       isPeak: true,
                     ),
                     _buildPillBar(
+                      context: context,
                       label: 'W4',
                       amount: '₹5.1k',
                       fillPercent: 0.58,
@@ -644,6 +726,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildPillBar({
+    required BuildContext context,
     required String label,
     required String amount,
     required double fillPercent,
@@ -879,107 +962,158 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: SpendzSpacing.sm),
 
-            if (recent.isNotEmpty)
-              Column(
-                children: recent.map((tx) {
-                  final isIncome = tx.type == 'income';
-                  final category = context
-                      .read<CategoryProvider>()
-                      .getCategoryById(tx.categoryId ?? '');
-                  final iconData = IconMapper.getIcon(
-                    category?.icon ?? 'category',
-                  );
+            if (recent.isNotEmpty) ...[
+              ...recent.map((tx) {
+                final isIncome = tx.type == 'income';
+                final category = context
+                    .read<CategoryProvider>()
+                    .getCategoryById(tx.categoryId ?? '');
+                final iconData = IconMapper.getIcon(
+                  category?.icon ?? 'category',
+                );
 
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: SpendzSurface(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 11,
-                      ),
-                      borderRadius: 20,
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 42,
-                            height: 42,
-                            decoration: BoxDecoration(
-                              color: isIncome
-                                  ? SpendzColors.periwinkleLight
-                                  : SpendzColors.sunshineLight,
-                              borderRadius: BorderRadius.circular(14),
-                              boxShadow: [
-                                BoxShadow(
-                                  color:
-                                      (isIncome
-                                              ? SpendzColors.periwinkle
-                                              : SpendzColors.sunshineYellow)
-                                          .withAlpha(40),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Icon(
-                              iconData,
-                              size: 20,
-                              color: isIncome
-                                  ? SpendzColors.periwinkleDeep
-                                  : SpendzColors.sunshineDeep,
-                            ),
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: SpendzSurface(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 11,
+                    ),
+                    borderRadius: 20,
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: isIncome
+                                ? SpendzColors.periwinkleLight
+                                : SpendzColors.sunshineLight,
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color:
+                                    (isIncome
+                                            ? SpendzColors.periwinkle
+                                            : SpendzColors.sunshineYellow)
+                                        .withAlpha(40),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  tx.merchant?.isNotEmpty == true
-                                      ? tx.merchant!
-                                      : (category?.name ?? 'Expense'),
-                                  style: TextStyle(
-                                    fontSize: 13.5,
-                                    fontWeight: FontWeight.w800,
-                                    color: SpendzColors.textPrimary(context),
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  DateFormat(
-                                    'dd MMM • hh:mm a',
-                                  ).format(tx.date),
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: SpendzColors.textSecondary(context),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
+                          child: Icon(
+                            iconData,
+                            size: 20,
+                            color: isIncome
+                                ? SpendzColors.periwinkleDeep
+                                : SpendzColors.sunshineDeep,
                           ),
-                          SpendzAmountText(
-                            amount: tx.amount,
-                            variant: isIncome
-                                ? SpendzAmountVariant.income
-                                : SpendzAmountVariant.expense,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                            showSign: true,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                tx.merchant?.isNotEmpty == true
+                                    ? tx.merchant!
+                                    : (category?.name ?? 'Expense'),
+                                style: TextStyle(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: SpendzColors.textPrimary(context),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                DateFormat(
+                                  'dd MMM • hh:mm a',
+                                ).format(tx.date),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: SpendzColors.textSecondary(context),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                        SpendzAmountText(
+                          amount: tx.amount,
+                          variant: isIncome
+                              ? SpendzAmountVariant.income
+                              : SpendzAmountVariant.expense,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          showSign: true,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+              const SizedBox(height: SpendzSpacing.sm),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const TransactionsScreen(),
                     ),
                   );
-                }).toList(),
-              )
-            else
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: SpendzColors.surface(context),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: SpendzColors.border(context),
+                      width: 0.8,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(
+                          SpendzColors.isDark(context) ? 30 : 8,
+                        ),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'View all ${txProvider.transactions.length} transactions',
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: SpendzColors.textPrimary(context),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      const Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 16,
+                        color: SpendzColors.tangerine,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ] else ...[
               const SpendzEmptyState(
                 title: 'No recent transactions',
                 message: 'Tap the + button to record your first flow',
                 icon: Icons.savings_outlined,
               ),
+            ],
           ],
         );
       },

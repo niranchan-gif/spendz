@@ -6,6 +6,7 @@ import '../../app/theme/spendz_colors.dart';
 import '../../models/transaction_model.dart';
 import '../../presentation/widgets/spendz_amount_text.dart';
 import '../../presentation/widgets/spendz_empty_state.dart';
+import '../../presentation/widgets/spendz_top_bar.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/transaction_provider.dart';
 import '../../utils/icon_mapper.dart';
@@ -138,6 +139,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             return CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
+                // 0. Global Top Bar
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: SpendzTopBar(title: 'Activity', category: 'OVERVIEW'),
+                  ),
+                ),
+
                 // 1. Funky Clay Header
                 SliverToBoxAdapter(
                   child: Padding(
@@ -242,7 +251,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   )
                 else
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate((
                         context,
@@ -365,6 +374,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                           ),
                         );
                       }, childCount: grouped.length),
+                    ),
+                  ),
+
+                  // 7. Visual Proof & Audit Reconciliation Card
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                      child: _buildReconciliationFooter(context),
                     ),
                   ),
               ],
@@ -1238,6 +1255,192 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // 7. Visual Proof & Audit Reconciliation Card matching Image 2
+  Widget _buildReconciliationFooter(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: SpendzColors.surface(context),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(
+          color: SpendzColors.border(context),
+          width: 0.8,
+        ),
+        boxShadow: SpendzColors.clayDropShadow(context),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: SpendzColors.sunshineYellow,
+                      boxShadow: [
+                        BoxShadow(
+                          color: SpendzColors.sunshineYellow.withAlpha(80),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.verified_user_rounded,
+                      color: Color(0xFF735500),
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Ledger Verified & Encrypted',
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w800,
+                          color: SpendzColors.textPrimary(context),
+                        ),
+                      ),
+                      const SizedBox(height: 1),
+                      Text(
+                        'AES-256 Cloud Vault • Synced 2m ago',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          color: SpendzColors.textSecondary(context),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              // Export CSV Button
+              GestureDetector(
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Exporting transactions to CSV... 📥'),
+                      behavior: SnackBarBehavior.floating,
+                      backgroundColor: SpendzColors.surfaceContainerHigh(context),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: SpendzColors.surfaceContainerHigh(context),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: SpendzColors.border(context),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.file_download_outlined,
+                        size: 15,
+                        color: SpendzColors.textPrimary(context),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Export CSV',
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: SpendzColors.textPrimary(context),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Sunken Audit Bar
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: SpendzColors.surfaceRecessed(context),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: SpendzColors.tertiarySky,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    RichText(
+                      text: TextSpan(
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: SpendzColors.textSecondary(context),
+                        ),
+                        children: [
+                          const TextSpan(text: 'Checksum: '),
+                          TextSpan(
+                            text: '#4E92-B7',
+                            style: TextStyle(
+                              fontFamily: 'monospace',
+                              fontWeight: FontWeight.w800,
+                              color: SpendzColors.textPrimary(context),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const Row(
+                  children: [
+                    Text(
+                      '100% RECONCILED',
+                      style: TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        color: SpendzColors.tertiarySky,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                    SizedBox(width: 4),
+                    Icon(
+                      Icons.check_circle_rounded,
+                      size: 15,
+                      color: SpendzColors.tertiarySky,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

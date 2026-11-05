@@ -7,6 +7,7 @@ import '../../app/theme/spendz_colors.dart';
 import '../../models/transaction_model.dart';
 import '../../presentation/widgets/spendz_amount_text.dart';
 import '../../presentation/widgets/spendz_empty_state.dart';
+import '../../presentation/widgets/spendz_top_bar.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/transaction_provider.dart';
 import '../../utils/icon_mapper.dart';
@@ -148,6 +149,14 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             return CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
+                // 0. Global Top Bar
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: SpendzTopBar(title: 'Insights', category: 'OVERVIEW'),
+                  ),
+                ),
+
                 // 1. Header with Month Selector
                 SliverToBoxAdapter(
                   child: Padding(
@@ -218,7 +227,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   // 5. Ranked Category Breakdown Bars
                   if (sortedSpending.isNotEmpty)
                     SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
                       sliver: SliverToBoxAdapter(
                         child: _buildCategoryRankList(
                           context,
@@ -228,6 +237,14 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                         ),
                       ),
                     ),
+
+                  // 6. Smart Insight Card matching Image 5
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                      child: _buildSmartInsightCard(context),
+                    ),
+                  ),
                 ],
               ],
             );
@@ -1084,6 +1101,89 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           );
         }),
       ],
+    );
+  }
+
+  // 6. Smart Insight Card matching Image 5
+  Widget _buildSmartInsightCard(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF3D6), // Warm butter/sunshine
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: const Color(0xFFFED7AA),
+          width: 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFFBBF24).withAlpha(40),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: Colors.white.withAlpha(200),
+            blurRadius: 3,
+            offset: const Offset(1, 1),
+            blurStyle: BlurStyle.inner,
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(12),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: const Center(
+              child: Text(
+                '🌱',
+                style: TextStyle(fontSize: 20),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Smart Insight',
+                  style: TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF78350F),
+                    letterSpacing: -0.2,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'You spent \$142 less on dining out on weekends compared to last month!',
+                  style: TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF92400E).withAlpha(220),
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

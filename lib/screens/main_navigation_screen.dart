@@ -55,8 +55,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         onTap: (index) => setState(() => _currentIndex = index),
         destinations: const [
           SpendzNavigationDestination(
-            icon: Icons.home_outlined,
-            activeIcon: Icons.home_rounded,
+            icon: Icons.grid_view_outlined,
+            activeIcon: Icons.grid_view_rounded,
             label: 'Home',
           ),
           SpendzNavigationDestination(
@@ -75,8 +75,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             label: 'Insights',
           ),
           SpendzNavigationDestination(
-            icon: Icons.person_outline_rounded,
-            activeIcon: Icons.person_rounded,
+            icon: Icons.face_outlined,
+            activeIcon: Icons.face_rounded,
             label: 'Profile',
           ),
         ],

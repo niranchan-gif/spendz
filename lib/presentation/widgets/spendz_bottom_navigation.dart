@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../app/theme/spendz_colors.dart';
-import '../../app/theme/spendz_spacing.dart';
 
 class SpendzNavigationDestination {
   final IconData icon;
@@ -15,6 +14,7 @@ class SpendzNavigationDestination {
 }
 
 /// Spendz Funky Claymorphism Floating Bottom Dock Navigation.
+/// Floating rounded capsule dock matching Stitch design and uploaded images.
 class SpendzBottomNavigation extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -31,39 +31,40 @@ class SpendzBottomNavigation extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = SpendzColors.isDark(context);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF131C2D) : Colors.white,
-        border: Border(
-          top: BorderSide(
-            color: isDark ? const Color(0xFF1E2B40) : const Color(0xFFE2E8F0),
-            width: 1.0,
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: isDark
-                ? Colors.black.withAlpha(90)
-                : const Color(0xFF1E293B).withAlpha(15),
-            blurRadius: 20,
-            offset: const Offset(0, -6),
-          ),
-          BoxShadow(
-            color: isDark
-                ? Colors.black.withAlpha(50)
-                : const Color(0xFF1E293B).withAlpha(8),
-            blurRadius: 6,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
         child: Container(
           height: 64,
-          padding: const EdgeInsets.symmetric(horizontal: SpendzSpacing.sm),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+          decoration: BoxDecoration(
+            color: isDark
+                ? const Color(0xFF131C2D).withAlpha(245)
+                : Colors.white.withAlpha(245),
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(
+              color: isDark ? const Color(0xFF1E2B40) : const Color(0xFFE2E8F0),
+              width: 1.0,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: isDark
+                    ? Colors.black.withAlpha(120)
+                    : const Color(0xFF1E293B).withAlpha(25),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+              BoxShadow(
+                color: Colors.white.withAlpha(isDark ? 10 : 200),
+                blurRadius: 4,
+                offset: const Offset(1, 1),
+                blurStyle: BlurStyle.inner,
+              ),
+            ],
+          ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: List.generate(destinations.length, (index) {
               final item = destinations[index];
               final isSelected = index == currentIndex;
@@ -72,64 +73,63 @@ class SpendzBottomNavigation extends StatelessWidget {
                 child: Material(
                   type: MaterialType.transparency,
                   child: InkWell(
-                    borderRadius: BorderRadius.circular(
-                      SpendzSpacing.radiusFull,
-                    ),
+                    borderRadius: BorderRadius.circular(24),
                     onTap: () => onTap(index),
-                    child: Padding(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeOutBack,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? SpendzColors.tangerine
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: SpendzColors.tangerine.withAlpha(
+                                    isDark ? 90 : 100,
+                                  ),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                                BoxShadow(
+                                  color: Colors.white.withAlpha(150),
+                                  blurRadius: 2,
+                                  offset: const Offset(1, 1),
+                                  blurStyle: BlurStyle.inner,
+                                ),
+                              ]
+                            : null,
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Column(
-                        mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 220),
-                            curve: Curves.easeOutBack,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? SpendzColors.tangerine
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(
-                                SpendzSpacing.radiusFull,
-                              ),
-                              boxShadow: isSelected
-                                  ? [
-                                      BoxShadow(
-                                        color: SpendzColors.tangerine.withAlpha(
-                                          isDark ? 80 : 90,
-                                        ),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 3),
-                                      ),
-                                    ]
-                                  : null,
-                            ),
-                            child: Icon(
-                              isSelected ? item.activeIcon : item.icon,
-                              size: 22,
-                              color: isSelected
-                                  ? Colors.white
-                                  : SpendzColors.textSecondary(context),
-                            ),
+                          Icon(
+                            isSelected ? item.activeIcon : item.icon,
+                            size: 20,
+                            color: isSelected
+                                ? Colors.white
+                                : (isDark
+                                    ? const Color(0xFF94A3B8)
+                                    : const Color(0xFF64748B)),
                           ),
-                          const SizedBox(height: 3),
+                          const SizedBox(height: 2),
                           Text(
                             item.label,
                             style: TextStyle(
-                              fontSize: 10.5,
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: 10,
                               fontWeight: isSelected
                                   ? FontWeight.w800
                                   : FontWeight.w600,
                               color: isSelected
-                                  ? (isDark
-                                        ? Colors.white
-                                        : SpendzColors.tangerineDeep)
-                                  : SpendzColors.textSecondary(context),
-                              letterSpacing: 0.2,
+                                  ? Colors.white
+                                  : (isDark
+                                      ? const Color(0xFF94A3B8)
+                                      : const Color(0xFF64748B)),
+                              letterSpacing: 0.1,
+                              height: 1.0,
                             ),
                           ),
                         ],
