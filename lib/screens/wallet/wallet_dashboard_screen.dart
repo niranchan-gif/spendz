@@ -62,7 +62,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
   @override
   void initState() {
     super.initState();
-    _cardPageController = PageController(viewportFraction: 0.88);
+    _cardPageController = PageController(viewportFraction: 0.94);
     _loadCardOrder();
   }
 
@@ -853,7 +853,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         // Clean Horizontal Swipe Carousel - Exact 1.586 ID-1 Card Aspect Ratio Replica
         LayoutBuilder(
           builder: (context, constraints) {
-            const viewportFraction = 0.88;
+            const viewportFraction = 0.94;
             final cardWidth = constraints.maxWidth * viewportFraction - 8;
             final cardHeight = cardWidth / 1.586;
             return SizedBox(

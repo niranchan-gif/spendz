@@ -1,10 +1,9 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_spacing.dart';
 
-/// Translucent Glass Modal Dialog with backdrop filter.
+/// Matte, borderless modal dialog for the legacy Glass API.
 class GlassDialog extends StatelessWidget {
   final Widget child;
   final String? title;
@@ -31,7 +30,7 @@ class GlassDialog extends StatelessWidget {
       context: context,
       barrierDismissible: barrierDismissible,
       barrierColor: Colors.black.withAlpha(120),
-      builder: (ctx) =>
+      builder: (_) =>
           GlassDialog(title: title, icon: icon, actions: actions, child: child),
     );
   }
@@ -46,58 +45,47 @@ class GlassDialog extends StatelessWidget {
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppRadius.xl),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-          child: Container(
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? const Color(0xFF14231B).withAlpha(235)
-                  : const Color(0xFFFFFFFF).withAlpha(240),
-              borderRadius: BorderRadius.circular(AppRadius.xl),
-              border: Border.all(
-                color: isDark
-                    ? Colors.white.withAlpha(35)
-                    : Colors.white.withAlpha(230),
-                width: 1.2,
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          decoration: BoxDecoration(
+            color: AppColors.getSurface(context),
+            borderRadius: BorderRadius.circular(AppRadius.xl),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(isDark ? 52 : 18),
+                blurRadius: 26,
+                offset: const Offset(0, 8),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha(isDark ? 90 : 30),
-                  blurRadius: 32,
-                  offset: const Offset(0, 10),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (icon != null) ...[
+                Center(child: icon!),
+                const SizedBox(height: AppSpacing.md),
+              ],
+              if (title != null) ...[
+                Text(
+                  title!,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.getTextPrimary(context),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+              ],
+              Flexible(child: child),
+              if (actions != null && actions!.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.lg),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: actions!,
                 ),
               ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (icon != null) ...[
-                  Center(child: icon!),
-                  const SizedBox(height: AppSpacing.md),
-                ],
-                if (title != null) ...[
-                  Text(
-                    title!,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.getTextPrimary(context),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                ],
-                Flexible(child: child),
-                if (actions != null && actions!.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.lg),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: actions!,
-                  ),
-                ],
-              ],
-            ),
+            ],
           ),
         ),
       ),

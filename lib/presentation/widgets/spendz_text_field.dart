@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../app/theme/spendz_colors.dart';
 import '../../app/theme/spendz_spacing.dart';
 
-/// Clean minimalist text input field for Spendz 2.0.
+/// Clean, borderless matte input field for Spendz.
 class SpendzTextField extends StatelessWidget {
   final TextEditingController? controller;
   final String? hintText;
@@ -35,7 +35,11 @@ class SpendzTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = SpendzColors.isDark(context);
+    final radius = BorderRadius.circular(SpendzSpacing.radiusMd);
+    final border = OutlineInputBorder(
+      borderRadius: radius,
+      borderSide: BorderSide.none,
+    );
 
     return TextFormField(
       controller: controller,
@@ -65,33 +69,16 @@ class SpendzTextField extends StatelessWidget {
         prefixIcon: prefixIcon,
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: SpendzColors.surface(context),
+        fillColor: SpendzColors.surfaceElevated(context),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: SpendzSpacing.lg,
           vertical: SpendzSpacing.md,
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(SpendzSpacing.radiusMd),
-          borderSide: BorderSide(
-            color: isDark ? SpendzColors.borderDark : SpendzColors.borderLight,
-            width: 1.0,
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(SpendzSpacing.radiusMd),
-          borderSide: BorderSide(
-            color: SpendzColors.primaryAccent(context),
-            width: 1.5,
-          ),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(SpendzSpacing.radiusMd),
-          borderSide: const BorderSide(color: SpendzColors.expense, width: 1.0),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(SpendzSpacing.radiusMd),
-          borderSide: const BorderSide(color: SpendzColors.expense, width: 1.5),
-        ),
+        border: border,
+        enabledBorder: border,
+        focusedBorder: border,
+        errorBorder: border,
+        focusedErrorBorder: border,
       ),
     );
   }

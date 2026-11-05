@@ -203,18 +203,10 @@ class AppColors {
 
   // ─── GLASS SYSTEM COLORS ────────────────────────────────────────────────────
   /// Translucent background tint for glass surfaces (Smoked Obsidian in Dark, Frosted White in Light)
-  static Color getGlassBackground(BuildContext context) {
-    return isDark(context)
-        ? const Color(0xFF0F1A14).withAlpha(200)
-        : const Color(0xFFFFFFFF).withAlpha(215);
-  }
+  static Color getGlassBackground(BuildContext context) => getSurface(context);
 
   /// Subtle perimeter border for glass components (Specular Refractive Hairline)
-  static Color getGlassBorder(BuildContext context) {
-    return isDark(context)
-        ? Colors.white.withAlpha(25)
-        : const Color(0xFFFFFFFF).withAlpha(220);
-  }
+  static Color getGlassBorder(BuildContext context) => getBorder(context);
 
   /// Specular ambient highlight color for glass gradients
   static Color getGlassHighlight(BuildContext context) {

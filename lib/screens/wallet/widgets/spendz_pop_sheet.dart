@@ -42,12 +42,6 @@ class SpendzPopSheet extends StatelessWidget {
         borderRadius: const BorderRadius.vertical(
           top: Radius.circular(32), // rounded-3xl
         ),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withAlpha(15)
-              : Colors.white.withAlpha(200),
-          width: 1.5,
-        ),
         boxShadow: [
           BoxShadow(
             color: isDark
@@ -109,30 +103,30 @@ class SpendzPopSheet extends StatelessWidget {
                               vertical: 5,
                             ),
                             decoration: BoxDecoration(
-                              color: SpendzColors.tangerine,
+                              color: SpendzColors.surfaceElevated(context),
                               borderRadius: BorderRadius.circular(
                                 SpendzSpacing.radiusFull,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: SpendzColors.tangerine.withAlpha(80),
+                                  color: Colors.black.withAlpha(isDark ? 28 : 10),
                                   blurRadius: 8,
                                   offset: const Offset(0, 3),
                                 ),
                               ],
                             ),
-                            child: const Row(
+                            child: Row(
                               children: [
                                 Icon(
                                   Icons.flash_on_rounded,
                                   size: 14,
-                                  color: Colors.white,
+                                  color: SpendzColors.primaryAccent(context),
                                 ),
                                 SizedBox(width: 4),
                                 Text(
                                   'QUICK VAULT',
                                   style: TextStyle(
-                                    color: Colors.white,
+                                    color: textPrimary,
                                     fontSize: 10.5,
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: 0.8,

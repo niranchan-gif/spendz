@@ -35,7 +35,7 @@ class SpendzTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(SpendzSpacing.radiusLg),
-          side: const BorderSide(color: SpendzColors.borderLight, width: 1),
+          side: BorderSide.none,
         ),
       ),
       dividerTheme: const DividerThemeData(
@@ -76,7 +76,7 @@ class SpendzTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(SpendzSpacing.radiusLg),
-          side: const BorderSide(color: SpendzColors.borderDark, width: 1),
+          side: BorderSide.none,
         ),
       ),
       dividerTheme: const DividerThemeData(

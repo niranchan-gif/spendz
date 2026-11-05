@@ -92,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
         return Container(
           padding: const EdgeInsets.all(SpendzSpacing.lg),
           decoration: BoxDecoration(
-            color: const Color(0xFFE2F4EA),
+            color: SpendzColors.matteTangerine,
             borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
@@ -100,17 +100,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 blurRadius: 18,
                 offset: const Offset(0, 8),
               ),
-              const BoxShadow(
-                color: Colors.white,
-                blurRadius: 4,
-                offset: Offset(1, 1),
-                blurStyle: BlurStyle.inner,
-              ),
             ],
-            border: Border.all(
-              color: const Color(0xFFB8E6CE),
-              width: 1.2,
-            ),
+            border: null,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -180,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         vertical: 11,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFCEF1DE),
+                        color: SpendzColors.matteMint,
                         borderRadius: BorderRadius.circular(18),
                         boxShadow: [
                           BoxShadow(
@@ -188,17 +179,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
-                          const BoxShadow(
-                            color: Colors.white,
-                            blurRadius: 2,
-                            offset: Offset(1, 1),
-                            blurStyle: BlurStyle.inner,
-                          ),
                         ],
-                        border: Border.all(
-                          color: const Color(0xFFA5DFC0),
-                          width: 1.2,
-                        ),
+                        border: null,
                       ),
                       child: Row(
                         children: [
@@ -261,7 +243,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         vertical: 11,
                       ),
                       decoration: BoxDecoration(
-                        color: SpendzColors.clayYellow,
+                        color: SpendzColors.matteSunshine,
                         borderRadius: BorderRadius.circular(18),
                         boxShadow: [
                           BoxShadow(
@@ -269,17 +251,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
-                          const BoxShadow(
-                            color: Colors.white,
-                            blurRadius: 2,
-                            offset: Offset(1, 1),
-                            blurStyle: BlurStyle.inner,
-                          ),
                         ],
-                        border: Border.all(
-                          color: Colors.white.withAlpha(200),
-                          width: 1.2,
-                        ),
+                        border: null,
                       ),
                       child: Row(
                         children: [
@@ -344,65 +317,64 @@ class _HomeScreenState extends State<HomeScreen> {
   // ─── 2. QUICK ACTION CLAY BUTTONS ───────────────────────────────────────────
   Widget _buildQuickActionButtons(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildClayActionPod(
-          context: context,
-          icon: Icons.add_rounded,
-          label: 'Add',
-          bgColor: SpendzColors.tangerine,
-          iconColor: Colors.white,
-          onTap: () {
-            Navigator.push(
+        Expanded(
+          child: _buildClayActionPod(
+            context: context,
+            icon: Icons.add_rounded,
+            label: 'Add',
+            bgColor: SpendzColors.tangerine,
+            iconColor: Colors.white,
+            onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
-            );
-          },
+            ),
+          ),
         ),
-        _buildClayActionPod(
-          context: context,
-          icon: Icons.sync_rounded,
-          label: 'Sync to Bank',
-          bgColor: SpendzColors.tertiarySky,
-          iconColor: Colors.white,
-          onTap: () {
-            Navigator.push(
+        Expanded(
+          child: _buildClayActionPod(
+            context: context,
+            icon: Icons.sync_rounded,
+            label: 'Sync to Bank',
+            bgColor: SpendzColors.tertiarySky,
+            iconColor: Colors.white,
+            onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (_) => const ImportedTransactionsScreen(),
               ),
-            );
-          },
+            ),
+          ),
         ),
-        _buildClayActionPod(
-          context: context,
-          icon: Icons.credit_card_rounded,
-          label: 'Cards',
-          bgColor: SpendzColors.sunshineYellow,
-          iconColor: const Color(0xFF735500),
-          onTap: () {
-            Navigator.push(
+        Expanded(
+          child: _buildClayActionPod(
+            context: context,
+            icon: Icons.credit_card_rounded,
+            label: 'Cards',
+            bgColor: SpendzColors.sunshineYellow,
+            iconColor: const Color(0xFF735500),
+            onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (_) => const WalletDashboardScreen(),
               ),
-            );
-          },
+            ),
+          ),
         ),
-        _buildClayActionPod(
-          context: context,
-          icon: Icons.lock_outline_rounded,
-          label: 'Vault',
-          bgColor: const Color(0xFFDDD6FE),
-          iconColor: const Color(0xFF4C1D95),
-          onTap: () {
-            Navigator.push(
+        Expanded(
+          child: _buildClayActionPod(
+            context: context,
+            icon: Icons.lock_outline_rounded,
+            label: 'Vault',
+            bgColor: const Color(0xFFDDD6FE),
+            iconColor: const Color(0xFF4C1D95),
+            onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (_) => const WalletDashboardScreen(),
               ),
-            );
-          },
+            ),
+          ),
         ),
       ],
     );
@@ -440,12 +412,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-            child: Icon(icon, color: iconColor, size: 26),
+            child: Icon(icon, color: SpendzColors.textSecondary(context), size: 24),
           ),
         ),
         const SizedBox(height: 6),
         Text(
           label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
           style: TextStyle(
             fontFamily: 'Plus Jakarta Sans',
             fontSize: 12,
@@ -491,7 +466,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         width: 36,
                         height: 36,
                         decoration: BoxDecoration(
-                          color: SpendzColors.tangerine.withAlpha(25),
+                          color: SpendzColors.clayTangerine,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(

@@ -13,8 +13,7 @@ class SpendzNavigationDestination {
   });
 }
 
-/// Spendz Funky Claymorphism Floating Bottom Dock Navigation.
-/// Floating rounded capsule dock matching Stitch design and uploaded images.
+/// Floating, matte navigation dock with a quiet active state.
 class SpendzBottomNavigation extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -39,95 +38,62 @@ class SpendzBottomNavigation extends StatelessWidget {
           height: 64,
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
           decoration: BoxDecoration(
-            color: isDark
-                ? const Color(0xFF131C2D).withAlpha(245)
-                : Colors.white.withAlpha(245),
-            borderRadius: BorderRadius.circular(32),
-            border: Border.all(
-              color: isDark ? const Color(0xFF1E2B40) : const Color(0xFFE2E8F0),
-              width: 1.0,
-            ),
+            color: SpendzColors.surface(context),
+            borderRadius: BorderRadius.circular(26),
             boxShadow: [
               BoxShadow(
-                color: isDark
-                    ? Colors.black.withAlpha(120)
-                    : const Color(0xFF1E293B).withAlpha(25),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
-              ),
-              BoxShadow(
-                color: Colors.white.withAlpha(isDark ? 10 : 200),
-                blurRadius: 4,
-                offset: const Offset(1, 1),
-                blurStyle: BlurStyle.inner,
+                color: Colors.black.withAlpha(isDark ? 38 : 12),
+                blurRadius: 18,
+                offset: const Offset(0, 6),
+                spreadRadius: -4,
               ),
             ],
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: List.generate(destinations.length, (index) {
               final item = destinations[index];
-              final isSelected = index == currentIndex;
+              final selected = index == currentIndex;
+              final muted = SpendzColors.textSecondary(context);
 
               return Expanded(
                 child: Material(
                   type: MaterialType.transparency,
                   child: InkWell(
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(18),
                     onTap: () => onTap(index),
                     child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 220),
-                      curve: Curves.easeOutBack,
+                      duration: const Duration(milliseconds: 180),
+                      curve: Curves.easeOut,
                       decoration: BoxDecoration(
-                        color: isSelected
-                            ? SpendzColors.tangerine
+                        color: selected
+                            ? SpendzColors.surfaceElevated(context)
                             : Colors.transparent,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: SpendzColors.tangerine.withAlpha(
-                                    isDark ? 90 : 100,
-                                  ),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
-                                ),
-                                BoxShadow(
-                                  color: Colors.white.withAlpha(150),
-                                  blurRadius: 2,
-                                  offset: const Offset(1, 1),
-                                  blurStyle: BlurStyle.inner,
-                                ),
-                              ]
-                            : null,
+                        borderRadius: BorderRadius.circular(18),
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            isSelected ? item.activeIcon : item.icon,
+                            selected ? item.activeIcon : item.icon,
                             size: 20,
-                            color: isSelected
-                                ? Colors.white
-                                : (isDark
-                                    ? const Color(0xFF94A3B8)
-                                    : const Color(0xFF64748B)),
+                            color: selected
+                                ? SpendzColors.primaryAccent(context)
+                                : muted,
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: 3),
                           Text(
                             item.label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontFamily: 'Plus Jakarta Sans',
                               fontSize: 10,
-                              fontWeight: isSelected
-                                  ? FontWeight.w800
-                                  : FontWeight.w600,
-                              color: isSelected
-                                  ? Colors.white
-                                  : (isDark
-                                      ? const Color(0xFF94A3B8)
-                                      : const Color(0xFF64748B)),
+                              fontWeight:
+                                  selected ? FontWeight.w800 : FontWeight.w600,
+                              color: selected
+                                  ? SpendzColors.textPrimary(context)
+                                  : muted,
                               letterSpacing: 0.1,
                               height: 1.0,
                             ),
