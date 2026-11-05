@@ -92,21 +92,13 @@ class _HomeScreenState extends State<HomeScreen> {
         return Container(
           padding: const EdgeInsets.all(SpendzSpacing.lg),
           decoration: BoxDecoration(
-            color: SpendzColors.isDark(context)
-              ? SpendzColors.matteTangerine
-              : const Color(0xFFE2F4EA),
+            color: SpendzColors.matteTangerine,
             borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFF1E293B).withAlpha(20),
                 blurRadius: 18,
                 offset: const Offset(0, 8),
-              ),
-              const BoxShadow(
-                color: Colors.white,
-                blurRadius: 4,
-                offset: Offset(1, 1),
-                blurStyle: BlurStyle.inner,
               ),
             ],
             border: null,
@@ -179,21 +171,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         vertical: 11,
                       ),
                       decoration: BoxDecoration(
-                        color: SpendzColors.isDark(context)
-                          ? SpendzColors.matteMint
-                          : const Color(0xFFCEF1DE),
+                        color: SpendzColors.matteMint,
                         borderRadius: BorderRadius.circular(18),
                         boxShadow: [
                           BoxShadow(
                             color: const Color(0xFF70C99A).withAlpha(60),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
-                          ),
-                          const BoxShadow(
-                            color: Colors.white,
-                            blurRadius: 2,
-                            offset: Offset(1, 1),
-                            blurStyle: BlurStyle.inner,
                           ),
                         ],
                         border: null,
@@ -259,21 +243,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         vertical: 11,
                       ),
                       decoration: BoxDecoration(
-                        color: SpendzColors.isDark(context)
-                          ? SpendzColors.matteSunshine
-                          : SpendzColors.clayYellow,
+                        color: SpendzColors.matteSunshine,
                         borderRadius: BorderRadius.circular(18),
                         boxShadow: [
                           BoxShadow(
                             color: SpendzColors.clayYellow.withAlpha(100),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
-                          ),
-                          const BoxShadow(
-                            color: Colors.white,
-                            blurRadius: 2,
-                            offset: Offset(1, 1),
-                            blurStyle: BlurStyle.inner,
                           ),
                         ],
                         border: null,
