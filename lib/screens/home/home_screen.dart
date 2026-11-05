@@ -89,29 +89,11 @@ class _HomeScreenState extends State<HomeScreen> {
         final monthlyIncome = dashboard.monthlyIncome;
         final monthlyExpenses = dashboard.monthlyExpenses;
 
-        return Container(
+        return SpendzSurface(
+          isElevated: true,
+          color: SpendzColors.clayTangerine,
+          borderRadius: 28,
           padding: const EdgeInsets.all(SpendzSpacing.lg),
-          decoration: BoxDecoration(
-            color: const Color(0xFFE2F4EA),
-            borderRadius: BorderRadius.circular(28),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF1E293B).withAlpha(20),
-                blurRadius: 18,
-                offset: const Offset(0, 8),
-              ),
-              const BoxShadow(
-                color: Colors.white,
-                blurRadius: 4,
-                offset: Offset(1, 1),
-                blurStyle: BlurStyle.inner,
-              ),
-            ],
-            border: Border.all(
-              color: const Color(0xFFB8E6CE),
-              width: 1.2,
-            ),
-          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -180,7 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         vertical: 11,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFCEF1DE),
+                        color: SpendzColors.clayMint,
                         borderRadius: BorderRadius.circular(18),
                         boxShadow: [
                           BoxShadow(
@@ -206,11 +188,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             width: 32,
                             height: 32,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF0F5B38),
+                              color: SpendzColors.income,
                               borderRadius: BorderRadius.circular(10),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF0F5B38).withAlpha(60),
+                                  color: SpendzColors.income.withAlpha(45),
                                   blurRadius: 4,
                                   offset: const Offset(0, 2),
                                 ),
@@ -265,7 +247,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         borderRadius: BorderRadius.circular(18),
                         boxShadow: [
                           BoxShadow(
-                            color: SpendzColors.clayYellow.withAlpha(100),
+                            color: SpendzColors.sunshineDeep.withAlpha(28),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -287,7 +269,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             width: 32,
                             height: 32,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF735500),
+                              color: SpendzColors.sunshineDeep,
                               borderRadius: BorderRadius.circular(10),
                               boxShadow: [
                                 BoxShadow(
