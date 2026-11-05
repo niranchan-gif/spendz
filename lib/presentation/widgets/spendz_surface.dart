@@ -171,6 +171,13 @@ class SpendzSurface extends StatelessWidget {
       }
     }
 
+    // Every tile fill is composited onto an opaque base surface. This keeps
+    // the clay palette vivid without allowing translucent card backgrounds.
+    bgColor = Color.alphaBlend(
+      bgColor,
+      isDark ? SpendzColors.surfaceDark : SpendzColors.surfaceLowest,
+    );
+
     // Outer chromatic shadows
     List<BoxShadow>? shadows;
     if (showShadow && !isSunken && tone != SpendzClayTone.sunken) {
