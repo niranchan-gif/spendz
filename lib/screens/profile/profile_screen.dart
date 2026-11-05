@@ -71,8 +71,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildProfileHero(BuildContext context) {
     final accent = SpendzColors.primaryAccent(context);
 
-    return SpendzSurface(
+    return SpendzSurface.tangerine(
       isElevated: true,
+      color: SpendzColors.clayTangerine,
       padding: const EdgeInsets.all(SpendzSpacing.lg),
       child: Row(
         children: [
@@ -151,7 +152,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         const SpendzSectionHeader(title: 'Automated Security & Keystore'),
         const SizedBox(height: SpendzSpacing.xs),
-        SpendzSurface(
+        SpendzSurface.periwinkle(
+          color: SpendzColors.clayPeriwinkle,
           padding: EdgeInsets.zero,
           child: Column(
             children: [
@@ -255,7 +257,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         const SpendzSectionHeader(title: 'Preferences & Sync'),
         const SizedBox(height: SpendzSpacing.xs),
-        SpendzSurface(
+        SpendzSurface.sunshine(
+          color: SpendzColors.clayYellowSoft,
           padding: EdgeInsets.zero,
           child: Column(
             children: [
