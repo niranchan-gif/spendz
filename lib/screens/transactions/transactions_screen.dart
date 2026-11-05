@@ -1114,6 +1114,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         ? SpendzColors.periwinkle
         : SpendzColors.sunshineYellow;
 
+    final tileFill = isIncome
+        ? SpendzColors.clayPeriwinkle
+        : badgeColor == SpendzColors.tangerine
+        ? SpendzColors.clayTangerine
+        : badgeColor == SpendzColors.periwinkle
+        ? SpendzColors.clayLavender
+        : SpendzColors.clayYellowSoft;
+
     return Dismissible(
       key: Key(tx.id),
       direction: DismissDirection.endToStart,
@@ -1173,13 +1181,24 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: SpendzColors.clayCream,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color.lerp(tileFill, Colors.white, 0.26)!,
+                tileFill,
+                Color.lerp(tileFill, badgeColor, 0.07)!,
+              ],
+            ),
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
-              color: const Color(0xFFF0EBE1),
-              width: 1,
+              color: Colors.white.withAlpha(220),
+              width: 1.2,
             ),
-            boxShadow: SpendzColors.clayDropShadow(context),
+            boxShadow: [
+              BoxShadow(color: badgeColor.withAlpha(34), blurRadius: 18, offset: const Offset(0, 7)),
+              BoxShadow(color: Colors.white.withAlpha(220), blurRadius: 5, offset: const Offset(-2, -2)),
+            ],
           ),
           child: Row(
             children: [
