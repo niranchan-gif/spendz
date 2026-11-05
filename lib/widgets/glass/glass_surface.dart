@@ -47,7 +47,7 @@ class GlassSurface extends StatelessWidget {
     final suppliedColor = color;
     final surfaceColor = suppliedColor == null
         ? AppColors.getSurface(context)
-        : suppliedColor.withAlpha(255);
+        : Color.alphaBlend(suppliedColor, AppColors.getSurface(context));
     final surfaceBorder = border ??
         Border.all(
           color: AppColors.getBorder(context),
