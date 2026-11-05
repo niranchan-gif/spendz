@@ -89,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
         final monthlyIncome = dashboard.monthlyIncome;
         final monthlyExpenses = dashboard.monthlyExpenses;
 
-        return SpendzSurface(
+        return SpendzSurface.tangerine(
           isElevated: true,
           color: SpendzColors.clayTangerine,
           borderRadius: 28,
@@ -406,18 +406,33 @@ class _HomeScreenState extends State<HomeScreen> {
             width: 58,
             height: 58,
             decoration: BoxDecoration(
-              color: bgColor,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color.lerp(bgColor, Colors.white, 0.24)!,
+                  bgColor,
+                  Color.lerp(bgColor, SpendzColors.inkSlate, 0.055)!,
+                ],
+              ),
               borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white.withAlpha(205), width: 1.2),
               boxShadow: [
                 BoxShadow(
-                  color: bgColor.withAlpha(80),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
+                  color: bgColor.withAlpha(105),
+                  blurRadius: 18,
+                  spreadRadius: -3,
+                  offset: const Offset(0, 8),
                 ),
                 BoxShadow(
-                  color: Colors.white.withAlpha(160),
-                  blurRadius: 2,
-                  offset: const Offset(1, 1),
+                  color: Colors.white.withAlpha(210),
+                  blurRadius: 5,
+                  offset: const Offset(-2, -2),
+                ),
+                BoxShadow(
+                  color: SpendzColors.inkSlate.withAlpha(12),
+                  blurRadius: 3,
+                  offset: const Offset(2, 3),
                   blurStyle: BlurStyle.inner,
                 ),
               ],
@@ -457,8 +472,8 @@ class _HomeScreenState extends State<HomeScreen> {
         final utilRatio = hasExpenses ? (totalSpent / totalBudget).clamp(0.05, 1.0) : 0.0;
         final utilPct = hasExpenses ? ((totalSpent / totalBudget) * 100).clamp(1.0, 100.0).toStringAsFixed(0) : '0';
 
-        return SpendzSurface(
-          color: SpendzColors.clayCream,
+        return SpendzSurface.sunshine(
+          color: SpendzColors.clayYellowSoft,
           padding: const EdgeInsets.all(SpendzSpacing.lg),
           borderRadius: 24,
           child: Column(
