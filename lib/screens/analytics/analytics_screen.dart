@@ -1118,9 +1118,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: SpendzColors.isDark(context)
-          ? SpendzColors.matteSunshine
-          : const Color(0xFFFFF3D6), // Warm butter/sunshine
+        color: SpendzColors.matteSunshine, // Dark matte sunshine tone
         borderRadius: BorderRadius.circular(24),
         border: null,
         boxShadow: [
@@ -1144,9 +1142,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: SpendzColors.isDark(context)
-                  ? SpendzColors.surfaceElevated(context)
-                  : Colors.white,
+              color: SpendzColors.surfaceElevated(context),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
