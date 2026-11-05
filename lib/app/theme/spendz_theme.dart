@@ -35,11 +35,11 @@ class SpendzTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(SpendzSpacing.radiusLg),
-          side: const BorderSide(color: SpendzColors.borderLight, width: 1),
+          side: BorderSide.none,
         ),
       ),
       dividerTheme: const DividerThemeData(
-        color: SpendzColors.borderLight,
+        color: SpendzColors.borderLight.withAlpha(100),
         thickness: 1,
         space: 1,
       ),
@@ -76,11 +76,11 @@ class SpendzTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(SpendzSpacing.radiusLg),
-          side: const BorderSide(color: SpendzColors.borderDark, width: 1),
+          side: BorderSide.none,
         ),
       ),
       dividerTheme: const DividerThemeData(
-        color: SpendzColors.borderDark,
+        color: SpendzColors.borderDark.withAlpha(90),
         thickness: 1,
         space: 1,
       ),
