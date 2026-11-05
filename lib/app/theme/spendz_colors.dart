@@ -1,97 +1,173 @@
 import 'package:flutter/material.dart';
 
-/// Spendz 2.0 Brand Palette and Semantic Theme Tokens.
+/// Spendz Funky Claymorphism Brand Palette & Semantic Theme Tokens.
 ///
-/// Deep Forest Green, Emerald, Olive, Sage with authentic Light and Dark modes.
+/// Tangerine Punch, Sunshine Yellow, Periwinkle Sky Blue, Soft Cream,
+/// and Deep Slate Ink with dual chromatic shadow accents.
 class SpendzColors {
-  // ─── LIGHT PALETTE ──────────────────────────────────────────────────────────
-  /// Deep forest green brand anchor: #142D25
-  static const Color forestGreen = Color(0xFF142D25);
+  // ─── STITCH CLAYMORPHISM PALETTE ──────────────────────────────────────────
+  /// Tangerine Punch primary energy driver: #FF933E
+  static const Color tangerine = Color(0xFFFF933E);
+  static const Color tangerineDeep = Color(0xFF954A00);
+  static const Color tangerineLight = Color(0xFFFFDCC6);
+  static const Color tangerineDark = Color(0xFF6A3300);
 
-  /// Emerald accent: #286B50
-  static const Color emerald = Color(0xFF286B50);
+  /// Sunshine Yellow secondary highlight: #FECA55 / #FFCB56
+  static const Color sunshineYellow = Color(0xFFFECA55);
+  static const Color sunshineDeep = Color(0xFF795900);
+  static const Color sunshineLight = Color(0xFFFFDF9F);
+  static const Color softButter = Color(0xFFFFE9A9);
 
-  /// Bright mint highlight: #34D399
-  static const Color mint = Color(0xFF34D399);
+  /// Periwinkle Sky Blue accent: #73A5CA / #82B4DA
+  static const Color periwinkle = Color(0xFF73A5CA);
+  static const Color periwinkleDeep = Color(0xFF2E6385);
+  static const Color periwinkleLight = Color(0xFFC9E6FF);
+  static const Color periwinkleDark = Color(0xFF024667);
+  static const Color tertiarySky = periwinkle;
 
-  /// Olive accent: #687A46
-  static const Color olive = Color(0xFF687A46);
+  /// Canvas Backdrops
+  static const Color canvasLight = Color(0xFFF9F9FF);
+  static const Color canvasWarmCream = Color(0xFFFDF6EC);
+  static const Color canvasDark = Color(0xFF111C2D);
+  static const Color canvasDeepDark = Color(0xFF101713);
 
-  /// Sage accent: #A8B99B
-  static const Color sage = Color(0xFFA8B99B);
+  /// Surfaces (Light Claymorphic Layers)
+  static const Color surfaceLowest = Color(0xFFFFFFFF);
+  static const Color surfaceLow = Color(0xFFF0F3FF);
+  static const Color surfaceContainerColor = Color(0xFFE7EEFF);
+  static const Color surfaceHigh = Color(0xFFDEE8FF);
+  static const Color surfaceHighest = Color(0xFFD8E3FB);
 
-  /// Soft light background: #F5F6F0
-  static const Color softBackground = Color(0xFFF5F6F0);
+  /// Surfaces (Dark Claymorphic Layers)
+  static const Color surfaceDark = Color(0xFF192538);
+  static const Color surfaceElevatedDark = Color(0xFF202F44);
+  static const Color borderDark = Color(0xFF2B3D55);
 
-  /// Primary light surface: #FFFFFF
-  static const Color surfaceLight = Color(0xFFFFFFFF);
-
-  /// Elevated light surface: #EBF0E9
-  static const Color surfaceElevatedLight = Color(0xFFEBF0E9);
-
-  /// Light border: #DFE5DC
-  static const Color borderLight = Color(0xFFDFE5DC);
-
-  /// Primary text (Light): #17231D
-  static const Color textPrimaryLight = Color(0xFF17231D);
-
-  /// Secondary text (Light): #818A80
-  static const Color textSecondaryLight = Color(0xFF818A80);
-
-  // ─── DARK PALETTE ───────────────────────────────────────────────────────────
-  /// Primary dark background: #101713
-  static const Color backgroundDark = Color(0xFF101713);
-
-  /// Primary dark surface: #19231D
-  static const Color surfaceDark = Color(0xFF19231D);
-
-  /// Elevated dark surface: #202D25
-  static const Color surfaceElevatedDark = Color(0xFF202D25);
-
-  /// Dark border: #27382E
-  static const Color borderDark = Color(0xFF27382E);
-
-  /// Primary text (Dark): #F1F5EF
-  static const Color textPrimaryDark = Color(0xFFF1F5EF);
-
-  /// Secondary text (Dark): #9AA89B
-  static const Color textSecondaryDark = Color(0xFF9AA89B);
+  /// Typography Bases
+  static const Color inkSlate = Color(0xFF111C2D);
+  static const Color inkSlateVariant = Color(0xFF554337);
+  static const Color inkOutline = Color(0xFF897365);
+  static const Color inkOutlineVariant = Color(0xFFDCC1B2);
 
   // ─── SEMANTIC INDICATORS ───────────────────────────────────────────────────
-  /// Muted coral expense indicator: #E06A55
+  /// Vibrant Expense / Coral: #E06A55 / #BA1A1A
   static const Color expense = Color(0xFFE06A55);
+  static const Color error = expense;
+  static const Color errorContainer = Color(0xFFFFDAD6);
 
-  /// Emerald income indicator: #286B50
-  static const Color income = Color(0xFF286B50);
+  /// Healthy Inflow / Growth Emerald: #16A34A / #286B50
+  static const Color income = Color(0xFF16A34A);
 
-  /// Warning / Pending indicator: #D99B26
+  /// Warning / Gold: #D99B26
   static const Color warning = Color(0xFFD99B26);
 
-  /// Info / Sync indicator: #3B82F6
-  static const Color info = Color(0xFF3B82F6);
+  /// Info / Tech: #2E6385
+  static const Color info = Color(0xFF2E6385);
+
+  // ─── BACKWARD COMPATIBILITY ALIASES ───────────────────────────────────────
+  static const Color forestGreen = tangerineDeep;
+  static const Color emerald = tangerine;
+  static const Color mint = sunshineYellow;
+  static const Color olive = periwinkle;
+  static const Color sage = periwinkleLight;
+  static const Color softBackground = canvasLight;
+  static const Color surfaceLight = surfaceLowest;
+  static const Color surfaceElevatedLight = surfaceLow;
+  static const Color borderLight = surfaceHigh;
+  static const Color textPrimaryLight = inkSlate;
+  static const Color textSecondaryLight = inkOutline;
+  static const Color backgroundDark = canvasDark;
+  static const Color textPrimaryDark = Color(0xFFF1F5EF);
+  static const Color textSecondaryDark = Color(0xFF9AA89B);
 
   // ─── DYNAMIC CONTEXT HELPERS ───────────────────────────────────────────────
   static bool isDark(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark;
 
   static Color background(BuildContext context) =>
-      isDark(context) ? backgroundDark : softBackground;
+      isDark(context) ? canvasDark : canvasLight;
 
   static Color surface(BuildContext context) =>
-      isDark(context) ? surfaceDark : surfaceLight;
+      isDark(context) ? surfaceDark : surfaceLowest;
 
   static Color surfaceElevated(BuildContext context) =>
-      isDark(context) ? surfaceElevatedDark : surfaceElevatedLight;
+      isDark(context) ? surfaceElevatedDark : surfaceLow;
+
+  static Color surfaceRecessed(BuildContext context) =>
+      isDark(context) ? const Color(0xFF141E2D) : surfaceLow;
+
+  static Color surfaceContainerLow(BuildContext context) =>
+      isDark(context) ? const Color(0xFF162030) : surfaceLow;
+
+  static Color surfaceContainer(BuildContext context) =>
+      isDark(context) ? const Color(0xFF1D2A40) : surfaceContainerColor;
+
+  static Color surfaceContainerHigh(BuildContext context) =>
+      isDark(context) ? const Color(0xFF223149) : surfaceHigh;
+
+  static Color surfaceContainerHighest(BuildContext context) =>
+      isDark(context) ? const Color(0xFF283A55) : surfaceHighest;
 
   static Color border(BuildContext context) =>
-      isDark(context) ? borderDark : borderLight;
+      isDark(context) ? borderDark : surfaceHigh;
 
   static Color textPrimary(BuildContext context) =>
-      isDark(context) ? textPrimaryDark : textPrimaryLight;
+      isDark(context) ? textPrimaryDark : inkSlate;
 
   static Color textSecondary(BuildContext context) =>
-      isDark(context) ? textSecondaryDark : textSecondaryLight;
+      isDark(context) ? textSecondaryDark : inkOutline;
 
-  static Color primaryAccent(BuildContext context) =>
-      isDark(context) ? mint : emerald;
+  static Color primaryAccent(BuildContext context) => tangerine;
+
+  static Color secondaryAccent(BuildContext context) => sunshineYellow;
+
+  static Color tertiaryAccent(BuildContext context) => periwinkle;
+
+  // ─── AUTHENTIC CLAYMORPHISM DROP SHADOWS & HIGHLIGHTS ─────────────────────
+  static List<BoxShadow> clayDropShadow(
+    BuildContext context, {
+    double blur = 24.0,
+    double spread = -4.0,
+    Offset offset = const Offset(0, 10),
+  }) {
+    final dark = isDark(context);
+    return [
+      BoxShadow(
+        color: dark
+            ? Colors.black.withAlpha(90)
+            : const Color(0xFF1E293B).withAlpha(18),
+        offset: offset,
+        blurRadius: blur,
+        spreadRadius: spread,
+      ),
+      BoxShadow(
+        color: dark
+            ? const Color(0xFF2E6385).withAlpha(20)
+            : tangerine.withAlpha(15),
+        offset: Offset(0, offset.dy / 2),
+        blurRadius: blur / 2,
+        spreadRadius: -2,
+      ),
+    ];
+  }
+
+  static List<BoxShadow> clayInnerSheen({
+    Color highlightColor = Colors.white,
+    double opacity = 0.9,
+  }) {
+    return [
+      BoxShadow(
+        color: highlightColor.withAlpha((opacity * 255).round()),
+        offset: const Offset(2.5, 2.5),
+        blurRadius: 4.0,
+        blurStyle: BlurStyle.inner,
+      ),
+      BoxShadow(
+        color: const Color(0xFF1E293B).withAlpha(10),
+        offset: const Offset(-2.5, -2.5),
+        blurRadius: 4.0,
+        blurStyle: BlurStyle.inner,
+      ),
+    ];
+  }
 }

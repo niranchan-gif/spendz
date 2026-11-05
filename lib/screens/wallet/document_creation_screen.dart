@@ -162,8 +162,11 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
 
   Future<void> _populateFromExisting(WalletDocumentModel doc) async {
     _selectedCategory = doc.category;
-    _nameController.text = doc.documentName;
-    _holderController.text = doc.holderName ?? '';
+    final preferredName = doc.holderName?.isNotEmpty == true
+        ? doc.holderName!
+        : doc.documentName;
+    _nameController.text = preferredName;
+    _holderController.text = preferredName;
     _issueDate = doc.issueDate;
     _expiryDate = doc.expiryDate;
 
@@ -203,6 +206,47 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
       if (extra['policy_type'] != null) _policyType = extra['policy_type'];
       _coverageController.text = extra['coverage_amount']?.toString() ?? '';
       _contactController.text = extra['contact_info'] ?? '';
+    }
+
+    // Fallback: parse description lines if extra fields were not in encryptedFields
+    if (doc.description != null && doc.description!.isNotEmpty) {
+      final lines = doc.description!.split('\n');
+      for (final line in lines) {
+        final trimmed = line.trim();
+        if (_fatherNameController.text.isEmpty &&
+            trimmed.startsWith('Father:')) {
+          _fatherNameController.text = trimmed
+              .replaceFirst('Father:', '')
+              .trim();
+        } else if (_dob == null && trimmed.startsWith('DOB:')) {
+          final rawDob = trimmed.replaceFirst('DOB:', '').trim();
+          try {
+            _dob = DateFormat('dd/MM/yyyy').parse(rawDob);
+          } catch (_) {}
+        } else if (_addressController.text.isEmpty &&
+            trimmed.startsWith('Address:')) {
+          _addressController.text = trimmed.replaceFirst('Address:', '').trim();
+        } else if (_authorityController.text.isEmpty &&
+            trimmed.startsWith('Issuer:')) {
+          _authorityController.text = trimmed
+              .replaceFirst('Issuer:', '')
+              .trim();
+        } else if (_stateController.text.isEmpty &&
+            trimmed.startsWith('State:')) {
+          _stateController.text = trimmed.replaceFirst('State:', '').trim();
+        } else if (_providerController.text.isEmpty &&
+            trimmed.startsWith('Provider:')) {
+          _providerController.text = trimmed
+              .replaceFirst('Provider:', '')
+              .trim();
+        } else if (_selectedVehicleClasses.isEmpty &&
+            trimmed.startsWith('Vehicle Class:')) {
+          final raw = trimmed.replaceFirst('Vehicle Class:', '').trim();
+          _selectedVehicleClasses.addAll(
+            raw.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty),
+          );
+        }
+      }
     }
 
     if (mounted) setState(() {});
@@ -379,14 +423,32 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
   Future<void> _saveDocument() async {
     setState(() => _isSaving = true);
     try {
-      final docTitle = _nameController.text.trim().isNotEmpty
+      final rawPersonName = _nameController.text.trim().isNotEmpty
           ? _nameController.text.trim()
+          : (_holderController.text.trim().isNotEmpty
+                ? _holderController.text.trim()
+                : null);
+
+      final docTitle = rawPersonName != null
+          ? (_selectedCategory == 'aadhaar'
+                ? 'Aadhaar Card'
+                : _selectedCategory == 'pan'
+                ? 'PAN Card'
+                : _selectedCategory == 'driving_license' ||
+                      _selectedCategory == 'driving_licence'
+                ? 'Driving Licence'
+                : _selectedCategory == 'insurance'
+                ? 'Health Insurance'
+                : rawPersonName)
           : '${_selectedCategory.replaceAll('_', ' ').toUpperCase()} Document';
 
-      final holder = _holderController.text.trim().isNotEmpty
-          ? _holderController.text.trim()
-          : null;
-      final rawNumber = _numberController.text.trim();
+      final holder = rawPersonName;
+      final rawNumber = _selectedCategory == 'pan'
+          ? _numberController.text
+                .replaceAll(RegExp(r'[\s\-]+'), '')
+                .toUpperCase()
+                .trim()
+          : _numberController.text.trim();
       final masked = _computeMaskedIdentifier(rawNumber);
 
       // Pack extra metadata map for AES-256-GCM encryption
@@ -440,6 +502,10 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
       if (_providerController.text.isNotEmpty)
         descBuffer.writeln('Provider: ${_providerController.text.trim()}');
       if (_policyType.isNotEmpty) descBuffer.writeln('Type: $_policyType');
+      if (_authorityController.text.isNotEmpty)
+        descBuffer.writeln('Issuer: ${_authorityController.text.trim()}');
+      if (_stateController.text.isNotEmpty)
+        descBuffer.writeln('State: ${_stateController.text.trim()}');
       if (_selectedVehicleClasses.isNotEmpty)
         descBuffer.writeln(
           'Vehicle Class: ${_selectedVehicleClasses.join(', ')}',
@@ -917,8 +983,8 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
         controller: _numberController,
         textCapitalization: TextCapitalization.characters,
         inputFormatters: [
-          LengthLimitingTextInputFormatter(10),
-          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9•]')),
+          LengthLimitingTextInputFormatter(14),
+          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9•\s\-]')),
           _UpperCaseTextFormatter(),
         ],
         decoration: const InputDecoration(
@@ -927,7 +993,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           prefixIcon: Icon(Icons.credit_card_rounded),
         ),
         validator: (v) {
-          final pan = v?.replaceAll(RegExp(r'\s+'), '').toUpperCase() ?? '';
+          final pan = v?.replaceAll(RegExp(r'[\s\-]+'), '').toUpperCase() ?? '';
           if (pan.isEmpty) {
             return 'PAN number is required';
           }

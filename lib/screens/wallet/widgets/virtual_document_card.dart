@@ -2595,6 +2595,24 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
       }
     }
 
+    if (holder.isEmpty) {
+      if (widget.document.holderName != null &&
+          widget.document.holderName!.trim().isNotEmpty) {
+        holder = widget.document.holderName!.trim();
+      } else if (!widget.document.documentName.toLowerCase().contains(
+            'document',
+          ) &&
+          !widget.document.documentName.toLowerCase().contains('card')) {
+        holder = widget.document.documentName.trim();
+      }
+    }
+
+    if (number.isEmpty &&
+        widget.document.maskedIdentifier != null &&
+        widget.document.maskedIdentifier!.trim().isNotEmpty) {
+      number = widget.document.maskedIdentifier!.trim();
+    }
+
     return _ParsedMetadata(
       holder: holder,
       number: number,

@@ -14,7 +14,7 @@ class SpendzNavigationDestination {
   });
 }
 
-/// Spendz 2.0 Custom Floating Bottom Dock Navigation.
+/// Spendz Funky Claymorphism Floating Bottom Dock Navigation.
 class SpendzBottomNavigation extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -30,31 +30,37 @@ class SpendzBottomNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = SpendzColors.isDark(context);
-    final accent = SpendzColors.primaryAccent(context);
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF141D17) : Colors.white,
+        color: isDark ? const Color(0xFF131C2D) : Colors.white,
         border: Border(
           top: BorderSide(
-            color: isDark ? SpendzColors.borderDark : SpendzColors.borderLight,
+            color: isDark ? const Color(0xFF1E2B40) : const Color(0xFFE2E8F0),
             width: 1.0,
           ),
         ),
         boxShadow: [
           BoxShadow(
             color: isDark
-                ? Colors.black.withAlpha(80)
-                : Colors.black.withAlpha(15),
-            blurRadius: 16,
-            offset: const Offset(0, -4),
+                ? Colors.black.withAlpha(90)
+                : const Color(0xFF1E293B).withAlpha(15),
+            blurRadius: 20,
+            offset: const Offset(0, -6),
+          ),
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withAlpha(50)
+                : const Color(0xFF1E293B).withAlpha(8),
+            blurRadius: 6,
+            offset: const Offset(0, -2),
           ),
         ],
       ),
       child: SafeArea(
         top: false,
         child: Container(
-          height: 60,
+          height: 64,
           padding: const EdgeInsets.symmetric(horizontal: SpendzSpacing.sm),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -66,52 +72,65 @@ class SpendzBottomNavigation extends StatelessWidget {
                 child: Material(
                   type: MaterialType.transparency,
                   child: InkWell(
-                    borderRadius: BorderRadius.circular(SpendzSpacing.radiusMd),
+                    borderRadius: BorderRadius.circular(
+                      SpendzSpacing.radiusFull,
+                    ),
                     onTap: () => onTap(index),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            curve: Curves.easeInOut,
+                            duration: const Duration(milliseconds: 220),
+                            curve: Curves.easeOutBack,
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 3,
+                              horizontal: 16,
+                              vertical: 4,
                             ),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? accent.withAlpha(isDark ? 45 : 30)
+                                  ? SpendzColors.tangerine
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(
                                 SpendzSpacing.radiusFull,
                               ),
+                              boxShadow: isSelected
+                                  ? [
+                                      BoxShadow(
+                                        color: SpendzColors.tangerine.withAlpha(
+                                          isDark ? 80 : 90,
+                                        ),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 3),
+                                      ),
+                                    ]
+                                  : null,
                             ),
                             child: Icon(
                               isSelected ? item.activeIcon : item.icon,
                               size: 22,
                               color: isSelected
-                                  ? accent
+                                  ? Colors.white
                                   : SpendzColors.textSecondary(context),
                             ),
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: 3),
                           Text(
                             item.label,
                             style: TextStyle(
                               fontSize: 10.5,
                               fontWeight: isSelected
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
+                                  ? FontWeight.w800
+                                  : FontWeight.w600,
                               color: isSelected
-                                  ? accent
+                                  ? (isDark
+                                        ? Colors.white
+                                        : SpendzColors.tangerineDeep)
                                   : SpendzColors.textSecondary(context),
-                              letterSpacing: -0.2,
+                              letterSpacing: 0.2,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),

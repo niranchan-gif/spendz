@@ -231,6 +231,7 @@ class DatabaseHelper {
         "TEXT DEFAULT 'none'",
       );
       await _addColumnIfNotExists(db, 'wallet_passes', 'notes', 'TEXT');
+      await _addColumnIfNotExists(db, 'wallet_passes', 'notes', 'TEXT');
     }
   }
 

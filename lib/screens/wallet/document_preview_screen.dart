@@ -20,7 +20,6 @@ import '../../providers/wallet_document_provider.dart';
 import '../../providers/wallet_provider.dart';
 import '../../utils/date_formatter.dart';
 import '../../widgets/design_system/reusable_card.dart';
-import '../../widgets/design_system/secure_protected_field.dart';
 import '../../widgets/design_system/custom_dialog.dart';
 import 'document_attachment_scanner_screen.dart';
 import 'document_creation_screen.dart';
@@ -48,6 +47,7 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
   Uint8List? _decryptedImageBytes;
   File? _stagedPdfFile;
   String? _secureDocumentNumber;
+  Map<String, dynamic> _decryptedExtraFields = {};
 
   @override
   void initState() {
@@ -55,10 +55,23 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
     _currentDocument = widget.document;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadSecureDocNumber();
+      _loadExtraFields();
       if (_currentDocument.hasAttachment) {
         _authenticateAndDecrypt();
       }
     });
+  }
+
+  Future<void> _loadExtraFields() async {
+    if (_currentDocument.encryptedFields != null &&
+        _currentDocument.encryptedFields!.isNotEmpty) {
+      try {
+        final extra = await _vaultService.decryptMetadataFields(
+          _currentDocument.encryptedFields!,
+        );
+        if (mounted) setState(() => _decryptedExtraFields = extra);
+      } catch (_) {}
+    }
   }
 
   Future<void> _loadSecureDocNumber() async {
@@ -918,8 +931,14 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
     String? additionalNotes;
 
     // 0. Holder Name and Card/ID Number
-    if (doc.holderName != null && doc.holderName!.trim().isNotEmpty) {
-      fields['Holder Name'] = doc.holderName!.trim();
+    final resolvedHolder = doc.holderName?.trim().isNotEmpty == true
+        ? doc.holderName!.trim()
+        : (!doc.documentName.toLowerCase().contains('document') &&
+                  !doc.documentName.toLowerCase().contains('card')
+              ? doc.documentName.trim()
+              : null);
+    if (resolvedHolder != null) {
+      fields['Holder Name'] = resolvedHolder;
     }
     if (doc.maskedIdentifier != null &&
         doc.maskedIdentifier!.trim().isNotEmpty) {
@@ -932,6 +951,18 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
     }
     if (doc.expiryDate != null) {
       fields['Expiry Date'] = DateFormatter.formatShortDate(doc.expiryDate!);
+    }
+
+    // 2. Decrypted extra metadata fields
+    for (final entry in _decryptedExtraFields.entries) {
+      final key = entry.key;
+      final val = entry.value?.toString().trim() ?? '';
+      if (val.isNotEmpty) {
+        final label = _formatFieldLabel(key);
+        if (!fields.containsKey(label)) {
+          fields[label] = val;
+        }
+      }
     }
 
     // 2. From structured description

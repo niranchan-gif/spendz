@@ -4,8 +4,11 @@ import '../../app/theme/spendz_spacing.dart';
 
 enum SpendzButtonVariant { primary, secondary, ghost, tonal }
 
-/// Spendz 2.0 Editorial Action Button.
-class SpendzButton extends StatelessWidget {
+/// Spendz Funky Claymorphism Pill Action Button.
+///
+/// Inflated 3D tactile button with dual chromatic drop shadow, top-left white sheen,
+/// and smooth scale press animation.
+class SpendzButton extends StatefulWidget {
   final String label;
   final VoidCallback? onPressed;
   final IconData? icon;
@@ -24,7 +27,7 @@ class SpendzButton extends StatelessWidget {
     this.variant = SpendzButtonVariant.primary,
     this.isLoading = false,
     this.isFullWidth = false,
-    this.height = 48,
+    this.height = 50,
     this.customColor,
     this.customTextColor,
   });
@@ -36,7 +39,7 @@ class SpendzButton extends StatelessWidget {
     this.icon,
     this.isLoading = false,
     this.isFullWidth = false,
-    this.height = 48,
+    this.height = 50,
     this.customColor,
     this.customTextColor,
   }) : variant = SpendzButtonVariant.primary;
@@ -48,7 +51,7 @@ class SpendzButton extends StatelessWidget {
     this.icon,
     this.isLoading = false,
     this.isFullWidth = false,
-    this.height = 48,
+    this.height = 50,
     this.customColor,
     this.customTextColor,
   }) : variant = SpendzButtonVariant.secondary;
@@ -60,7 +63,7 @@ class SpendzButton extends StatelessWidget {
     this.icon,
     this.isLoading = false,
     this.isFullWidth = false,
-    this.height = 48,
+    this.height = 50,
     this.customColor,
     this.customTextColor,
   }) : variant = SpendzButtonVariant.ghost;
@@ -72,121 +75,150 @@ class SpendzButton extends StatelessWidget {
     this.icon,
     this.isLoading = false,
     this.isFullWidth = false,
-    this.height = 48,
+    this.height = 50,
     this.customColor,
     this.customTextColor,
   }) : variant = SpendzButtonVariant.tonal;
 
   @override
+  State<SpendzButton> createState() => _SpendzButtonState();
+}
+
+class _SpendzButtonState extends State<SpendzButton> {
+  bool _isPressed = false;
+
+  @override
   Widget build(BuildContext context) {
     final isDark = SpendzColors.isDark(context);
+    final isEnabled = widget.onPressed != null && !widget.isLoading;
 
     Color bgColor;
     Color fgColor;
-    Border? border;
+    Color shadowTint;
 
-    switch (variant) {
+    switch (widget.variant) {
       case SpendzButtonVariant.primary:
-        bgColor =
-            customColor ??
-            (isDark ? SpendzColors.mint : SpendzColors.forestGreen);
-        fgColor =
-            customTextColor ??
-            (isDark ? SpendzColors.backgroundDark : Colors.white);
-        border = null;
+        bgColor = widget.customColor ?? SpendzColors.tangerine;
+        fgColor = widget.customTextColor ?? Colors.white;
+        shadowTint = SpendzColors.tangerine;
         break;
 
       case SpendzButtonVariant.secondary:
-        bgColor = customColor ?? SpendzColors.surface(context);
-        fgColor = customTextColor ?? SpendzColors.textPrimary(context);
-        border = Border.all(
-          color: isDark ? SpendzColors.borderDark : SpendzColors.borderLight,
-          width: 1.0,
-        );
+        bgColor = widget.customColor ?? SpendzColors.sunshineYellow;
+        fgColor = widget.customTextColor ?? const Color(0xFF735500);
+        shadowTint = SpendzColors.sunshineDeep;
         break;
 
       case SpendzButtonVariant.tonal:
-        bgColor =
-            customColor ??
-            (isDark
-                ? SpendzColors.emerald.withAlpha(50)
-                : SpendzColors.sage.withAlpha(50));
-        fgColor =
-            customTextColor ??
-            (isDark ? SpendzColors.mint : SpendzColors.forestGreen);
-        border = null;
+        bgColor = widget.customColor ?? SpendzColors.periwinkle;
+        fgColor = widget.customTextColor ?? Colors.white;
+        shadowTint = SpendzColors.periwinkleDeep;
         break;
 
       case SpendzButtonVariant.ghost:
-        bgColor = Colors.transparent;
-        fgColor = customTextColor ?? SpendzColors.primaryAccent(context);
-        border = null;
+        bgColor = widget.customColor ?? Colors.transparent;
+        fgColor = widget.customTextColor ?? SpendzColors.textPrimary(context);
+        shadowTint = Colors.transparent;
         break;
     }
 
-    final content = Row(
-      mainAxisSize: isFullWidth ? MainAxisSize.max : MainAxisSize.min,
+    if (!isEnabled && widget.variant != SpendzButtonVariant.ghost) {
+      bgColor = isDark ? const Color(0xFF233042) : const Color(0xFFE2E8F0);
+      fgColor = isDark ? Colors.white38 : const Color(0xFF94A3B8);
+      shadowTint = Colors.transparent;
+    }
+
+    final List<BoxShadow> shadows = [];
+    if (isEnabled && widget.variant != SpendzButtonVariant.ghost) {
+      if (!_isPressed) {
+        shadows.addAll([
+          BoxShadow(
+            color: shadowTint.withAlpha(isDark ? 70 : 85),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+            spreadRadius: -2,
+          ),
+          BoxShadow(
+            color: shadowTint.withAlpha(isDark ? 40 : 50),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ]);
+      } else {
+        shadows.add(
+          BoxShadow(
+            color: shadowTint.withAlpha(40),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        );
+      }
+    }
+
+    Widget content = Row(
+      mainAxisSize: widget.isFullWidth ? MainAxisSize.max : MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        if (isLoading)
+        if (widget.isLoading)
           SizedBox(
             width: 18,
             height: 18,
             child: CircularProgressIndicator(
-              strokeWidth: 2,
+              strokeWidth: 2.2,
               valueColor: AlwaysStoppedAnimation<Color>(fgColor),
             ),
           )
         else ...[
-          if (icon != null) ...[
-            Icon(icon, size: 18, color: fgColor),
-            const SizedBox(width: SpendzSpacing.sm),
+          if (widget.icon != null) ...[
+            Icon(widget.icon, size: 19, color: fgColor),
+            const SizedBox(width: 8),
           ],
           Text(
-            label,
+            widget.label,
             style: TextStyle(
-              fontSize: 14.5,
-              fontWeight: FontWeight.w600,
-              letterSpacing: -0.2,
               color: fgColor,
+              fontWeight: FontWeight.w800,
+              fontSize: 14.5,
+              letterSpacing: 0.2,
             ),
           ),
         ],
       ],
     );
 
-    return Container(
-      height: height,
-      width: isFullWidth ? double.infinity : null,
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(SpendzSpacing.radiusFull),
-        border: border,
-        boxShadow: variant == SpendzButtonVariant.primary
-            ? [
-                BoxShadow(
-                  color: isDark
-                      ? SpendzColors.mint.withAlpha(40)
-                      : SpendzColors.forestGreen.withAlpha(30),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ]
-            : null,
-      ),
-      child: Material(
-        type: MaterialType.transparency,
-        child: InkWell(
+    return AnimatedScale(
+      scale: _isPressed ? 0.96 : 1.0,
+      duration: const Duration(milliseconds: 100),
+      curve: Curves.easeInOut,
+      child: Container(
+        height: widget.height,
+        width: widget.isFullWidth ? double.infinity : null,
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(
+            SpendzSpacing.radiusFull,
+          ), // rounded-pill (9999px)
+          border: Border.all(
+            color: widget.variant == SpendzButtonVariant.ghost
+                ? (isDark ? Colors.white24 : const Color(0xFFCBD5E1))
+                : Colors.white.withAlpha(isEnabled ? 160 : 40),
+            width: 1.2,
+          ),
+          boxShadow: shadows,
+        ),
+        child: Material(
+          color: Colors.transparent,
           borderRadius: BorderRadius.circular(SpendzSpacing.radiusFull),
-          onTap: isLoading ? null : onPressed,
-          splashColor: fgColor.withAlpha(30),
-          highlightColor: fgColor.withAlpha(15),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: SpendzSpacing.xl,
-              vertical: 8,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(SpendzSpacing.radiusFull),
+            onHighlightChanged: (pressed) {
+              setState(() => _isPressed = pressed);
+            },
+            onTap: isEnabled ? widget.onPressed : null,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: SpendzSpacing.xl),
+              child: content,
             ),
-            child: content,
           ),
         ),
       ),

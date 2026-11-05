@@ -3,21 +3,16 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../app/theme/spendz_colors.dart';
-import '../../app/theme/spendz_spacing.dart';
-import '../../app/theme/spendz_typography.dart';
 import '../../models/transaction_model.dart';
 import '../../presentation/widgets/spendz_amount_text.dart';
-import '../../presentation/widgets/spendz_app_bar.dart';
 import '../../presentation/widgets/spendz_empty_state.dart';
-import '../../presentation/widgets/spendz_surface.dart';
-import '../../presentation/widgets/spendz_text_field.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/transaction_provider.dart';
 import '../../utils/icon_mapper.dart';
 import 'add_transaction_screen.dart';
 
-/// Spendz 2.0 Activity & Transactions Feed Screen.
-/// Clean editorial timeline with search, category filters, and date-grouping.
+/// Spendz Funky Claymorphism Activity & Transactions Feed Screen.
+/// Bulbous tactile clay modules, sunken search wells, dual pods, and live feed.
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key});
 
@@ -52,7 +47,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.fromSeed(
-              seedColor: SpendzColors.emerald,
+              seedColor: SpendzColors.tangerine,
               brightness: isDark ? Brightness.dark : Brightness.light,
             ),
           ),
@@ -82,133 +77,136 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: SpendzColors.background(context),
-      appBar: SpendzAppBar(
-        title: 'Activity',
-        subtitle: 'Transactions & cashflow timeline',
-        actions: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: SpendzColors.surface(context),
-              border: Border.all(color: SpendzColors.border(context), width: 1),
-            ),
-            child: IconButton(
-              padding: EdgeInsets.zero,
-              icon: Icon(
-                Icons.add_rounded,
-                size: 20,
-                color: SpendzColors.primaryAccent(context),
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const AddTransactionScreen(),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-      body: Consumer2<TransactionProvider, CategoryProvider>(
-        builder: (context, txProvider, catProvider, _) {
-          final allTransactions = txProvider.transactions;
+      body: SafeArea(
+        child: Consumer2<TransactionProvider, CategoryProvider>(
+          builder: (context, txProvider, catProvider, _) {
+            final allTransactions = txProvider.transactions;
 
-          // Apply filters
-          final filtered = allTransactions.where((t) {
-            // Type filter
-            if (_selectedType != 'all' && t.type != _selectedType) {
-              return false;
-            }
+            // Calculate totals for Dual Pods
+            double totalSpent = 0;
+            double totalReceived = 0;
+            int expenseCount = 0;
+            int incomeCount = 0;
 
-            // Category filter
-            if (_selectedCategoryId != 'all' &&
-                t.categoryId != _selectedCategoryId) {
-              return false;
-            }
-
-            // Date range filter
-            if (_startDate != null && t.date.isBefore(_startDate!)) {
-              return false;
-            }
-            if (_endDate != null && t.date.isAfter(_endDate!)) {
-              return false;
-            }
-
-            // Search filter
-            if (_searchQuery.isNotEmpty) {
-              final q = _searchQuery.toLowerCase();
-              final matchesMerchant =
-                  t.merchant?.toLowerCase().contains(q) ?? false;
-              final matchesDesc =
-                  t.description?.toLowerCase().contains(q) ?? false;
-              final cat = catProvider.getCategoryById(t.categoryId ?? '');
-              final matchesCat = cat?.name.toLowerCase().contains(q) ?? false;
-              if (!matchesMerchant && !matchesDesc && !matchesCat) {
-                return false;
+            for (final t in allTransactions) {
+              if (t.type == 'income') {
+                totalReceived += t.amount;
+                incomeCount++;
+              } else {
+                totalSpent += t.amount;
+                expenseCount++;
               }
             }
 
-            return true;
-          }).toList();
+            // Apply filters
+            final filtered = allTransactions.where((t) {
+              if (_selectedType != 'all' && t.type != _selectedType) {
+                return false;
+              }
+              if (_selectedCategoryId != 'all' &&
+                  t.categoryId != _selectedCategoryId) {
+                return false;
+              }
+              if (_startDate != null && t.date.isBefore(_startDate!)) {
+                return false;
+              }
+              if (_endDate != null && t.date.isAfter(_endDate!)) {
+                return false;
+              }
+              if (_searchQuery.isNotEmpty) {
+                final q = _searchQuery.toLowerCase();
+                final matchesMerchant =
+                    t.merchant?.toLowerCase().contains(q) ?? false;
+                final matchesDesc =
+                    t.description?.toLowerCase().contains(q) ?? false;
+                final cat = catProvider.getCategoryById(t.categoryId ?? '');
+                final matchesCat = cat?.name.toLowerCase().contains(q) ?? false;
+                if (!matchesMerchant && !matchesDesc && !matchesCat) {
+                  return false;
+                }
+              }
+              return true;
+            }).toList();
 
-          // Group by Date
-          final Map<String, List<TransactionModel>> grouped = {};
-          for (final t in filtered) {
-            final key = _formatDateGroupKey(t.date);
-            grouped.putIfAbsent(key, () => []).add(t);
-          }
+            // Group by Date
+            final Map<String, List<TransactionModel>> grouped = {};
+            for (final t in filtered) {
+              final key = _formatDateGroupKey(t.date);
+              grouped.putIfAbsent(key, () => []).add(t);
+            }
 
-          return Column(
-            children: [
-              // Search & Filter Bar
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: SpendzSpacing.lg,
-                  vertical: SpendzSpacing.sm,
-                ),
-                child: SpendzTextField(
-                  controller: _searchController,
-                  hintText: 'Search merchant, category, or note...',
-                  prefixIcon: Icon(
-                    Icons.search_rounded,
-                    size: 20,
-                    color: SpendzColors.textSecondary(context),
+            return CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                // 1. Funky Clay Header
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                    child: _buildHeader(context, filtered.length),
                   ),
-                  suffixIcon: _searchQuery.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear_rounded, size: 18),
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() => _searchQuery = '');
-                          },
-                        )
-                      : null,
-                  onChanged: (val) {
-                    setState(() => _searchQuery = val.trim());
-                  },
                 ),
-              ),
 
-              // Filter Chips Carousel
-              _buildFilterChips(catProvider),
-              const SizedBox(height: SpendzSpacing.xs),
+                // 2. Dual Inflow/Spent Clay Pods
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: _buildDualPods(
+                      context,
+                      totalSpent,
+                      totalReceived,
+                      expenseCount,
+                      incomeCount,
+                    ),
+                  ),
+                ),
 
-              // Transaction Feed
-              Expanded(
-                child: filtered.isEmpty
-                    ? SpendzEmptyState(
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+                // 3. Sunken Clay Search Well
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: _buildSunkenSearch(context),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 12)),
+
+                // 4. Segmented Clay Filter Pills
+                SliverToBoxAdapter(
+                  child: _buildFilterPills(context, incomeCount, expenseCount),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 10)),
+
+                // 5. Category Bubble Chips
+                SliverToBoxAdapter(
+                  child: _buildCategoryBubbles(
+                    context,
+                    catProvider,
+                    allTransactions,
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+                // 6. Date-Grouped Transaction Stream or Empty State
+                if (filtered.isEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 32,
+                      ),
+                      child: SpendzEmptyState(
                         icon: Icons.receipt_long_outlined,
-                        title: 'No Matching Transactions',
+                        title: 'No Matching Flows',
                         message:
                             _searchQuery.isNotEmpty ||
                                 _selectedCategoryId != 'all' ||
                                 _selectedType != 'all' ||
                                 _startDate != null
-                            ? 'Try clearing active filters to see all transactions.'
+                            ? 'Try clearing active filters to reveal all activity.'
                             : 'Tap "+" to record your first transaction.',
                         actionLabel:
                             _searchQuery.isNotEmpty ||
@@ -239,187 +237,808 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                             );
                           }
                         },
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: SpendzSpacing.lg,
-                          vertical: SpendzSpacing.sm,
-                        ),
-                        itemCount: grouped.length,
-                        itemBuilder: (context, groupIndex) {
-                          final dateKey = grouped.keys.elementAt(groupIndex);
-                          final items = grouped[dateKey]!;
+                      ),
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate((
+                        context,
+                        groupIndex,
+                      ) {
+                        final dateKey = grouped.keys.elementAt(groupIndex);
+                        final items = grouped[dateKey]!;
 
-                          // Calculate daily net
-                          double dayNet = 0;
-                          for (final i in items) {
-                            if (i.type == 'income') {
-                              dayNet += i.amount;
-                            } else {
-                              dayNet -= i.amount;
-                            }
+                        double dayNet = 0;
+                        for (final i in items) {
+                          if (i.type == 'income') {
+                            dayNet += i.amount;
+                          } else {
+                            dayNet -= i.amount;
                           }
+                        }
 
-                          return Column(
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 20),
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               // Date Group Header
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: SpendzSpacing.sm,
-                                  horizontal: 4,
-                                ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      dateKey,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700,
-                                        letterSpacing: 0.5,
-                                        color: SpendzColors.textSecondary(
-                                          context,
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        dateKey.split(',')[0],
+                                        style: TextStyle(
+                                          fontFamily: 'Plus Jakarta Sans',
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w800,
+                                          color: SpendzColors.textPrimary(
+                                            context,
+                                          ),
+                                          letterSpacing: -0.3,
                                         ),
                                       ),
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        width: 6,
+                                        height: 6,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: dayNet >= 0
+                                              ? SpendzColors.tertiarySky
+                                              : SpendzColors.tangerine,
+                                        ),
+                                      ),
+                                      if (dateKey.contains(',')) ...[
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          dateKey.split(',')[1].trim(),
+                                          style: TextStyle(
+                                            fontFamily: 'Plus Jakarta Sans',
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                            color: SpendzColors.textSecondary(
+                                              context,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
                                     ),
-                                    SpendzAmountText(
+                                    decoration: BoxDecoration(
+                                      color: SpendzColors.surfaceContainerHigh(
+                                        context,
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withAlpha(8),
+                                          offset: const Offset(1, 1),
+                                          blurRadius: 2,
+                                          blurStyle: BlurStyle.inner,
+                                        ),
+                                        BoxShadow(
+                                          color: Colors.white.withAlpha(180),
+                                          offset: const Offset(-1, -1),
+                                          blurRadius: 2,
+                                          blurStyle: BlurStyle.inner,
+                                        ),
+                                      ],
+                                    ),
+                                    child: SpendzAmountText(
                                       amount: dayNet,
                                       variant: dayNet >= 0
                                           ? SpendzAmountVariant.income
                                           : SpendzAmountVariant.expense,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
                                       showSign: true,
                                     ),
-                                  ],
-                                ),
-                              ),
-
-                              // Grouped Surface List
-                              SpendzSurface(
-                                padding: EdgeInsets.zero,
-                                child: ListView.separated(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: items.length,
-                                  separatorBuilder: (context, i) => Divider(
-                                    height: 1,
-                                    color: SpendzColors.border(context),
                                   ),
-                                  itemBuilder: (context, i) {
-                                    final tx = items[i];
-                                    return _buildTransactionRow(
-                                      context,
-                                      tx,
-                                      catProvider,
-                                    );
-                                  },
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+
+                              // Transaction items list
+                              ...items.map(
+                                (tx) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 10),
+                                  child: _buildClayTransactionCard(
+                                    context,
+                                    tx,
+                                    catProvider,
+                                  ),
                                 ),
                               ),
-                              const SizedBox(height: SpendzSpacing.md),
                             ],
-                          );
-                        },
-                      ),
-              ),
-            ],
-          );
-        },
+                          ),
+                        );
+                      }, childCount: grouped.length),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildFilterChips(CategoryProvider catProvider) {
+  // 1. Header with Activity & Flows ⚡️ and Puffy Add Button
+  Widget _buildHeader(BuildContext context, int count) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'Activity & Flows',
+                  style: TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    color: SpendzColors.textPrimary(context),
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Text('⚡️', style: TextStyle(fontSize: 22)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: SpendzColors.sunshineYellow,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: SpendzColors.sunshineYellow.withAlpha(90),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                      BoxShadow(
+                        color: Colors.white.withAlpha(200),
+                        blurRadius: 2,
+                        offset: const Offset(1, 1),
+                        blurStyle: BlurStyle.inner,
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Color(0xFF735500),
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        '$count this month',
+                        style: const TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF735500),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.auto_awesome,
+                      size: 13,
+                      color: SpendzColors.textSecondary(context),
+                    ),
+                    const SizedBox(width: 3),
+                    Text(
+                      'Live feed',
+                      style: TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: SpendzColors.textSecondary(context),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+
+        // Floating Puffy Add Button
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+            );
+          },
+          child: Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: SpendzColors.tangerine,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: SpendzColors.tangerine.withAlpha(110),
+                  blurRadius: 16,
+                  offset: const Offset(0, 8),
+                ),
+                BoxShadow(
+                  color: Colors.white.withAlpha(180),
+                  blurRadius: 3,
+                  offset: const Offset(2, 2),
+                  blurStyle: BlurStyle.inner,
+                ),
+                BoxShadow(
+                  color: const Color(0xFFB85200).withAlpha(80),
+                  blurRadius: 4,
+                  offset: const Offset(-2, -2),
+                  blurStyle: BlurStyle.inner,
+                ),
+              ],
+            ),
+            child: const Icon(Icons.add_rounded, color: Colors.white, size: 26),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // 2. Dual Inflow / Spent Clay Pods
+  Widget _buildDualPods(
+    BuildContext context,
+    double spent,
+    double received,
+    int expenseCount,
+    int incomeCount,
+  ) {
+    return Row(
+      children: [
+        // Spent Pod
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: SpendzColors.surface(context),
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: SpendzColors.clayDropShadow(context),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'SPENT',
+                      style: TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
+                        color: SpendzColors.textSecondary(context),
+                      ),
+                    ),
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: SpendzColors.tangerineLight,
+                        boxShadow: [
+                          BoxShadow(
+                            color: SpendzColors.tangerine.withAlpha(60),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                          BoxShadow(
+                            color: Colors.white.withAlpha(200),
+                            blurRadius: 2,
+                            offset: const Offset(1, 1),
+                            blurStyle: BlurStyle.inner,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.arrow_downward_rounded,
+                        size: 15,
+                        color: SpendzColors.tangerine,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  '₹${spent.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: SpendzColors.textPrimary(context),
+                    letterSpacing: -0.4,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: SpendzColors.surfaceContainerHigh(context),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '$expenseCount flows',
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: SpendzColors.textSecondary(context),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+
+        // Received Pod
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: SpendzColors.surface(context),
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: SpendzColors.clayDropShadow(context),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'RECEIVED',
+                      style: TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
+                        color: SpendzColors.textSecondary(context),
+                      ),
+                    ),
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: SpendzColors.tertiarySky.withAlpha(40),
+                        boxShadow: [
+                          BoxShadow(
+                            color: SpendzColors.tertiarySky.withAlpha(60),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                          BoxShadow(
+                            color: Colors.white.withAlpha(200),
+                            blurRadius: 2,
+                            offset: const Offset(1, 1),
+                            blurStyle: BlurStyle.inner,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.arrow_upward_rounded,
+                        size: 15,
+                        color: SpendzColors.tertiarySky,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  '+₹${received.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: SpendzColors.tertiarySky,
+                    letterSpacing: -0.4,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: SpendzColors.tertiarySky.withAlpha(25),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '+$incomeCount inflows',
+                    style: const TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: SpendzColors.tertiarySky,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // 3. Sunken Clay Search Well
+  Widget _buildSunkenSearch(BuildContext context) {
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        color: SpendzColors.surfaceContainerLow(context),
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(18),
+            offset: const Offset(2, 2),
+            blurRadius: 5,
+            blurStyle: BlurStyle.inner,
+          ),
+          BoxShadow(
+            color: Colors.white.withAlpha(220),
+            offset: const Offset(-2, -2),
+            blurRadius: 4,
+            blurStyle: BlurStyle.inner,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.search_rounded,
+            size: 20,
+            color: SpendzColors.textSecondary(context),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              style: TextStyle(
+                fontFamily: 'Plus Jakarta Sans',
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: SpendzColors.textPrimary(context),
+              ),
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                hintText: 'Search flows, merchants, notes...',
+                hintStyle: TextStyle(
+                  fontFamily: 'Plus Jakarta Sans',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: SpendzColors.textSecondary(context).withAlpha(160),
+                ),
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
+              ),
+              onChanged: (val) {
+                setState(() => _searchQuery = val.trim());
+              },
+            ),
+          ),
+          if (_searchQuery.isNotEmpty)
+            GestureDetector(
+              onTap: () {
+                _searchController.clear();
+                setState(() => _searchQuery = '');
+              },
+              child: Container(
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: SpendzColors.surfaceContainerHighest(context),
+                ),
+                child: Icon(
+                  Icons.close_rounded,
+                  size: 14,
+                  color: SpendzColors.textSecondary(context),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // 4. Segmented Clay Filter Pills
+  Widget _buildFilterPills(
+    BuildContext context,
+    int incomeCount,
+    int expenseCount,
+  ) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: SpendzSpacing.lg),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         children: [
-          // Date Range Chip
-          FilterChip(
-            label: Text(
-              _startDate != null && _endDate != null
-                  ? '${DateFormat('dd MMM').format(_startDate!)} - ${DateFormat('dd MMM').format(_endDate!)}'
-                  : 'Date Range',
-            ),
-            selected: _startDate != null,
-            onSelected: (_) {
+          // All Flows
+          _buildPillButton(
+            label: 'All Flows',
+            isSelected: _selectedType == 'all',
+            activeColor: SpendzColors.tangerine,
+            textColor: Colors.white,
+            onTap: () => setState(() => _selectedType = 'all'),
+          ),
+          const SizedBox(width: 8),
+
+          // Inflows
+          _buildPillButton(
+            label: 'Inflows (+$incomeCount)',
+            isSelected: _selectedType == 'income',
+            activeColor: SpendzColors.tertiarySky,
+            textColor: Colors.white,
+            onTap: () => setState(() => _selectedType = 'income'),
+          ),
+          const SizedBox(width: 8),
+
+          // Expenses
+          _buildPillButton(
+            label: 'Expenses ($expenseCount)',
+            isSelected: _selectedType == 'expense',
+            activeColor: SpendzColors.sunshineYellow,
+            textColor: const Color(0xFF735500),
+            onTap: () => setState(() => _selectedType = 'expense'),
+          ),
+          const SizedBox(width: 8),
+
+          // Date Range
+          GestureDetector(
+            onTap: () {
               if (_startDate != null) {
                 _clearDateRange();
               } else {
                 _selectDateRange();
               }
             },
-            avatar: Icon(
-              Icons.calendar_today_rounded,
-              size: 14,
-              color: SpendzColors.textPrimary(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: _startDate != null
+                    ? SpendzColors.periwinkle
+                    : SpendzColors.surface(context),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: _startDate != null
+                    ? [
+                        BoxShadow(
+                          color: SpendzColors.periwinkle.withAlpha(90),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]
+                    : SpendzColors.clayDropShadow(context),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.calendar_today_rounded,
+                    size: 13,
+                    color: _startDate != null
+                        ? Colors.white
+                        : SpendzColors.textSecondary(context),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    _startDate != null && _endDate != null
+                        ? '${DateFormat('dd MMM').format(_startDate!)} - ${DateFormat('dd MMM').format(_endDate!)}'
+                        : 'Date Range',
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: _startDate != null
+                          ? Colors.white
+                          : SpendzColors.textSecondary(context),
+                    ),
+                  ),
+                  if (_startDate != null) ...[
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.close_rounded,
+                      size: 13,
+                      color: Colors.white,
+                    ),
+                  ],
+                ],
+              ),
             ),
           ),
-          const SizedBox(width: SpendzSpacing.xs),
-
-          // Type: All
-          ChoiceChip(
-            label: const Text('All'),
-            selected: _selectedType == 'all',
-            onSelected: (selected) {
-              if (selected) setState(() => _selectedType = 'all');
-            },
-          ),
-          const SizedBox(width: SpendzSpacing.xs),
-
-          // Type: Expense
-          ChoiceChip(
-            label: const Text('Expenses'),
-            selected: _selectedType == 'expense',
-            onSelected: (selected) {
-              if (selected) setState(() => _selectedType = 'expense');
-            },
-          ),
-          const SizedBox(width: SpendzSpacing.xs),
-
-          // Type: Income
-          ChoiceChip(
-            label: const Text('Inflow'),
-            selected: _selectedType == 'income',
-            onSelected: (selected) {
-              if (selected) setState(() => _selectedType = 'income');
-            },
-          ),
-          const SizedBox(width: SpendzSpacing.xs),
-
-          // Category Chips
-          ...catProvider.categories.map((c) {
-            final isSelected = _selectedCategoryId == c.id;
-            return Padding(
-              padding: const EdgeInsets.only(right: SpendzSpacing.xs),
-              child: ChoiceChip(
-                label: Text(c.name),
-                selected: isSelected,
-                avatar: Icon(
-                  IconMapper.getIcon(c.icon),
-                  size: 14,
-                  color: isSelected
-                      ? SpendzColors.primaryAccent(context)
-                      : SpendzColors.textSecondary(context),
-                ),
-                onSelected: (selected) {
-                  setState(() {
-                    _selectedCategoryId = selected ? c.id : 'all';
-                  });
-                },
-              ),
-            );
-          }),
         ],
       ),
     );
   }
 
-  Widget _buildTransactionRow(
+  Widget _buildPillButton({
+    required String label,
+    required bool isSelected,
+    required Color activeColor,
+    required Color textColor,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? activeColor : SpendzColors.surface(context),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: activeColor.withAlpha(90),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                  BoxShadow(
+                    color: Colors.white.withAlpha(180),
+                    blurRadius: 3,
+                    offset: const Offset(1, 1),
+                    blurStyle: BlurStyle.inner,
+                  ),
+                ]
+              : SpendzColors.clayDropShadow(context),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontFamily: 'Plus Jakarta Sans',
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: isSelected ? textColor : SpendzColors.textPrimary(context),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 5. Category Bubble Chips
+  Widget _buildCategoryBubbles(
+    BuildContext context,
+    CategoryProvider catProvider,
+    List<TransactionModel> allTransactions,
+  ) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: catProvider.categories.map((c) {
+          final isSelected = _selectedCategoryId == c.id;
+          final count = allTransactions
+              .where((t) => t.categoryId == c.id)
+              .length;
+
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedCategoryId = isSelected ? 'all' : c.id;
+                });
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? SpendzColors.tangerine
+                      : SpendzColors.surface(context),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: SpendzColors.tangerine.withAlpha(80),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ]
+                      : [
+                          BoxShadow(
+                            color: Colors.black.withAlpha(8),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      IconMapper.getIcon(c.icon),
+                      size: 13,
+                      color: isSelected
+                          ? Colors.white
+                          : SpendzColors.textSecondary(context),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      c.name,
+                      style: TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: isSelected
+                            ? Colors.white
+                            : SpendzColors.textSecondary(context),
+                      ),
+                    ),
+                    if (count > 0) ...[
+                      const SizedBox(width: 4),
+                      Text(
+                        '$count',
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: isSelected
+                              ? Colors.white
+                              : SpendzColors.textPrimary(context),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  // 6. Sculpted Funky Clay Transaction Card
+  Widget _buildClayTransactionCard(
     BuildContext context,
     TransactionModel tx,
     CategoryProvider catProvider,
@@ -428,13 +1047,27 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     final isIncome = tx.type == 'income';
     final timeFormat = DateFormat('hh:mm a');
 
+    // Funky badge colors
+    final badgeColor = isIncome
+        ? SpendzColors.tertiarySky
+        : (tx.categoryId?.contains('food') == true ||
+              tx.categoryId?.contains('dining') == true)
+        ? SpendzColors.tangerine
+        : (tx.categoryId?.contains('tech') == true ||
+              tx.categoryId?.contains('tool') == true)
+        ? SpendzColors.periwinkle
+        : SpendzColors.sunshineYellow;
+
     return Dismissible(
       key: Key(tx.id),
       direction: DismissDirection.endToStart,
       background: Container(
-        color: SpendzColors.expense,
+        decoration: BoxDecoration(
+          color: SpendzColors.error,
+          borderRadius: BorderRadius.circular(22),
+        ),
         alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: SpendzSpacing.xl),
+        padding: const EdgeInsets.only(right: 20),
         child: const Icon(Icons.delete_outline_rounded, color: Colors.white),
       ),
       confirmDismiss: (direction) async {
@@ -445,7 +1078,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           context: context,
           builder: (ctx) => AlertDialog(
             backgroundColor: SpendzColors.surface(context),
-            title: const Text('Delete Transaction?'),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+            title: const Text('Delete Flow?'),
             content: Text(
               'Remove "$title" of ₹${tx.amount.toStringAsFixed(2)}?',
             ),
@@ -458,7 +1094,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 onPressed: () => Navigator.pop(ctx, true),
                 child: const Text(
                   'Delete',
-                  style: TextStyle(color: SpendzColors.expense),
+                  style: TextStyle(color: SpendzColors.error),
                 ),
               ),
             ],
@@ -469,47 +1105,54 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         context.read<TransactionProvider>().deleteTransaction(tx.id);
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Transaction deleted')));
+        ).showSnackBar(const SnackBar(content: Text('Flow deleted')));
       },
-      child: InkWell(
+      child: GestureDetector(
         onTap: () {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
           );
         },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: SpendzSpacing.lg,
-            vertical: SpendzSpacing.md,
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: SpendzColors.surface(context),
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: SpendzColors.clayDropShadow(context),
           ),
           child: Row(
             children: [
-              // Icon
+              // Icon Badge Clay
               Container(
-                width: 38,
-                height: 38,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: isIncome
-                      ? SpendzColors.income.withAlpha(20)
-                      : SpendzColors.surfaceElevated(context),
-                  borderRadius: BorderRadius.circular(SpendzSpacing.radiusMd),
-                  border: Border.all(
-                    color: SpendzColors.border(context),
-                    width: 1,
-                  ),
+                  color: badgeColor.withAlpha(35),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: badgeColor.withAlpha(50),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                    BoxShadow(
+                      color: Colors.white.withAlpha(200),
+                      blurRadius: 2,
+                      offset: const Offset(1, 1),
+                      blurStyle: BlurStyle.inner,
+                    ),
+                  ],
                 ),
                 child: Icon(
                   IconMapper.getIcon(cat?.icon ?? 'category'),
-                  size: 18,
-                  color: isIncome
-                      ? SpendzColors.income
-                      : SpendzColors.primaryAccent(context),
+                  size: 20,
+                  color: badgeColor,
                 ),
               ),
-              const SizedBox(width: SpendzSpacing.md),
+              const SizedBox(width: 12),
 
-              // Title & Category details
+              // Title & Category info
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -519,35 +1162,78 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                           ? tx.merchant!
                           : (cat?.name ?? tx.categoryId ?? 'Transaction'),
                       style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
                         color: SpendzColors.textPrimary(context),
                         letterSpacing: -0.2,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${cat?.name ?? tx.categoryId ?? "General"} • ${tx.paymentMethod ?? "Cash"} • ${timeFormat.format(tx.date)}',
-                      style: SpendzTypography.caption(context),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        Text(
+                          cat?.name ?? tx.categoryId ?? 'General',
+                          style: TextStyle(
+                            fontFamily: 'Plus Jakarta Sans',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: SpendzColors.textSecondary(context),
+                          ),
+                        ),
+                        if (tx.paymentMethod != null &&
+                            tx.paymentMethod!.isNotEmpty) ...[
+                          Text(
+                            ' • ',
+                            style: TextStyle(
+                              color: SpendzColors.textSecondary(context),
+                            ),
+                          ),
+                          Text(
+                            tx.paymentMethod!,
+                            style: TextStyle(
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: SpendzColors.textSecondary(context),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: SpendzSpacing.sm),
 
-              // Amount
-              SpendzAmountText(
-                amount: tx.amount,
-                variant: isIncome
-                    ? SpendzAmountVariant.income
-                    : SpendzAmountVariant.expense,
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                showSign: true,
+              // Amount & Timestamp
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${isIncome ? '+' : '-'}₹${tx.amount.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: isIncome
+                          ? SpendzColors.tertiarySky
+                          : SpendzColors.textPrimary(context),
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    timeFormat.format(tx.date),
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: SpendzColors.textSecondary(context),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -567,9 +1253,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     } else if (txDate == yesterday) {
       return 'Yesterday, ${DateFormat('dd MMM').format(date)}';
     } else if (txDate.year == now.year) {
-      return DateFormat('EEEE, dd MMMM').format(date);
+      return '${DateFormat('dd MMMM').format(date)}, ${DateFormat('EEEE').format(date)}';
     } else {
-      return DateFormat('EEEE, dd MMM yyyy').format(date);
+      return DateFormat('dd MMM yyyy').format(date);
     }
   }
 }

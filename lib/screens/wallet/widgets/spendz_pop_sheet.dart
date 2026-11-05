@@ -1,13 +1,11 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../../providers/wallet_provider.dart';
-import '../../../app/theme/app_colors.dart';
-import '../../../app/theme/app_spacing.dart';
-import '../../../app/theme/app_radius.dart';
-import '../../../app/theme/app_text_styles.dart';
+import '../../../app/theme/spendz_colors.dart';
+import '../../../app/theme/spendz_spacing.dart';
+import '../../../presentation/widgets/spendz_surface.dart';
+import '../../../presentation/widgets/spendz_button.dart';
 import '../widgets/wallet_card_widget.dart';
 import '../documents_screen.dart';
 import '../cards_screen.dart';
@@ -15,6 +13,10 @@ import '../card_detail_screen.dart';
 import '../document_preview_screen.dart';
 import '../../transactions/add_transaction_screen.dart';
 
+/// Funky Claymorphism Pop-Up Bottom Sheet for Spendz.
+///
+/// Features pill-shaped drag handle, inflated clay cards, bouncy quick actions,
+/// and smooth background scrim.
 class SpendzPopSheet extends StatelessWidget {
   const SpendzPopSheet({super.key});
 
@@ -29,193 +31,225 @@ class SpendzPopSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surfaceColor = AppColors.getSurface(context);
-    final borderColor = AppColors.getBorder(context);
-    final textPrimary = AppColors.getTextPrimary(context);
-    final textSecondary = AppColors.getTextSecondary(context);
+    final isDark = SpendzColors.isDark(context);
+    final surfaceColor = SpendzColors.surface(context);
+    final textPrimary = SpendzColors.textPrimary(context);
+    final textSecondary = SpendzColors.textSecondary(context);
 
-    return BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-      child: Container(
-        decoration: BoxDecoration(
-          color: surfaceColor.withAlpha(isDark ? 230 : 245),
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(AppRadius.sheet),
-          ),
-          border: Border.all(color: borderColor, width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(isDark ? 100 : 30),
-              blurRadius: 30,
-              offset: const Offset(0, -10),
-            ),
-          ],
+    return Container(
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(32), // rounded-3xl
         ),
-        child: SafeArea(
-          child: Consumer<WalletProvider>(
-            builder: (context, wallet, child) {
-              final favCards = wallet.favoriteCards.isNotEmpty
-                  ? wallet.favoriteCards
-                  : wallet.cards.take(2).toList();
-              final favDocs = wallet.favoriteDocuments.isNotEmpty
-                  ? wallet.favoriteDocuments
-                  : wallet.documents.take(3).toList();
-              final favPasses = wallet.favoritePasses.isNotEmpty
-                  ? wallet.favoritePasses
-                  : wallet.passes.take(1).toList();
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withAlpha(15)
+              : Colors.white.withAlpha(200),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withAlpha(120)
+                : const Color(0xFF1E293B).withAlpha(35),
+            blurRadius: 36,
+            offset: const Offset(0, -12),
+          ),
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withAlpha(60)
+                : const Color(0xFF1E293B).withAlpha(15),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Consumer<WalletProvider>(
+          builder: (context, wallet, child) {
+            final favCards = wallet.favoriteCards.isNotEmpty
+                ? wallet.favoriteCards
+                : wallet.cards.take(2).toList();
+            final favDocs = wallet.favoriteDocuments.isNotEmpty
+                ? wallet.favoriteDocuments
+                : wallet.documents.take(3).toList();
 
-              return Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.lg,
-                  vertical: AppSpacing.md,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Drag handle
-                    Center(
-                      child: Container(
-                        width: 44,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: textSecondary.withAlpha(80),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
+            return Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: SpendzSpacing.lg,
+                vertical: SpendzSpacing.md,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Clay Pill Drag Handle
+                  Center(
+                    child: Container(
+                      width: 44,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: textSecondary.withAlpha(70),
+                        borderRadius: BorderRadius.circular(999),
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.md),
+                  ),
+                  const SizedBox(height: SpendzSpacing.md),
 
-                    // Header
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
+                  // Header with Puffy Clay Badge
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: SpendzColors.tangerine,
+                              borderRadius: BorderRadius.circular(
+                                SpendzSpacing.radiusFull,
                               ),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary,
-                                borderRadius: BorderRadius.circular(
-                                  AppRadius.xs,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: SpendzColors.tangerine.withAlpha(80),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
                                 ),
-                              ),
-                              child: const Text(
-                                'POP WALLET',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 1.2,
+                              ],
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(
+                                  Icons.flash_on_rounded,
+                                  size: 14,
                                   color: Colors.white,
                                 ),
-                              ),
+                                SizedBox(width: 4),
+                                Text(
+                                  'QUICK VAULT',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 0.8,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: AppSpacing.sm),
-                            Text(
-                              'Instant Access',
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                color: textSecondary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.close_rounded, color: textSecondary),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-
-                    // Quick Action Shortcuts
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildActionPill(
-                            context: context,
-                            icon: Icons.add_rounded,
-                            label: 'Expense',
-                            onTap: () {
-                              Navigator.pop(context);
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const AddTransactionScreen(),
-                                ),
-                              );
-                            },
                           ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Expanded(
-                          child: _buildActionPill(
-                            context: context,
-                            icon: Icons.credit_card_rounded,
-                            label: 'Cards',
-                            onTap: () {
-                              Navigator.pop(context);
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const CardsScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Expanded(
-                          child: _buildActionPill(
-                            context: context,
-                            icon: Icons.shield_rounded,
-                            label: 'Vault',
-                            onTap: () {
-                              Navigator.pop(context);
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const DocumentsScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-
-                    // Favorite Cards Carousel
-                    if (favCards.isNotEmpty) ...[
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
+                          const SizedBox(width: 8),
                           Text(
-                            'Favourite Cards',
-                            style: AppTextStyles.labelLarge,
-                          ),
-                          Text(
-                            '${favCards.length} ready',
-                            style: AppTextStyles.caption.copyWith(
-                              color: textSecondary,
+                            'Spendz Hub',
+                            style: TextStyle(
+                              color: textPrimary,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 18,
+                              letterSpacing: -0.3,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: AppSpacing.sm),
-                      SizedBox(
-                        height: 185,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          physics: const BouncingScrollPhysics(),
-                          itemCount: favCards.length,
-                          itemBuilder: (context, index) {
-                            final card = favCards[index];
-                            return WalletCardWidget(
+                      IconButton(
+                        icon: Icon(
+                          Icons.close_rounded,
+                          color: textSecondary,
+                          size: 22,
+                        ),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: SpendzSpacing.md),
+
+                  // Quick Action Clay Buttons (Add, Send, Receive)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SpendzButton.primary(
+                          label: 'Add Expense',
+                          icon: Icons.add_circle_outline_rounded,
+                          onPressed: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const AddTransactionScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: SpendzButton.tonal(
+                          label: 'Cards Vault',
+                          icon: Icons.wallet_rounded,
+                          onPressed: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const CardsScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: SpendzSpacing.lg),
+
+                  // Favorite Payment Cards Section
+                  if (favCards.isNotEmpty) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Payment Cards',
+                          style: TextStyle(
+                            color: textPrimary,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const CardsScreen(),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            'View All',
+                            style: TextStyle(
+                              color: SpendzColors.tangerine,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: SpendzSpacing.sm),
+                    SizedBox(
+                      height: 120,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
+                        itemCount: favCards.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 12),
+                        itemBuilder: (context, index) {
+                          final card = favCards[index];
+                          return SizedBox(
+                            width: 190,
+                            child: WalletCardWidget(
                               card: card,
                               isCompact: true,
                               onTap: () {
@@ -228,183 +262,130 @@ class SpendzPopSheet extends StatelessWidget {
                                   ),
                                 );
                               },
-                              onFavoriteToggle: () =>
-                                  wallet.toggleCardFavorite(card.id),
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                    ],
-
-                    // Favorite Documents Quick List
-                    if (favDocs.isNotEmpty) ...[
-                      Text('Quick Documents', style: AppTextStyles.labelLarge),
-                      const SizedBox(height: AppSpacing.sm),
-                      Column(
-                        children: favDocs.map((doc) {
-                          return Container(
-                            margin: const EdgeInsets.only(
-                              bottom: AppSpacing.xs + 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: surfaceColor,
-                              borderRadius: BorderRadius.circular(AppRadius.md),
-                              border: Border.all(color: borderColor),
-                            ),
-                            child: Material(
-                              color: Colors.transparent,
-                              borderRadius: BorderRadius.circular(AppRadius.md),
-                              child: ListTile(
-                                dense: true,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                    AppRadius.md,
-                                  ),
-                                ),
-                                leading: const Icon(
-                                  Icons.shield_outlined,
-                                  color: AppColors.primary,
-                                  size: 20,
-                                ),
-                                title: Text(
-                                  doc.documentName,
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: textPrimary,
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  doc.category.toUpperCase(),
-                                  style: AppTextStyles.caption.copyWith(
-                                    color: textSecondary,
-                                    fontSize: 10,
-                                  ),
-                                ),
-                                trailing: Icon(
-                                  Icons.arrow_forward_ios_rounded,
-                                  size: 12,
-                                  color: textSecondary,
-                                ),
-                                onTap: () {
-                                  Navigator.pop(context);
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          DocumentPreviewScreen(document: doc),
-                                    ),
-                                  );
-                                },
-                              ),
                             ),
                           );
-                        }).toList(),
+                        },
                       ),
-                    ],
+                    ),
+                    const SizedBox(height: SpendzSpacing.md),
+                  ],
 
-                    // Active Passes Quick QR
-                    if (favPasses.isNotEmpty) ...[
-                      const SizedBox(height: AppSpacing.xs),
-                      Container(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withAlpha(20),
-                          borderRadius: BorderRadius.circular(AppRadius.card),
-                          border: Border.all(
-                            color: AppColors.primary.withAlpha(50),
+                  // Favorite Documents Section
+                  if (favDocs.isNotEmpty) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Identity & Vault',
+                          style: TextStyle(
+                            color: textPrimary,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
                           ),
                         ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(
-                                  AppRadius.sm,
+                        InkWell(
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const DocumentsScreen(),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            'All Docs',
+                            style: TextStyle(
+                              color: SpendzColors.tangerine,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: SpendzSpacing.sm),
+                    ...favDocs.map(
+                      (doc) => Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: SpendzSurface(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    DocumentPreviewScreen(document: doc),
+                              ),
+                            );
+                          },
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 38,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  color: SpendzColors.tangerine.withAlpha(20),
+                                  borderRadius: BorderRadius.circular(
+                                    SpendzSpacing.radiusMd,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.badge_outlined,
+                                  size: 20,
+                                  color: SpendzColors.tangerine,
                                 ),
                               ),
-                              child: QrImageView(
-                                data: favPasses.first.codeData.isNotEmpty
-                                    ? favPasses.first.codeData
-                                    : 'spendz-pass',
-                                version: QrVersions.auto,
-                                size: 36.0,
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    favPasses.first.title,
-                                    style: AppTextStyles.labelMedium.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: textPrimary,
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      doc.documentName,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 13,
+                                        color: textPrimary,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                  ),
-                                  Text(
-                                    'Code: ${favPasses.first.codeData}',
-                                    style: AppTextStyles.caption.copyWith(
-                                      fontFamily: 'monospace',
-                                      color: textSecondary,
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      doc.category
+                                          .replaceAll('_', ' ')
+                                          .toUpperCase(),
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: textSecondary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                              Icon(
+                                Icons.chevron_right_rounded,
+                                color: textSecondary,
+                                size: 20,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ],
+                    ),
                   ],
-                ),
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  }
 
-  Widget _buildActionPill({
-    required BuildContext context,
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    final surfaceColor = AppColors.getSurface(context);
-    final borderColor = AppColors.getBorder(context);
-    final textPrimary = AppColors.getTextPrimary(context);
-
-    return Material(
-      color: surfaceColor,
-      borderRadius: BorderRadius.circular(AppRadius.card),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm + 2),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.card),
-            border: Border.all(color: borderColor),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: AppColors.primary, size: 16),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: AppTextStyles.labelSmall.copyWith(
-                  color: textPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
+                  const SizedBox(height: SpendzSpacing.md),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

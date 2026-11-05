@@ -1,23 +1,19 @@
-import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../app/theme/spendz_colors.dart';
-import '../../app/theme/spendz_spacing.dart';
-import '../../app/theme/spendz_typography.dart';
 import '../../models/transaction_model.dart';
 import '../../presentation/widgets/spendz_amount_text.dart';
-import '../../presentation/widgets/spendz_app_bar.dart';
 import '../../presentation/widgets/spendz_empty_state.dart';
-import '../../presentation/widgets/spendz_section_header.dart';
-import '../../presentation/widgets/spendz_surface.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/transaction_provider.dart';
 import '../../utils/icon_mapper.dart';
 
-/// Spendz 2.0 Financial Intelligence & Analytics Screen.
-/// Clean editorial visualisations for Cashflow, Spending Trend, and Categories.
+/// Spendz Funky Claymorphism Financial Intelligence & Analytics Screen.
+/// Playful tactile money playground with 3-capsule scorecard, donut split,
+/// chunky 6-month trend bars, and ranked category modules.
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
 
@@ -49,7 +45,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.fromSeed(
-              seedColor: SpendzColors.emerald,
+              seedColor: SpendzColors.tangerine,
               brightness: isDark ? Brightness.dark : Brightness.light,
             ),
           ),
@@ -116,403 +112,761 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final accent = SpendzColors.primaryAccent(context);
-
     return Scaffold(
       backgroundColor: SpendzColors.background(context),
-      appBar: SpendzAppBar(
-        title: 'Insights',
-        subtitle: 'Cashflow analytics & spending trends',
-        actions: [
-          TextButton.icon(
-            style: TextButton.styleFrom(
-              backgroundColor: SpendzColors.surface(context),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(SpendzSpacing.radiusFull),
-                side: BorderSide(color: SpendzColors.border(context)),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            ),
-            icon: Icon(Icons.calendar_today_rounded, size: 14, color: accent),
-            label: Text(
-              DateFormat('MMM yyyy').format(_startDate),
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: SpendzColors.textPrimary(context),
-              ),
-            ),
-            onPressed: _selectDateRange,
-          ),
-        ],
-      ),
-      body: Consumer2<TransactionProvider, CategoryProvider>(
-        builder: (context, txProvider, catProvider, _) {
-          final txs = txProvider.transactions;
-          final categorySpending = _calculateCategorySpending(txs);
-          final sortedSpending = categorySpending.entries.toList()
-            ..sort((a, b) => b.value.compareTo(a.value));
+      body: SafeArea(
+        child: Consumer2<TransactionProvider, CategoryProvider>(
+          builder: (context, txProvider, catProvider, _) {
+            final txs = txProvider.transactions;
+            final categorySpending = _calculateCategorySpending(txs);
+            final sortedSpending = categorySpending.entries.toList()
+              ..sort((a, b) => b.value.compareTo(a.value));
 
-          double totalSpent = 0;
-          for (var item in sortedSpending) {
-            totalSpent += item.value;
-          }
-
-          double totalIncome = 0;
-          for (var tx in txs) {
-            if (tx.type == 'income' &&
-                tx.date.isAfter(
-                  _startDate.subtract(const Duration(seconds: 1)),
-                ) &&
-                tx.date.isBefore(_endDate.add(const Duration(seconds: 1)))) {
-              totalIncome += tx.amount;
+            double totalSpent = 0;
+            for (var item in sortedSpending) {
+              totalSpent += item.value;
             }
-          }
 
-          return SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(
-              horizontal: SpendzSpacing.lg,
-              vertical: SpendzSpacing.md,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 1. Cashflow Comparison Hero
-                _buildCashflowHero(
-                  context,
-                  totalSpent,
-                  totalIncome,
-                  sortedSpending.length,
+            double totalIncome = 0;
+            for (var tx in txs) {
+              if (tx.type == 'income' &&
+                  tx.date.isAfter(
+                    _startDate.subtract(const Duration(seconds: 1)),
+                  ) &&
+                  tx.date.isBefore(_endDate.add(const Duration(seconds: 1)))) {
+                totalIncome += tx.amount;
+              }
+            }
+
+            final savingsRate = totalIncome > 0
+                ? (((totalIncome - totalSpent) / totalIncome) * 100).clamp(
+                    0.0,
+                    100.0,
+                  )
+                : 0.0;
+
+            return CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                // 1. Header with Month Selector
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                    child: _buildHeader(context),
+                  ),
                 ),
-                const SizedBox(height: SpendzSpacing.xl),
+
+                // 2. Three Puffy Clay Scorecard Capsules
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: _buildThreeCapsules(
+                      context,
+                      totalIncome,
+                      totalSpent,
+                      savingsRate,
+                    ),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
                 if (totalSpent == 0 && totalIncome == 0)
-                  SpendzEmptyState(
-                    icon: Icons.pie_chart_outline_rounded,
-                    title: 'No Activity in Selected Period',
-                    message:
-                        'No transactions found between ${DateFormat('dd MMM').format(_startDate)} and ${DateFormat('dd MMM').format(_endDate)}.',
-                    actionLabel: 'Select Another Range',
-                    onAction: _selectDateRange,
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 32,
+                      ),
+                      child: SpendzEmptyState(
+                        icon: Icons.pie_chart_outline_rounded,
+                        title: 'No Flows in Period',
+                        message:
+                            'No transactions between ${DateFormat('dd MMM').format(_startDate)} and ${DateFormat('dd MMM').format(_endDate)}.',
+                        actionLabel: 'Select Another Range',
+                        onAction: _selectDateRange,
+                      ),
+                    ),
                   )
                 else ...[
-                  // 2. Category Distribution Donut
-                  if (sortedSpending.isNotEmpty) ...[
-                    _buildDonutSection(
-                      context,
-                      sortedSpending,
-                      totalSpent,
-                      catProvider,
+                  // 3. Interactive Expense Donut Clay Section
+                  if (sortedSpending.isNotEmpty)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: _buildDonutSection(
+                          context,
+                          sortedSpending,
+                          totalSpent,
+                          catProvider,
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: SpendzSpacing.xl),
-                  ],
 
-                  // 3. 6-Month Spending Trend
-                  _buildTrendSection(context, txProvider.transactions),
-                  const SizedBox(height: SpendzSpacing.xl),
+                  const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-                  // 4. Ranked Category Breakdown Bars
-                  if (sortedSpending.isNotEmpty) ...[
-                    _buildCategoryRankList(
-                      context,
-                      sortedSpending,
-                      totalSpent,
-                      catProvider,
+                  // 4. 6-Month Spending Trend with Chunky Clay Bars
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: _buildTrendSection(context, txs),
                     ),
-                    const SizedBox(height: SpendzSpacing.hero),
-                  ],
+                  ),
+
+                  const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+                  // 5. Ranked Category Breakdown Bars
+                  if (sortedSpending.isNotEmpty)
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                      sliver: SliverToBoxAdapter(
+                        child: _buildCategoryRankList(
+                          context,
+                          sortedSpending,
+                          totalSpent,
+                          catProvider,
+                        ),
+                      ),
+                    ),
                 ],
               ],
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
 
-  // ─── 1. CASHFLOW HERO ────────────────────────────────────────────────────────
-  Widget _buildCashflowHero(
-    BuildContext context,
-    double totalSpent,
-    double totalIncome,
-    int categoryCount,
-  ) {
-    final netSavings = totalIncome - totalSpent;
-    final totalFlow = totalIncome + totalSpent;
-    final expenseRatio = totalFlow > 0 ? (totalSpent / totalFlow) : 0.5;
-    final incomeRatio = totalFlow > 0 ? (totalIncome / totalFlow) : 0.5;
+  // 1. Header with Month Toggle & Compare Button
+  Widget _buildHeader(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'Insights & Analytics',
+                  style: TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: SpendzColors.textPrimary(context),
+                    letterSpacing: -0.4,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Text('📊', style: TextStyle(fontSize: 20)),
+              ],
+            ),
+            const SizedBox(height: 2),
+            Text(
+              'Your tactile money playground',
+              style: TextStyle(
+                fontFamily: 'Plus Jakarta Sans',
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: SpendzColors.textSecondary(context),
+              ),
+            ),
+          ],
+        ),
 
-    return SpendzSurface(
-      isElevated: true,
-      padding: const EdgeInsets.all(SpendzSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  'CASHFLOW COMPARISON',
-                  style: SpendzTypography.labelTracked(context),
+        // Month selector clay pill
+        GestureDetector(
+          onTap: _selectDateRange,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            decoration: BoxDecoration(
+              color: SpendzColors.surface(context),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: SpendzColors.clayDropShadow(context),
+            ),
+            child: Row(
+              children: [
+                Text(
+                  DateFormat('MMM yyyy').format(_startDate),
+                  style: TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: SpendzColors.textPrimary(context),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Icon(
+                  Icons.expand_more_rounded,
+                  size: 16,
+                  color: SpendzColors.tangerine,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // 2. Financial Scorecard Pods (3 Puffy Clay Capsules)
+  Widget _buildThreeCapsules(
+    BuildContext context,
+    double income,
+    double spent,
+    double savingsRate,
+  ) {
+    return Row(
+      children: [
+        // Income Capsule
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+            decoration: BoxDecoration(
+              color: SpendzColors.surface(context),
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: SpendzColors.clayDropShadow(context),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: SpendzColors.tertiarySky.withAlpha(40),
+                    boxShadow: [
+                      BoxShadow(
+                        color: SpendzColors.tertiarySky.withAlpha(60),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                      BoxShadow(
+                        color: Colors.white.withAlpha(200),
+                        blurRadius: 2,
+                        offset: const Offset(1, 1),
+                        blurStyle: BlurStyle.inner,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.south_west_rounded,
+                    size: 16,
+                    color: SpendzColors.tertiarySky,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Income',
+                  style: TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: SpendzColors.textSecondary(context),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '+₹${income.toStringAsFixed(0)}',
+                  style: const TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: SpendzColors.tertiarySky,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: SpendzColors.primaryAccent(context).withAlpha(25),
-                  borderRadius: BorderRadius.circular(SpendzSpacing.radiusFull),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+
+        // Spent Capsule
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+            decoration: BoxDecoration(
+              color: SpendzColors.surface(context),
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: SpendzColors.clayDropShadow(context),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: SpendzColors.tangerineLight,
+                    boxShadow: [
+                      BoxShadow(
+                        color: SpendzColors.tangerine.withAlpha(60),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                      BoxShadow(
+                        color: Colors.white.withAlpha(200),
+                        blurRadius: 2,
+                        offset: const Offset(1, 1),
+                        blurStyle: BlurStyle.inner,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.north_east_rounded,
+                    size: 16,
+                    color: SpendzColors.tangerine,
+                  ),
                 ),
-                child: Text(
-                  '$categoryCount Categories',
+                const SizedBox(height: 6),
+                Text(
+                  'Spent',
                   style: TextStyle(
-                    color: SpendzColors.primaryAccent(context),
-                    fontSize: 10.5,
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: SpendzColors.textSecondary(context),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '₹${spent.toStringAsFixed(0)}',
+                  style: TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: SpendzColors.textPrimary(context),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+
+        // Saved Capsule (Sunshine Yellow highlight)
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+            decoration: BoxDecoration(
+              color: SpendzColors.sunshineYellow,
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: [
+                BoxShadow(
+                  color: SpendzColors.sunshineYellow.withAlpha(90),
+                  blurRadius: 14,
+                  offset: const Offset(0, 5),
+                ),
+                BoxShadow(
+                  color: Colors.white.withAlpha(200),
+                  blurRadius: 3,
+                  offset: const Offset(2, 2),
+                  blurStyle: BlurStyle.inner,
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withAlpha(180),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(10),
+                        blurRadius: 2,
+                        offset: const Offset(1, 1),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.savings_rounded,
+                    size: 16,
+                    color: Color(0xFF735500),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Saved',
+                  style: TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 11,
                     fontWeight: FontWeight.w700,
+                    color: Color(0xFF735500),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: SpendzSpacing.md),
-
-          Row(
-            children: [
-              // Outflow
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.arrow_upward_rounded,
-                          size: 13,
-                          color: SpendzColors.expense,
-                        ),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            'Total Outflow',
-                            style: SpendzTypography.caption(context),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 3),
-                    SpendzAmountText(
-                      amount: totalSpent,
-                      variant: SpendzAmountVariant.expense,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                width: 1,
-                height: 36,
-                color: SpendzColors.border(context),
-              ),
-              const SizedBox(width: SpendzSpacing.md),
-              // Inflow
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.arrow_downward_rounded,
-                          size: 13,
-                          color: SpendzColors.income,
-                        ),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            'Total Inflow',
-                            style: SpendzTypography.caption(context),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 3),
-                    SpendzAmountText(
-                      amount: totalIncome,
-                      variant: SpendzAmountVariant.income,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: SpendzSpacing.md),
-
-          // Visual Progress Ratio Bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(SpendzSpacing.radiusFull),
-            child: SizedBox(
-              height: 6,
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: (expenseRatio * 100).round().clamp(1, 99),
-                    child: Container(color: SpendzColors.expense),
+                const SizedBox(height: 2),
+                Text(
+                  '${savingsRate.toStringAsFixed(1)}%',
+                  style: const TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF735500),
                   ),
-                  const SizedBox(width: 2),
-                  Expanded(
-                    flex: (incomeRatio * 100).round().clamp(1, 99),
-                    child: Container(color: SpendzColors.income),
-                  ),
-                ],
-              ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: SpendzSpacing.sm),
-
-          // Net Savings Note
-          Text(
-            netSavings >= 0
-                ? 'Net Surplus: +₹${netSavings.toStringAsFixed(0)} retained this period'
-                : 'Net Deficit: -₹${(-netSavings).toStringAsFixed(0)} beyond inflow',
-            style: TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w600,
-              color: netSavings >= 0
-                  ? SpendzColors.income
-                  : SpendzColors.expense,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  // ─── 2. DONUT DISTRIBUTION CHART ───────────────────────────────────────────
+  // 3. Interactive Expense Donut Clay Section
   Widget _buildDonutSection(
     BuildContext context,
     List<MapEntry<String, double>> sortedSpending,
     double totalSpent,
     CategoryProvider catProvider,
   ) {
-    final accent = SpendzColors.primaryAccent(context);
+    final colors = [
+      SpendzColors.tangerine,
+      SpendzColors.tertiarySky,
+      SpendzColors.sunshineYellow,
+      SpendzColors.periwinkle,
+      const Color(0xFFFF6B6B),
+      const Color(0xFF4ECDC4),
+      const Color(0xFF82B4DA),
+      const Color(0xFFFFDCC6),
+    ];
 
-    return SpendzSurface(
-      padding: const EdgeInsets.all(SpendzSpacing.lg),
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: SpendzColors.surface(context),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: SpendzColors.clayDropShadow(context),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SpendzSectionHeader(
-            title: 'Category Distribution',
-            count: sortedSpending.length,
-          ),
-          const SizedBox(height: SpendzSpacing.md),
-
-          SizedBox(
-            height: 180,
-            child: PieChart(
-              PieChartData(
-                pieTouchData: PieTouchData(
-                  touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                    setState(() {
-                      if (!event.isInterestedForInteractions ||
-                          pieTouchResponse == null ||
-                          pieTouchResponse.touchedSection == null) {
-                        _touchedPieIndex = -1;
-                        return;
-                      }
-                      _touchedPieIndex =
-                          pieTouchResponse.touchedSection!.touchedSectionIndex;
-                    });
-                  },
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.donut_large_rounded,
+                    size: 18,
+                    color: SpendzColors.tangerine,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Category Split',
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: SpendzColors.textPrimary(context),
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: SpendzColors.surfaceContainerHigh(context),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                borderData: FlBorderData(show: false),
-                sectionsSpace: 3,
-                centerSpaceRadius: 50,
-                sections: sortedSpending.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final item = entry.value;
-                  final isTouched = index == _touchedPieIndex;
-                  final category = catProvider.getCategoryById(item.key);
-                  final color = category != null
-                      ? Color(int.tryParse(category.color) ?? accent.toARGB32())
-                      : accent;
+                child: Text(
+                  '${DateFormat('d MMM').format(_startDate)} - ${DateFormat('d MMM').format(_endDate)}',
+                  style: TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: SpendzColors.textSecondary(context),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
 
-                  return PieChartSectionData(
-                    color: color,
-                    value: item.value,
-                    title: '',
-                    radius: isTouched ? 26 : 20,
-                  );
-                }).toList(),
+          // Tactile Donut Chart with Center Hub
+          Center(
+            child: SizedBox(
+              height: 200,
+              width: 200,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  PieChart(
+                    PieChartData(
+                      pieTouchData: PieTouchData(
+                        touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                          setState(() {
+                            if (!event.isInterestedForInteractions ||
+                                pieTouchResponse == null ||
+                                pieTouchResponse.touchedSection == null) {
+                              _touchedPieIndex = -1;
+                              return;
+                            }
+                            _touchedPieIndex = pieTouchResponse
+                                .touchedSection!
+                                .touchedSectionIndex;
+                          });
+                        },
+                      ),
+                      borderData: FlBorderData(show: false),
+                      sectionsSpace: 4,
+                      centerSpaceRadius: 58,
+                      sections: sortedSpending.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final item = entry.value;
+                        final isTouched = index == _touchedPieIndex;
+                        final color = colors[index % colors.length];
+
+                        return PieChartSectionData(
+                          color: color,
+                          value: item.value,
+                          title: '',
+                          radius: isTouched ? 26 : 20,
+                        );
+                      }).toList(),
+                    ),
+                  ),
+
+                  // Center Hub Clay Disc
+                  Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: SpendzColors.surfaceContainerLow(context),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(20),
+                          blurRadius: 4,
+                          offset: const Offset(2, 2),
+                          blurStyle: BlurStyle.inner,
+                        ),
+                        BoxShadow(
+                          color: Colors.white.withAlpha(220),
+                          blurRadius: 4,
+                          offset: const Offset(-2, -2),
+                          blurStyle: BlurStyle.inner,
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'TOTAL SPENT',
+                          style: TextStyle(
+                            fontFamily: 'Plus Jakarta Sans',
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.5,
+                            color: SpendzColors.textSecondary(context),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '₹${totalSpent.toStringAsFixed(0)}',
+                          style: TextStyle(
+                            fontFamily: 'Plus Jakarta Sans',
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: SpendzColors.textPrimary(context),
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
+          ),
+          const SizedBox(height: 16),
+
+          // Playful Legend 2-Column Grid
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: sortedSpending.take(6).length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 3.2,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            ),
+            itemBuilder: (context, idx) {
+              final item = sortedSpending[idx];
+              final category = catProvider.getCategoryById(item.key);
+              final pct = totalSpent > 0
+                  ? (item.value / totalSpent * 100)
+                  : 0.0;
+              final color = colors[idx % colors.length];
+
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: SpendzColors.surfaceContainerLow(context),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: color,
+                        boxShadow: [
+                          BoxShadow(
+                            color: color.withAlpha(100),
+                            blurRadius: 4,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        category?.name ?? item.key,
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: SpendzColors.textPrimary(context),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Text(
+                      '${pct.toStringAsFixed(0)}%',
+                      style: TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: SpendzColors.textPrimary(context),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ],
       ),
     );
   }
 
-  // ─── 3. 6-MONTH SPENDING TREND ──────────────────────────────────────────────
+  // 4. 6-Month Spending Trend with Chunky Bulbous Clay Bars
   Widget _buildTrendSection(
     BuildContext context,
     List<TransactionModel> allTxs,
   ) {
     final monthlyTrend = _calculateMonthlyTrend(allTxs);
-    final accent = SpendzColors.primaryAccent(context);
-    final isDark = SpendzColors.isDark(context);
-
     final maxMonthAmount = monthlyTrend.fold(
       0.0,
       (max, m) => (m['amount'] as double) > max ? (m['amount'] as double) : max,
     );
+    final avgAmount = monthlyTrend.isEmpty
+        ? 0.0
+        : (monthlyTrend.fold(0.0, (sum, m) => sum + (m['amount'] as double)) /
+              monthlyTrend.length);
 
-    return SpendzSurface(
-      padding: const EdgeInsets.all(SpendzSpacing.lg),
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: SpendzColors.surface(context),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: SpendzColors.clayDropShadow(context),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SpendzSectionHeader(
-            title: 'Monthly Spending Trend',
-            trailing: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: accent.withAlpha(25),
-                borderRadius: BorderRadius.circular(SpendzSpacing.radiusFull),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '6-Month Trend',
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: SpendzColors.textPrimary(context),
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Monthly velocity and baseline',
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: SpendzColors.textSecondary(context),
+                    ),
+                  ),
+                ],
               ),
-              child: Text(
-                '6 Months',
-                style: TextStyle(
-                  color: accent,
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w700,
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: SpendzColors.sunshineYellow.withAlpha(40),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.trending_up_rounded,
+                      size: 13,
+                      color: Color(0xFF735500),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Avg ₹${avgAmount.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF735500),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
+            ],
           ),
-          const SizedBox(height: SpendzSpacing.lg),
+          const SizedBox(height: 20),
 
+          // Bulbous Bars
           SizedBox(
-            height: 170,
+            height: 160,
             child: BarChart(
               BarChartData(
                 alignment: BarChartAlignment.spaceAround,
-                maxY: (maxMonthAmount * 1.2).clamp(100.0, double.infinity),
+                maxY: (maxMonthAmount * 1.25).clamp(100.0, double.infinity),
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
                   getDrawingHorizontalLine: (val) => FlLine(
-                    color: SpendzColors.border(context).withAlpha(100),
+                    color: SpendzColors.border(context).withAlpha(80),
                     strokeWidth: 0.8,
                     dashArray: [4, 4],
                   ),
@@ -543,12 +897,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             child: Text(
                               monthlyTrend[idx]['label'] as String,
                               style: TextStyle(
+                                fontFamily: 'Plus Jakarta Sans',
                                 fontSize: 11,
                                 fontWeight: isCurrent
-                                    ? FontWeight.w700
-                                    : FontWeight.w500,
+                                    ? FontWeight.w800
+                                    : FontWeight.w600,
                                 color: isCurrent
-                                    ? accent
+                                    ? SpendzColors.tangerine
                                     : SpendzColors.textSecondary(context),
                               ),
                             ),
@@ -571,13 +926,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       BarChartRodData(
                         toY: amount,
                         color: isCurrent
-                            ? accent
-                            : (isDark
-                                  ? accent.withAlpha(90)
-                                  : accent.withAlpha(130)),
-                        width: 14,
+                            ? SpendzColors.tangerine
+                            : SpendzColors.surfaceContainerHighest(context),
+                        width: 16,
                         borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(5),
+                          top: Radius.circular(8),
+                          bottom: Radius.circular(8),
                         ),
                       ),
                     ],
@@ -591,78 +945,93 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  // ─── 4. CATEGORY BREAKDOWN LIST ─────────────────────────────────────────────
+  // 5. Ranked Category Breakdown Bars
   Widget _buildCategoryRankList(
     BuildContext context,
     List<MapEntry<String, double>> sortedSpending,
     double totalSpent,
     CategoryProvider catProvider,
   ) {
-    final accent = SpendzColors.primaryAccent(context);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SpendzSectionHeader(title: 'Highest Spending Categories'),
-        const SizedBox(height: SpendzSpacing.xs),
-        SpendzSurface(
-          padding: const EdgeInsets.all(SpendzSpacing.md),
-          child: ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: sortedSpending.length,
-            separatorBuilder: (_, _) =>
-                Divider(height: 16, color: SpendzColors.border(context)),
-            itemBuilder: (context, index) {
-              final item = sortedSpending[index];
-              final category = catProvider.getCategoryById(item.key);
-              final pct = totalSpent > 0
-                  ? (item.value / totalSpent * 100)
-                  : 0.0;
-              final color = category != null
-                  ? Color(int.tryParse(category.color) ?? accent.toARGB32())
-                  : accent;
+        Text(
+          'Ranked Spending Breakdown',
+          style: TextStyle(
+            fontFamily: 'Plus Jakarta Sans',
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: SpendzColors.textPrimary(context),
+            letterSpacing: -0.3,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...sortedSpending.asMap().entries.map((entry) {
+          final index = entry.key;
+          final item = entry.value;
+          final category = catProvider.getCategoryById(item.key);
+          final pct = totalSpent > 0 ? (item.value / totalSpent * 100) : 0.0;
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: SpendzColors.surface(context),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: SpendzColors.clayDropShadow(context),
+              ),
+              child: Column(
                 children: [
                   Row(
                     children: [
-                      // Icon
+                      // Rank number chip
                       Container(
-                        width: 32,
-                        height: 32,
+                        width: 26,
+                        height: 26,
                         decoration: BoxDecoration(
-                          color: color.withAlpha(25),
-                          borderRadius: BorderRadius.circular(
-                            SpendzSpacing.radiusSm,
+                          shape: BoxShape.circle,
+                          color: index == 0
+                              ? SpendzColors.tangerine
+                              : SpendzColors.surfaceContainerHigh(context),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          '${index + 1}',
+                          style: TextStyle(
+                            fontFamily: 'Plus Jakarta Sans',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: index == 0
+                                ? Colors.white
+                                : SpendzColors.textSecondary(context),
                           ),
                         ),
-                        child: Icon(
-                          category != null
-                              ? IconMapper.getIcon(category.icon)
-                              : Icons.category_outlined,
-                          size: 16,
-                          color: color,
-                        ),
                       ),
-                      const SizedBox(width: SpendzSpacing.sm + 2),
+                      const SizedBox(width: 10),
 
-                      // Category Name
+                      // Icon
+                      Icon(
+                        category != null
+                            ? IconMapper.getIcon(category.icon)
+                            : Icons.category_outlined,
+                        size: 18,
+                        color: SpendzColors.tangerine,
+                      ),
+                      const SizedBox(width: 8),
+
+                      // Name
                       Expanded(
                         child: Text(
-                          category?.name ?? 'Uncategorized',
+                          category?.name ?? item.key,
                           style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13.5,
+                            fontFamily: 'Plus Jakarta Sans',
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
                             color: SpendzColors.textPrimary(context),
-                            letterSpacing: -0.2,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(width: SpendzSpacing.sm),
 
                       // Amount & Pct
                       Column(
@@ -670,32 +1039,50 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                         children: [
                           SpendzAmountText(
                             amount: item.value,
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w700,
+                            variant: SpendzAmountVariant.expense,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
                           ),
                           Text(
                             '${pct.toStringAsFixed(1)}%',
-                            style: SpendzTypography.caption(context),
+                            style: TextStyle(
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: SpendzColors.textSecondary(context),
+                            ),
                           ),
                         ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 10),
+
+                  // Tactile Progress Bar
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: (pct / 100).clamp(0.0, 1.0),
-                      backgroundColor: SpendzColors.border(context),
-                      valueColor: AlwaysStoppedAnimation<Color>(color),
-                      minHeight: 4,
+                    borderRadius: BorderRadius.circular(6),
+                    child: SizedBox(
+                      height: 6,
+                      child: LinearProgressIndicator(
+                        value: (pct / 100).clamp(0.0, 1.0),
+                        backgroundColor: SpendzColors.surfaceContainerHigh(
+                          context,
+                        ),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          index == 0
+                              ? SpendzColors.tangerine
+                              : index == 1
+                              ? SpendzColors.tertiarySky
+                              : SpendzColors.sunshineYellow,
+                        ),
+                      ),
                     ),
                   ),
                 ],
-              );
-            },
-          ),
-        ),
+              ),
+            ),
+          );
+        }),
       ],
     );
   }
