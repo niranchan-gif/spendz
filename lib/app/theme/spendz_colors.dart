@@ -131,7 +131,7 @@ class SpendzColors {
 
   static Color surfaceContainerHighest(BuildContext context) => terracotta;
 
-  static Color border(BuildContext context) => Color(0xFFB5CCA7);
+  static Color border(BuildContext context) => Colors.transparent;
 
   static Color textPrimary(BuildContext context) => espresso;
 

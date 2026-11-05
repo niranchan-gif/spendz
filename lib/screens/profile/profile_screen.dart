@@ -45,12 +45,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _buildProfileHero(context),
                 const SizedBox(height: SpendzSpacing.xl),
 
-                // 2. Security & Biometrics Section
-                _buildSecuritySection(context),
-              const SizedBox(height: SpendzSpacing.xl),
-
-              // 4. Data & Categories Section
-              _buildPreferencesSection(context),
+                // 2. Data & Categories Section
+                _buildPreferencesSection(context),
               const SizedBox(height: SpendzSpacing.xl),
 
               // 5. Danger Zone / Data Management
@@ -82,7 +78,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: SpendzColors.forestGreen,
-              border: Border.all(color: accent.withAlpha(80), width: 1.5),
             ),
             child: const Center(
               child: Text(
@@ -140,112 +135,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildSecuritySection(BuildContext context) {
-    final accent = SpendzColors.primaryAccent(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SpendzSectionHeader(title: 'Automated Security & Keystore'),
-        const SizedBox(height: SpendzSpacing.xs),
-        SpendzSurface(
-          padding: EdgeInsets.zero,
-          child: Column(
-            children: [
-              ListTile(
-                leading: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: accent.withAlpha(20),
-                    borderRadius: BorderRadius.circular(SpendzSpacing.radiusSm),
-                  ),
-                  child: Icon(Icons.shield_rounded, size: 18, color: accent),
-                ),
-                title: Text(
-                  'Hardware Vault Security',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: SpendzColors.textPrimary(context),
-                  ),
-                ),
-                subtitle: Text(
-                  'AES-256-GCM authenticated encryption managed automatically',
-                  style: SpendzTypography.caption(context),
-                ),
-                trailing: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: SpendzColors.income.withAlpha(25),
-                    borderRadius: BorderRadius.circular(SpendzSpacing.radiusSm),
-                  ),
-                  child: const Text(
-                    'Active',
-                    style: TextStyle(
-                      color: SpendzColors.income,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 11,
-                    ),
-                  ),
-                ),
-              ),
-              Divider(height: 1, color: SpendzColors.border(context)),
-              ListTile(
-                leading: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: accent.withAlpha(20),
-                    borderRadius: BorderRadius.circular(SpendzSpacing.radiusSm),
-                  ),
-                  child: Icon(
-                    Icons.fingerprint_rounded,
-                    size: 18,
-                    color: accent,
-                  ),
-                ),
-                title: Text(
-                  'Biometric Guard',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: SpendzColors.textPrimary(context),
-                  ),
-                ),
-                subtitle: Text(
-                  'Always enforced for card and document number visibility',
-                  style: SpendzTypography.caption(context),
-                ),
-                trailing: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: SpendzColors.income.withAlpha(25),
-                    borderRadius: BorderRadius.circular(SpendzSpacing.radiusSm),
-                  ),
-                  child: const Text(
-                    'Enforced',
-                    style: TextStyle(
-                      color: SpendzColors.income,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 11,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 

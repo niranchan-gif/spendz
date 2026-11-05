@@ -51,12 +51,6 @@ class _FinancialSummaryCardState extends State<FinancialSummaryCard> {
                 ? const Color(0xFF14231B).withAlpha(210)
                 : const Color(0xFFFFFFFF).withAlpha(225),
             borderRadius: BorderRadius.circular(AppRadius.xl),
-            border: Border.all(
-              color: isDark
-                  ? emerald.withAlpha(45)
-                  : Colors.white.withAlpha(230),
-              width: 1.2,
-            ),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -96,7 +90,6 @@ class _FinancialSummaryCardState extends State<FinancialSummaryCard> {
                       decoration: BoxDecoration(
                         color: emerald.withAlpha(isDark ? 35 : 22),
                         borderRadius: BorderRadius.circular(AppRadius.full),
-                        border: Border.all(color: emerald.withAlpha(60)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,

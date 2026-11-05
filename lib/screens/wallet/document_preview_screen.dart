@@ -517,14 +517,19 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
     final textSecondary = AppColors.getTextSecondary(context);
 
     return Scaffold(
-      backgroundColor: AppColors.getBackground(context),
+      backgroundColor: const Color(0xFFF6F4D2),
       appBar: AppBar(
-        title: Text(
-          doc.documentName,
-          style: AppTextStyles.headingSmall.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+        backgroundColor: const Color(0xFFF6F4D2),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        iconTheme: const IconThemeData(color: Color(0xFF2C221E)),
+        titleTextStyle: const TextStyle(
+          fontFamily: 'Plus Jakarta Sans',
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+          color: Color(0xFF2C221E),
         ),
+        title: Text(doc.documentName),
         actions: [
           IconButton(
             tooltip: doc.isFavorite ? 'Remove Favorite' : 'Add Favorite',
@@ -576,7 +581,6 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
                 decoration: BoxDecoration(
                   color: surfaceColor,
                   borderRadius: BorderRadius.circular(AppRadius.md),
-                  border: Border.all(color: AppColors.primary.withAlpha(50)),
                 ),
                 child: Row(
                   children: [
@@ -704,7 +708,6 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
                   decoration: BoxDecoration(
                     color: surfaceColor,
                     borderRadius: BorderRadius.circular(AppRadius.md),
-                    border: Border.all(color: AppColors.getBorder(context)),
                   ),
                   child: Row(
                     children: [
@@ -766,7 +769,6 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
                     decoration: BoxDecoration(
                       color: surfaceColor,
                       borderRadius: BorderRadius.circular(AppRadius.card),
-                      border: Border.all(color: AppColors.getBorder(context)),
                     ),
                     child: _buildPreviewBody(),
                   ),
@@ -778,7 +780,6 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
                   decoration: BoxDecoration(
                     color: surfaceColor,
                     borderRadius: BorderRadius.circular(AppRadius.card),
-                    border: Border.all(color: AppColors.getBorder(context)),
                   ),
                   child: Column(
                     children: [
@@ -898,7 +899,6 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
         decoration: BoxDecoration(
           color: surfaceColor,
           borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: AppColors.getBorder(context)),
         ),
         child: Column(
           children: [

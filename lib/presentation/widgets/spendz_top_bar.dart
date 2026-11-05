@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../app/theme/spendz_colors.dart';
 import '../../app/theme/spendz_spacing.dart';
 import '../../screens/profile/profile_screen.dart';
@@ -51,7 +52,6 @@ class SpendzTopBar extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFFF19C79), // Coral Terracotta
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFD9835E), width: 1.2),
                   boxShadow: quietShadow,
                 ),
                 child: Row(
@@ -64,18 +64,18 @@ class SpendzTopBar extends StatelessWidget {
                         width: 23,
                         height: 23,
                         errorBuilder: (_, __, ___) => Icon(
-                          Icons.savings_outlined,
+                          LucideIcons.wallet,
                           color: SpendzColors.primaryAccent(context),
                           size: 21,
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text(
+                    const Text(
                       'SPENDZ',
                       style: TextStyle(
                         fontFamily: 'Plus Jakarta Sans',
-                        color: const Color(0xFF2C221E),
+                        color: Color(0xFF2C221E),
                         fontWeight: FontWeight.w900,
                         fontSize: 14,
                         letterSpacing: -0.2,
@@ -111,16 +111,15 @@ class SpendzTopBar extends StatelessWidget {
                   child: Container(
                     width: 38,
                     height: 38,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      color: const Color(0xFFCBDFBD), // Pistachio
-                      border: Border.all(color: const Color(0xFFB5CCA7), width: 1.2),
+                      color: Color(0xFFCBDFBD), // Pistachio
                       boxShadow: quietShadow,
                     ),
-                    child: Icon(
-                      Icons.notifications_none_rounded,
-                      size: 19,
-                      color: SpendzColors.textSecondary(context),
+                    child: const Icon(
+                      LucideIcons.bell,
+                      size: 18,
+                      color: Color(0xFF2C221E),
                     ),
                   ),
                 ),
@@ -139,16 +138,15 @@ class SpendzTopBar extends StatelessWidget {
                 child: Container(
                   width: 38,
                   height: 38,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFFD4E09B), // Chartreuse
-                    border: Border.all(color: const Color(0xFFBFCC85), width: 1.2),
+                    color: Color(0xFFD4E09B), // Chartreuse
                     boxShadow: quietShadow,
                   ),
-                  child: Icon(
-                    Icons.person_rounded,
-                    size: 19,
-                    color: SpendzColors.primaryAccent(context),
+                  child: const Icon(
+                    LucideIcons.user,
+                    size: 18,
+                    color: Color(0xFF2C221E),
                   ),
                 ),
               ),

@@ -43,10 +43,6 @@ class EmptyState extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.getPrimary(context).withAlpha(20),
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: AppColors.getPrimary(context).withAlpha(45),
-                  width: 1.5,
-                ),
               ),
               child: Center(
                 child: Icon(

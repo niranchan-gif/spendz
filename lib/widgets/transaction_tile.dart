@@ -29,7 +29,6 @@ class TransactionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final isIncome = transaction.type == 'income';
     final surfaceColor = AppColors.getSurface(context);
-    final borderColor = AppColors.getBorder(context);
     final textPrimary = AppColors.getTextPrimary(context);
     final textSecondary = AppColors.getTextSecondary(context);
     final primaryColor = AppColors.getPrimary(context);
@@ -103,7 +102,6 @@ class TransactionTile extends StatelessWidget {
               decoration: BoxDecoration(
                 color: surfaceColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: borderColor, width: 1),
               ),
               child: Material(
                 color: Colors.transparent,
@@ -187,9 +185,6 @@ class TransactionTile extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: AppColors.primary.withAlpha(25),
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: AppColors.primary.withAlpha(40),
-                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -239,13 +234,6 @@ class TransactionTile extends StatelessWidget {
                       ? Colors.green.withAlpha(30)
                       : Colors.orange.withAlpha(30),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color:
-                        transaction.linkedPayments >=
-                            transaction.expectedPayments
-                        ? Colors.green.withAlpha(50)
-                        : Colors.orange.withAlpha(50),
-                  ),
                 ),
                 child: Text(
                   transaction.linkedPayments >= transaction.expectedPayments
@@ -270,7 +258,6 @@ class TransactionTile extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.orange.withAlpha(30),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange.withAlpha(50)),
                 ),
                 child: Text(
                   'Owed ${CurrencyFormatter.format(transaction.owedAmount)}',

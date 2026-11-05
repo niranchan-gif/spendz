@@ -278,9 +278,6 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
               ? AppColors.primary.withAlpha(20)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : Colors.transparent,
-          ),
         ),
         child: Row(
           children: [

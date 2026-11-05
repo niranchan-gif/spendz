@@ -15,7 +15,7 @@ import '../../models/wallet_document_model.dart';
 import '../../providers/wallet_document_provider.dart';
 import '../../providers/wallet_provider.dart';
 import 'document_attachment_scanner_screen.dart';
-import 'widgets/virtual_document_card.dart';
+import 'widgets/stitch_spotlight_card.dart';
 
 /// Screen managing manual document creation and editing with dedicated category forms.
 ///
@@ -670,8 +670,18 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: const Color(0xFFF6F4D2),
       appBar: AppBar(
+        backgroundColor: const Color(0xFFF6F4D2),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        iconTheme: const IconThemeData(color: Color(0xFF2C221E)),
+        titleTextStyle: const TextStyle(
+          fontFamily: 'Plus Jakarta Sans',
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+          color: Color(0xFF2C221E),
+        ),
         title: Text(
           widget.documentToEdit != null
               ? 'Edit Document'
@@ -693,7 +703,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
         ),
       ),
       body: _isSaving
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFFF19C79)))
           : (_currentStep == 0
                 ? _buildCategorySelector()
                 : (_currentStep == 1 ? _buildFormStep() : _buildPreviewStep())),
@@ -709,27 +719,36 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           'Choose Document Type',
           style: AppTextStyles.headingSmall.copyWith(
             fontWeight: FontWeight.bold,
+            color: const Color(0xFF2C221E),
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
           'Select the kind of document you want to add to your private encrypted vault.',
           style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.getTextSecondary(context),
+            color: const Color(0xFF63564F),
           ),
         ),
         const SizedBox(height: AppSpacing.md),
         ..._categories.map((cat) {
           final isSelected = _selectedCategory == cat['id'];
-          return Card(
-            elevation: isSelected ? 3 : 1,
-            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppRadius.card),
-              side: BorderSide(
-                color: isSelected ? AppColors.primary : Colors.transparent,
-                width: 2,
-              ),
+          return Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            decoration: BoxDecoration(
+              color: isSelected ? const Color(0xFFCBDFBD) : const Color(0xFFF6F4D2),
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x1F2C221E),
+                  blurRadius: 4,
+                  offset: Offset(1.5, 2.5),
+                ),
+                BoxShadow(
+                  color: Colors.white,
+                  blurRadius: 1.5,
+                  offset: Offset(-1, -1),
+                ),
+              ],
             ),
             child: ListTile(
               contentPadding: const EdgeInsets.symmetric(
@@ -844,16 +863,22 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           ElevatedButton(
             onPressed: _proceedToPreview,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+              backgroundColor: const Color(0xFFF19C79),
+              foregroundColor: const Color(0xFF2C221E),
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.sm),
+                borderRadius: BorderRadius.circular(20),
               ),
             ),
             child: const Text(
               'Preview Virtual Card',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              style: TextStyle(
+                fontFamily: 'Plus Jakarta Sans',
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                color: Color(0xFF2C221E),
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -1253,7 +1278,6 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
         decoration: BoxDecoration(
           color: AppColors.primary.withAlpha(20),
           borderRadius: BorderRadius.circular(AppRadius.card),
-          border: Border.all(color: AppColors.primary.withAlpha(60)),
         ),
         child: const Row(
           children: [
@@ -1614,7 +1638,6 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1663,7 +1686,6 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
               decoration: BoxDecoration(
                 color: AppColors.primary.withAlpha(15),
                 borderRadius: BorderRadius.circular(AppRadius.md),
-                border: Border.all(color: AppColors.primary.withAlpha(60)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1823,27 +1845,45 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
         ),
         const SizedBox(height: AppSpacing.lg),
 
-        // Live Virtual Document Card
-        VirtualDocumentCard(document: previewDoc, showShadow: true),
+        // Live Authentic Spotlight Card (Exact Replica of Wallet Spotlight)
+        AspectRatio(
+          aspectRatio: 1.586,
+          child: StitchSpotlightCard.fromDocument(document: previewDoc),
+        ),
         const SizedBox(height: AppSpacing.lg),
 
-        // Summary Information Card
-        Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.card),
+        // Summary Information Clay Container
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFCBDFBD),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x1F2C221E),
+                blurRadius: 4,
+                offset: Offset(1.5, 2.5),
+              ),
+              BoxShadow(
+                color: Colors.white,
+                blurRadius: 1.5,
+                offset: Offset(-1, -1),
+              ),
+            ],
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Document Details',
-                  style: AppTextStyles.bodyLarge.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Document Details',
+                style: TextStyle(
+                  fontFamily: 'Plus Jakarta Sans',
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                  color: Color(0xFF2C221E),
                 ),
-                const Divider(),
+              ),
+              const Divider(color: Color(0xFFB5CCA7)),
                 _summaryRow(
                   'Type',
                   _selectedCategory.replaceAll('_', ' ').toUpperCase(),
@@ -1872,41 +1912,85 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
               ],
             ),
           ),
-        ),
         const SizedBox(height: AppSpacing.xl),
 
         // Buttons: Edit Details or Save to Vault
         Row(
           children: [
             Expanded(
-              child: OutlinedButton(
-                onPressed: () => setState(() => _currentStep = 1),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
+              child: GestureDetector(
+                onTap: () => setState(() => _currentStep = 1),
+                child: Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF6F4D2),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x1F2C221E),
+                        blurRadius: 4,
+                        offset: Offset(1.5, 2.5),
+                      ),
+                      BoxShadow(
+                        color: Colors.white,
+                        blurRadius: 1.5,
+                        offset: Offset(-1, -1),
+                      ),
+                    ],
+                  ),
+                  alignment: Alignment.center,
+                  child: const Text(
+                    'Back / Edit',
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF2C221E),
+                      fontSize: 14,
+                    ),
                   ),
                 ),
-                child: const Text('Back / Edit Form'),
               ),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
-              child: ElevatedButton.icon(
-                onPressed: _saveDocument,
-                icon: const Icon(Icons.lock_rounded, size: 18),
-                label: Text(
-                  widget.documentToEdit != null
-                      ? 'Update Vault'
-                      : 'Save to Vault',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
+              child: GestureDetector(
+                onTap: _saveDocument,
+                child: Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF19C79), // Terracotta
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x1F2C221E),
+                        blurRadius: 4,
+                        offset: Offset(1.5, 2.5),
+                      ),
+                      BoxShadow(
+                        color: Colors.white,
+                        blurRadius: 1.5,
+                        offset: Offset(-1, -1),
+                      ),
+                    ],
+                  ),
+                  alignment: Alignment.center,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.lock_rounded, size: 16, color: Color(0xFF2C221E)),
+                      const SizedBox(width: 6),
+                      Text(
+                        widget.documentToEdit != null
+                            ? 'Update Vault'
+                            : 'Save to Vault',
+                        style: const TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF2C221E),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

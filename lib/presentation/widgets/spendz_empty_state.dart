@@ -38,10 +38,6 @@ class SpendzEmptyState extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: SpendzColors.surface(context),
-                border: Border.all(
-                  color: SpendzColors.border(context),
-                  width: 1,
-                ),
               ),
               child: Icon(
                 icon,

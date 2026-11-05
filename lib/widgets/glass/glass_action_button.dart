@@ -44,12 +44,6 @@ class GlassActionButton extends StatelessWidget {
                     ? const Color(0xFF14231B).withAlpha(190)
                     : const Color(0xFFFFFFFF).withAlpha(210),
                 borderRadius: BorderRadius.circular(AppRadius.lg),
-                border: Border.all(
-                  color: isDark
-                      ? accent.withAlpha(50)
-                      : Colors.white.withAlpha(200),
-                  width: 1.0,
-                ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withAlpha(isDark ? 30 : 10),

@@ -94,7 +94,6 @@ class _HomeScreenState extends State<HomeScreen> {
           decoration: BoxDecoration(
             color: const Color(0xFFCBDFBD), // Pale Pistachio
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: const Color(0xFFB5CCA7), width: 1.5),
             boxShadow: const [
               BoxShadow(
                 color: Color(0x242C221E),
@@ -408,7 +407,6 @@ class _HomeScreenState extends State<HomeScreen> {
             decoration: BoxDecoration(
               color: bgColor,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: borderColor, width: 1.2),
               boxShadow: const [
                 BoxShadow(
                   color: Color(0x222C221E),
@@ -658,10 +656,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ? SpendzColors.periwinkleLight
                                 : SpendzColors.sunshineLight,
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: isIncome ? const Color(0xFFBFCC85) : const Color(0xFFD9835E),
-                              width: 1.0,
-                            ),
                             boxShadow: const [
                               BoxShadow(
                                 color: Color(0x1A2C221E),
@@ -739,10 +733,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   decoration: BoxDecoration(
                     color: const Color(0xFFCBDFBD), // Pistachio
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: const Color(0xFFB5CCA7),
-                      width: 1.2,
-                    ),
                     boxShadow: const [
                       BoxShadow(
                         color: Color(0x222C221E),

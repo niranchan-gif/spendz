@@ -163,12 +163,6 @@ class _SecureProtectedFieldState extends State<SecureProtectedField>
       decoration: BoxDecoration(
         color: Colors.black.withAlpha(45),
         borderRadius: AppRadius.roundedMd,
-        border: Border.all(
-          color: _isRevealed
-              ? AppColors.getPrimary(context).withAlpha(120)
-              : Colors.white.withAlpha(25),
-          width: 1,
-        ),
       ),
       child: Row(
         children: [
@@ -198,10 +192,6 @@ class _SecureProtectedFieldState extends State<SecureProtectedField>
                         decoration: BoxDecoration(
                           color: AppColors.getWarning(context).withAlpha(35),
                           borderRadius: BorderRadius.circular(4),
-                          border: Border.all(
-                            color: AppColors.getWarning(context).withAlpha(60),
-                            width: 0.8,
-                          ),
                         ),
                         child: Text(
                           'Expires in ${_remainingSeconds}s',
@@ -236,11 +226,6 @@ class _SecureProtectedFieldState extends State<SecureProtectedField>
                     ? AppColors.getPrimary(context).withAlpha(35)
                     : Colors.white.withAlpha(20),
                 borderRadius: AppRadius.roundedSm,
-                border: Border.all(
-                  color: _isRevealed
-                      ? AppColors.getPrimary(context).withAlpha(60)
-                      : Colors.white.withAlpha(30),
-                ),
               ),
               child: _isAuthenticating
                   ? const SizedBox(

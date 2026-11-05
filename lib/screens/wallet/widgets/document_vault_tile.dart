@@ -65,11 +65,6 @@ class DocumentVaultTile extends StatelessWidget {
     final isExpiringSoon = document.isExpiringSoon;
 
     final surfaceColor = AppColors.getSurface(context);
-    final borderColor = isExpired
-        ? AppColors.error.withAlpha(120)
-        : (isExpiringSoon
-              ? AppColors.warning.withAlpha(120)
-              : AppColors.getBorder(context));
     final textPrimary = AppColors.getTextPrimary(context);
     final textSecondary = AppColors.getTextSecondary(context);
 
@@ -78,7 +73,6 @@ class DocumentVaultTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: surfaceColor,
         borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: borderColor, width: 1),
       ),
       child: Material(
         color: Colors.transparent,
@@ -100,7 +94,6 @@ class DocumentVaultTile extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AppColors.primary.withAlpha(25),
                   borderRadius: BorderRadius.circular(AppRadius.sm + 2),
-                  border: Border.all(color: AppColors.primary.withAlpha(50)),
                 ),
                 child: Icon(
                   _getCategoryIcon(document.category),
@@ -116,7 +109,6 @@ class DocumentVaultTile extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: surfaceColor,
                     shape: BoxShape.circle,
-                    border: Border.all(color: borderColor, width: 1),
                   ),
                   child: const Icon(
                     Icons.lock_rounded,
@@ -149,7 +141,6 @@ class DocumentVaultTile extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: AppColors.error.withAlpha(25),
                     borderRadius: BorderRadius.circular(AppRadius.xs),
-                    border: Border.all(color: AppColors.error.withAlpha(50)),
                   ),
                   child: Text(
                     'PDF',

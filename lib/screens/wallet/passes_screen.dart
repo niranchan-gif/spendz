@@ -354,14 +354,12 @@ class _PassesScreenState extends State<PassesScreen> {
               }
 
               final surfaceColor = AppColors.getSurface(context);
-              final borderColor = AppColors.getBorder(context);
 
               return Container(
                 margin: const EdgeInsets.only(bottom: AppSpacing.sm + 2),
                 decoration: BoxDecoration(
                   color: surfaceColor,
                   borderRadius: BorderRadius.circular(AppRadius.card),
-                  border: Border.all(color: borderColor, width: 1),
                 ),
                 child: Material(
                   color: Colors.transparent,
@@ -377,9 +375,6 @@ class _PassesScreenState extends State<PassesScreen> {
                       decoration: BoxDecoration(
                         color: AppColors.primary.withAlpha(25),
                         borderRadius: BorderRadius.circular(AppRadius.sm + 2),
-                        border: Border.all(
-                          color: AppColors.primary.withAlpha(50),
-                        ),
                       ),
                       child: const Icon(
                         Icons.qr_code_2_rounded,

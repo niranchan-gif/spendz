@@ -357,10 +357,6 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
       decoration: BoxDecoration(
         color: isSelected ? const Color(0xFFF19C79) : const Color(0xFFCBDFBD),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isSelected ? const Color(0xFFD9835E) : const Color(0xFFB5CCA7),
-          width: 1.2,
-        ),
         boxShadow: isSelected
             ? const [
                 BoxShadow(
@@ -639,7 +635,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         id: 'spotlight_passport',
         title: passportDoc?.documentName ?? 'Indian Passport',
         subtitle: passportDoc != null
-            ? (passportDoc.holderName?.isNotEmpty == true ? passportDoc.holderName! : 'Republic of India')
+            ? (passportDoc.holderName?.isNotEmpty == true ? passportDoc.holderName! : 'Official Passport')
             : 'Tap to Add & Encrypt',
         icon: Icons.public_rounded,
         color: const Color(0xFF122238),
@@ -804,10 +800,6 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: SpendzColors.surface(context),
-                        border: Border.all(
-                          color: SpendzColors.border(context),
-                          width: 0.8,
-                        ),
                       ),
                       child: Icon(
                         Icons.chevron_left_rounded,
@@ -834,10 +826,6 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: SpendzColors.surface(context),
-                        border: Border.all(
-                          color: SpendzColors.border(context),
-                          width: 0.8,
-                        ),
                       ),
                       child: Icon(
                         Icons.chevron_right_rounded,
@@ -923,7 +911,6 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                       decoration: BoxDecoration(
                         color: SpendzColors.surface(context),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: SpendzColors.border(context), width: 0.8),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -1085,10 +1072,6 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                             decoration: BoxDecoration(
                               color: SpendzColors.background(context),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: SpendzColors.border(context),
-                                width: 0.8,
-                              ),
                             ),
                             child: Row(
                               children: [
@@ -1425,10 +1408,11 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         _buildDirectoryCardItem(
           context: context,
           tileBg: const Color(0xFFF19C79), // Coral Terracotta
-          tileBorder: const Color(0xFFD9835E),
+          textColor: const Color(0xFF2C221E),
+          subtitleColor: const Color(0xFF4A3B32),
           icon: Icons.health_and_safety_rounded,
-          iconBg: const Color(0xFFA44A3F), // Brick
-          iconColor: const Color(0xFFF6F4D2),
+          iconBg: const Color(0xFFF6F4D2), // Cream
+          iconColor: const Color(0xFFA44A3F), // Brick
           title: insuranceDoc?.documentName ?? 'Star Health Mediclaim',
           badgeText: 'Coverage',
           badgeBg: const Color(0xFFF6F4D2),
@@ -1439,7 +1423,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
           statusWidget: Icon(
             insuranceDoc != null ? Icons.verified_rounded : Icons.add_circle_outline_rounded,
             size: 18,
-            color: const Color(0xFFA44A3F),
+            color: const Color(0xFF2C221E),
           ),
           onTap: () {
             if (insuranceDoc != null) {
@@ -1512,11 +1496,11 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
           iconBg: const Color(0xFFF6F4D2),
           iconColor: const Color(0xFFA44A3F),
           title: passportDoc?.documentName ?? 'Indian Passport',
-          badgeText: 'Republic of India',
+          badgeText: 'Passport',
           badgeBg: const Color(0xFFD4E09B),
           badgeColor: const Color(0xFF2C221E),
           subtitle: passportDoc != null
-              ? '${passportDoc.maskedIdentifier != null && passportDoc.maskedIdentifier!.isNotEmpty ? passportDoc.maskedIdentifier : "Valid"} • Republic of India'
+              ? '${passportDoc.maskedIdentifier != null && passportDoc.maskedIdentifier!.isNotEmpty ? passportDoc.maskedIdentifier : "Valid"} • Official Passport'
               : 'Not added • Tap to add',
           statusWidget: Icon(
             passportDoc != null ? Icons.public_rounded : Icons.add_circle_outline_rounded,
@@ -1566,10 +1550,6 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
       decoration: BoxDecoration(
         color: tileBg ?? SpendzColors.surface(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: tileBorder ?? SpendzColors.border(context),
-          width: 1.2,
-        ),
         boxShadow: const [
           BoxShadow(
             color: Color(0x1F2C221E),
@@ -1617,7 +1597,8 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                                 fontWeight: FontWeight.w800,
                                 color: textColor ?? SpendzColors.textPrimary(context),
                               ),
-                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(width: 6),
@@ -1651,6 +1632,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                           fontWeight: FontWeight.w500,
                           color: subtitleColor ?? SpendzColors.textSecondary(context),
                         ),
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
@@ -1746,7 +1728,6 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFF19C79), // Coral Terracotta
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFD9835E), width: 1.2),
                   boxShadow: const [
                     BoxShadow(
                       color: Color(0x1F2C221E),
@@ -1790,10 +1771,6 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
             decoration: BoxDecoration(
               color: SpendzColors.surface(context),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: SpendzColors.border(context),
-                width: 0.8,
-              ),
               boxShadow: SpendzColors.clayDropShadow(context),
             ),
             child: Column(
@@ -2080,9 +2057,6 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                                   borderRadius: BorderRadius.circular(
                                     SpendzSpacing.radiusMd,
                                   ),
-                                  border: Border.all(
-                                    color: SpendzColors.border(context),
-                                  ),
                                 ),
                                 child: Row(
                                   children: [
@@ -2124,9 +2098,6 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                                   color: SpendzColors.surface(context),
                                   borderRadius: BorderRadius.circular(
                                     SpendzSpacing.radiusMd,
-                                  ),
-                                  border: Border.all(
-                                    color: SpendzColors.border(context),
                                   ),
                                 ),
                                 child: Row(
@@ -2172,9 +2143,6 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                             borderRadius: BorderRadius.circular(
                               SpendzSpacing.radiusMd,
                             ),
-                            border: Border.all(
-                              color: const Color(0xFF10B981).withAlpha(80),
-                            ),
                           ),
                           child: Row(
                             children: [
@@ -2195,7 +2163,8 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                                     fontWeight: FontWeight.w600,
                                     fontSize: 12.5,
                                   ),
-                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],

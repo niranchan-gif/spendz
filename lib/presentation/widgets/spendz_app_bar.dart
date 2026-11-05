@@ -41,7 +41,6 @@ class SpendzAppBar extends StatelessWidget implements PreferredSizeWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: SpendzColors.surface(context),
-              border: Border.all(color: SpendzColors.border(context), width: 1),
             ),
             child: IconButton(
               padding: EdgeInsets.zero,

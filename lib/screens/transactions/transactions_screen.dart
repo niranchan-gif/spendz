@@ -412,7 +412,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFFD4E09B), // Chartreuse
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFBFCC85), width: 1.2),
                 boxShadow: const [
                   BoxShadow(
                     color: Color(0x1F2C221E),
@@ -471,10 +470,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFCBDFBD), // Pistachio
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: const Color(0xFFB5CCA7),
-                    width: 1.2,
-                  ),
                   boxShadow: const [
                     BoxShadow(
                       color: Color(0x1F2C221E),
@@ -526,7 +521,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFF19C79), // Coral Terracotta
                   shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFD9835E), width: 1.2),
                   boxShadow: const [
                     BoxShadow(
                       color: Color(0x222C221E),
@@ -566,10 +560,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             decoration: BoxDecoration(
               color: const Color(0xFFF19C79), // Coral Terracotta
               borderRadius: BorderRadius.circular(22),
-              border: Border.all(
-                color: const Color(0xFFD9835E),
-                width: 1.2,
-              ),
               boxShadow: const [
                 BoxShadow(
                   color: Color(0x1F2C221E),
@@ -665,10 +655,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             decoration: BoxDecoration(
               color: const Color(0xFFD4E09B), // Chartreuse
               borderRadius: BorderRadius.circular(22),
-              border: Border.all(
-                color: const Color(0xFFBFCC85),
-                width: 1.2,
-              ),
               boxShadow: const [
                 BoxShadow(
                   color: Color(0x1F2C221E),
@@ -964,10 +950,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFFF19C79) : const Color(0xFFCBDFBD),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? const Color(0xFFD9835E) : const Color(0xFFB5CCA7),
-            width: 1.2,
-          ),
           boxShadow: isSelected
               ? const [
                   BoxShadow(
@@ -1032,10 +1014,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       ? const Color(0xFFD4E09B)
                       : const Color(0xFFF6F4D2),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isSelected ? const Color(0xFFBFCC85) : const Color(0xFFE2E0BD),
-                    width: 1.2,
-                  ),
                   boxShadow: isSelected
                       ? const [
                           BoxShadow(
@@ -1178,10 +1156,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           decoration: BoxDecoration(
             color: SpendzColors.clayCream,
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: const Color(0xFFF0EBE1),
-              width: 1,
-            ),
             boxShadow: SpendzColors.clayDropShadow(context),
           ),
           child: Row(

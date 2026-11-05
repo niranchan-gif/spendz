@@ -31,11 +31,7 @@ class GlassContainer extends StatelessWidget {
       decoration: BoxDecoration(
         color: color ?? const Color(0xFFCBDFBD), // Pale Pistachio Clay
         borderRadius: BorderRadius.circular(borderRadius),
-        border: border ??
-            Border.all(
-              color: const Color(0xFFB5CCA7), // Defined tactile border
-              width: 1.2,
-            ),
+        border: border,
         boxShadow: const [
           BoxShadow(
             color: Color(0x222C221E), // Soft matte warm shadow

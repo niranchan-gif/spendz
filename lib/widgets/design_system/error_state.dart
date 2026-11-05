@@ -34,10 +34,6 @@ class ErrorState extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.getError(context).withAlpha(20),
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: AppColors.getError(context).withAlpha(50),
-                  width: 1.5,
-                ),
               ),
               child: Center(
                 child: Icon(

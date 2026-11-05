@@ -300,7 +300,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             decoration: BoxDecoration(
               color: const Color(0xFFF6F4D2),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFE2E0BD), width: 1.2),
               boxShadow: const [
                 BoxShadow(
                   color: Color(0x1F2C221E),
@@ -355,7 +354,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             decoration: BoxDecoration(
               color: const Color(0xFFD4E09B),
               borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: const Color(0xFFBFCC85), width: 1.2),
               boxShadow: const [
                 BoxShadow(
                   color: Color(0x1F2C221E),
@@ -377,7 +375,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: const Color(0xFFF6F4D2),
-                    border: Border.all(color: const Color(0xFFE2E0BD), width: 1.2),
                   ),
                   child: const Icon(
                     Icons.south_west_rounded,
@@ -485,7 +482,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             decoration: BoxDecoration(
               color: const Color(0xFFCBDFBD),
               borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: const Color(0xFFB5CCA7), width: 1.2),
               boxShadow: const [
                 BoxShadow(
                   color: Color(0x1F2C221E),
@@ -507,7 +503,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: const Color(0xFFF6F4D2),
-                    border: Border.all(color: const Color(0xFFE2E0BD), width: 1.2),
                   ),
                   child: const Icon(
                     Icons.savings_rounded,
@@ -565,7 +560,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFFF6F4D2),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE2E0BD), width: 1.5),
         boxShadow: const [
           BoxShadow(
             color: Color(0x1F2C221E),
@@ -676,7 +670,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: const Color(0xFFCBDFBD),
-                      border: Border.all(color: const Color(0xFFB5CCA7), width: 1.5),
                       boxShadow: const [
                         BoxShadow(
                           color: Color(0x1F2C221E),
@@ -752,7 +745,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFCBDFBD),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFB5CCA7), width: 1),
                 ),
                 child: Row(
                   children: [
@@ -762,7 +754,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: color,
-                        border: Border.all(color: const Color(0xFF2C221E).withAlpha(40), width: 0.8),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -818,7 +809,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFFF6F4D2),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE2E0BD), width: 1.5),
         boxShadow: const [
           BoxShadow(
             color: Color(0x1F2C221E),
@@ -871,7 +861,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFF6F4D2),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE2E0BD), width: 1),
                 ),
                 child: Row(
                   children: [
@@ -1021,7 +1010,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFFF6F4D2),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFE2E0BD), width: 1.2),
                 boxShadow: const [
                   BoxShadow(
                     color: Color(0x1F2C221E),
@@ -1146,7 +1134,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFFD4E09B),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFBFCC85), width: 1.2),
         boxShadow: const [
           BoxShadow(
             color: Color(0x1F2C221E),
@@ -1169,7 +1156,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             decoration: BoxDecoration(
               color: const Color(0xFFF6F4D2),
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFE2E0BD), width: 1.2),
             ),
             child: const Center(
               child: Icon(

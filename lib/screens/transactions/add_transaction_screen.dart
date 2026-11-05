@@ -1,3 +1,4 @@
+import '../../presentation/widgets/cred_clay_keypad.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -160,7 +161,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                           decoration: BoxDecoration(
                             color: const Color(0xFFCBDFBD),
                             shape: BoxShape.circle,
-                            border: Border.all(color: const Color(0xFFB5CCA7), width: 1.2),
                             boxShadow: const [
                               BoxShadow(
                                 color: Color(0x1F2C221E),
@@ -202,7 +202,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     decoration: BoxDecoration(
                       color: const Color(0xFFF6F4D2),
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: const Color(0xFFE2E0BD), width: 1.2),
                       boxShadow: const [
                         BoxShadow(
                           color: Color(0x1F2C221E),
@@ -252,7 +251,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     decoration: BoxDecoration(
                       color: const Color(0xFFCBDFBD),
                       borderRadius: BorderRadius.circular(26),
-                      border: Border.all(color: const Color(0xFFB5CCA7), width: 1.5),
                       boxShadow: const [
                         BoxShadow(
                           color: Color(0x1F2C221E),
@@ -305,7 +303,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                             decoration: BoxDecoration(
                               color: const Color(0xFFF6F4D2),
                               borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: const Color(0xFFE2E0BD), width: 1),
                             ),
                             child: Text(
                               'Category: ${_selectedCategory!.name}',
@@ -329,7 +326,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     decoration: BoxDecoration(
                       color: const Color(0xFFF6F4D2),
                       borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: const Color(0xFFE2E0BD), width: 1.2),
                       boxShadow: const [
                         BoxShadow(
                           color: Color(0x1F2C221E),
@@ -406,12 +402,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                   ? const Color(0xFFF19C79)
                                   : const Color(0xFFCBDFBD),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: isSelected
-                                    ? const Color(0xFFD9835E)
-                                    : const Color(0xFFB5CCA7),
-                                width: 1.2,
-                              ),
                               boxShadow: const [
                                 BoxShadow(
                                   color: Color(0x1F2C221E),
@@ -463,7 +453,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                             decoration: BoxDecoration(
                               color: const Color(0xFFF6F4D2),
                               borderRadius: BorderRadius.circular(18),
-                              border: Border.all(color: const Color(0xFFE2E0BD), width: 1.2),
                               boxShadow: const [
                                 BoxShadow(
                                   color: Color(0x1F2C221E),
@@ -558,7 +547,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                             decoration: BoxDecoration(
                               color: const Color(0xFFF6F4D2),
                               borderRadius: BorderRadius.circular(18),
-                              border: Border.all(color: const Color(0xFFE2E0BD), width: 1.2),
                               boxShadow: const [
                                 BoxShadow(
                                   color: Color(0x1F2C221E),
@@ -632,71 +620,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Tactile Clay Numeric Keypad
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF6F4D2),
-                      borderRadius: BorderRadius.circular(22),
-                      border: Border.all(color: const Color(0xFFE2E0BD), width: 1.2),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x1F2C221E),
-                          offset: Offset(1.5, 1.5),
-                          blurRadius: 3,
-                          blurStyle: BlurStyle.inner,
-                        ),
-                        BoxShadow(
-                          color: Colors.white,
-                          offset: Offset(-1, -1),
-                          blurRadius: 2,
-                          blurStyle: BlurStyle.inner,
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            _buildKey('1'),
-                            const SizedBox(width: 8),
-                            _buildKey('2'),
-                            const SizedBox(width: 8),
-                            _buildKey('3'),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            _buildKey('4'),
-                            const SizedBox(width: 8),
-                            _buildKey('5'),
-                            const SizedBox(width: 8),
-                            _buildKey('6'),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            _buildKey('7'),
-                            const SizedBox(width: 8),
-                            _buildKey('8'),
-                            const SizedBox(width: 8),
-                            _buildKey('9'),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            _buildKey('.'),
-                            const SizedBox(width: 8),
-                            _buildKey('0'),
-                            const SizedBox(width: 8),
-                            _buildKey('backspace', isAction: true),
-                          ],
-                        ),
-                      ],
-                    ),
+                  // Tactile CRED Clay Numeric Keypad
+                  CredClayKeypad(
+                    onKeyPress: _onKeyPress,
+                    onBackspace: () => _onKeyPress('backspace'),
+                    onClear: () => setState(() => _amount = '0'),
                   ),
                   const SizedBox(height: 18),
 
@@ -708,7 +636,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       decoration: BoxDecoration(
                         color: const Color(0xFFF19C79),
                         borderRadius: BorderRadius.circular(28),
-                        border: Border.all(color: const Color(0xFFD9835E), width: 1.5),
                         boxShadow: const [
                           BoxShadow(
                             color: Color(0x1F2C221E),
@@ -767,7 +694,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           decoration: BoxDecoration(
             color: isSelected ? color : Colors.transparent,
             borderRadius: BorderRadius.circular(20),
-            border: isSelected ? Border.all(color: borderColor, width: 1.2) : null,
             boxShadow: isSelected
                 ? const [
                     BoxShadow(
@@ -799,51 +725,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       ),
     );
   }
-
-  Widget _buildKey(String key, {bool isAction = false}) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => _onKeyPress(key),
-        child: Container(
-          height: 48,
-          decoration: BoxDecoration(
-            color: const Color(0xFFCBDFBD),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFB5CCA7), width: 1.2),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x1F2C221E),
-                blurRadius: 3,
-                offset: Offset(1, 2),
-              ),
-              BoxShadow(
-                color: Colors.white,
-                blurRadius: 1,
-                offset: Offset(-1, -1),
-              ),
-            ],
-          ),
-          alignment: Alignment.center,
-          child: isAction
-              ? const Icon(
-                  Icons.backspace_outlined,
-                  size: 20,
-                  color: Color(0xFFA44A3F),
-                )
-              : Text(
-                  key,
-                  style: TextStyle(
-                    fontFamily: 'Plus Jakarta Sans',
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: SpendzColors.textPrimary(context),
-                  ),
-                ),
-        ),
-      ),
-    );
-  }
-
   void _showAccountSelector(List<WalletCardModel> cards) {
     showModalBottomSheet(
       context: context,

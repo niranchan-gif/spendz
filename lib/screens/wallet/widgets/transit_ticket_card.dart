@@ -242,10 +242,6 @@ class TransitTicketCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFCBDFBD), // Pale Pistachio Clay
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: const Color(0xFFB5CCA7),
-          width: 1.5,
-        ),
         boxShadow: const [
           BoxShadow(
             color: Color(0x1F2C221E),
@@ -329,10 +325,6 @@ class TransitTicketCard extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: const Color(0xFFD4E09B),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: const Color(0xFFBFCC85),
-                            width: 0.8,
-                          ),
                         ),
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
@@ -367,10 +359,6 @@ class TransitTicketCard extends StatelessWidget {
                               decoration: BoxDecoration(
                                 color: Colors.black.withAlpha(50),
                                 shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white.withAlpha(30),
-                                  width: 0.6,
-                                ),
                               ),
                               child: const Icon(
                                 Icons.delete_outline_rounded,
@@ -395,10 +383,6 @@ class TransitTicketCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFFF6F4D2), // Cream
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: const Color(0xFFE2E0BD),
-                    width: 1.2,
-                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -634,10 +618,6 @@ class TransitTicketCard extends StatelessWidget {
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFD4E09B),
                                       borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(
-                                        color: const Color(0xFFBFCC85),
-                                        width: 0.8,
-                                      ),
                                     ),
                                     child: Row(
                                       mainAxisAlignment:
@@ -697,10 +677,6 @@ class TransitTicketCard extends StatelessWidget {
                               decoration: BoxDecoration(
                                 color: const Color(0xFFD4E09B),
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: const Color(0xFFBFCC85),
-                                  width: 0.8,
-                                ),
                               ),
                               child: const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,

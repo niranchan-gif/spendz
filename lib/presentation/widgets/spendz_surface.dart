@@ -136,18 +136,9 @@ class SpendzSurface extends StatelessWidget {
             SpendzClayTone.sunken => SpendzColors.surfaceRecessed(context),
           };
 
-    final defaultBorderColor = switch (tone) {
-      SpendzClayTone.tangerine => const Color(0xFFD9835E),
-      SpendzClayTone.sunshine => const Color(0xFFBFCC85),
-      SpendzClayTone.periwinkle => const Color(0xFFB5CCA7),
-      SpendzClayTone.neutral => isElevated ? const Color(0xFFB5CCA7) : const Color(0xFFE2E0BD),
-      SpendzClayTone.sunken => const Color(0xFFD8D2AA),
-    };
-
-    final effectiveBorder = Border.all(
-      color: borderColor ?? defaultBorderColor,
-      width: borderWidth,
-    );
+    final effectiveBorder = borderColor != null
+        ? Border.all(color: borderColor!, width: borderWidth)
+        : null;
 
     final shadows = showShadow && !isRecessed
         ? <BoxShadow>[

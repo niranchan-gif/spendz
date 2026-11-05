@@ -37,7 +37,6 @@ class SpendzBottomNavigation extends StatelessWidget {
           decoration: BoxDecoration(
             color: const Color(0xFFF6F4D2), // Cream
             borderRadius: BorderRadius.circular(26),
-            border: Border.all(color: const Color(0xFFE2E0BD), width: 1.2),
             boxShadow: const [
               BoxShadow(
                 color: Color(0x1F2C221E),

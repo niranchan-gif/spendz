@@ -413,12 +413,19 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.getBackground(context),
+      backgroundColor: const Color(0xFFF6F4D2),
       appBar: AppBar(
-        title: Text(
-          _currentCard.nickname,
-          style: AppTextStyles.getHeading3(context),
+        backgroundColor: const Color(0xFFF6F4D2),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        iconTheme: const IconThemeData(color: Color(0xFF2C221E)),
+        titleTextStyle: const TextStyle(
+          fontFamily: 'Plus Jakarta Sans',
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+          color: Color(0xFF2C221E),
         ),
+        title: Text(_currentCard.nickname),
         actions: [
           IconButton(
             icon: Icon(
@@ -516,9 +523,6 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
               decoration: BoxDecoration(
                 color: AppColors.getPrimary(context).withAlpha(15),
                 borderRadius: AppRadius.roundedMd,
-                border: Border.all(
-                  color: AppColors.getPrimary(context).withAlpha(35),
-                ),
               ),
               child: Row(
                 children: [
@@ -623,7 +627,6 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                     decoration: BoxDecoration(
                       color: AppColors.getSurface(context),
                       borderRadius: AppRadius.roundedMd,
-                      border: Border.all(color: AppColors.getBorder(context)),
                     ),
                     child: Row(
                       children: [

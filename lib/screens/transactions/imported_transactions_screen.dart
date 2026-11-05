@@ -78,7 +78,6 @@ class ImportedTransactionsScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: const Color(0xFFF6F4D2),
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFFE2E0BD), width: 1),
                           ),
                           child: Row(
                             children: [
@@ -139,7 +138,6 @@ class ImportedTransactionsScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: const Color(0xFFCBDFBD),
-                            border: Border.all(color: const Color(0xFFB5CCA7), width: 1.2),
                             boxShadow: const [
                               BoxShadow(
                                 color: Color(0x1F2C221E),
@@ -166,7 +164,6 @@ class ImportedTransactionsScreen extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: const Color(0xFFF19C79),
                           borderRadius: BorderRadius.circular(22),
-                          border: Border.all(color: const Color(0xFFD9835E), width: 1.2),
                           boxShadow: const [
                             BoxShadow(
                               color: Color(0x1F2C221E),
@@ -226,7 +223,6 @@ class ImportedTransactionsScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: const Color(0xFFD4E09B),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: const Color(0xFFBFCC85), width: 1.2),
                             boxShadow: const [
                               BoxShadow(
                                 color: Color(0x1F2C221E),
@@ -316,7 +312,6 @@ class ImportedTransactionsScreen extends StatelessWidget {
                               decoration: BoxDecoration(
                                 color: const Color(0xFFF6F4D2),
                                 shape: BoxShape.circle,
-                                border: Border.all(color: const Color(0xFFA44A3F), width: 1.5),
                               ),
                               child: const Icon(Icons.cloud_off_rounded, color: Color(0xFFA44A3F), size: 28),
                             ),
@@ -348,7 +343,6 @@ class ImportedTransactionsScreen extends StatelessWidget {
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFF19C79),
                                   borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: const Color(0xFFD9835E), width: 1.2),
                                   boxShadow: const [
                                     BoxShadow(
                                       color: Color(0x1F2C221E),
@@ -391,7 +385,6 @@ class ImportedTransactionsScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: const Color(0xFFF6F4D2),
                             borderRadius: BorderRadius.circular(28),
-                            border: Border.all(color: const Color(0xFFE2E0BD), width: 1.5),
                             boxShadow: const [
                               BoxShadow(
                                 color: Color(0x1F2C221E),
@@ -414,7 +407,6 @@ class ImportedTransactionsScreen extends StatelessWidget {
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFCBDFBD),
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: const Color(0xFFB5CCA7), width: 1.2),
                                 ),
                                 child: const Icon(Icons.check_circle_rounded, color: Color(0xFF2C221E), size: 30),
                               ),
@@ -447,7 +439,6 @@ class ImportedTransactionsScreen extends StatelessWidget {
                                   decoration: BoxDecoration(
                                     color: const Color(0xFFF19C79),
                                     borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(color: const Color(0xFFD9835E), width: 1.2),
                                     boxShadow: const [
                                       BoxShadow(
                                         color: Color(0x1F2C221E),
@@ -503,7 +494,6 @@ class ImportedTransactionsScreen extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: const Color(0xFFCBDFBD),
                           borderRadius: BorderRadius.circular(22),
-                          border: Border.all(color: const Color(0xFFB5CCA7), width: 1.2),
                           boxShadow: const [
                             BoxShadow(
                               color: Color(0x1F2C221E),
@@ -567,7 +557,6 @@ class ImportedTransactionsScreen extends StatelessWidget {
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFF6F4D2),
                                       borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: const Color(0xFFE2E0BD), width: 1),
                                     ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
@@ -609,7 +598,6 @@ class ImportedTransactionsScreen extends StatelessWidget {
                                         decoration: BoxDecoration(
                                           color: const Color(0xFFF6F4D2),
                                           borderRadius: BorderRadius.circular(14),
-                                          border: Border.all(color: const Color(0xFFA44A3F), width: 1.2),
                                         ),
                                         child: const Icon(
                                           Icons.close_rounded,
@@ -637,7 +625,6 @@ class ImportedTransactionsScreen extends StatelessWidget {
                                         decoration: BoxDecoration(
                                           color: const Color(0xFFD4E09B),
                                           borderRadius: BorderRadius.circular(14),
-                                          border: Border.all(color: const Color(0xFFBFCC85), width: 1.2),
                                         ),
                                         child: const Row(
                                           mainAxisSize: MainAxisSize.min,

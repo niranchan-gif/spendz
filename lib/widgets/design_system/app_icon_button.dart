@@ -29,9 +29,6 @@ class AppIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final fgColor = color ?? AppColors.getTextPrimary(context);
     final bgColor = backgroundColor ?? AppColors.getSurfaceVariant(context);
-    final borderColor = hasBorder
-        ? AppColors.getBorder(context)
-        : Colors.transparent;
 
     Widget button = Container(
       width: size,
@@ -39,7 +36,6 @@ class AppIconButton extends StatelessWidget {
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: AppRadius.roundedSm,
-        border: Border.all(color: borderColor, width: 1),
       ),
       child: Material(
         color: Colors.transparent,

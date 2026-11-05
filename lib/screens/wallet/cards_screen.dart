@@ -408,9 +408,6 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                         decoration: BoxDecoration(
                           color: AppColors.getPrimary(context).withAlpha(15),
                           borderRadius: AppRadius.roundedMd,
-                          border: Border.all(
-                            color: AppColors.getPrimary(context).withAlpha(35),
-                          ),
                         ),
                         child: Row(
                           children: [
@@ -745,22 +742,31 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.getBackground(context),
+      backgroundColor: const Color(0xFFF6F4D2),
       appBar: AppBar(
+        backgroundColor: const Color(0xFFF6F4D2),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        iconTheme: const IconThemeData(color: Color(0xFF2C221E)),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Card Studio',
-              style: AppTextStyles.getHeading2(
-                context,
-              ).copyWith(fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontFamily: 'Plus Jakarta Sans',
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF2C221E),
+              ),
             ),
-            Text(
+            const Text(
               'Premium Cards · Your Collection',
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.getTextSecondary(context),
+              style: TextStyle(
+                fontFamily: 'Plus Jakarta Sans',
+                color: Color(0xFF63564F),
                 fontSize: 11,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
@@ -998,10 +1004,6 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                             cards[_currentCardIndex + offset],
                           ),
                           borderRadius: BorderRadius.circular(18),
-                          border: Border.all(
-                            color: Colors.white.withAlpha(45),
-                            width: 1.0,
-                          ),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withAlpha(50),
@@ -1247,12 +1249,6 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                         ? AppColors.getPrimary(context).withAlpha(20)
                         : AppColors.getSurface(context),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isCurrent
-                          ? AppColors.getPrimary(context)
-                          : AppColors.getBorder(context),
-                      width: isCurrent ? 1.6 : 1.0,
-                    ),
                   ),
                   child: Row(
                     children: [
@@ -1264,14 +1260,6 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                           color: isCurrent
                               ? AppColors.getPrimary(context)
                               : Colors.transparent,
-                          border: Border.all(
-                            color: isCurrent
-                                ? AppColors.getPrimary(context)
-                                : AppColors.getTextSecondary(
-                                    context,
-                                  ).withAlpha(100),
-                            width: 1.5,
-                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -1347,7 +1335,6 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
         decoration: BoxDecoration(
           color: AppColors.getSurface(context),
           borderRadius: BorderRadius.circular(AppRadius.card),
-          border: Border.all(color: AppColors.getBorder(context)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withAlpha(20),
@@ -1429,9 +1416,6 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                       decoration: BoxDecoration(
                         color: currentTheme.primaryAccent.withAlpha(25),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: currentTheme.primaryAccent.withAlpha(70),
-                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -1476,7 +1460,6 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                       decoration: BoxDecoration(
                         color: AppColors.getBackground(context),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.getBorder(context)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,

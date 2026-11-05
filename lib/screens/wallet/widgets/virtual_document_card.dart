@@ -328,7 +328,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                             borderRadius: BorderRadius.circular(2.5),
                           ),
                           child: const Text(
-                            'भारत सरकार',
+                            'GOVERNMENT OF INDIA',
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w900,
@@ -467,7 +467,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Text(
-                            'नाम / Name',
+                            'Name',
                             style: TextStyle(
                               color: Color(0xFF64748B),
                               fontSize: 7,
@@ -487,7 +487,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                           ),
                           const SizedBox(height: 2),
                           const Text(
-                            'जन्म तिथि / DOB',
+                            'DOB',
                             style: TextStyle(
                               color: Color(0xFF64748B),
                               fontSize: 7,
@@ -512,7 +512,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                           ),
                           const SizedBox(height: 2),
                           const Text(
-                            'लिंग / Gender',
+                            'Gender',
                             style: TextStyle(
                               color: Color(0xFF64748B),
                               fontSize: 7,
@@ -522,7 +522,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                           Text(
                             meta.gender.isNotEmpty
                                 ? meta.gender.toUpperCase()
-                                : 'पुरुष / MALE',
+                                : 'MALE',
                             style: const TextStyle(
                               color: Color(0xFF0F172A),
                               fontSize: 9,
@@ -607,7 +607,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              'मेरा ',
+                              '',
                               style: TextStyle(
                                 color: Color(0xFF1E293B),
                                 fontWeight: FontWeight.w700,
@@ -615,7 +615,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                               ),
                             ),
                             Text(
-                              'आधार',
+                              'AADHAAR',
                               style: TextStyle(
                                 color: Color(0xFFDC2626),
                                 fontWeight: FontWeight.w900,
@@ -623,7 +623,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                               ),
                             ),
                             Text(
-                              ', मेरी पहचान',
+                              '',
                               style: TextStyle(
                                 color: Color(0xFF1E293B),
                                 fontWeight: FontWeight.w700,
@@ -708,7 +708,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'आयकर विभाग',
+                          'GOVT. OF INDIA',
                           style: TextStyle(
                             color: Color(0xFF0F2B48),
                             fontWeight: FontWeight.bold,
@@ -750,7 +750,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          'भारत सरकार',
+                          'GOVERNMENT OF INDIA',
                           style: TextStyle(
                             color: Color(0xFF0F2B48),
                             fontWeight: FontWeight.bold,
@@ -779,7 +779,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
               // Subtitle: Bilingual Card Designation
               Center(
                 child: Text(
-                  'स्थायी लेखा संख्या कार्ड / Permanent Account Number Card',
+                  'Permanent Account Number Card',
                   style: TextStyle(
                     color: const Color(0xFF0F2B48).withAlpha(200),
                     fontSize: 7.5,
@@ -845,7 +845,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'नाम / Name',
+                          'Name',
                           style: TextStyle(
                             color: Color(0xFF334155),
                             fontSize: 7,
@@ -864,7 +864,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                         ),
                         const SizedBox(height: 2),
                         const Text(
-                          "पिता का नाम / Father's Name",
+                          "Father's Name",
                           style: TextStyle(
                             color: Color(0xFF334155),
                             fontSize: 7,
@@ -888,7 +888,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text(
-                                  'जन्म की तारीख / DOB',
+                                  'DOB',
                                   style: TextStyle(
                                     color: Color(0xFF334155),
                                     fontSize: 7,
@@ -917,7 +917,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text(
-                                  'हस्ताक्षर / Signature',
+                                  'Signature',
                                   style: TextStyle(
                                     color: Color(0xFF334155),
                                     fontSize: 6.5,
@@ -925,7 +925,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                                   ),
                                 ),
                                 const Text(
-                                  'Sign / हस्ताक्षर',
+                                  'Signature',
                                   style: TextStyle(
                                     fontStyle: FontStyle.italic,
                                     fontSize: 8.5,
@@ -1345,7 +1345,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'REPUBLIC OF INDIA / PASSPORT',
+                          'INDIAN PASSPORT',
                           style: TextStyle(
                             color: Color(0xFFD4AF37),
                             fontWeight: FontWeight.w800,
@@ -1354,7 +1354,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                           ),
                         ),
                         Text(
-                          'भारत गणराज्य / पासपोर्ट',
+                          'PASSPORT',
                           style: TextStyle(
                             color: Colors.white70,
                             fontWeight: FontWeight.bold,
@@ -2073,7 +2073,7 @@ class _VirtualDocumentCardState extends State<VirtualDocumentCard>
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'ELECTION COMMISSION OF INDIA\nभारत निर्वाचन आयोग',
+                    'ELECTION COMMISSION OF INDIA',
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
