@@ -493,7 +493,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         width: 36,
                         height: 36,
                         decoration: BoxDecoration(
-                          color: SpendzColors.tangerine.withAlpha(25),
+                          color: SpendzColors.clayTangerine,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(
