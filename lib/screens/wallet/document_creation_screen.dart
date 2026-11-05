@@ -1000,11 +1000,8 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           if (pan.contains('•')) {
             return null; // Preserving existing masked PAN identifier
           }
-          if (pan.length != 10) {
-            return 'PAN number must be exactly 10 characters';
-          }
-          if (!RegExp(r'^[A-Z0-9]{10}$').hasMatch(pan)) {
-            return 'Enter a valid 10-character PAN (e.g. ABCDE1234F)';
+          if (pan.length < 5) {
+            return 'Please enter a valid PAN number';
           }
           return null;
         },

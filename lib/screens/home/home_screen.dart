@@ -13,9 +13,6 @@ import '../../providers/transaction_provider.dart';
 import '../../utils/icon_mapper.dart';
 import '../transactions/add_transaction_screen.dart';
 import '../transactions/transactions_screen.dart';
-import '../wallet/cards_screen.dart';
-import '../wallet/documents_screen.dart';
-import '../wallet/widgets/spendz_pop_sheet.dart';
 
 /// Spendz Funky Claymorphism Home Screen.
 ///
@@ -448,114 +445,47 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ─── 3. 4 FUNKY QUICK ACTION CLAY BUTTONS ──────────────────────────────────
+  // ─── 3. QUICK ACTION CLAY BUTTON (ADD ONLY) ──────────────────────────────
   Widget _buildQuickActionButtons(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        // 1. Add
-        _buildClayActionTile(
-          context: context,
-          label: 'Add',
-          icon: Icons.add_circle_outline_rounded,
-          bgColor: SpendzColors.tangerine,
-          fgColor: Colors.white,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
-            );
-          },
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+        );
+      },
+      child: Container(
+        height: 54,
+        decoration: BoxDecoration(
+          color: SpendzColors.tangerine,
+          borderRadius: BorderRadius.circular(27),
+          boxShadow: [
+            BoxShadow(
+              color: SpendzColors.tangerine.withAlpha(90),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+          border: Border.all(color: Colors.white.withAlpha(160), width: 1.5),
         ),
-
-        // 2. Transfer
-        _buildClayActionTile(
-          context: context,
-          label: 'Transfer',
-          icon: Icons.swap_horiz_rounded,
-          bgColor: SpendzColors.periwinkle,
-          fgColor: Colors.white,
-          onTap: () {
-            SpendzPopSheet.show(context);
-          },
-        ),
-
-        // 3. Cards
-        _buildClayActionTile(
-          context: context,
-          label: 'Cards',
-          icon: Icons.credit_card_rounded,
-          bgColor: SpendzColors.sunshineYellow,
-          fgColor: const Color(0xFF735500),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const CardsScreen()),
-            );
-          },
-        ),
-
-        // 4. Vault
-        _buildClayActionTile(
-          context: context,
-          label: 'Vault',
-          icon: Icons.shield_rounded,
-          bgColor: SpendzColors.surfaceHigh,
-          fgColor: SpendzColors.textPrimary(context),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const DocumentsScreen()),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildClayActionTile({
-    required BuildContext context,
-    required String label,
-    required IconData icon,
-    required Color bgColor,
-    required Color fgColor,
-    required VoidCallback onTap,
-  }) {
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: onTap,
-          child: Container(
-            width: 58,
-            height: 58,
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: bgColor.withAlpha(70),
-                  blurRadius: 14,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-              border: Border.all(
-                color: Colors.white.withAlpha(160),
-                width: 1.5,
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.add_circle_rounded, color: Colors.white, size: 24),
+            SizedBox(width: 8),
+            Text(
+              'Add Transaction',
+              style: TextStyle(
+                fontFamily: 'Plus Jakarta Sans',
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+                letterSpacing: 0.2,
               ),
             ),
-            child: Icon(icon, color: fgColor, size: 26),
-          ),
+          ],
         ),
-        const SizedBox(height: 6),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-            color: SpendzColors.textPrimary(context),
-          ),
-        ),
-      ],
+      ),
     );
   }
 

@@ -249,10 +249,15 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         builder: (context, wallet, _) {
           final docProvider = context.watch<WalletDocumentProvider>();
           final cards = wallet.cards;
-          // Use authoritative live vault documents list
-          final documents = docProvider.documents.isNotEmpty
-              ? docProvider.documents
-              : wallet.documents;
+          // Combine live vault documents from all providers
+          final Map<String, WalletDocumentModel> allDocsMap = {};
+          for (final d in wallet.documents) {
+            allDocsMap[d.id] = d;
+          }
+          for (final d in docProvider.documents) {
+            allDocsMap[d.id] = d;
+          }
+          final documents = allDocsMap.values.toList();
           final passes = wallet.passes;
           final expiringDocs = docProvider.expiringDocuments.isNotEmpty
               ? docProvider.expiringDocuments
@@ -445,19 +450,31 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
 
     // 3. Ensure all core card types (Aadhaar, PAN, DL, Insurance) are available
     final hasAadhaar = documents.any(
-      (d) => d.category.toLowerCase() == 'aadhaar',
+      (d) => d.category.toLowerCase().contains('aadhaar'),
     );
-    final hasPan = documents.any((d) => d.category.toLowerCase() == 'pan');
+    final hasPan = documents.any(
+      (d) => d.category.toLowerCase().contains('pan'),
+    );
     final hasDl = documents.any(
       (d) =>
-          d.category.toLowerCase() == 'driving_licence' ||
-          d.category.toLowerCase() == 'driving_license',
+          d.category.toLowerCase().contains('driv') ||
+          d.category.toLowerCase().contains('licen'),
     );
     final hasInsurance = documents.any(
-      (d) => d.category.toLowerCase() == 'insurance',
+      (d) => d.category.toLowerCase().contains('insur'),
     );
 
     if (!hasAadhaar) {
+      final templateAadhaar = WalletDocumentModel(
+        id: 'template_aadhaar',
+        documentName: 'Aadhaar Card',
+        category: 'aadhaar',
+        holderName: 'GOVERNMENT OF INDIA',
+        maskedIdentifier: '•••• •••• 9842',
+        description: 'Holder: USER RECORD\nNumber: •••• •••• 9842',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
       deckItems.add(
         _CardDeckItem(
           id: 'template_aadhaar',
@@ -466,18 +483,22 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
           icon: Icons.badge_outlined,
           color: const Color(0xFFFF9933),
           widget: GestureDetector(
-            onTap: () => _openCreateDoc(context, 'aadhaar'),
+            onTap: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      DocumentPreviewScreen(document: templateAadhaar),
+                ),
+              );
+              if (!mounted) return;
+              await context.read<WalletProvider>().loadWallet();
+              if (!mounted) return;
+              await context.read<WalletDocumentProvider>().loadDocuments();
+              if (mounted) setState(() {});
+            },
             child: VirtualDocumentCard(
-              document: WalletDocumentModel(
-                id: 'template_aadhaar',
-                documentName: 'Aadhaar Card',
-                category: 'aadhaar',
-                holderName: 'GOVERNMENT OF INDIA',
-                maskedIdentifier: '•••• •••• ••••',
-                description: 'Holder: USER RECORD\nNumber: •••• •••• ••••',
-                createdAt: DateTime.now(),
-                updatedAt: DateTime.now(),
-              ),
+              document: templateAadhaar,
               allowReveal: true,
             ),
           ),
@@ -486,6 +507,16 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     }
 
     if (!hasPan) {
+      final templatePan = WalletDocumentModel(
+        id: 'template_pan',
+        documentName: 'Permanent Account Number',
+        category: 'pan',
+        holderName: 'INCOME TAX DEPT',
+        maskedIdentifier: 'BKAPS••••K',
+        description: 'Holder: USER RECORD\nNumber: BKAPS••••K',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
       deckItems.add(
         _CardDeckItem(
           id: 'template_pan',
@@ -494,18 +525,21 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
           icon: Icons.credit_card_rounded,
           color: const Color(0xFF0284C7),
           widget: GestureDetector(
-            onTap: () => _openCreateDoc(context, 'pan'),
+            onTap: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => DocumentPreviewScreen(document: templatePan),
+                ),
+              );
+              if (!mounted) return;
+              await context.read<WalletProvider>().loadWallet();
+              if (!mounted) return;
+              await context.read<WalletDocumentProvider>().loadDocuments();
+              if (mounted) setState(() {});
+            },
             child: VirtualDocumentCard(
-              document: WalletDocumentModel(
-                id: 'template_pan',
-                documentName: 'Permanent Account Number',
-                category: 'pan',
-                holderName: 'INCOME TAX DEPT',
-                maskedIdentifier: '••••••••••',
-                description: 'Holder: USER RECORD\nNumber: ••••••••••',
-                createdAt: DateTime.now(),
-                updatedAt: DateTime.now(),
-              ),
+              document: templatePan,
               allowReveal: true,
             ),
           ),
@@ -514,6 +548,16 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     }
 
     if (!hasDl) {
+      final templateDl = WalletDocumentModel(
+        id: 'template_dl',
+        documentName: 'Driving Licence',
+        category: 'driving_license',
+        holderName: 'MOTOR VEHICLE DEPT',
+        maskedIdentifier: 'DL-••••4321',
+        description: 'Holder: USER RECORD\nNumber: DL-••••4321',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
       deckItems.add(
         _CardDeckItem(
           id: 'template_dl',
@@ -522,26 +566,37 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
           icon: Icons.directions_car_rounded,
           color: const Color(0xFFEA580C),
           widget: GestureDetector(
-            onTap: () => _openCreateDoc(context, 'driving_licence'),
-            child: VirtualDocumentCard(
-              document: WalletDocumentModel(
-                id: 'template_dl',
-                documentName: 'Driving Licence',
-                category: 'driving_license',
-                holderName: 'MOTOR VEHICLE DEPT',
-                maskedIdentifier: '••••••••••••••',
-                description: 'Holder: USER RECORD\nNumber: ••••••••••••••',
-                createdAt: DateTime.now(),
-                updatedAt: DateTime.now(),
-              ),
-              allowReveal: true,
-            ),
+            onTap: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => DocumentPreviewScreen(document: templateDl),
+                ),
+              );
+              if (!mounted) return;
+              await context.read<WalletProvider>().loadWallet();
+              if (!mounted) return;
+              await context.read<WalletDocumentProvider>().loadDocuments();
+              if (mounted) setState(() {});
+            },
+            child: VirtualDocumentCard(document: templateDl, allowReveal: true),
           ),
         ),
       );
     }
 
     if (!hasInsurance) {
+      final templateInsurance = WalletDocumentModel(
+        id: 'template_insurance',
+        documentName: 'Health Insurance Card',
+        category: 'insurance',
+        holderName: 'POLICY HOLDER',
+        maskedIdentifier: '•••••••••••••',
+        description:
+            'Holder: USER RECORD\nNumber: •••••••••••••\nProvider: HEALTH SHIELD',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
       deckItems.add(
         _CardDeckItem(
           id: 'template_insurance',
@@ -550,19 +605,22 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
           icon: Icons.health_and_safety_rounded,
           color: const Color(0xFFFA7070),
           widget: GestureDetector(
-            onTap: () => _openCreateDoc(context, 'insurance'),
+            onTap: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      DocumentPreviewScreen(document: templateInsurance),
+                ),
+              );
+              if (!mounted) return;
+              await context.read<WalletProvider>().loadWallet();
+              if (!mounted) return;
+              await context.read<WalletDocumentProvider>().loadDocuments();
+              if (mounted) setState(() {});
+            },
             child: VirtualDocumentCard(
-              document: WalletDocumentModel(
-                id: 'template_insurance',
-                documentName: 'Health Insurance Card',
-                category: 'insurance',
-                holderName: 'POLICY HOLDER',
-                maskedIdentifier: '•••••••••••••',
-                description:
-                    'Holder: USER RECORD\nNumber: •••••••••••••\nProvider: HEALTH SHIELD',
-                createdAt: DateTime.now(),
-                updatedAt: DateTime.now(),
-              ),
+              document: templateInsurance,
               allowReveal: true,
             ),
           ),
@@ -672,10 +730,12 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         ),
         const SizedBox(height: SpendzSpacing.xs),
 
-        // Clean Horizontal Swipe Carousel - ZERO 3D STACK / ZERO OVERLAPPING PEEKS
+        // Clean Horizontal Swipe Carousel - Exact 1.586 ID-1 Card Aspect Ratio Replica
         LayoutBuilder(
           builder: (context, constraints) {
-            final cardHeight = constraints.maxWidth / 1.586;
+            const viewportFraction = 0.88;
+            final cardWidth = constraints.maxWidth * viewportFraction - 8;
+            final cardHeight = cardWidth / 1.586;
             return SizedBox(
               height: cardHeight,
               child: PageView.builder(
@@ -689,7 +749,12 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                 itemBuilder: (context, index) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: cardWidgets[index],
+                    child: Center(
+                      child: AspectRatio(
+                        aspectRatio: 1.586,
+                        child: cardWidgets[index],
+                      ),
+                    ),
                   );
                 },
               ),
@@ -1005,23 +1070,6 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         );
       },
     );
-  }
-
-  Future<void> _openCreateDoc(BuildContext context, String category) async {
-    final normalized = (category == 'driving_licence')
-        ? 'driving_license'
-        : category;
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => DocumentCreationScreen(initialCategory: normalized),
-      ),
-    );
-    if (!mounted) return;
-    await context.read<WalletProvider>().loadWallet();
-    if (!mounted) return;
-    await context.read<WalletDocumentProvider>().loadDocuments();
-    if (mounted) setState(() {});
   }
 
   // ─── 3. DOCUMENT VAULT CATEGORIES ───────────────────────────────────────────
