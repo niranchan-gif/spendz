@@ -39,7 +39,7 @@ class SpendzTheme {
         ),
       ),
       dividerTheme: const DividerThemeData(
-        color: SpendzColors.borderLight.withAlpha(100),
+        color: SpendzColors.borderLight,
         thickness: 1,
         space: 1,
       ),
@@ -80,7 +80,7 @@ class SpendzTheme {
         ),
       ),
       dividerTheme: const DividerThemeData(
-        color: SpendzColors.borderDark.withAlpha(90),
+        color: SpendzColors.borderDark,
         thickness: 1,
         space: 1,
       ),
