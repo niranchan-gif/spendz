@@ -439,7 +439,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-            child: Icon(icon, color: iconColor, size: 26),
+            child: Icon(icon, color: SpendzColors.textSecondary(context), size: 24),
           ),
         ),
         const SizedBox(height: 6),
