@@ -103,7 +103,7 @@ class SpendzPopSheet extends StatelessWidget {
                               vertical: 5,
                             ),
                             decoration: BoxDecoration(
-                              color: SpendzColors.tangerine,
+                              color: SpendzColors.surfaceElevated(context),
                               borderRadius: BorderRadius.circular(
                                 SpendzSpacing.radiusFull,
                               ),
@@ -115,18 +115,18 @@ class SpendzPopSheet extends StatelessWidget {
                                 ),
                               ],
                             ),
-                            child: const Row(
+                            child: Row(
                               children: [
                                 Icon(
                                   Icons.flash_on_rounded,
                                   size: 14,
-                                  color: Colors.white,
+                                  color: SpendzColors.primaryAccent(context),
                                 ),
                                 SizedBox(width: 4),
                                 Text(
                                   'QUICK VAULT',
                                   style: TextStyle(
-                                    color: Colors.white,
+                                    color: textPrimary,
                                     fontSize: 10.5,
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: 0.8,
