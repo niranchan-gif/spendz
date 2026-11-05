@@ -344,65 +344,64 @@ class _HomeScreenState extends State<HomeScreen> {
   // ─── 2. QUICK ACTION CLAY BUTTONS ───────────────────────────────────────────
   Widget _buildQuickActionButtons(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildClayActionPod(
-          context: context,
-          icon: Icons.add_rounded,
-          label: 'Add',
-          bgColor: SpendzColors.tangerine,
-          iconColor: Colors.white,
-          onTap: () {
-            Navigator.push(
+        Expanded(
+          child: _buildClayActionPod(
+            context: context,
+            icon: Icons.add_rounded,
+            label: 'Add',
+            bgColor: SpendzColors.tangerine,
+            iconColor: Colors.white,
+            onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
-            );
-          },
+            ),
+          ),
         ),
-        _buildClayActionPod(
-          context: context,
-          icon: Icons.sync_rounded,
-          label: 'Sync to Bank',
-          bgColor: SpendzColors.tertiarySky,
-          iconColor: Colors.white,
-          onTap: () {
-            Navigator.push(
+        Expanded(
+          child: _buildClayActionPod(
+            context: context,
+            icon: Icons.sync_rounded,
+            label: 'Sync to Bank',
+            bgColor: SpendzColors.tertiarySky,
+            iconColor: Colors.white,
+            onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (_) => const ImportedTransactionsScreen(),
               ),
-            );
-          },
+            ),
+          ),
         ),
-        _buildClayActionPod(
-          context: context,
-          icon: Icons.credit_card_rounded,
-          label: 'Cards',
-          bgColor: SpendzColors.sunshineYellow,
-          iconColor: const Color(0xFF735500),
-          onTap: () {
-            Navigator.push(
+        Expanded(
+          child: _buildClayActionPod(
+            context: context,
+            icon: Icons.credit_card_rounded,
+            label: 'Cards',
+            bgColor: SpendzColors.sunshineYellow,
+            iconColor: const Color(0xFF735500),
+            onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (_) => const WalletDashboardScreen(),
               ),
-            );
-          },
+            ),
+          ),
         ),
-        _buildClayActionPod(
-          context: context,
-          icon: Icons.lock_outline_rounded,
-          label: 'Vault',
-          bgColor: const Color(0xFFDDD6FE),
-          iconColor: const Color(0xFF4C1D95),
-          onTap: () {
-            Navigator.push(
+        Expanded(
+          child: _buildClayActionPod(
+            context: context,
+            icon: Icons.lock_outline_rounded,
+            label: 'Vault',
+            bgColor: const Color(0xFFDDD6FE),
+            iconColor: const Color(0xFF4C1D95),
+            onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (_) => const WalletDashboardScreen(),
               ),
-            );
-          },
+            ),
+          ),
         ),
       ],
     );
@@ -446,6 +445,9 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(height: 6),
         Text(
           label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
           style: TextStyle(
             fontFamily: 'Plus Jakarta Sans',
             fontSize: 12,
