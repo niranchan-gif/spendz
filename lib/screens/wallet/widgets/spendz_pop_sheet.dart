@@ -109,7 +109,7 @@ class SpendzPopSheet extends StatelessWidget {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: SpendzColors.tangerine.withAlpha(80),
+                                  color: Colors.black.withAlpha(isDark ? 28 : 10),
                                   blurRadius: 8,
                                   offset: const Offset(0, 3),
                                 ),
