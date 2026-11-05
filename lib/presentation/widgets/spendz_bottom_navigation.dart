@@ -43,10 +43,7 @@ class SpendzBottomNavigation extends StatelessWidget {
                 ? const Color(0xFF131C2D).withAlpha(245)
                 : Colors.white.withAlpha(245),
             borderRadius: BorderRadius.circular(32),
-            border: Border.all(
-              color: isDark ? const Color(0xFF1E2B40) : const Color(0xFFE2E8F0),
-              width: 1.0,
-            ),
+            
             boxShadow: [
               BoxShadow(
                 color: isDark
@@ -83,23 +80,7 @@ class SpendzBottomNavigation extends StatelessWidget {
                             ? SpendzColors.tangerine
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(24),
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: SpendzColors.tangerine.withAlpha(
-                                    isDark ? 90 : 100,
-                                  ),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
-                                ),
-                                BoxShadow(
-                                  color: Colors.white.withAlpha(150),
-                                  blurRadius: 2,
-                                  offset: const Offset(1, 1),
-                                  blurStyle: BlurStyle.inner,
-                                ),
-                              ]
-                            : null,
+                        boxShadow: isSelected\n                            ? [\n                                BoxShadow(\n                                  color: Colors.black.withAlpha(isDark ? 30 : 10),\n                                  blurRadius: 8,\n                                  offset: const Offset(0, 2),\n                                ),\n                              ]\n                            : null,
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Column(
