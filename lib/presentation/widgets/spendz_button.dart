@@ -198,12 +198,7 @@ class _SpendzButtonState extends State<SpendzButton> {
           borderRadius: BorderRadius.circular(
             SpendzSpacing.radiusFull,
           ), // rounded-pill (9999px)
-          border: Border.all(
-            color: widget.variant == SpendzButtonVariant.ghost
-                ? (isDark ? Colors.white24 : const Color(0xFFCBD5E1))
-                : Colors.white.withAlpha(isEnabled ? 160 : 40),
-            width: 1.2,
-          ),
+          
           boxShadow: shadows,
         ),
         child: Material(
