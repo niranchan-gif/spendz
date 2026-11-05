@@ -47,35 +47,13 @@ class GlassBottomSheet extends StatelessWidget {
         borderRadius: const BorderRadius.vertical(
           top: Radius.circular(AppRadius.sheet),
         ),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-          child: Container(
+        child: Container(
             decoration: BoxDecoration(
               color: isDark
                   ? const Color(0xFF14231B).withAlpha(235)
                   : const Color(0xFFFFFFFF).withAlpha(240),
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(AppRadius.sheet),
-              ),
-              border: Border(
-                top: BorderSide(
-                  color: isDark
-                      ? Colors.white.withAlpha(40)
-                      : Colors.white.withAlpha(240),
-                  width: 1.2,
-                ),
-                left: BorderSide(
-                  color: isDark
-                      ? Colors.white.withAlpha(20)
-                      : Colors.white.withAlpha(180),
-                  width: 0.8,
-                ),
-                right: BorderSide(
-                  color: isDark
-                      ? Colors.white.withAlpha(20)
-                      : Colors.white.withAlpha(180),
-                  width: 0.8,
-                ),
               ),
               boxShadow: [
                 BoxShadow(
