@@ -4,10 +4,8 @@ import '../../app/theme/spendz_spacing.dart';
 
 enum SpendzClayTone { neutral, tangerine, periwinkle, sunshine, sunken }
 
-/// Spendz Funky Claymorphism Adaptive Surface Container.
-///
-/// Implements dual chromatic outer drop shadows paired with pillowy inner highlight
-/// sheens to create physical, inflated clay volume.
+/// Reusable tactile surface: one soft lift, a fine rim and a restrained inner bevel.
+/// Avoid stacking these around every row; reserve elevation for meaningful groups.
 class SpendzSurface extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
@@ -25,225 +23,141 @@ class SpendzSurface extends StatelessWidget {
   final double? height;
 
   const SpendzSurface({
-    super.key,
-    required this.child,
-    this.padding,
-    this.margin,
-    this.borderRadius,
-    this.onTap,
-    this.color,
-    this.borderColor,
-    this.borderWidth = 1.0,
-    this.isElevated = false,
-    this.showShadow = true,
-    this.isSunken = false,
-    this.tone = SpendzClayTone.neutral,
-    this.width,
-    this.height,
+    super.key, required this.child, this.padding, this.margin,
+    this.borderRadius, this.onTap, this.color, this.borderColor,
+    this.borderWidth = 1, this.isElevated = false, this.showShadow = true,
+    this.isSunken = false, this.tone = SpendzClayTone.neutral,
+    this.width, this.height,
   });
 
   const SpendzSurface.sunken({
-    super.key,
-    required this.child,
-    this.padding,
-    this.margin,
-    this.borderRadius,
-    this.onTap,
-    this.color,
-    this.borderColor,
-    this.borderWidth = 1.0,
-    this.isElevated = false,
-    this.showShadow = false,
-    this.isSunken = true,
-    this.tone = SpendzClayTone.sunken,
-    this.width,
-    this.height,
+    super.key, required this.child, this.padding, this.margin,
+    this.borderRadius, this.onTap, this.color, this.borderColor,
+    this.borderWidth = 1, this.isElevated = false, this.showShadow = false,
+    this.isSunken = true, this.tone = SpendzClayTone.sunken,
+    this.width, this.height,
   });
 
   const SpendzSurface.tangerine({
-    super.key,
-    required this.child,
-    this.padding,
-    this.margin,
-    this.borderRadius,
-    this.onTap,
-    this.color,
-    this.borderColor,
-    this.borderWidth = 1.0,
-    this.isElevated = true,
-    this.showShadow = true,
-    this.isSunken = false,
-    this.tone = SpendzClayTone.tangerine,
-    this.width,
-    this.height,
+    super.key, required this.child, this.padding, this.margin,
+    this.borderRadius, this.onTap, this.color, this.borderColor,
+    this.borderWidth = 1, this.isElevated = true, this.showShadow = true,
+    this.isSunken = false, this.tone = SpendzClayTone.tangerine,
+    this.width, this.height,
   });
 
   const SpendzSurface.periwinkle({
-    super.key,
-    required this.child,
-    this.padding,
-    this.margin,
-    this.borderRadius,
-    this.onTap,
-    this.color,
-    this.borderColor,
-    this.borderWidth = 1.0,
-    this.isElevated = true,
-    this.showShadow = true,
-    this.isSunken = false,
-    this.tone = SpendzClayTone.periwinkle,
-    this.width,
-    this.height,
+    super.key, required this.child, this.padding, this.margin,
+    this.borderRadius, this.onTap, this.color, this.borderColor,
+    this.borderWidth = 1, this.isElevated = true, this.showShadow = true,
+    this.isSunken = false, this.tone = SpendzClayTone.periwinkle,
+    this.width, this.height,
   });
 
   const SpendzSurface.sunshine({
-    super.key,
-    required this.child,
-    this.padding,
-    this.margin,
-    this.borderRadius,
-    this.onTap,
-    this.color,
-    this.borderColor,
-    this.borderWidth = 1.0,
-    this.isElevated = true,
-    this.showShadow = true,
-    this.isSunken = false,
-    this.tone = SpendzClayTone.sunshine,
-    this.width,
-    this.height,
+    super.key, required this.child, this.padding, this.margin,
+    this.borderRadius, this.onTap, this.color, this.borderColor,
+    this.borderWidth = 1, this.isElevated = true, this.showShadow = true,
+    this.isSunken = false, this.tone = SpendzClayTone.sunshine,
+    this.width, this.height,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDark = SpendzColors.isDark(context);
-    final radius = borderRadius ?? SpendzSpacing.radiusXl; // rounded-3xl (24px)
+    final dark = SpendzColors.isDark(context);
+    final radius = borderRadius ?? SpendzSpacing.radiusXl;
+    final sunken = isSunken || tone == SpendzClayTone.sunken;
 
-    // Base background color
-    Color bgColor;
-    Color shadowTint;
-    Color topSheen;
-    Color bottomShade;
-
-    if (isSunken || tone == SpendzClayTone.sunken) {
-      bgColor =
-          color ?? (isDark ? const Color(0xFF131D2C) : SpendzColors.surfaceLow);
-      shadowTint = Colors.transparent;
-      topSheen = isDark
-          ? Colors.black.withAlpha(40)
-          : const Color(0xFF1E293B).withAlpha(15);
-      bottomShade = isDark
-          ? Colors.white.withAlpha(10)
-          : Colors.white.withAlpha(220);
-    } else {
-      switch (tone) {
-        case SpendzClayTone.tangerine:
-          bgColor = color ?? SpendzColors.tangerine;
-          shadowTint = SpendzColors.tangerine;
-          topSheen = Colors.white.withAlpha(160);
-          bottomShade = const Color(0xFF954A00).withAlpha(60);
-          break;
-        case SpendzClayTone.periwinkle:
-          bgColor = color ?? SpendzColors.periwinkle;
-          shadowTint = SpendzColors.periwinkleDeep;
-          topSheen = Colors.white.withAlpha(180);
-          bottomShade = const Color(0xFF2E6385).withAlpha(60);
-          break;
-        case SpendzClayTone.sunshine:
-          bgColor = color ?? SpendzColors.sunshineYellow;
-          shadowTint = SpendzColors.sunshineDeep;
-          topSheen = Colors.white.withAlpha(190);
-          bottomShade = const Color(0xFF795900).withAlpha(50);
-          break;
-        case SpendzClayTone.neutral:
-        default:
-          bgColor =
-              color ??
-              (isElevated
-                  ? SpendzColors.surfaceElevated(context)
-                  : SpendzColors.surface(context));
-          shadowTint = isDark ? Colors.black : const Color(0xFF1E293B);
-          topSheen = isDark ? Colors.white.withAlpha(35) : Colors.white;
-          bottomShade = isDark
-              ? Colors.black.withAlpha(50)
-              : const Color(0xFF1E293B).withAlpha(15);
-          break;
-      }
+    final Color fill;
+    final Color rim;
+    final Color shadowTint;
+    switch (tone) {
+      case SpendzClayTone.tangerine:
+        fill = color ?? SpendzColors.clayTangerine;
+        rim = const Color(0xFFFFD5B7);
+        shadowTint = SpendzColors.tangerineDeep;
+        break;
+      case SpendzClayTone.periwinkle:
+        fill = color ?? SpendzColors.clayPeriwinkle;
+        rim = const Color(0xFFD3E5F1);
+        shadowTint = SpendzColors.periwinkleDeep;
+        break;
+      case SpendzClayTone.sunshine:
+        fill = color ?? SpendzColors.clayYellow;
+        rim = const Color(0xFFFFE5A0);
+        shadowTint = SpendzColors.sunshineDeep;
+        break;
+      case SpendzClayTone.sunken:
+        fill = color ?? SpendzColors.surfaceRecessed(context);
+        rim = dark ? Colors.white.withAlpha(12) : const Color(0xFFE4D9CC);
+        shadowTint = Colors.transparent;
+        break;
+      case SpendzClayTone.neutral:
+        fill = color ?? (isElevated
+            ? SpendzColors.surface(context)
+            : SpendzColors.surfaceElevated(context));
+        rim = dark ? Colors.white.withAlpha(18) : Colors.white.withAlpha(230);
+        shadowTint = dark ? Colors.black : const Color(0xFF80664E);
+        break;
     }
 
-    // Outer chromatic shadows
-    List<BoxShadow>? shadows;
-    if (showShadow && !isSunken && tone != SpendzClayTone.sunken) {
-      final alpha1 = isDark ? 60 : (tone == SpendzClayTone.neutral ? 20 : 65);
-      final alpha2 = isDark ? 40 : (tone == SpendzClayTone.neutral ? 12 : 45);
-
-      shadows = [
+    final shadows = <BoxShadow>[];
+    if (sunken) {
+      shadows.addAll([
         BoxShadow(
-          color: shadowTint.withAlpha(alpha1),
-          blurRadius: isElevated ? 24 : 16,
-          offset: Offset(0, isElevated ? 10 : 6),
-          spreadRadius: -3,
+          color: dark ? Colors.black.withAlpha(55) : const Color(0xFF8B725A).withAlpha(22),
+          offset: const Offset(2, 3), blurRadius: 6,
+          blurStyle: BlurStyle.inner,
         ),
         BoxShadow(
-          color: shadowTint.withAlpha(alpha2),
-          blurRadius: 6,
-          offset: const Offset(0, 2),
+          color: dark ? Colors.white.withAlpha(8) : Colors.white.withAlpha(220),
+          offset: const Offset(-2, -2), blurRadius: 5,
+          blurStyle: BlurStyle.inner,
         ),
-      ];
-    } else if (isSunken || tone == SpendzClayTone.sunken) {
-      // Inverted sunken impression
-      shadows = [
+      ]);
+    } else if (showShadow) {
+      shadows.add(
         BoxShadow(
-          color: topSheen,
-          blurRadius: 4,
-          offset: const Offset(2, 2),
+          color: shadowTint.withAlpha(dark ? 48 : (isElevated ? 24 : 15)),
+          offset: Offset(0, isElevated ? 9 : 5),
+          blurRadius: isElevated ? 22 : 14,
+          spreadRadius: -5,
+        ),
+      );
+      shadows.add(
+        BoxShadow(
+          color: dark ? Colors.white.withAlpha(7) : Colors.white.withAlpha(230),
+          offset: const Offset(-1, -1),
+          blurRadius: 2,
           spreadRadius: -1,
         ),
-        BoxShadow(
-          color: bottomShade,
-          blurRadius: 4,
-          offset: const Offset(-2, -2),
-          spreadRadius: -1,
-        ),
-      ];
-    }
-
-    Widget content = Material(
-      type: MaterialType.transparency,
-      child: Padding(
-        padding: padding ?? const EdgeInsets.all(SpendzSpacing.lg),
-        child: child,
-      ),
-    );
-
-    if (onTap != null) {
-      content = InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(radius),
-        splashColor: SpendzColors.tangerine.withAlpha(25),
-        highlightColor: SpendzColors.sunshineYellow.withAlpha(15),
-        child: content,
       );
     }
 
-    return Container(
+    final content = Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(radius),
+        splashColor: SpendzColors.tangerine.withAlpha(24),
+        highlightColor: SpendzColors.tangerine.withAlpha(10),
+        child: Padding(
+          padding: padding ?? const EdgeInsets.all(SpendzSpacing.lg),
+          child: child,
+        ),
+      ),
+    );
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutCubic,
       width: width,
       height: height,
       margin: margin,
       decoration: BoxDecoration(
-        color: bgColor,
+        color: fill,
         borderRadius: BorderRadius.circular(radius),
-        border: Border.all(
-          color: isSunken
-              ? (isDark
-                    ? Colors.white.withAlpha(12)
-                    : const Color(0xFF1E293B).withAlpha(12))
-              : (borderColor ??
-                    (isDark
-                        ? Colors.white.withAlpha(20)
-                        : Colors.white.withAlpha(180))),
-          width: borderWidth,
-        ),
+        border: Border.all(color: borderColor ?? rim, width: borderWidth),
         boxShadow: shadows,
       ),
       clipBehavior: Clip.antiAlias,
