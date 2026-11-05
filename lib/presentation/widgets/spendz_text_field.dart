@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../app/theme/spendz_colors.dart';
 import '../../app/theme/spendz_spacing.dart';
 
-/// Clean minimalist text input field for Spendz 2.0.
+/// Clean, borderless matte input field for Spendz.
 class SpendzTextField extends StatelessWidget {
   final TextEditingController? controller;
   final String? hintText;
@@ -35,7 +35,11 @@ class SpendzTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = SpendzColors.isDark(context);
+    final radius = BorderRadius.circular(SpendzSpacing.radiusMd);
+    final border = OutlineInputBorder(
+      borderRadius: radius,
+      borderSide: BorderSide.none,
+    );
 
     return TextFormField(
       controller: controller,
@@ -70,9 +74,11 @@ class SpendzTextField extends StatelessWidget {
           horizontal: SpendzSpacing.lg,
           vertical: SpendzSpacing.md,
         ),
-        border: OutlineInputBorder(\n          borderRadius: BorderRadius.circular(SpendzSpacing.radiusMd),\n          borderSide: BorderSide.none,\n        ),\n        enabledBorder: OutlineInputBorder(\n          borderRadius: BorderRadius.circular(SpendzSpacing.radiusMd),\n          borderSide: BorderSide.none,\n        ),\n        focusedBorder: OutlineInputBorder(\n          borderRadius: BorderRadius.circular(SpendzSpacing.radiusMd),\n          borderSide: BorderSide.none,\n        ),\n        errorBorder: OutlineInputBorder(\n          borderRadius: BorderRadius.circular(SpendzSpacing.radiusMd),\n          borderSide: BorderSide.none,\n        ),\n        focusedErrorBorder: OutlineInputBorder(\n          borderRadius: BorderRadius.circular(SpendzSpacing.radiusMd),\n          borderSide: BorderSide.none,\n        ),
-          borderSide: const BorderSide(color: SpendzColors.expense, width: 1.5),
-        ),
+        border: border,
+        enabledBorder: border,
+        focusedBorder: border,
+        errorBorder: border,
+        focusedErrorBorder: border,
       ),
     );
   }
