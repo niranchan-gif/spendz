@@ -368,7 +368,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                         offset: const Offset(0, 2),
                       ),
                       BoxShadow(
-                        color: Colors.white.withAlpha(200),
+                        color: Colors.black.withAlpha(12),
                         blurRadius: 2,
                         offset: const Offset(1, 1),
                         blurStyle: BlurStyle.inner,
@@ -1118,12 +1118,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF3D6), // Warm butter/sunshine
+        color: SpendzColors.isDark(context)
+          ? SpendzColors.matteSunshine
+          : const Color(0xFFFFF3D6), // Warm butter/sunshine
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: const Color(0xFFFED7AA),
-          width: 1.0,
-        ),
+        border: null,
         boxShadow: [
           BoxShadow(
             color: const Color(0xFFFBBF24).withAlpha(40),
@@ -1145,7 +1144,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: SpendzColors.isDark(context)
+                  ? SpendzColors.surfaceElevated(context)
+                  : Colors.white,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
