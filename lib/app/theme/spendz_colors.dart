@@ -52,6 +52,14 @@ class SpendzColors {
   static const Color surfaceElevatedDark = Color(0xFF222B25);
   static const Color borderDark = Color(0xFF29352D);
 
+  /// Dark matte accent surfaces for dashboard tiles and coloured cards.
+  /// These retain the brand hue without using bright or pastel fills.
+  static const Color matteTangerine = Color(0xFF392319);
+  static const Color matteSunshine = Color(0xFF352D1C);
+  static const Color mattePeriwinkle = Color(0xFF202D35);
+  static const Color matteMint = Color(0xFF203027);
+  static const Color matteNeutral = Color(0xFF202923);
+
   /// Typography Bases
   static const Color inkSlate = Color(0xFF111C2D);
   static const Color inkSlateVariant = Color(0xFF554337);
