@@ -419,6 +419,27 @@ class DocumentVaultService {
       updatedAt: DateTime.now(),
     );
 
+    if (updated.driveFileId?.isNotEmpty == true) {
+      final extension = updated.mimeType.contains('pdf')
+          ? 'pdf'
+          : updated.mimeType.contains('png')
+              ? 'png'
+              : 'jpg';
+      await DriveDocumentService.instance.updateMetadata(
+        fileId: updated.driveFileId!,
+        fileName: '${updated.documentName.replaceAll(RegExp(r'[^A-Za-z0-9._ -]'), '_')}.$extension',
+        metadata: {
+          'spendzDocumentId': updated.id,
+          'spendzCategory': updated.category,
+          'spendzCreatedAt': updated.createdAt.toIso8601String(),
+          if (updated.issueDate != null)
+            'spendzIssueDate': updated.issueDate!.toIso8601String(),
+          if (updated.expiryDate != null)
+            'spendzExpiryDate': updated.expiryDate!.toIso8601String(),
+          'spendzAttachmentType': updated.attachmentType,
+        },
+      );
+    }
     await _documentRepository.update(updated);
     return updated;
   }
