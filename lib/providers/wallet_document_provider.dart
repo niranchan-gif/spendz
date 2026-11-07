@@ -32,8 +32,6 @@ class WalletDocumentProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      // Restore an already-authorized Google session without prompting during
-      // app startup. Drive remains the source of truth for attachment bytes.
       await DriveDocumentService.instance.restoreSession();
       if (DriveDocumentService.instance.isSignedIn) {
         final remoteFiles = await DriveDocumentService.instance.listDocuments();
@@ -41,8 +39,52 @@ class WalletDocumentProvider with ChangeNotifier {
           final properties = remote.appProperties;
           final documentId = properties['spendzDocumentId'];
           if (documentId == null || documentId.isEmpty) continue;
+
           final existing = await _repository.getDocumentById(documentId);
-          final name = remote.fileName.replaceFirst(RegExp(r'\\.[^.]+
+          final nameParts = remote.fileName.split('.');
+          final displayName = nameParts.length > 1
+              ? nameParts.sublist(0, nameParts.length - 1).join('.')
+              : remote.fileName;
+          final attachmentType = properties['spendzAttachmentType'] ??
+              (remote.mimeType.toLowerCase().contains('pdf') ? 'pdf' : 'image');
+
+          final remoteModel = existing != null
+              ? existing.copyWith(
+                  driveFileId: remote.fileId,
+                  encryptedFilePath: '',
+                  mimeType: remote.mimeType,
+                  fileSize: remote.size,
+                  attachmentType: attachmentType,
+                )
+              : WalletDocumentModel(
+                  id: documentId,
+                  documentName: displayName,
+                  category: properties['spendzCategory'] ?? 'other',
+                  driveFileId: remote.fileId,
+                  mimeType: remote.mimeType,
+                  fileSize: remote.size,
+                  attachmentType: attachmentType,
+                  issueDate: DateTime.tryParse(properties['spendzIssueDate'] ?? ''),
+                  expiryDate: DateTime.tryParse(properties['spendzExpiryDate'] ?? ''),
+                  createdAt: DateTime.tryParse(properties['spendzCreatedAt'] ?? '') ??
+                      DateTime.now(),
+                  updatedAt: DateTime.now(),
+                );
+          await _repository.upsert(remoteModel);
+        }
+      }
+
+      _documents = _selectedCategory == 'all'
+          ? await _repository.getAllDocuments()
+          : await _repository.getDocumentsByCategory(_selectedCategory);
+    } catch (e) {
+      _error = 'Google Drive sync unavailable: $e';
+      try {
+        _documents = _selectedCategory == 'all'
+            ? await _repository.getAllDocuments()
+            : await _repository.getDocumentsByCategory(_selectedCategory);
+      } catch (_) {}
+    } finally {
       _isLoading = false;
       notifyListeners();
     }
