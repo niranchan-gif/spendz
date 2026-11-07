@@ -101,12 +101,14 @@ class DriveDocumentService {
     Object? body,
   }) async {
     final auth = await _authorizedHeaders(interactive: false);
-    final response = await _client.send(
-      http.Request(method, uri)
-        ..headers.addAll({...auth, ...?headers})
-        ..body = body is String ? body : ''
-        ..bodyBytes = body is List<int> ? body : (body is String ? utf8.encode(body) : null),
-    );
+    final request = http.Request(method, uri);
+    request.headers.addAll({...auth, ...?headers});
+    if (body is String) {
+      request.body = body;
+    } else if (body is List<int>) {
+      request.bodyBytes = body;
+    }
+    final response = await _client.send(request);
     final result = await http.Response.fromStream(response);
     if (result.statusCode < 200 || result.statusCode >= 300) {
       var message = 'Google Drive request failed (${result.statusCode}).';
