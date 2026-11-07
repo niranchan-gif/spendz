@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/wallet_document_model.dart';
 import '../database/wallet_document_repository.dart';
 import '../features/wallet/services/drive_document_service.dart';
+import '../features/wallet/services/document_vault_service.dart';
 
 class WalletDocumentProvider with ChangeNotifier {
   final WalletDocumentRepository _repository = WalletDocumentRepository();
@@ -34,6 +35,13 @@ class WalletDocumentProvider with ChangeNotifier {
     try {
       await DriveDocumentService.instance.restoreSession();
       if (DriveDocumentService.instance.isSignedIn) {
+        // One-time migration: upload old encrypted local attachments, then
+        // delete their local ciphertext only after Drive confirms the upload.
+        try {
+          await DocumentVaultService().migrateLegacyAttachments();
+        } catch (_) {
+          // Keep legacy files intact if migration cannot be completed.
+        }
         final remoteFiles = await DriveDocumentService.instance.listDocuments();
         for (final remote in remoteFiles) {
           final properties = remote.appProperties;
