@@ -338,10 +338,7 @@ class DocumentVaultService {
             (normalizedMime.contains('pdf') ? 'pdf' : 'image'),
       },
     );
-    if (document.driveFileId != null && document.driveFileId!.isNotEmpty &&
-        document.driveFileId != stored.fileId) {
-      await DriveDocumentService.instance.delete(document.driveFileId!);
-    }
+    final previousDriveFileId = document.driveFileId;
     final updated = document.copyWith(
       encryptedFilePath: '',
       driveFileId: stored.fileId,
@@ -352,6 +349,11 @@ class DocumentVaultService {
       updatedAt: DateTime.now(),
     );
     await _documentRepository.update(updated);
+    if (previousDriveFileId != null &&
+        previousDriveFileId.isNotEmpty &&
+        previousDriveFileId != stored.fileId) {
+      await DriveDocumentService.instance.delete(previousDriveFileId);
+    }
     return updated;
   }
 
