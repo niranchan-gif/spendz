@@ -25,7 +25,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 5,
+      version: 6,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onOpen: _onOpenDB,
@@ -33,6 +33,8 @@ class DatabaseHelper {
   }
 
   Future<void> _onOpenDB(Database db) async {
+    // Cloud document storage: only the Drive file ID is persisted locally.
+    await _addColumnIfNotExists(db, 'wallet_documents', 'drive_file_id', 'TEXT');
     await _addColumnIfNotExists(
       db,
       'wallet_documents',
@@ -162,6 +164,7 @@ class DatabaseHelper {
           category TEXT NOT NULL,
           description TEXT,
           encrypted_file_path TEXT NOT NULL,
+        drive_file_id TEXT,
           thumbnail_path TEXT,
           mime_type TEXT NOT NULL,
           file_size INTEGER NOT NULL DEFAULT 0,
