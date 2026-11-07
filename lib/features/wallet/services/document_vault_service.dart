@@ -177,6 +177,14 @@ class DocumentVaultService {
         fileName: '${documentName.trim().replaceAll(RegExp(r'[^A-Za-z0-9._ -]'), '_')}.${normalizedMime.contains('pdf') ? 'pdf' : normalizedMime.contains('png') ? 'png' : 'jpg'}',
         mimeType: normalizedMime,
         bytes: Uint8List.fromList(attachmentBytes),
+        metadata: {
+          'spendzCategory': category.toLowerCase().trim(),
+          'spendzCreatedAt': now.toIso8601String(),
+          if (issueDate != null) 'spendzIssueDate': issueDate.toIso8601String(),
+          if (expiryDate != null) 'spendzExpiryDate': expiryDate.toIso8601String(),
+          'spendzAttachmentType': attachmentType ??
+              (normalizedMime.contains('pdf') ? 'pdf' : 'image'),
+        },
       );
       driveFileId = stored.fileId;
       fileSize = attachmentBytes.length;
@@ -271,6 +279,14 @@ class DocumentVaultService {
       fileName: '${document.documentName.replaceAll(RegExp(r'[^A-Za-z0-9._ -]'), '_')}.${normalizedMime.contains('pdf') ? 'pdf' : normalizedMime.contains('png') ? 'png' : 'jpg'}',
       mimeType: normalizedMime,
       bytes: Uint8List.fromList(fileBytes),
+      metadata: {
+        'spendzCategory': document.category,
+        'spendzCreatedAt': document.createdAt.toIso8601String(),
+        if (document.issueDate != null) 'spendzIssueDate': document.issueDate!.toIso8601String(),
+        if (document.expiryDate != null) 'spendzExpiryDate': document.expiryDate!.toIso8601String(),
+        'spendzAttachmentType': attachmentType ??
+            (normalizedMime.contains('pdf') ? 'pdf' : 'image'),
+      },
     );
     if (document.driveFileId != null && document.driveFileId!.isNotEmpty &&
         document.driveFileId != stored.fileId) {
