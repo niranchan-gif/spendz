@@ -289,25 +289,25 @@ class DocumentVaultService {
     return updated;
   }
 
-  /// Removes the attachment from an existing document while preserving all metadata.
+  /// Removes a Drive attachment while preserving document metadata.
   Future<WalletDocumentModel> removeAttachmentFromDocument(
     WalletDocumentModel document,
   ) async {
-    if (document.hasAttachment) {
+    if (document.driveFileId?.isNotEmpty == true) {
+      await DriveDocumentService.instance.delete(document.driveFileId!);
+    } else if (document.encryptedFilePath.isNotEmpty) {
+      // Legacy local-vault cleanup for documents created by older Spendz builds.
       final file = File(document.encryptedFilePath);
-      if (await file.exists()) {
-        await file.delete().catchError((_) => file);
-      }
+      if (await file.exists()) await file.delete();
     }
-
     final updated = document.copyWith(
       encryptedFilePath: '',
+      driveFileId: '',
       mimeType: 'none',
       fileSize: 0,
       attachmentType: 'none',
       updatedAt: DateTime.now(),
     );
-
     await _documentRepository.update(updated);
     return updated;
   }
@@ -359,6 +359,10 @@ class DocumentVaultService {
   Future<Uint8List> decryptDocumentBytes(WalletDocumentModel document) async {
     if (!document.hasAttachment) {
       return Uint8List(0);
+    }
+
+    if (document.driveFileId?.isNotEmpty == true) {
+      return await DriveDocumentService.instance.download(document.driveFileId!);
     }
 
     final masterKey = await _keyService.getMasterKey();
@@ -427,11 +431,11 @@ class DocumentVaultService {
   /// Deletes a document from SQLite database, private encrypted storage, and secure keystore.
   Future<void> deleteDocument(String documentId) async {
     final doc = await _documentRepository.getDocumentById(documentId);
-    if (doc != null && doc.hasAttachment) {
+    if (doc?.driveFileId?.isNotEmpty == true) {
+      await DriveDocumentService.instance.delete(doc!.driveFileId!);
+    } else if (doc != null && doc.encryptedFilePath.isNotEmpty) {
       final file = File(doc.encryptedFilePath);
-      if (await file.exists()) {
-        await file.delete().catchError((_) => file);
-      }
+      if (await file.exists()) await file.delete().catchError((_) => file);
     }
     await _secureNumberService.deleteDocumentFullNumber(documentId);
     await _documentRepository.delete(documentId);
