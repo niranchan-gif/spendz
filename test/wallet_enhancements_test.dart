@@ -15,6 +15,7 @@ import 'package:spendz/providers/wallet_provider.dart';
 import 'package:spendz/screens/wallet/document_preview_screen.dart';
 import 'package:spendz/screens/wallet/wallet_dashboard_screen.dart';
 import 'package:spendz/screens/wallet/cards_screen.dart';
+import 'package:spendz/screens/wallet/widgets/stitch_spotlight_card.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
@@ -54,6 +55,37 @@ void main() {
     final db = await DatabaseHelper.instance.database;
     await db.delete('wallet_documents');
     await db.delete('wallet_cards');
+  });
+
+  test('Payment document categories map to payment spotlight cards', () {
+    final now = DateTime.now();
+    final debitDocument = WalletDocumentModel(
+      id: 'debit_doc',
+      documentName: 'HDFC Debit Card',
+      category: 'debit_card',
+      holderName: 'Riya Sen',
+      maskedIdentifier: '•••• 2841',
+      createdAt: now,
+      updatedAt: now,
+    );
+    final creditDocument = WalletDocumentModel(
+      id: 'credit_doc',
+      documentName: 'ICICI Credit Card',
+      category: 'credit_card',
+      holderName: 'Riya Sen',
+      maskedIdentifier: '•••• 6128',
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    expect(
+      StitchSpotlightCard.fromDocument(document: debitDocument).cardType,
+      StitchCardType.debit,
+    );
+    expect(
+      StitchSpotlightCard.fromDocument(document: creditDocument).cardType,
+      StitchCardType.credit,
+    );
   });
 
   Widget buildTestHarness(Widget child) {
@@ -118,7 +150,7 @@ void main() {
 
         await tester.runAsync(() async {
           await docRepo.insert(doc);
-          await walletProvider.loadWallet();
+          await docProvider.loadDocuments();
         });
 
         await tester.pumpWidget(
@@ -127,7 +159,7 @@ void main() {
         await tester.pumpAndSettle();
 
         // Find Aadhaar tile in grid
-        final aadhaarTile = find.text('Aadhaar');
+        final aadhaarTile = find.text('Aadhaar Card');
         expect(aadhaarTile, findsOneWidget);
 
         await tester.tap(aadhaarTile);
@@ -135,172 +167,190 @@ void main() {
 
         // Must be on DocumentPreviewScreen for Priya Patel's Aadhaar!
         expect(find.byType(DocumentPreviewScreen), findsOneWidget);
-        expect(find.text('Priya Patel'), findsOneWidget);
+        expect(find.text('Priya Patel'), findsWidgets);
       },
     );
+
+    testWidgets('Spotlight and directory follow card add and delete', (
+      tester,
+    ) async {
+      final card = WalletCardModel(
+        id: 'live_debit_card',
+        nickname: 'Live debit card',
+        issuerName: 'Spendz Bank',
+        cardholderName: 'Riya Sen',
+        maskedNumber: '•••• •••• 2841',
+        lastFour: '2841',
+        expiryMonth: 8,
+        expiryYear: 29,
+        cardType: 'debit',
+        cardNetwork: 'visa',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      await tester.pumpWidget(buildTestHarness(const WalletDashboardScreen()));
+      await tester.pumpAndSettle();
+      expect(find.text('Live debit card'), findsNothing);
+
+      await tester.runAsync(() => cardProvider.addCard(card));
+      await tester.pumpAndSettle();
+      expect(find.text('Live debit card'), findsOneWidget);
+      expect(find.textContaining('2841'), findsWidgets);
+
+      await tester.runAsync(() => cardProvider.deleteCard(card.id));
+      await tester.pumpAndSettle();
+      expect(find.text('Live debit card'), findsNothing);
+    });
   });
 
-  group('3. Stacked Swipeable Card Studio Tests', () {
-    testWidgets(
-      'CardsScreen renders stacked cards with swipeable PageView and deck controls',
-      (tester) async {
-        tester.view.physicalSize = const Size(800, 1600);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(() {
-          tester.view.resetPhysicalSize();
-          tester.view.resetDevicePixelRatio();
-        });
+  group('3. Wallet Card and Document List Tests', () {
+    testWidgets('CardsScreen lists payment cards without a Card Studio deck', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
 
-        // Seed 2 cards
-        final card1 = WalletCardModel(
-          id: 'card_1',
-          nickname: 'HDFC Regalia',
-          issuerName: 'HDFC Bank',
-          cardholderName: 'Rahul Mehra',
-          maskedNumber: '•••• •••• •••• 4321',
-          lastFour: '4321',
-          expiryMonth: 10,
-          expiryYear: 28,
-          cardType: 'credit',
-          cardNetwork: 'visa',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
-        final card2 = WalletCardModel(
-          id: 'card_2',
-          nickname: 'ICICI Coral',
-          issuerName: 'ICICI Bank',
-          cardholderName: 'Rahul Mehra',
-          maskedNumber: '•••• •••• •••• 8765',
-          lastFour: '8765',
-          expiryMonth: 12,
-          expiryYear: 29,
-          cardType: 'credit',
-          cardNetwork: 'mastercard',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
+      // Seed 2 cards
+      final card1 = WalletCardModel(
+        id: 'card_1',
+        nickname: 'HDFC Regalia',
+        issuerName: 'HDFC Bank',
+        cardholderName: 'Rahul Mehra',
+        maskedNumber: '•••• •••• •••• 4321',
+        lastFour: '4321',
+        expiryMonth: 10,
+        expiryYear: 28,
+        cardType: 'credit',
+        cardNetwork: 'visa',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      final card2 = WalletCardModel(
+        id: 'card_2',
+        nickname: 'ICICI Coral',
+        issuerName: 'ICICI Bank',
+        cardholderName: 'Rahul Mehra',
+        maskedNumber: '•••• •••• •••• 8765',
+        lastFour: '8765',
+        expiryMonth: 12,
+        expiryYear: 29,
+        cardType: 'credit',
+        cardNetwork: 'mastercard',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
 
-        await tester.runAsync(() async {
-          await cardRepo.insert(card1);
-          await cardRepo.insert(card2);
-          await walletProvider.loadWallet();
-        });
+      await tester.runAsync(() async {
+        await cardRepo.insert(card1);
+        await cardRepo.insert(card2);
+        await walletProvider.loadWallet();
+      });
 
-        await tester.pumpWidget(buildTestHarness(const CardsScreen()));
-        await tester.pumpAndSettle();
+      await tester.pumpWidget(buildTestHarness(const CardsScreen()));
+      await tester.pumpAndSettle();
 
-        // Verify Stacked PageView exists
-        expect(find.byType(PageView), findsOneWidget);
-        expect(find.text('Card 1 of 2'), findsOneWidget);
-        expect(find.text('HDFC Regalia'), findsWidgets);
-        expect(find.text('Copy Number'), findsOneWidget);
-        expect(find.text('Card Details'), findsOneWidget);
+      expect(find.text('Payment Cards'), findsOneWidget);
+      expect(find.byType(PageView), findsNothing);
+      expect(find.text('Card Studio'), findsNothing);
+      expect(find.text('HDFC Regalia'), findsOneWidget);
+      expect(find.text('ICICI Coral'), findsOneWidget);
+    });
 
-        // Swipe left on the stacked PageView to move to next card
-        await tester.fling(find.byType(PageView), const Offset(-500, 0), 1000);
-        await tester.pumpAndSettle();
+    testWidgets('CardsScreen filters payment cards and official documents', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
 
-        // Verify moved to Card 2 of 2 seamlessly
-        expect(find.text('Card 2 of 2'), findsOneWidget);
-        expect(find.text('ICICI Coral'), findsWidgets);
-      },
-    );
+      // Seed 1 payment card and 2 govt documents (Aadhaar and PAN)
+      final paymentCard = WalletCardModel(
+        id: 'credit_1',
+        nickname: 'HDFC Regalia',
+        issuerName: 'HDFC Bank',
+        cardholderName: 'Kunal Sharma',
+        maskedNumber: '•••• •••• •••• 1234',
+        lastFour: '1234',
+        expiryMonth: 5,
+        expiryYear: 28,
+        cardType: 'credit',
+        cardNetwork: 'visa',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
 
-    testWidgets(
-      'CardsScreen unifies payment cards AND government ID cards in stacked deck',
-      (tester) async {
-        tester.view.physicalSize = const Size(800, 1600);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(() {
-          tester.view.resetPhysicalSize();
-          tester.view.resetDevicePixelRatio();
-        });
+      final aadhaarDoc = WalletDocumentModel(
+        id: 'aadhaar_1',
+        documentName: 'My Aadhaar',
+        category: 'aadhaar',
+        holderName: 'Kunal Sharma',
+        maskedIdentifier: '•••• •••• 9988',
+        description: 'Holder: Kunal Sharma\nNumber: •••• •••• 9988',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
 
-        // Seed 1 payment card and 2 govt documents (Aadhaar and PAN)
-        final paymentCard = WalletCardModel(
-          id: 'credit_1',
-          nickname: 'HDFC Regalia',
-          issuerName: 'HDFC Bank',
-          cardholderName: 'Kunal Sharma',
-          maskedNumber: '•••• •••• •••• 1234',
-          lastFour: '1234',
-          expiryMonth: 5,
-          expiryYear: 28,
-          cardType: 'credit',
-          cardNetwork: 'visa',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
+      final panDoc = WalletDocumentModel(
+        id: 'pan_1',
+        documentName: 'Income Tax PAN',
+        category: 'pan',
+        holderName: 'Kunal Sharma',
+        maskedIdentifier: 'ABCDE••••F',
+        description: 'Holder: Kunal Sharma\nNumber: ABCDE••••F',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
 
-        final aadhaarDoc = WalletDocumentModel(
-          id: 'aadhaar_1',
-          documentName: 'My Aadhaar',
-          category: 'aadhaar',
-          holderName: 'Kunal Sharma',
-          maskedIdentifier: '•••• •••• 9988',
-          description: 'Holder: Kunal Sharma\nNumber: •••• •••• 9988',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
+      await tester.runAsync(() async {
+        final db = await DatabaseHelper.instance.database;
+        await db.delete('wallet_cards');
+        await db.delete('wallet_documents');
 
-        final panDoc = WalletDocumentModel(
-          id: 'pan_1',
-          documentName: 'Income Tax PAN',
-          category: 'pan',
-          holderName: 'Kunal Sharma',
-          maskedIdentifier: 'ABCDE••••F',
-          description: 'Holder: Kunal Sharma\nNumber: ABCDE••••F',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
+        await cardRepo.insert(paymentCard);
+        await docRepo.insert(aadhaarDoc);
+        await docRepo.insert(panDoc);
+        await walletProvider.loadWallet();
+      });
 
-        await tester.runAsync(() async {
-          final db = await DatabaseHelper.instance.database;
-          await db.delete('wallet_cards');
-          await db.delete('wallet_documents');
+      await tester.pumpWidget(buildTestHarness(const CardsScreen()));
+      await tester.pumpAndSettle();
 
-          await cardRepo.insert(paymentCard);
-          await docRepo.insert(aadhaarDoc);
-          await docRepo.insert(panDoc);
-          await walletProvider.loadWallet();
-        });
+      // All saved records are listed together.
+      expect(find.text('All Cards (3)'), findsOneWidget);
+      expect(find.byType(PageView), findsNothing);
 
-        await tester.pumpWidget(buildTestHarness(const CardsScreen()));
-        await tester.pumpAndSettle();
+      // Verify both payment cards and documents appear in list/stack
+      expect(find.text('HDFC Regalia'), findsWidgets);
+      expect(find.text('My Aadhaar'), findsWidgets);
+      expect(find.text('Income Tax PAN'), findsWidgets);
 
-        // Verify all 3 cards are in studio together
-        expect(find.text('All Cards (3)'), findsOneWidget);
-        expect(find.text('Card 1 of 3'), findsOneWidget);
-        expect(find.text('Cards in Deck (3)'), findsOneWidget);
+      // Filter by Govt IDs
+      final govtChip = find.text('Govt IDs');
+      expect(govtChip, findsOneWidget);
+      await tester.tap(govtChip);
+      await tester.pumpAndSettle();
 
-        // Verify both payment cards and documents appear in list/stack
-        expect(find.text('HDFC Regalia'), findsWidgets);
-        expect(find.text('My Aadhaar'), findsWidgets);
-        expect(find.text('Income Tax PAN'), findsWidgets);
+      expect(find.text('HDFC Regalia'), findsNothing);
+      expect(find.text('My Aadhaar'), findsOneWidget);
+      expect(find.text('Income Tax PAN'), findsOneWidget);
 
-        // Filter by Govt IDs
-        final govtChip = find.text('Govt IDs');
-        expect(govtChip, findsOneWidget);
-        await tester.tap(govtChip);
-        await tester.pumpAndSettle();
+      // Filter by Payment Cards
+      final paymentChip = find.text('Payment Cards');
+      expect(paymentChip, findsOneWidget);
+      await tester.tap(paymentChip);
+      await tester.pumpAndSettle();
 
-        // Only Aadhaar and PAN should remain (2 cards)
-        expect(find.text('Card 1 of 2'), findsOneWidget);
-        expect(find.text('Cards in Deck (2)'), findsOneWidget);
-        expect(find.text('My Aadhaar'), findsWidgets);
-        expect(find.text('Income Tax PAN'), findsWidgets);
-
-        // Filter by Payment Cards
-        final paymentChip = find.text('Payment Cards');
-        expect(paymentChip, findsOneWidget);
-        await tester.tap(paymentChip);
-        await tester.pumpAndSettle();
-
-        // Only 1 card remains
-        expect(find.text('Card 1 of 1'), findsOneWidget);
-        expect(find.text('HDFC Regalia'), findsWidgets);
-      },
-    );
+      expect(find.text('HDFC Regalia'), findsOneWidget);
+      expect(find.text('My Aadhaar'), findsNothing);
+      expect(find.text('Income Tax PAN'), findsNothing);
+    });
   });
 }

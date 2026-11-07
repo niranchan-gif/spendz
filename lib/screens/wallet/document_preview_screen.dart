@@ -85,9 +85,7 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
 
   @override
   void dispose() {
-    if (_stagedPdfFile != null) {
-      _vaultService.cleanupPreviewFile(_stagedPdfFile!);
-    }
+    // Keep staged file alive in cache so external viewers/intents can read it
     super.dispose();
   }
 
@@ -168,101 +166,141 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
     }
   }
 
-  Future<void> _openDocument() async {
-    if (_currentDocument.hasAttachment) {
-      if (_decryptedImageBytes == null && _stagedPdfFile == null) {
-        await _authenticateAndDecrypt();
-        if (!mounted) return;
-      }
+  Future<void> _openDocument() => _openPdfAttachment();
 
-      if (_stagedPdfFile != null) {
-        try {
-          final result = await OpenFilex.open(_stagedPdfFile!.path);
-          if (result.type != ResultType.done && mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Could not open PDF viewer: ${result.message}'),
-                backgroundColor: AppColors.error,
-              ),
-            );
-          }
-        } catch (e) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Error opening PDF: $e'),
-                backgroundColor: AppColors.error,
-              ),
-            );
-          }
-        }
-        return;
-      }
-
-      if (_decryptedImageBytes != null) {
-        // Open full-screen zoomable preview modal
-        showDialog(
-          context: context,
-          builder: (ctx) => Dialog(
-            backgroundColor: Colors.transparent,
-            insetPadding: const EdgeInsets.all(12),
-            child: Stack(
-              children: [
-                Center(
-                  child: InteractiveViewer(
-                    minScale: 0.5,
-                    maxScale: 5.0,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Image.memory(
-                        _decryptedImageBytes!,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 10,
-                  right: 10,
-                  child: CircleAvatar(
-                    backgroundColor: Colors.black54,
-                    child: IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      onPressed: () => Navigator.pop(ctx),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+  /// Opens the user's actual attached document (PDF or image).
+  Future<void> _openPdfAttachment() async {
+    if (!_currentDocument.hasAttachment) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No PDF or image attached to this document.'),
           ),
         );
-        return;
       }
+      return;
     }
 
-    // Document without physical attachment: generate official Virtual Card PDF & open
     setState(() => _isExporting = true);
     try {
-      final pdfFile = await _exportService.generateDocumentPdf(
-        document: _currentDocument,
-        decryptedBytes: Uint8List(0),
-        secureDocNumber: _secureDocumentNumber,
+      // 1. Decrypt raw bytes directly from secure vault
+      final decryptedBytes =
+          await _vaultService.decryptDocumentBytes(_currentDocument);
+      if (decryptedBytes.isEmpty) {
+        throw const FileSystemException('Decrypted attachment is empty.');
+      }
+
+      // 2. Identify file format from bytes or MIME
+      final isPdfBytes = decryptedBytes.length >= 4 &&
+          decryptedBytes[0] == 0x25 &&
+          decryptedBytes[1] == 0x50 &&
+          decryptedBytes[2] == 0x44 &&
+          decryptedBytes[3] == 0x46; // %PDF
+      final isPdf = isPdfBytes ||
+          _currentDocument.mimeType.toLowerCase().contains('pdf') ||
+          _currentDocument.attachmentType.toLowerCase().contains('pdf');
+
+      final tempDir = await _vaultService.getTempDirectory();
+      final cleanName = _currentDocument.documentName
+          .replaceAll(RegExp(r'[^a-zA-Z0-9_\-]'), '_');
+      final safeName = cleanName.isEmpty ? 'document' : cleanName;
+      final ext = isPdf
+          ? 'pdf'
+          : (_currentDocument.mimeType.toLowerCase().contains('png')
+              ? 'png'
+              : 'jpg');
+
+      // 3. Write directly to temporary cache file
+      final stagedFile = File(
+        '${tempDir.path}/spendz_${safeName}_${_currentDocument.id}.$ext',
       );
+      await stagedFile.writeAsBytes(decryptedBytes, flush: true);
+
+      if (!await stagedFile.exists()) {
+        throw FileSystemException(
+          'Failed to write attachment to cache',
+          stagedFile.path,
+        );
+      }
+
       if (mounted) {
-        setState(() => _isExporting = false);
-        await OpenFilex.open(pdfFile.path);
+        setState(() {
+          _stagedPdfFile = stagedFile;
+          _isExporting = false;
+        });
+      }
+
+      // 4. Open via external viewer using OpenFilex
+      final result = await OpenFilex.open(stagedFile.path);
+      if (!mounted) return;
+
+      if (result.type != ResultType.done) {
+        if (!isPdf) {
+          setState(() => _decryptedImageBytes = decryptedBytes);
+          _showInAppImageDialog();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                result.type == ResultType.noAppToOpen
+                    ? 'No app found to open PDF files. Please install a PDF viewer.'
+                    : 'Could not open file: ${result.message}',
+              ),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isExporting = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Could not open document: $e'),
+            content: Text('Could not open attachment: $e'),
             backgroundColor: AppColors.error,
           ),
         );
       }
     }
+  }
+
+  void _showInAppImageDialog() {
+    if (_decryptedImageBytes == null) return;
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(12),
+        child: Stack(
+          children: [
+            Center(
+              child: InteractiveViewer(
+                minScale: 0.5,
+                maxScale: 5.0,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.memory(
+                    _decryptedImageBytes!,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 10,
+              right: 10,
+              child: CircleAvatar(
+                backgroundColor: Colors.black54,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: () => Navigator.pop(ctx),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _shareDocument() async {
@@ -301,22 +339,19 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
       return;
     }
 
+    if (!_currentDocument.hasAttachment) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No attachment found to share.')),
+      );
+      return;
+    }
+
     setState(() => _isExporting = true);
     try {
-      Uint8List bytes = Uint8List(0);
-      if (_currentDocument.hasAttachment) {
-        if (_decryptedImageBytes == null && _stagedPdfFile == null) {
-          await _authenticateAndDecrypt();
-          if (!mounted) {
-            setState(() => _isExporting = false);
-            return;
-          }
-        }
-        if (_stagedPdfFile != null) {
-          bytes = await _stagedPdfFile!.readAsBytes();
-        } else if (_decryptedImageBytes != null) {
-          bytes = _decryptedImageBytes!;
-        }
+      // Read directly from decrypted vault storage - never rely on temp file!
+      final bytes = await _vaultService.decryptDocumentBytes(_currentDocument);
+      if (bytes.isEmpty) {
+        throw const FileSystemException('Attachment data is empty.');
       }
 
       await _exportService.shareDocument(
@@ -511,7 +546,6 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
   @override
   Widget build(BuildContext context) {
     final doc = _currentDocument;
-    final isPdf = doc.mimeType.contains('pdf');
     final surfaceColor = AppColors.getSurface(context);
     final textPrimary = AppColors.getTextPrimary(context);
     final textSecondary = AppColors.getTextSecondary(context);
@@ -571,92 +605,43 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
                 aspectRatio: 1.586,
                 child: StitchSpotlightCard.fromDocument(document: doc),
               ),
+              const SizedBox(height: 24),
 
-              // 2. Hardware Keystore Banner
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.sm,
-                ),
-                decoration: BoxDecoration(
-                  color: surfaceColor,
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.shield_rounded,
-                      color: AppColors.primary,
-                      size: 18,
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: Text(
-                        'AES-256-GCM Hardware-Protected Vault',
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withAlpha(20),
-                        borderRadius: BorderRadius.circular(AppRadius.xs),
-                      ),
-                      child: Text(
-                        doc.hasAttachment
-                            ? (isPdf ? 'PDF' : 'IMAGE')
-                            : 'MANUAL',
-                        style: AppTextStyles.caption.copyWith(
-                          fontSize: 10,
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: AppSpacing.md),
-
-              // 3. Primary Actions Row (Unified, Non-Repeating)
+              // 3. Primary Actions Row
               Row(
                 children: [
                   Expanded(
-                    child: _buildActionButton(
+                    child: _buildClayActionButton(
                       context,
-                      icon: Icons.visibility_rounded,
+                      icon: Icons.folder_open_rounded,
                       label: 'Open',
-                      onTap: !_isExporting ? _openDocument : null,
+                      backgroundColor: const Color(0xFFCBDFBD), // Pistachio
+                      onTap: !_isExporting ? _openPdfAttachment : null,
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
+                  const SizedBox(width: 12),
                   Expanded(
-                    child: _buildActionButton(
+                    child: _buildClayActionButton(
                       context,
                       icon: Icons.share_rounded,
                       label: 'Share',
+                      backgroundColor: const Color(0xFFD4E09B), // Chartreuse
                       onTap: !_isExporting ? _shareDocument : null,
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
+                  const SizedBox(width: 12),
                   Expanded(
-                    child: _buildActionButton(
+                    child: _buildClayActionButton(
                       context,
                       icon: Icons.edit_note_rounded,
                       label: 'Edit',
+                      backgroundColor: const Color(0xFFF19C79), // Terracotta
                       onTap: _openEditScreen,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: 24),
 
               // 5. Original Scan / Physical Copy Section Header
               Row(
@@ -881,38 +866,55 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
     );
   }
 
-  Widget _buildActionButton(
+  Widget _buildClayActionButton(
     BuildContext context, {
     required IconData icon,
     required String label,
     required VoidCallback? onTap,
+    Color? backgroundColor,
   }) {
-    final surfaceColor = AppColors.getSurface(context);
-    final textPrimary = AppColors.getTextPrimary(context);
     final isEnabled = onTap != null;
-
-    return InkWell(
+    final espresso = const Color(0xFF2C221E);
+    final bgColor = backgroundColor ?? const Color(0xFFF6F4D2);
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppRadius.md),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
         decoration: BoxDecoration(
-          color: surfaceColor,
-          borderRadius: BorderRadius.circular(AppRadius.md),
+          color: bgColor,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0x332C221E),
+              blurRadius: 6,
+              offset: const Offset(2, 3),
+            ),
+            const BoxShadow(
+              color: Colors.white,
+              blurRadius: 2,
+              offset: Offset(-1.5, -1.5),
+            ),
+          ],
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
-              color: isEnabled ? AppColors.primary : Colors.grey,
-              size: 20,
+              color: isEnabled ? espresso : Colors.grey,
+              size: 22,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Text(
               label,
-              style: AppTextStyles.caption.copyWith(
-                color: isEnabled ? textPrimary : Colors.grey,
-                fontWeight: FontWeight.bold,
+              maxLines: 1,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: 'Plus Jakarta Sans',
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: isEnabled ? espresso : Colors.grey,
               ),
             ),
           ],
@@ -932,8 +934,33 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
 
     final Map<String, String> fields = {};
     String? additionalNotes;
+    final cat = doc.category.toLowerCase();
 
-    // 0. Holder Name and Card/ID Number
+    // ── Define per-category allowed field keys ─────────────────────────────
+    // Keys as they appear after _formatFieldLabel or in description lines.
+    final Set<String> allowedKeys;
+    if (cat.contains('aadhaar')) {
+      allowedKeys = {'Holder Name', 'ID / Card Number', 'Date of Birth', 'Gender', 'Address', 'Issue Date', 'Expiry Date'};
+    } else if (cat.contains('pan')) {
+      allowedKeys = {'Holder Name', 'ID / Card Number', 'Date of Birth', 'Father / Guardian', 'Issue Date', 'Expiry Date'};
+    } else if (cat.contains('voter') || cat.contains('epic')) {
+      allowedKeys = {'Holder Name', 'ID / Card Number', 'Date of Birth', 'Gender', 'Father / Guardian', 'Address', 'State', 'Issue Date', 'Expiry Date'};
+    } else if (cat.contains('passport')) {
+      allowedKeys = {'Holder Name', 'ID / Card Number', 'Date of Birth', 'Gender', 'Nationality', 'Place Of Birth', 'Issue Date', 'Expiry Date', 'Issuing Authority'};
+    } else if (cat.contains('licen') || cat.contains('driv')) {
+      allowedKeys = {'Holder Name', 'ID / Card Number', 'Date of Birth', 'Address', 'Vehicle Class', 'Issue Date', 'Expiry Date', 'Issuing Authority'};
+    } else if (cat.contains('insur') || cat.contains('medic')) {
+      allowedKeys = {'Holder Name', 'ID / Card Number', 'Policy Type', 'Provider', 'Issue Date', 'Expiry Date', 'Policy Number'};
+    } else if (cat.contains('credit') || cat.contains('debit') || cat.contains('payment')) {
+      allowedKeys = {'Holder Name', 'ID / Card Number', 'Bank', 'Network', 'Issue Date', 'Expiry Date'};
+    } else {
+      // Generic: allow everything
+      allowedKeys = const {};
+    }
+
+    final bool filterFields = allowedKeys.isNotEmpty;
+
+    // ── 0. Holder Name and Card/ID Number ─────────────────────────────────
     final resolvedHolder = doc.holderName?.trim().isNotEmpty == true
         ? doc.holderName!.trim()
         : (!doc.documentName.toLowerCase().contains('document') &&
@@ -941,34 +968,43 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
               ? doc.documentName.trim()
               : null);
     if (resolvedHolder != null) {
-      fields['Holder Name'] = resolvedHolder;
+      if (!filterFields || allowedKeys.contains('Holder Name')) {
+        fields['Holder Name'] = resolvedHolder;
+      }
     }
-    if (doc.maskedIdentifier != null &&
-        doc.maskedIdentifier!.trim().isNotEmpty) {
-      fields['ID / Card Number'] = doc.maskedIdentifier!.trim();
+    if (doc.maskedIdentifier != null && doc.maskedIdentifier!.trim().isNotEmpty) {
+      if (!filterFields || allowedKeys.contains('ID / Card Number')) {
+        fields['ID / Card Number'] = doc.maskedIdentifier!.trim();
+      }
     }
 
-    // 1. Core model dates
+    // ── 1. Core model dates ───────────────────────────────────────────────
     if (doc.issueDate != null) {
-      fields['Issue Date'] = DateFormatter.formatShortDate(doc.issueDate!);
+      if (!filterFields || allowedKeys.contains('Issue Date')) {
+        fields['Issue Date'] = DateFormatter.formatShortDate(doc.issueDate!);
+      }
     }
     if (doc.expiryDate != null) {
-      fields['Expiry Date'] = DateFormatter.formatShortDate(doc.expiryDate!);
+      if (!filterFields || allowedKeys.contains('Expiry Date')) {
+        fields['Expiry Date'] = DateFormatter.formatShortDate(doc.expiryDate!);
+      }
     }
 
-    // 2. Decrypted extra metadata fields
+    // ── 2. Decrypted extra metadata fields ────────────────────────────────
     for (final entry in _decryptedExtraFields.entries) {
       final key = entry.key;
       final val = entry.value?.toString().trim() ?? '';
       if (val.isNotEmpty) {
         final label = _formatFieldLabel(key);
         if (!fields.containsKey(label)) {
-          fields[label] = val;
+          if (!filterFields || allowedKeys.contains(label)) {
+            fields[label] = val;
+          }
         }
       }
     }
 
-    // 2. From structured description
+    // ── 3. From structured description ───────────────────────────────────
     if (doc.description != null && doc.description!.trim().isNotEmpty) {
       final lines = doc.description!.split('\n');
       for (final rawLine in lines) {
@@ -984,7 +1020,12 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
                   ? '$additionalNotes\n$val'
                   : val);
             } else {
-              fields[_formatFieldLabel(key)] = val;
+              final label = _formatFieldLabel(key);
+              if (!fields.containsKey(label)) {
+                if (!filterFields || allowedKeys.contains(label)) {
+                  fields[label] = val;
+                }
+              }
             }
           }
         } else {

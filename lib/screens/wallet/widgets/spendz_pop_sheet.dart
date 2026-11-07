@@ -6,7 +6,6 @@ import '../../../app/theme/spendz_colors.dart';
 import '../../../app/theme/spendz_spacing.dart';
 import '../../../presentation/widgets/spendz_surface.dart';
 import '../../../presentation/widgets/spendz_button.dart';
-import '../widgets/wallet_card_widget.dart';
 import '../documents_screen.dart';
 import '../cards_screen.dart';
 import '../card_detail_screen.dart';
@@ -109,7 +108,9 @@ class SpendzPopSheet extends StatelessWidget {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withAlpha(isDark ? 28 : 10),
+                                  color: Colors.black.withAlpha(
+                                    isDark ? 28 : 10,
+                                  ),
                                   blurRadius: 8,
                                   offset: const Offset(0, 3),
                                 ),
@@ -238,24 +239,83 @@ class SpendzPopSheet extends StatelessWidget {
                         scrollDirection: Axis.horizontal,
                         physics: const BouncingScrollPhysics(),
                         itemCount: favCards.length,
-                        separatorBuilder: (_, __) => const SizedBox(width: 12),
+                        separatorBuilder: (_, _) => const SizedBox(width: 12),
                         itemBuilder: (context, index) {
                           final card = favCards[index];
                           return SizedBox(
                             width: 190,
-                            child: WalletCardWidget(
-                              card: card,
-                              isCompact: true,
-                              onTap: () {
-                                Navigator.pop(context);
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        CardDetailScreen(card: card),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(14),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          CardDetailScreen(card: card),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: SpendzColors.pistachio,
+                                    borderRadius: BorderRadius.circular(14),
+                                    boxShadow: SpendzColors.clayDropShadow(
+                                      context,
+                                      blur: 4,
+                                    ),
                                   ),
-                                );
-                              },
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.credit_card_rounded,
+                                            size: 18,
+                                            color: SpendzColors.espresso,
+                                          ),
+                                          const Spacer(),
+                                          Text(
+                                            card.cardNetwork.toUpperCase(),
+                                            style: const TextStyle(
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.w800,
+                                              color: SpendzColors.espresso,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Text(
+                                        card.nickname.isNotEmpty
+                                            ? card.nickname
+                                            : card.issuerName,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w800,
+                                          color: SpendzColors.espresso,
+                                        ),
+                                      ),
+                                      Text(
+                                        '•••• ${card.lastFour}',
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                          color: SpendzColors.espressoMuted,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
                           );
                         },

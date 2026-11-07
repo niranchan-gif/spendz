@@ -1,5 +1,5 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:keybz/widgets/app_keyboard/app_keyboard.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
@@ -8,8 +8,9 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_radius.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_text_styles.dart';
+import '../../app/theme/spendz_colors.dart';
+import '../../app/theme/spendz_typography.dart';
 import '../../features/wallet/security/secure_number_service.dart';
-import '../../features/wallet/security/wallet_auth_service.dart';
 import '../../features/wallet/security/wallet_key_service.dart';
 import '../../models/wallet_card_model.dart';
 import '../../models/wallet_document_model.dart';
@@ -19,15 +20,8 @@ import '../../providers/wallet_provider.dart';
 import '../../widgets/design_system/empty_state.dart';
 import '../../widgets/design_system/primary_button.dart';
 import 'card_detail_screen.dart';
-import 'card_studio/card_layout_sheet.dart';
-import 'card_studio/card_studio_layout.dart';
-import 'card_studio/card_studio_theme.dart';
-import 'card_studio/card_theme_sheet.dart';
-import 'card_studio/manage_cards_screen.dart';
 import 'document_creation_screen.dart';
 import 'document_preview_screen.dart';
-import 'widgets/virtual_document_card.dart';
-import 'widgets/wallet_card_widget.dart';
 
 /// Unified Studio Card Item representing either a payment card or an identity document.
 enum StudioCardType { payment, document }
@@ -85,163 +79,14 @@ class CardsScreen extends StatefulWidget {
 class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
   String _selectedFilter = 'all';
   final SecureNumberService _secureNumberService = SecureNumberService();
-  late PageController _pageController;
-  int _currentCardIndex = 0;
-  bool _isStackedDeckView = true;
-
-  // Biometric reveal state with auto-masking timer
-  String? _revealedCardId;
-  String? _revealedNumber;
-  Timer? _maskTimer;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    _pageController = PageController(viewportFraction: 0.88);
     if (widget.openAddDialog) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _showAddCardDialog(context);
       });
-    }
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.hidden) {
-      _remaskNumber();
-    }
-  }
-
-  void _remaskNumber() {
-    _maskTimer?.cancel();
-    _maskTimer = null;
-    if (mounted && _revealedCardId != null) {
-      setState(() {
-        _revealedCardId = null;
-        _revealedNumber = null;
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _maskTimer?.cancel();
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  void _goToCard(int index, int total) {
-    if (index >= 0 && index < total) {
-      _pageController.animateToPage(
-        index,
-        duration: const Duration(milliseconds: 360),
-        curve: Curves.easeOutCubic,
-      );
-    }
-  }
-
-  Future<void> _revealActiveCardNumber(StudioCardItem item) async {
-    final authService = context.read<WalletAuthService>();
-    final authenticated = await authService.authenticate(
-      localizedReason: 'Authenticate to view the complete card number',
-    );
-
-    if (!authenticated) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              authService.lastErrorMessage ??
-                  'Biometric authentication required to reveal card number.',
-            ),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-      return;
-    }
-
-    String? fullNum;
-    if (item.type == StudioCardType.payment) {
-      fullNum = await _secureNumberService.getCardFullNumber(item.id);
-      if (fullNum != null && fullNum.isNotEmpty) {
-        fullNum = SecureNumberService.formatCardNumber(fullNum);
-      }
-    } else {
-      fullNum = await _secureNumberService.getDocumentFullNumber(item.id);
-    }
-
-    if (fullNum == null || fullNum.isEmpty) {
-      fullNum = item.maskedNumber;
-    }
-
-    if (mounted) {
-      setState(() {
-        _revealedCardId = item.id;
-        _revealedNumber = fullNum;
-      });
-
-      _maskTimer?.cancel();
-      _maskTimer = Timer(const Duration(seconds: 30), () {
-        _remaskNumber();
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Card number revealed (Auto-masks in 30 seconds)'),
-          backgroundColor: AppColors.primary,
-          duration: Duration(seconds: 3),
-        ),
-      );
-    }
-  }
-
-  Future<void> _copyActiveCardNumber(StudioCardItem item) async {
-    final authService = context.read<WalletAuthService>();
-    final authenticated = await authService.authenticate(
-      localizedReason: 'Authenticate with biometrics to copy private number',
-    );
-
-    if (!authenticated) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              authService.lastErrorMessage ??
-                  'Biometric authentication required to access private number.',
-            ),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-      return;
-    }
-
-    String numToCopy = item.maskedNumber;
-    if (item.type == StudioCardType.payment) {
-      final fullNum = await _secureNumberService.getCardFullNumber(item.id);
-      if (fullNum != null && fullNum.isNotEmpty) {
-        numToCopy = fullNum;
-      }
-    } else {
-      final fullNum = await _secureNumberService.getDocumentFullNumber(item.id);
-      if (fullNum != null && fullNum.isNotEmpty) {
-        numToCopy = fullNum;
-      }
-    }
-
-    await Clipboard.setData(ClipboardData(text: numToCopy));
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Copied: $numToCopy'),
-          backgroundColor: AppColors.primary,
-        ),
-      );
     }
   }
 
@@ -265,7 +110,7 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Add to Card Studio',
+                      'Add to Wallet',
                       style: AppTextStyles.getHeading2(
                         context,
                       ).copyWith(fontWeight: FontWeight.bold),
@@ -294,7 +139,7 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: const Text(
-                    'Debit, Credit, ATM or Membership Card with Custom Themes',
+                    'Debit, credit, ATM, or membership card',
                   ),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () {
@@ -391,7 +236,7 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Add Card to Studio',
+                            'Add Payment Card',
                             style: AppTextStyles.getHeading2(
                               context,
                             ).copyWith(fontWeight: FontWeight.w700),
@@ -429,7 +274,7 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                         ),
                       ),
                       const SizedBox(height: AppSpacing.md),
-                      TextFormField(
+                      AppTextFormField(
                         controller: nicknameController,
                         decoration: const InputDecoration(
                           labelText: 'Card Nickname (e.g. Daily Spender)',
@@ -442,7 +287,7 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                       Row(
                         children: [
                           Expanded(
-                            child: TextFormField(
+                            child: AppTextFormField(
                               controller: issuerController,
                               decoration: const InputDecoration(
                                 labelText: 'Bank / Issuer (e.g. HDFC)',
@@ -469,15 +314,16 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                                 );
                               }).toList(),
                               onChanged: (val) {
-                                if (val != null)
+                                if (val != null) {
                                   setModalState(() => cardType = val);
+                                }
                               },
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: AppSpacing.md),
-                      TextFormField(
+                      AppTextFormField(
                         controller: cardholderController,
                         decoration: const InputDecoration(
                           labelText: 'Cardholder Name',
@@ -490,7 +336,7 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                       Row(
                         children: [
                           Expanded(
-                            child: TextFormField(
+                            child: AppTextFormField(
                               controller: lastFourController,
                               decoration: const InputDecoration(
                                 labelText: 'Last 4 Digits',
@@ -500,8 +346,9 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                               keyboardType: TextInputType.number,
                               maxLength: 4,
                               validator: (v) {
-                                if (v == null || v.length != 4)
+                                if (v == null || v.length != 4) {
                                   return 'Enter 4 digits';
+                                }
                                 return null;
                               },
                             ),
@@ -520,15 +367,16 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                                 );
                               }).toList(),
                               onChanged: (val) {
-                                if (val != null)
+                                if (val != null) {
                                   setModalState(() => cardNetwork = val);
+                                }
                               },
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: AppSpacing.sm),
-                      TextFormField(
+                      AppTextFormField(
                         controller: fullNumberController,
                         decoration: const InputDecoration(
                           labelText:
@@ -557,8 +405,9 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                                 );
                               }).toList(),
                               onChanged: (val) {
-                                if (val != null)
+                                if (val != null) {
                                   setModalState(() => expiryMonth = val);
+                                }
                               },
                             ),
                           ),
@@ -576,54 +425,15 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                                 );
                               }).toList(),
                               onChanged: (val) {
-                                if (val != null)
+                                if (val != null) {
                                   setModalState(() => expiryYear = val);
+                                }
                               },
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: AppSpacing.md),
-
-                      // Card Theme Selection (8 themes)
-                      Text('Card Theme', style: AppTextStyles.labelMedium),
-                      const SizedBox(height: AppSpacing.sm),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: CardStudioTheme.allThemes.map((th) {
-                          final isSelected = themeGradient == th.id;
-                          return ChoiceChip(
-                            label: Text(th.name),
-                            selected: isSelected,
-                            avatar: CircleAvatar(
-                              backgroundColor: th.primaryAccent,
-                              radius: 6,
-                            ),
-                            onSelected: (_) =>
-                                setModalState(() => themeGradient = th.id),
-                          );
-                        }).toList(),
-                      ),
-
-                      const SizedBox(height: AppSpacing.md),
-
-                      // Card Layout Selection (5 layouts)
-                      Text('Card Layout', style: AppTextStyles.labelMedium),
-                      const SizedBox(height: AppSpacing.sm),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: CardStudioLayout.allLayouts.map((lo) {
-                          final isSelected = cardLayoutId == lo.id;
-                          return ChoiceChip(
-                            label: Text(lo.name),
-                            selected: isSelected,
-                            onSelected: (_) =>
-                                setModalState(() => cardLayoutId = lo.id),
-                          );
-                        }).toList(),
-                      ),
 
                       const SizedBox(height: AppSpacing.xl),
                       PrimaryButton(
@@ -685,7 +495,7 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                               }
                               messenger.showSnackBar(
                                 const SnackBar(
-                                  content: Text('Card added to Card Studio!'),
+                                  content: Text('Card added to Wallet.'),
                                   backgroundColor: AppColors.success,
                                 ),
                               );
@@ -720,25 +530,6 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
     }
   }
 
-  Color _getPeekCardColor(StudioCardItem item) {
-    if (item.type == StudioCardType.payment && item.paymentCard != null) {
-      final theme = CardStudioTheme.getTheme(item.paymentCard!.themeGradient);
-      return theme.backgroundGradient.colors[1];
-    }
-    switch (item.category) {
-      case 'aadhaar':
-        return const Color(0xFFE65100);
-      case 'pan':
-        return const Color(0xFF004D40);
-      case 'driving_license':
-        return const Color(0xFF1565C0);
-      case 'passport':
-        return const Color(0xFF1A237E);
-      default:
-        return const Color(0xFF2E7D32);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -752,7 +543,7 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Card Studio',
+              'Wallet Cards',
               style: TextStyle(
                 fontFamily: 'Plus Jakarta Sans',
                 fontSize: 18,
@@ -761,7 +552,7 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
               ),
             ),
             const Text(
-              'Premium Cards · Your Collection',
+              'Your saved cards and official documents',
               style: TextStyle(
                 fontFamily: 'Plus Jakarta Sans',
                 color: Color(0xFF63564F),
@@ -772,29 +563,6 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.tune_rounded),
-            tooltip: 'Manage Cards & Reorder',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ManageCardsScreen()),
-              );
-            },
-          ),
-          IconButton(
-            icon: Icon(
-              _isStackedDeckView
-                  ? Icons.view_agenda_outlined
-                  : Icons.style_rounded,
-              color: AppColors.getTextSecondary(context),
-            ),
-            tooltip: _isStackedDeckView
-                ? 'Switch to List View'
-                : 'Switch to Stacked Deck',
-            onPressed: () =>
-                setState(() => _isStackedDeckView = !_isStackedDeckView),
-          ),
           IconButton(
             icon: Icon(
               Icons.add_circle_outline,
@@ -874,37 +642,28 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
                 ),
               ),
 
-              // Cards Stack Carousel vs List View
+              // Wallet records use a compact list for quick scanning.
               Expanded(
                 child: filteredCards.isEmpty
                     ? EmptyState(
                         icon: Icons.credit_card_off_rounded,
-                        title: 'No Cards in Studio',
+                        title: 'No wallet items',
                         message:
-                            'Add payment cards, Aadhaar, PAN, DL, or Passport for unified tracking.',
-                        actionLabel: 'Add Your First Card',
+                            'Add a payment card or official document to get started.',
+                        actionLabel: 'Add to Wallet',
                         onAction: () => _showAddOptions(context),
                       )
-                    : (_isStackedDeckView
-                          ? _buildStackedCardDeck(context, filteredCards)
-                          : ListView.builder(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.lg,
-                                vertical: AppSpacing.md,
-                              ),
-                              itemCount: filteredCards.length,
-                              itemBuilder: (context, index) {
-                                final item = filteredCards[index];
-                                return Padding(
-                                  padding: const EdgeInsets.only(
-                                    bottom: AppSpacing.md,
-                                  ),
-                                  child: Center(
-                                    child: _buildCardItemWidget(item),
-                                  ),
-                                );
-                              },
-                            )),
+                    : ListView.separated(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg,
+                          vertical: AppSpacing.md,
+                        ),
+                        itemCount: filteredCards.length,
+                        separatorBuilder: (_, _) =>
+                            const SizedBox(height: AppSpacing.sm),
+                        itemBuilder: (context, index) =>
+                            _buildCardItemWidget(filteredCards[index]),
+                      ),
               ),
             ],
           );
@@ -920,7 +679,6 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
       selected: isSelected,
       onSelected: (_) => setState(() {
         _selectedFilter = key;
-        _currentCardIndex = 0;
       }),
       selectedColor: AppColors.getPrimary(context).withAlpha(40),
       labelStyle: TextStyle(
@@ -934,657 +692,115 @@ class _CardsScreenState extends State<CardsScreen> with WidgetsBindingObserver {
   }
 
   Widget _buildCardItemWidget(StudioCardItem item, {VoidCallback? onTap}) {
-    final isRevealed = _revealedCardId == item.id;
-    final revealedNum = isRevealed ? _revealedNumber : null;
+    final isPaymentCard = item.type == StudioCardType.payment;
+    final category = item.category.toLowerCase();
+    final imageAsset = isPaymentCard
+        ? 'assets/credit_Debit.png'
+        : category.contains('aadhaar')
+        ? 'assets/aadhar.png'
+        : category.contains('pan')
+        ? 'assets/PAN.png'
+        : category.contains('voter')
+        ? 'assets/voterid.png'
+        : category.contains('passport')
+        ? 'assets/passport.jpeg'
+        : category.contains('licen') || category.contains('driv')
+        ? 'assets/licence.png'
+        : category.contains('insur')
+        ? 'assets/Insurance.png'
+        : null;
 
-    if (item.type == StudioCardType.payment && item.paymentCard != null) {
-      return WalletCardWidget(
-        card: item.paymentCard!,
-        allowReveal: false,
-        revealedNumber: revealedNum,
-        onTap: onTap ?? () => _openCardItem(context, item),
-        onFavoriteToggle: () {
-          context.read<WalletCardProvider>().toggleCardFavorite(item.id);
-          context.read<WalletProvider>().loadWallet();
-        },
-      );
-    } else if (item.document != null) {
-      return VirtualDocumentCard(
-        document: item.document!,
-        onTap: onTap ?? () => _openCardItem(context, item),
-        onFavoriteToggle: () {
-          context.read<WalletDocumentProvider>().toggleDocumentFavorite(
-            item.id,
-          );
-          context.read<WalletProvider>().loadWallet();
-        },
-      );
-    }
-    return const SizedBox.shrink();
-  }
-
-  Widget _buildStackedCardDeck(
-    BuildContext context,
-    List<StudioCardItem> cards,
-  ) {
-    if (_currentCardIndex >= cards.length) {
-      _currentCardIndex = cards.length - 1;
-    }
-    if (_currentCardIndex < 0) {
-      _currentCardIndex = 0;
-    }
-
-    final activeCard = cards[_currentCardIndex];
-
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: Column(
-        children: [
-          const SizedBox(height: AppSpacing.xs),
-
-          // 1. Layered Stacked Cards presentation
-          SizedBox(
-            height: 295,
-            child: Stack(
-              alignment: Alignment.topCenter,
-              children: [
-                // Visual Stack depth: Show up to 2 subsequent cards peeking underneath the top card
-                for (int offset = 2; offset >= 1; offset--) ...[
-                  if (_currentCardIndex + offset < cards.length)
-                    Positioned(
-                      top: 236.0 - (offset == 1 ? 22 : 0) + (offset * 16.0),
-                      left: 28.0 + (offset * 8.0),
-                      right: 28.0 + (offset * 8.0),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 320),
-                        curve: Curves.easeOutCubic,
-                        height: 54,
-                        decoration: BoxDecoration(
-                          color: _getPeekCardColor(
-                            cards[_currentCardIndex + offset],
-                          ),
-                          borderRadius: BorderRadius.circular(18),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withAlpha(50),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(18),
-                            onTap: () => _goToCard(
-                              _currentCardIndex + offset,
-                              cards.length,
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      cards[_currentCardIndex + offset].title,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 12,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  Text(
-                                    cards[_currentCardIndex + offset].category
-                                        .replaceAll('_', ' ')
-                                        .toUpperCase(),
-                                    style: TextStyle(
-                                      color: Colors.white.withAlpha(190),
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 9.5,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-
-                // Top Foreground Swipeable PageView (Seamless horizontal swipe to next card)
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: 245,
-                  child: PageView.builder(
-                    controller: _pageController,
-                    itemCount: cards.length,
-                    physics: const BouncingScrollPhysics(),
-                    onPageChanged: (index) {
-                      setState(() => _currentCardIndex = index);
-                      HapticFeedback.selectionClick();
-                    },
-                    itemBuilder: (context, index) {
-                      final card = cards[index];
-
-                      return AnimatedBuilder(
-                        animation: _pageController,
-                        builder: (context, child) {
-                          double pageOffset = 0.0;
-                          if (_pageController.hasClients &&
-                              _pageController.positions.length == 1 &&
-                              _pageController.position.haveDimensions) {
-                            pageOffset =
-                                (_pageController.page ??
-                                    _pageController.initialPage.toDouble()) -
-                                index;
-                          } else {
-                            pageOffset = (_currentCardIndex - index).toDouble();
-                          }
-
-                          // Tactile Stack transformation: smooth scale, rotation, translation & opacity
-                          final scale = (1.0 - (pageOffset.abs() * 0.08)).clamp(
-                            0.86,
-                            1.0,
-                          );
-                          final opacity = (1.0 - (pageOffset.abs() * 0.25))
-                              .clamp(0.40, 1.0);
-                          final translateY = pageOffset.abs() * 10.0;
-                          final rotation = (pageOffset * -0.04).clamp(
-                            -0.06,
-                            0.06,
-                          );
-
-                          return Transform.translate(
-                            offset: Offset(0, translateY),
-                            child: Transform.rotate(
-                              angle: rotation,
-                              child: Transform.scale(
-                                scale: scale,
-                                child: Opacity(opacity: opacity, child: child),
-                              ),
-                            ),
-                          );
-                        },
-                        child: Center(
-                          child: _buildCardItemWidget(
-                            card,
-                            onTap: () => _openCardItem(context, card),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: AppSpacing.xs),
-
-          // 2. Stack Indicators & Controls (Card X of Y + Dots + Prev/Next buttons)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+    return Container(
+      decoration: BoxDecoration(
+        color: SpendzColors.cream,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: SpendzColors.clayDropShadow(context, blur: 4),
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onTap ?? () => _openCardItem(context, item),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 16),
-                  tooltip: 'Previous Card',
-                  onPressed: _currentCardIndex > 0
-                      ? () => _goToCard(_currentCardIndex - 1, cards.length)
-                      : null,
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Card ${_currentCardIndex + 1} of ${cards.length}',
-                      style: AppTextStyles.caption.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.getTextSecondary(context),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: List.generate(cards.length, (dotIdx) {
-                        final isActive = dotIdx == _currentCardIndex;
-                        return AnimatedContainer(
-                          duration: const Duration(milliseconds: 250),
-                          margin: const EdgeInsets.symmetric(horizontal: 2.5),
-                          width: isActive ? 18 : 6,
-                          height: 6,
-                          decoration: BoxDecoration(
-                            color: isActive
-                                ? AppColors.primary
-                                : AppColors.getTextSecondary(
-                                    context,
-                                  ).withAlpha(60),
-                            borderRadius: BorderRadius.circular(3),
-                          ),
-                        );
-                      }),
-                    ),
-                  ],
-                ),
-                IconButton(
-                  icon: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
-                  tooltip: 'Next Card',
-                  onPressed: _currentCardIndex < cards.length - 1
-                      ? () => _goToCard(_currentCardIndex + 1, cards.length)
-                      : null,
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: AppSpacing.sm),
-
-          // 3. Active Card Information Panel (Requirement 7)
-          _buildActiveCardInfoPanel(context, activeCard),
-
-          const SizedBox(height: AppSpacing.lg),
-
-          // 4. Cards in Stack Tray (Tap to select card in stack)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    'Cards in Deck (${cards.length})',
-                    style: AppTextStyles.labelLarge.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.getTextPrimary(context),
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Swipe or tap to switch',
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.getTextSecondary(context),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.lg,
-              vertical: AppSpacing.xs,
-            ),
-            itemCount: cards.length,
-            separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.xs),
-            itemBuilder: (context, idx) {
-              final cardItem = cards[idx];
-              final isCurrent = idx == _currentCardIndex;
-
-              return InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () => _goToCard(idx, cards.length),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
+                Container(
+                  width: 44,
+                  height: 44,
+                  alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: isCurrent
-                        ? AppColors.getPrimary(context).withAlpha(20)
-                        : AppColors.getSurface(context),
+                    color: SpendzColors.pistachio,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isCurrent
-                              ? AppColors.getPrimary(context)
-                              : Colors.transparent,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              cardItem.title,
-                              style: TextStyle(
-                                fontWeight: isCurrent
-                                    ? FontWeight.bold
-                                    : FontWeight.w600,
-                                color: isCurrent
-                                    ? AppColors.getPrimary(context)
-                                    : AppColors.getTextPrimary(context),
-                                fontSize: 13,
-                              ),
+                  child: imageAsset == null
+                      ? const Icon(Icons.description_outlined)
+                      : ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.asset(
+                            imageAsset,
+                            width: 34,
+                            height: 34,
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, _, _) => const Icon(
+                              Icons.credit_card_rounded,
+                              color: SpendzColors.espresso,
                             ),
-                            Text(
-                              cardItem.subtitle,
-                              style: AppTextStyles.caption.copyWith(
-                                color: AppColors.getTextSecondary(context),
-                                fontSize: 11,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                      if (cardItem.isFavorite)
-                        const Icon(
-                          Icons.star_rounded,
-                          color: Colors.amber,
-                          size: 18,
-                        ),
-                      const SizedBox(width: 6),
-                      const Icon(Icons.chevron_right_rounded, size: 18),
-                    ],
-                  ),
                 ),
-              );
-            },
-          ),
-
-          const SizedBox(height: AppSpacing.xl),
-        ],
-      ),
-    );
-  }
-
-  // ==========================================
-  // ACTIVE CARD INFORMATION PANEL (Requirement 7)
-  // ==========================================
-  Widget _buildActiveCardInfoPanel(
-    BuildContext context,
-    StudioCardItem activeCard,
-  ) {
-    final isPayment =
-        activeCard.type == StudioCardType.payment &&
-        activeCard.paymentCard != null;
-    final paymentCard = activeCard.paymentCard;
-    final currentTheme = isPayment
-        ? CardStudioTheme.getTheme(paymentCard!.themeGradient)
-        : null;
-    final currentLayout = isPayment
-        ? CardStudioLayout.getLayout(paymentCard!.cardLayoutId)
-        : null;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: AppColors.getSurface(context),
-          borderRadius: BorderRadius.circular(AppRadius.card),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(20),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Top Row: Title, Category & Favorite Toggle
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        activeCard.title,
-                        style: AppTextStyles.getBodyLarge(
-                          context,
-                        ).copyWith(fontWeight: FontWeight.bold, fontSize: 16),
+                        item.title,
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        activeCard.subtitle,
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.getTextSecondary(context),
-                          fontSize: 11.5,
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontWeight: FontWeight.w800,
+                          color: SpendzColors.textPrimary(context),
                         ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        item.subtitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: SpendzTypography.caption(context),
                       ),
                     ],
                   ),
                 ),
                 IconButton(
-                  icon: Icon(
-                    activeCard.isFavorite
-                        ? Icons.star_rounded
-                        : Icons.star_outline_rounded,
-                    color: activeCard.isFavorite ? Colors.amber : null,
-                    size: 24,
-                  ),
-                  tooltip: 'Toggle Favorite',
+                  tooltip: item.isFavorite ? 'Remove favorite' : 'Add favorite',
                   onPressed: () {
-                    if (activeCard.type == StudioCardType.payment) {
+                    if (isPaymentCard) {
                       context.read<WalletCardProvider>().toggleCardFavorite(
-                        activeCard.id,
+                        item.id,
                       );
                     } else {
                       context
                           .read<WalletDocumentProvider>()
-                          .toggleDocumentFavorite(activeCard.id);
+                          .toggleDocumentFavorite(item.id);
                     }
                     context.read<WalletProvider>().loadWallet();
                   },
+                  icon: Icon(
+                    item.isFavorite ? Icons.star_rounded : Icons.star_outline,
+                    color: item.isFavorite
+                        ? SpendzColors.terracotta
+                        : SpendzColors.textSecondary(context),
+                  ),
                 ),
               ],
             ),
-
-            // Theme & Layout Badges for Payment Cards
-            if (isPayment && currentTheme != null && currentLayout != null) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Wrap(
-                spacing: 8,
-                runSpacing: 6,
-                children: [
-                  // Theme Selector Pill
-                  InkWell(
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: () => CardThemeSheet.show(context, paymentCard!),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: currentTheme.primaryAccent.withAlpha(25),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: currentTheme.primaryAccent,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            currentTheme.name,
-                            style: TextStyle(
-                              color: AppColors.getTextPrimary(context),
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.palette_outlined,
-                            size: 12,
-                            color: currentTheme.primaryAccent,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Layout Selector Pill
-                  InkWell(
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: () => CardLayoutSheet.show(context, paymentCard!),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.getBackground(context),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            currentLayout.icon,
-                            size: 12,
-                            color: AppColors.getTextSecondary(context),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            currentLayout.name,
-                            style: TextStyle(
-                              color: AppColors.getTextSecondary(context),
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          const Icon(Icons.expand_more, size: 12),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-
-            const Divider(height: 20),
-
-            // Actions Dock
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildDeckActionButton(
-                    context,
-                    icon: Icons.info_outline_rounded,
-                    label: 'Card Details',
-                    onTap: () => _openCardItem(context, activeCard),
-                  ),
-                  const SizedBox(width: 8),
-                  if (isPayment) ...[
-                    _buildDeckActionButton(
-                      context,
-                      icon: Icons.palette_outlined,
-                      label: 'Change Theme',
-                      onTap: () => CardThemeSheet.show(context, paymentCard!),
-                    ),
-                    const SizedBox(width: 8),
-                    _buildDeckActionButton(
-                      context,
-                      icon: Icons.view_quilt_outlined,
-                      label: 'Change Layout',
-                      onTap: () => CardLayoutSheet.show(context, paymentCard!),
-                    ),
-                    const SizedBox(width: 8),
-                  ],
-                  _buildDeckActionButton(
-                    context,
-                    icon: _revealedCardId == activeCard.id
-                        ? Icons.lock_open_rounded
-                        : Icons.lock_outline_rounded,
-                    label: _revealedCardId == activeCard.id
-                        ? 'Hide Number'
-                        : 'Secure Reveal',
-                    color: _revealedCardId == activeCard.id
-                        ? AppColors.primary
-                        : null,
-                    onTap: () {
-                      if (_revealedCardId == activeCard.id) {
-                        _remaskNumber();
-                      } else {
-                        _revealActiveCardNumber(activeCard);
-                      }
-                    },
-                  ),
-                  const SizedBox(width: 8),
-                  _buildDeckActionButton(
-                    context,
-                    icon: Icons.copy_rounded,
-                    label: 'Copy Number',
-                    onTap: () => _copyActiveCardNumber(activeCard),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildDeckActionButton(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    Color? color,
-  }) {
-    final effectiveColor = color ?? AppColors.getTextPrimary(context);
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(8),
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: effectiveColor, size: 20),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: effectiveColor,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

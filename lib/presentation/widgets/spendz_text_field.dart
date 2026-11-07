@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keybz/widgets/app_keyboard/app_keyboard.dart';
 import '../../app/theme/spendz_colors.dart';
 import '../../app/theme/spendz_spacing.dart';
 
@@ -41,7 +42,7 @@ class SpendzTextField extends StatelessWidget {
       borderSide: BorderSide.none,
     );
 
-    return TextFormField(
+    return AppTextFormField(
       controller: controller,
       onChanged: onChanged,
       onEditingComplete: onEditingComplete,

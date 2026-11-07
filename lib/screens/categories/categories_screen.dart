@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keybz/widgets/app_keyboard/app_keyboard.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
@@ -114,7 +115,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(LucideIcons.plus, size: 16, color: Color(0xFF2C221E)),
+                          Icon(
+                            LucideIcons.plus,
+                            size: 16,
+                            color: Color(0xFF2C221E),
+                          ),
                           SizedBox(width: 4),
                           Text(
                             'Add',
@@ -577,7 +582,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       ),
                     ],
                   ),
-                  child: TextField(
+                  child: AppTextFormField(
                     controller: nameController,
                     style: const TextStyle(
                       fontFamily: 'Plus Jakarta Sans',
@@ -622,7 +627,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     children: [
                       Expanded(
                         child: GestureDetector(
-                          onTap: () => setModalState(() => selectedType = 'expense'),
+                          onTap: () =>
+                              setModalState(() => selectedType = 'expense'),
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             decoration: BoxDecoration(
@@ -646,7 +652,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       ),
                       Expanded(
                         child: GestureDetector(
-                          onTap: () => setModalState(() => selectedType = 'income'),
+                          onTap: () =>
+                              setModalState(() => selectedType = 'income'),
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             decoration: BoxDecoration(

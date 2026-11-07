@@ -82,8 +82,7 @@ class DocumentVaultService {
     if (_customTempDirectory != null) {
       dir = Directory(_customTempDirectory);
     } else {
-      final cacheDir = await getTemporaryDirectory();
-      dir = Directory(p.join(cacheDir.path, 'vault_temp'));
+      dir = await getTemporaryDirectory();
     }
     if (!await dir.exists()) {
       await dir.create(recursive: true);
@@ -199,12 +198,14 @@ class DocumentVaultService {
             attachmentType ??
             (normalizedMime.contains('pdf') ? 'pdf' : 'image');
       } catch (e) {
-        if (await stagingFile.exists())
+        if (await stagingFile.exists()) {
           await stagingFile.delete().catchError((_) => stagingFile);
-        if (await finalEncryptedFile.exists())
+        }
+        if (await finalEncryptedFile.exists()) {
           await finalEncryptedFile.delete().catchError(
             (_) => finalEncryptedFile,
           );
+        }
         rethrow;
       }
     }
@@ -397,7 +398,22 @@ class DocumentVaultService {
       throw MasterKeyLostException();
     }
 
-    final file = File(document.encryptedFilePath);
+    File file = File(document.encryptedFilePath);
+    if (!await file.exists()) {
+      // Fallback: Resolve against current vault directory by doc id or filename
+      final vaultDir = await getVaultDirectory();
+      final alternateById = File(p.join(vaultDir.path, '${document.id}.enc'));
+      if (await alternateById.exists()) {
+        file = alternateById;
+      } else if (document.encryptedFilePath.isNotEmpty) {
+        final baseName = p.basename(document.encryptedFilePath);
+        final alternateByBase = File(p.join(vaultDir.path, baseName));
+        if (await alternateByBase.exists()) {
+          file = alternateByBase;
+        }
+      }
+    }
+
     if (!await file.exists()) {
       throw VaultStorageException(
         'Encrypted file not found on disk at: ${document.encryptedFilePath}',
@@ -418,16 +434,37 @@ class DocumentVaultService {
     }
 
     final decryptedBytes = await decryptDocumentBytes(document);
-    final tempDir = await getTempDirectory();
+    if (decryptedBytes.isEmpty) {
+      throw VaultValidationException('Decrypted document is empty.');
+    }
 
-    final ext = document.mimeType.contains('pdf')
+    final tempDir = await getTempDirectory();
+    if (!await tempDir.exists()) {
+      await tempDir.create(recursive: true);
+    }
+
+    final isPdfBytes = decryptedBytes.length >= 4 &&
+        decryptedBytes[0] == 0x25 &&
+        decryptedBytes[1] == 0x50 &&
+        decryptedBytes[2] == 0x44 &&
+        decryptedBytes[3] == 0x46; // %PDF
+    final isPdf = isPdfBytes ||
+        document.mimeType.toLowerCase().contains('pdf') ||
+        document.attachmentType.toLowerCase().contains('pdf');
+
+    final ext = isPdf
         ? '.pdf'
-        : (document.mimeType.contains('png') ? '.png' : '.jpg');
+        : (document.mimeType.toLowerCase().contains('png') ? '.png' : '.jpg');
 
     final previewFile = File(
       p.join(tempDir.path, '${document.id}_preview$ext'),
     );
     await previewFile.writeAsBytes(decryptedBytes, flush: true);
+
+    if (!await previewFile.exists()) {
+      throw VaultStorageException('Failed to write preview file to cache.');
+    }
+
     return previewFile;
   }
 

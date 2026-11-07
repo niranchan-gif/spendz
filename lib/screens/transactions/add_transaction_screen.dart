@@ -1,5 +1,6 @@
 import '../../presentation/widgets/cred_clay_keypad.dart';
 import 'package:flutter/material.dart';
+import 'package:keybz/widgets/app_keyboard/app_keyboard.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
@@ -350,7 +351,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         ),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: TextField(
+                          child: AppTextFormField(
                             controller: _descriptionController,
                             style: TextStyle(
                               fontFamily: 'Plus Jakarta Sans',
@@ -683,7 +684,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
   }
 
-  Widget _buildModeTab(String label, String mode, Color color, Color borderColor) {
+  Widget _buildModeTab(
+    String label,
+    String mode,
+    Color color,
+    Color borderColor,
+  ) {
     final isSelected = _selectedType == mode;
     return Expanded(
       child: GestureDetector(
@@ -725,6 +731,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       ),
     );
   }
+
   void _showAccountSelector(List<WalletCardModel> cards) {
     showModalBottomSheet(
       context: context,

@@ -41,7 +41,8 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: AppColors.surfaceLightMode,
-        elevation: 0,
+        elevation: 2,
+        shadowColor: AppColors.textPrimaryLightMode.withAlpha(22),
         shape: RoundedRectangleBorder(
           borderRadius: AppRadius.roundedCard,
           side: const BorderSide(color: AppColors.borderLightMode, width: 1),
@@ -54,7 +55,7 @@ class AppTheme {
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: AppColors.primaryLightMode,
         foregroundColor: Colors.white,
-        elevation: 4,
+        elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(AppRadius.card)),
         ),
@@ -78,7 +79,8 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primaryLightMode,
           foregroundColor: Colors.white,
-          elevation: 0,
+          elevation: 1,
+          shadowColor: AppColors.textPrimaryLightMode.withAlpha(24),
           minimumSize: const Size.fromHeight(48),
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.lg,
@@ -139,10 +141,12 @@ class AppTheme {
       dialogTheme: DialogThemeData(
         backgroundColor: AppColors.surfaceLightMode,
         shape: RoundedRectangleBorder(borderRadius: AppRadius.roundedLg),
-        elevation: 6,
+        elevation: 5,
+        shadowColor: AppColors.textPrimaryLightMode.withAlpha(24),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: AppColors.surfaceLightMode,
+        elevation: 3,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
@@ -193,7 +197,8 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: AppColors.surfaceDarkMode,
-        elevation: 0,
+        elevation: 2,
+        shadowColor: AppColors.textPrimaryDarkMode.withAlpha(22),
         shape: RoundedRectangleBorder(
           borderRadius: AppRadius.roundedCard,
           side: const BorderSide(color: AppColors.borderDarkMode, width: 1),
@@ -206,7 +211,7 @@ class AppTheme {
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: AppColors.primaryDarkMode,
         foregroundColor: AppColors.backgroundDarkMode,
-        elevation: 4,
+        elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(AppRadius.card)),
         ),
@@ -230,7 +235,8 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primaryDarkMode,
           foregroundColor: AppColors.backgroundDarkMode,
-          elevation: 0,
+          elevation: 1,
+          shadowColor: AppColors.textPrimaryDarkMode.withAlpha(24),
           minimumSize: const Size.fromHeight(48),
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.lg,
@@ -293,10 +299,12 @@ class AppTheme {
       dialogTheme: DialogThemeData(
         backgroundColor: AppColors.surfaceDarkMode,
         shape: RoundedRectangleBorder(borderRadius: AppRadius.roundedLg),
-        elevation: 6,
+        elevation: 5,
+        shadowColor: AppColors.textPrimaryDarkMode.withAlpha(24),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: AppColors.surfaceDarkMode,
+        elevation: 3,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(

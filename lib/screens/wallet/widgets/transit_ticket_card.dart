@@ -248,11 +248,7 @@ class TransitTicketCard extends StatelessWidget {
             blurRadius: 6,
             offset: Offset(2, 3.5),
           ),
-          BoxShadow(
-            color: Colors.white,
-            blurRadius: 2,
-            offset: Offset(-1, -1),
-          ),
+          BoxShadow(color: Colors.white, blurRadius: 2, offset: Offset(-1, -1)),
         ],
       ),
       child: ClipRRect(
@@ -394,7 +390,7 @@ class TransitTicketCard extends StatelessWidget {
                         const Text(
                           'PNR NUMBER',
                           style: TextStyle(
-                            color: const Color(0xFF2C221E),
+                            color: Color(0xFF2C221E),
                             fontWeight: FontWeight.w700,
                             fontSize: 9,
                             letterSpacing: 1.0,
@@ -421,7 +417,7 @@ class TransitTicketCard extends StatelessWidget {
                               Text(
                                 _effectivePnr,
                                 style: const TextStyle(
-                                  color: const Color(0xFF2C221E),
+                                  color: Color(0xFF2C221E),
                                   fontWeight: FontWeight.w900,
                                   fontSize: 16,
                                   fontFamily: 'monospace',
@@ -431,7 +427,7 @@ class TransitTicketCard extends StatelessWidget {
                               const SizedBox(width: 5),
                               const Icon(
                                 Icons.copy_rounded,
-                                color: const Color(0xFFF19C79),
+                                color: Color(0xFFF19C79),
                                 size: 13,
                               ),
                             ],
@@ -447,7 +443,7 @@ class TransitTicketCard extends StatelessWidget {
                         const Text(
                           'SEAT / BERTH',
                           style: TextStyle(
-                            color: const Color(0xFF2C221E),
+                            color: Color(0xFF2C221E),
                             fontWeight: FontWeight.w700,
                             fontSize: 9,
                             letterSpacing: 1.0,
@@ -512,7 +508,7 @@ class TransitTicketCard extends StatelessWidget {
                               const Text(
                                 'DATE OF TRAVEL',
                                 style: TextStyle(
-                                  color: const Color(0xFF2C221E),
+                                  color: Color(0xFF2C221E),
                                   fontSize: 7.5,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -520,7 +516,7 @@ class TransitTicketCard extends StatelessWidget {
                               Text(
                                 formattedDate,
                                 style: const TextStyle(
-                                  color: const Color(0xFF2C221E),
+                                  color: Color(0xFF2C221E),
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -557,7 +553,7 @@ class TransitTicketCard extends StatelessWidget {
                               const Text(
                                 'TIME OF TRAVEL',
                                 style: TextStyle(
-                                  color: const Color(0xFF2C221E),
+                                  color: Color(0xFF2C221E),
                                   fontSize: 7.5,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -565,7 +561,7 @@ class TransitTicketCard extends StatelessWidget {
                               Text(
                                 _effectiveTime,
                                 style: const TextStyle(
-                                  color: const Color(0xFF2C221E),
+                                  color: Color(0xFF2C221E),
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),

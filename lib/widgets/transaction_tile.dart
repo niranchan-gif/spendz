@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keybz/widgets/app_keyboard/app_keyboard.dart';
 import 'package:provider/provider.dart';
 import '../../models/transaction_model.dart';
 import '../../providers/transaction_provider.dart';
@@ -509,7 +510,7 @@ class TransactionTile extends StatelessWidget {
               'Original Amount: ${CurrencyFormatter.format(transaction.amount)}',
             ),
             const SizedBox(height: 16),
-            TextField(
+            AppTextFormField(
               controller: peopleController,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
@@ -518,7 +519,7 @@ class TransactionTile extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            TextField(
+            AppTextFormField(
               controller: amountController,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,

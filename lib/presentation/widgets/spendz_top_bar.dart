@@ -27,11 +27,7 @@ class SpendzTopBar extends StatelessWidget {
         blurRadius: 4,
         offset: Offset(1.5, 2.5),
       ),
-      BoxShadow(
-        color: Colors.white,
-        blurRadius: 1.5,
-        offset: Offset(-1, -1),
-      ),
+      BoxShadow(color: Colors.white, blurRadius: 1.5, offset: Offset(-1, -1)),
     ];
 
     return Padding(
@@ -42,49 +38,37 @@ class SpendzTopBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 7,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF19C79), // Coral Terracotta
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: quietShadow,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: Image.asset(
-                        'assets/icon.png',
-                        width: 23,
-                        height: 23,
-                        errorBuilder: (_, __, ___) => Icon(
-                          LucideIcons.wallet,
-                          color: SpendzColors.primaryAccent(context),
-                          size: 21,
-                        ),
-                      ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Image.asset(
+              'assets/launcher/spendz_banner.png',
+              height: 38,
+              fit: BoxFit.contain,
+              errorBuilder: (_, _, _) => Image.asset(
+                'assets/banner.png',
+                height: 38,
+                fit: BoxFit.contain,
+                errorBuilder: (_, _, _) => Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF19C79),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Text(
+                    'SPENDZ',
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      color: Color(0xFF2C221E),
+                      fontWeight: FontWeight.w900,
+                      fontSize: 14,
                     ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'SPENDZ',
-                      style: TextStyle(
-                        fontFamily: 'Plus Jakarta Sans',
-                        color: Color(0xFF2C221E),
-                        fontWeight: FontWeight.w900,
-                        fontSize: 14,
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ],
+            ),
           ),
           Row(
             children: [
@@ -92,7 +76,8 @@ class SpendzTopBar extends StatelessWidget {
                 type: MaterialType.transparency,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(20),
-                  onTap: onNotificationsTap ??
+                  onTap:
+                      onNotificationsTap ??
                       () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -100,8 +85,9 @@ class SpendzTopBar extends StatelessWidget {
                               'All notifications are up to date',
                             ),
                             behavior: SnackBarBehavior.floating,
-                            backgroundColor:
-                                SpendzColors.surfaceContainerHigh(context),
+                            backgroundColor: SpendzColors.surfaceContainerHigh(
+                              context,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -126,7 +112,8 @@ class SpendzTopBar extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               GestureDetector(
-                onTap: onProfileTap ??
+                onTap:
+                    onProfileTap ??
                     () {
                       Navigator.push(
                         context,

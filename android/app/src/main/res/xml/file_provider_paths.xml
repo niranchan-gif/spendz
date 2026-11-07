@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- App's private cache directory: Context.getCacheDir() -->
+    <cache-path name="cache" path="." />
+    <!-- vault_temp subdirectory inside cache -->
+    <cache-path name="vault_temp" path="vault_temp/" />
+    <!-- App's external cache directory (some devices) -->
+    <external-cache-path name="external_cache" path="." />
+    <!-- App's files directory: Context.getFilesDir() -->
+    <files-path name="files" path="." />
+    <!-- App's external files directory -->
+    <external-files-path name="external_files" path="." />
+</paths>
+

@@ -62,7 +62,7 @@ class ImportedTransactionsScreen extends StatelessWidget {
                     shrinkWrap: true,
                     physics: const BouncingScrollPhysics(),
                     itemCount: categories.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
                     itemBuilder: (context, index) {
                       final cat = categories[index];
                       final catColor = Color(int.parse(cat.color));
@@ -74,7 +74,10 @@ class ImportedTransactionsScreen extends StatelessWidget {
                         },
                         borderRadius: BorderRadius.circular(16),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFF6F4D2),
                             borderRadius: BorderRadius.circular(16),
@@ -88,7 +91,11 @@ class ImportedTransactionsScreen extends StatelessWidget {
                                   color: catColor.withAlpha(35),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: Icon(IconMapper.getIcon(cat.icon), color: catColor, size: 18),
+                                child: Icon(
+                                  IconMapper.getIcon(cat.icon),
+                                  color: catColor,
+                                  size: 18,
+                                ),
                               ),
                               const SizedBox(width: 12),
                               Text(
@@ -160,7 +167,10 @@ class ImportedTransactionsScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 12),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 7,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF19C79),
                           borderRadius: BorderRadius.circular(22),
@@ -182,7 +192,11 @@ class ImportedTransactionsScreen extends StatelessWidget {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(6),
-                              child: Image.asset('assets/icon.png', width: 22, height: 22),
+                              child: Image.asset(
+                                'assets/icon.png',
+                                width: 22,
+                                height: 22,
+                              ),
                             ),
                             const SizedBox(width: 8),
                             const Text(
@@ -207,11 +221,15 @@ class ImportedTransactionsScreen extends StatelessWidget {
                       }
                       return GestureDetector(
                         onTap: () async {
-                          final added = await importProvider.approveAll(txProvider);
+                          final added = await importProvider.approveAll(
+                            txProvider,
+                          );
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Added $added transactions to activity!'),
+                                content: Text(
+                                  'Added $added transactions to activity!',
+                                ),
                                 backgroundColor: const Color(0xFFF19C79),
                               ),
                             );
@@ -219,7 +237,10 @@ class ImportedTransactionsScreen extends StatelessWidget {
                           }
                         },
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFD4E09B),
                             borderRadius: BorderRadius.circular(20),
@@ -239,7 +260,11 @@ class ImportedTransactionsScreen extends StatelessWidget {
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.check_circle_rounded, size: 16, color: Color(0xFF2C221E)),
+                              Icon(
+                                Icons.check_circle_rounded,
+                                size: 16,
+                                color: Color(0xFF2C221E),
+                              ),
                               SizedBox(width: 4),
                               Text(
                                 'Approve All',
@@ -262,403 +287,472 @@ class ImportedTransactionsScreen extends StatelessWidget {
 
             // Content
             Expanded(
-              child: Consumer3<GmailImportProvider, TransactionProvider, CategoryProvider>(
-                builder: (context, importProvider, txProvider, categoryProvider, _) {
-                  if (importProvider.isLoading) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 60,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              color: SpendzColors.tangerine.withAlpha(25),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Padding(
-                              padding: EdgeInsets.all(16),
-                              child: CircularProgressIndicator(
-                                strokeWidth: 3,
-                                color: SpendzColors.tangerine,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Syncing Bank & SMS Alerts...',
-                            style: TextStyle(
-                              fontFamily: 'Plus Jakarta Sans',
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: SpendzColors.textPrimary(context),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  if (importProvider.error != null) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 56,
-                              height: 56,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF6F4D2),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.cloud_off_rounded, color: Color(0xFFA44A3F), size: 28),
-                            ),
-                            const SizedBox(height: 14),
-                            Text(
-                              'Sync Connection Failed',
-                              style: TextStyle(
-                                fontFamily: 'Plus Jakarta Sans',
-                                fontSize: 17,
-                                fontWeight: FontWeight.w800,
-                                color: SpendzColors.textPrimary(context),
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              importProvider.error!,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontFamily: 'Plus Jakarta Sans',
-                                fontSize: 12.5,
-                                color: SpendzColors.textSecondary(context),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            GestureDetector(
-                              onTap: () => importProvider.reloadTransactions(categoryProvider),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              child:
+                  Consumer3<
+                    GmailImportProvider,
+                    TransactionProvider,
+                    CategoryProvider
+                  >(
+                    builder: (context, importProvider, txProvider, categoryProvider, _) {
+                      if (importProvider.isLoading) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 60,
+                                height: 60,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFF19C79),
-                                  borderRadius: BorderRadius.circular(20),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      color: Color(0x1F2C221E),
-                                      blurRadius: 4,
-                                      offset: Offset(1.5, 2.5),
-                                    ),
-                                    BoxShadow(
-                                      color: Colors.white,
-                                      blurRadius: 1.5,
-                                      offset: Offset(-1, -1),
-                                    ),
-                                  ],
+                                  color: SpendzColors.tangerine.withAlpha(25),
+                                  shape: BoxShape.circle,
                                 ),
-                                child: const Text(
-                                  'Retry Sync',
-                                  style: TextStyle(
-                                    fontFamily: 'Plus Jakarta Sans',
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w800,
-                                    color: Color(0xFF2C221E),
+                                child: const Padding(
+                                  padding: EdgeInsets.all(16),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 3,
+                                    color: SpendzColors.tangerine,
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-
-                  final txList = importProvider.newTransactions;
-
-                  if (txList.isEmpty) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF6F4D2),
-                            borderRadius: BorderRadius.circular(28),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x1F2C221E),
-                                blurRadius: 8,
-                                offset: Offset(2, 4),
-                              ),
-                              BoxShadow(
-                                color: Colors.white,
-                                blurRadius: 2,
-                                offset: Offset(-1, -1),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 56,
-                                height: 56,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFCBDFBD),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(Icons.check_circle_rounded, color: Color(0xFF2C221E), size: 30),
-                              ),
-                              const SizedBox(height: 14),
+                              const SizedBox(height: 16),
                               Text(
-                                'All Caught Up!',
+                                'Syncing Bank & SMS Alerts...',
                                 style: TextStyle(
                                   fontFamily: 'Plus Jakarta Sans',
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w800,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
                                   color: SpendzColors.textPrimary(context),
                                 ),
                               ),
-                              const SizedBox(height: 6),
-                              Text(
-                                'No pending bank or SMS transactions found.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontFamily: 'Plus Jakarta Sans',
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w500,
-                                  color: SpendzColors.textSecondary(context),
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              GestureDetector(
-                                onTap: () => Navigator.pop(context),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF19C79),
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: const [
-                                      BoxShadow(
-                                        color: Color(0x1F2C221E),
-                                        blurRadius: 4,
-                                        offset: Offset(1.5, 2.5),
-                                      ),
-                                      BoxShadow(
-                                        color: Colors.white,
-                                        blurRadius: 1.5,
-                                        offset: Offset(-1, -1),
-                                      ),
-                                    ],
-                                  ),
-                                  child: const Text(
-                                    'Back to Home',
-                                    style: TextStyle(
-                                      fontFamily: 'Plus Jakarta Sans',
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w800,
-                                      color: Color(0xFF2C221E),
-                                    ),
-                                  ),
-                                ),
-                              ),
                             ],
                           ),
-                        ),
-                      ),
-                    );
-                  }
+                        );
+                      }
 
-                  return ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: txList.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final tx = txList[index];
-                      final isExpense = tx.type.toUpperCase() == 'DEBIT';
-                      final isParent = CategoryEngine.isParentTransfer(tx.name);
-
-                      final cat = tx.suggestedCategoryId != null
-                          ? categoryProvider.getCategoryById(tx.suggestedCategoryId!)
-                          : null;
-
-                      final amountColor = isParent
-                          ? SpendzColors.tertiarySky
-                          : (isExpense ? const Color(0xFFA44A3F) : const Color(0xFF4C6B22));
-                      final amountPrefix = isExpense ? '-' : '+';
-
-                      return Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFCBDFBD),
-                          borderRadius: BorderRadius.circular(22),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x1F2C221E),
-                              blurRadius: 5,
-                              offset: Offset(2, 3),
-                            ),
-                            BoxShadow(
-                              color: Colors.white,
-                              blurRadius: 1.5,
-                              offset: Offset(-1, -1),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      if (importProvider.error != null) {
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Expanded(
-                                  child: Text(
-                                    tx.name,
-                                    style: TextStyle(
-                                      fontFamily: 'Plus Jakarta Sans',
-                                      fontSize: 14.5,
-                                      fontWeight: FontWeight.w800,
-                                      color: SpendzColors.textPrimary(context),
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                                Container(
+                                  width: 56,
+                                  height: 56,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF6F4D2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.cloud_off_rounded,
+                                    color: Color(0xFFA44A3F),
+                                    size: 28,
                                   ),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(height: 14),
                                 Text(
-                                  '$amountPrefix₹${tx.amount.toStringAsFixed(2)}',
+                                  'Sync Connection Failed',
                                   style: TextStyle(
                                     fontFamily: 'Plus Jakarta Sans',
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w900,
-                                    color: amountColor,
-                                    letterSpacing: -0.3,
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w800,
+                                    color: SpendzColors.textPrimary(context),
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  importProvider.error!,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontFamily: 'Plus Jakarta Sans',
+                                    fontSize: 12.5,
+                                    color: SpendzColors.textSecondary(context),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                GestureDetector(
+                                  onTap: () => importProvider
+                                      .reloadTransactions(categoryProvider),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 18,
+                                      vertical: 10,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF19C79),
+                                      borderRadius: BorderRadius.circular(20),
+                                      boxShadow: const [
+                                        BoxShadow(
+                                          color: Color(0x1F2C221E),
+                                          blurRadius: 4,
+                                          offset: Offset(1.5, 2.5),
+                                        ),
+                                        BoxShadow(
+                                          color: Colors.white,
+                                          blurRadius: 1.5,
+                                          offset: Offset(-1, -1),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Text(
+                                      'Retry Sync',
+                                      style: TextStyle(
+                                        fontFamily: 'Plus Jakarta Sans',
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w800,
+                                        color: Color(0xFF2C221E),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 8),
+                          ),
+                        );
+                      }
 
-                            // Category pill + Actions
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                GestureDetector(
-                                  onTap: () => _showCategoryPicker(
-                                    context,
-                                    tx,
-                                    categoryProvider,
-                                    importProvider,
+                      final txList = importProvider.newTransactions;
+
+                      if (txList.isEmpty) {
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 32,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF6F4D2),
+                                borderRadius: BorderRadius.circular(28),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x1F2C221E),
+                                    blurRadius: 8,
+                                    offset: Offset(2, 4),
                                   ),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  BoxShadow(
+                                    color: Colors.white,
+                                    blurRadius: 2,
+                                    offset: Offset(-1, -1),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 56,
+                                    height: 56,
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFF6F4D2),
-                                      borderRadius: BorderRadius.circular(12),
+                                      color: const Color(0xFFCBDFBD),
+                                      shape: BoxShape.circle,
                                     ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          cat != null
-                                              ? IconMapper.getIcon(cat.icon)
-                                              : Icons.category_rounded,
-                                          size: 13,
-                                          color: SpendzColors.textSecondary(context),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          cat?.name ?? 'Category',
-                                          style: TextStyle(
-                                            fontFamily: 'Plus Jakarta Sans',
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w700,
-                                            color: SpendzColors.textPrimary(context),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 3),
-                                        Icon(
-                                          Icons.keyboard_arrow_down_rounded,
-                                          size: 14,
-                                          color: SpendzColors.textSecondary(context),
-                                        ),
-                                      ],
+                                    child: const Icon(
+                                      Icons.check_circle_rounded,
+                                      color: Color(0xFF2C221E),
+                                      size: 30,
                                     ),
                                   ),
-                                ),
-                                Row(
-                                  children: [
-                                    // Reject Button
-                                    GestureDetector(
-                                      onTap: () => importProvider.removeTransaction(tx),
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFF6F4D2),
-                                          borderRadius: BorderRadius.circular(14),
-                                        ),
-                                        child: const Icon(
-                                          Icons.close_rounded,
-                                          size: 15,
-                                          color: Color(0xFFA44A3F),
+                                  const SizedBox(height: 14),
+                                  Text(
+                                    'All Caught Up!',
+                                    style: TextStyle(
+                                      fontFamily: 'Plus Jakarta Sans',
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w800,
+                                      color: SpendzColors.textPrimary(context),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    'No pending bank or SMS transactions found.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontFamily: 'Plus Jakarta Sans',
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w500,
+                                      color: SpendzColors.textSecondary(
+                                        context,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  GestureDetector(
+                                    onTap: () => Navigator.pop(context),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                        vertical: 10,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF19C79),
+                                        borderRadius: BorderRadius.circular(20),
+                                        boxShadow: const [
+                                          BoxShadow(
+                                            color: Color(0x1F2C221E),
+                                            blurRadius: 4,
+                                            offset: Offset(1.5, 2.5),
+                                          ),
+                                          BoxShadow(
+                                            color: Colors.white,
+                                            blurRadius: 1.5,
+                                            offset: Offset(-1, -1),
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Text(
+                                        'Back to Home',
+                                        style: TextStyle(
+                                          fontFamily: 'Plus Jakarta Sans',
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w800,
+                                          color: Color(0xFF2C221E),
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(width: 8),
-                                    // Approve Button
-                                    GestureDetector(
-                                      onTap: () async {
-                                        await importProvider.approveTransaction(tx.reference, txProvider);
-                                        if (context.mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(
-                                              content: Text('Transaction added!'),
-                                              backgroundColor: Color(0xFFF19C79),
-                                            ),
-                                          );
-                                        }
-                                      },
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFD4E09B),
-                                          borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+
+                      return ListView.separated(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                        physics: const BouncingScrollPhysics(),
+                        itemCount: txList.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final tx = txList[index];
+                          final isExpense = tx.type.toUpperCase() == 'DEBIT';
+                          final isParent = CategoryEngine.isParentTransfer(
+                            tx.name,
+                          );
+
+                          final cat = tx.suggestedCategoryId != null
+                              ? categoryProvider.getCategoryById(
+                                  tx.suggestedCategoryId!,
+                                )
+                              : null;
+
+                          final amountColor = isParent
+                              ? SpendzColors.tertiarySky
+                              : (isExpense
+                                    ? const Color(0xFFA44A3F)
+                                    : const Color(0xFF4C6B22));
+                          final amountPrefix = isExpense ? '-' : '+';
+
+                          return Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFCBDFBD),
+                              borderRadius: BorderRadius.circular(22),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x1F2C221E),
+                                  blurRadius: 5,
+                                  offset: Offset(2, 3),
+                                ),
+                                BoxShadow(
+                                  color: Colors.white,
+                                  blurRadius: 1.5,
+                                  offset: Offset(-1, -1),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        tx.name,
+                                        style: TextStyle(
+                                          fontFamily: 'Plus Jakarta Sans',
+                                          fontSize: 14.5,
+                                          fontWeight: FontWeight.w800,
+                                          color: SpendzColors.textPrimary(
+                                            context,
+                                          ),
                                         ),
-                                        child: const Row(
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '$amountPrefix₹${tx.amount.toStringAsFixed(2)}',
+                                      style: TextStyle(
+                                        fontFamily: 'Plus Jakarta Sans',
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w900,
+                                        color: amountColor,
+                                        letterSpacing: -0.3,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+
+                                // Category pill + Actions
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () => _showCategoryPicker(
+                                        context,
+                                        tx,
+                                        categoryProvider,
+                                        importProvider,
+                                      ),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFF6F4D2),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Icon(
-                                              Icons.check_rounded,
-                                              size: 14,
-                                              color: Color(0xFF2C221E),
+                                              cat != null
+                                                  ? IconMapper.getIcon(cat.icon)
+                                                  : Icons.category_rounded,
+                                              size: 13,
+                                              color: SpendzColors.textSecondary(
+                                                context,
+                                              ),
                                             ),
-                                            SizedBox(width: 3),
+                                            const SizedBox(width: 4),
                                             Text(
-                                              'Add',
+                                              cat?.name ?? 'Category',
                                               style: TextStyle(
                                                 fontFamily: 'Plus Jakarta Sans',
-                                                fontSize: 11.5,
-                                                fontWeight: FontWeight.w800,
-                                                color: Color(0xFF2C221E),
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w700,
+                                                color: SpendzColors.textPrimary(
+                                                  context,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 3),
+                                            Icon(
+                                              Icons.keyboard_arrow_down_rounded,
+                                              size: 14,
+                                              color: SpendzColors.textSecondary(
+                                                context,
                                               ),
                                             ),
                                           ],
                                         ),
                                       ),
                                     ),
+                                    Row(
+                                      children: [
+                                        // Reject Button
+                                        GestureDetector(
+                                          onTap: () => importProvider
+                                              .removeTransaction(tx),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 10,
+                                              vertical: 5,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFF6F4D2),
+                                              borderRadius:
+                                                  BorderRadius.circular(14),
+                                            ),
+                                            child: const Icon(
+                                              Icons.close_rounded,
+                                              size: 15,
+                                              color: Color(0xFFA44A3F),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        // Approve Button
+                                        GestureDetector(
+                                          onTap: () async {
+                                            await importProvider
+                                                .approveTransaction(
+                                                  tx.reference,
+                                                  txProvider,
+                                                );
+                                            if (context.mounted) {
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                const SnackBar(
+                                                  content: Text(
+                                                    'Transaction added!',
+                                                  ),
+                                                  backgroundColor: Color(
+                                                    0xFFF19C79,
+                                                  ),
+                                                ),
+                                              );
+                                            }
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 5,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFD4E09B),
+                                              borderRadius:
+                                                  BorderRadius.circular(14),
+                                            ),
+                                            child: const Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  Icons.check_rounded,
+                                                  size: 14,
+                                                  color: Color(0xFF2C221E),
+                                                ),
+                                                SizedBox(width: 3),
+                                                Text(
+                                                  'Add',
+                                                  style: TextStyle(
+                                                    fontFamily:
+                                                        'Plus Jakarta Sans',
+                                                    fontSize: 11.5,
+                                                    fontWeight: FontWeight.w800,
+                                                    color: Color(0xFF2C221E),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ],
                                 ),
                               ],
                             ),
-                          ],
-                        ),
+                          );
+                        },
                       );
                     },
-                  );
-                },
-              ),
+                  ),
             ),
           ],
         ),

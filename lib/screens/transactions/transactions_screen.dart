@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keybz/widgets/app_keyboard/app_keyboard.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -405,10 +406,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             ),
             const SizedBox(height: 4),
             Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 3,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
               decoration: BoxDecoration(
                 color: const Color(0xFFD4E09B), // Chartreuse
                 borderRadius: BorderRadius.circular(20),
@@ -466,7 +464,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 );
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFCBDFBD), // Pistachio
                   borderRadius: BorderRadius.circular(20),
@@ -512,7 +513,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const AddTransactionScreen(),
+                  ),
                 );
               },
               child: Container(
@@ -534,7 +537,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     ),
                   ],
                 ),
-                child: const Icon(Icons.add_rounded, color: Color(0xFF2C221E), size: 24),
+                child: const Icon(
+                  Icons.add_rounded,
+                  color: Color(0xFF2C221E),
+                  size: 24,
+                ),
               ),
             ),
           ],
@@ -681,7 +688,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.5,
-                        color: const Color(0xFF2C221E),
+                        color: Color(0xFF2C221E),
                       ),
                     ),
                     Container(
@@ -701,7 +708,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       child: const Icon(
                         Icons.arrow_upward_rounded,
                         size: 15,
-                        color: const Color(0xFF2C221E),
+                        color: Color(0xFF2C221E),
                       ),
                     ),
                   ],
@@ -713,7 +720,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     fontFamily: 'Plus Jakarta Sans',
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF2C221E),
+                    color: Color(0xFF2C221E),
                     letterSpacing: -0.4,
                   ),
                 ),
@@ -733,7 +740,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       fontFamily: 'Plus Jakarta Sans',
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF2C221E),
+                      color: Color(0xFF2C221E),
                     ),
                   ),
                 ),
@@ -777,7 +784,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: TextField(
+            child: AppTextFormField(
               controller: _searchController,
               style: TextStyle(
                 fontFamily: 'Plus Jakarta Sans',
@@ -971,7 +978,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             fontFamily: 'Plus Jakarta Sans',
             fontSize: 12,
             fontWeight: FontWeight.w700,
-            color: isSelected ? const Color(0xFFF6F4D2) : const Color(0xFF2C221E),
+            color: isSelected
+                ? const Color(0xFFF6F4D2)
+                : const Color(0xFF2C221E),
           ),
         ),
       ),

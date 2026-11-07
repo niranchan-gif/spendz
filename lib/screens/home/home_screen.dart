@@ -15,7 +15,6 @@ import '../../providers/transaction_provider.dart';
 import '../../utils/icon_mapper.dart';
 import '../transactions/add_transaction_screen.dart';
 import '../transactions/transactions_screen.dart';
-import '../wallet/wallet_dashboard_screen.dart';
 
 /// Spendz Funky Claymorphism Home Screen.
 ///
@@ -318,17 +317,16 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ─── 2. QUICK ACTION CLAY BUTTONS ───────────────────────────────────────────
+  // ─── 2. QUICK ACTION CLAY BUTTONS (50/50 TACTILE TILES) ────────────────────
   Widget _buildQuickActionButtons(BuildContext context) {
     return Row(
       children: [
         Expanded(
-          child: _buildClayActionPod(
+          child: _buildClayActionTile(
             context: context,
             icon: Icons.add_rounded,
-            label: 'Add',
-            bgColor: const Color(0xFFF19C79),
-            borderColor: const Color(0xFFD9835E),
+            title: 'Add Transaction',
+            bgColor: const Color(0xFFF19C79), // Coral Terracotta
             iconColor: const Color(0xFF2C221E),
             onTap: () => Navigator.push(
               context,
@@ -336,13 +334,13 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
+        const SizedBox(width: 12),
         Expanded(
-          child: _buildClayActionPod(
+          child: _buildClayActionTile(
             context: context,
             icon: Icons.sync_rounded,
-            label: 'Sync to Bank',
-            bgColor: const Color(0xFFD4E09B),
-            borderColor: const Color(0xFFBFCC85),
+            title: 'Sync to Bank',
+            bgColor: const Color(0xFFD4E09B), // Funky Chartreuse
             iconColor: const Color(0xFF2C221E),
             onTap: () => Navigator.push(
               context,
@@ -352,91 +350,72 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
-        Expanded(
-          child: _buildClayActionPod(
-            context: context,
-            icon: Icons.credit_card_rounded,
-            label: 'Cards',
-            bgColor: const Color(0xFFCBDFBD),
-            borderColor: const Color(0xFFB5CCA7),
-            iconColor: const Color(0xFF2C221E),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const WalletDashboardScreen(),
-              ),
-            ),
-          ),
-        ),
-        Expanded(
-          child: _buildClayActionPod(
-            context: context,
-            icon: Icons.lock_outline_rounded,
-            label: 'Vault',
-            bgColor: const Color(0xFFA44A3F),
-            borderColor: const Color(0xFF883B32),
-            iconColor: Colors.white,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const WalletDashboardScreen(),
-              ),
-            ),
-          ),
-        ),
       ],
     );
   }
 
-  Widget _buildClayActionPod({
+  Widget _buildClayActionTile({
     required BuildContext context,
     required IconData icon,
-    required String label,
+    required String title,
     required Color bgColor,
-    required Color borderColor,
     required Color iconColor,
     required VoidCallback onTap,
   }) {
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: onTap,
-          child: Container(
-            width: 58,
-            height: 58,
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x222C221E),
-                  blurRadius: 5,
-                  offset: Offset(2, 3),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x222C221E),
+                blurRadius: 6,
+                offset: Offset(2, 3.5),
+              ),
+              BoxShadow(
+                color: Colors.white,
+                blurRadius: 2,
+                offset: Offset(-1, -1),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2C221E).withAlpha(22),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                BoxShadow(
-                  color: Colors.white,
-                  blurRadius: 1.5,
-                  offset: Offset(-1, -1),
+                child: Icon(icon, color: iconColor, size: 20),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.2,
+                    color: Color(0xFF2C221E),
+                    height: 1.15,
+                  ),
                 ),
-              ],
-            ),
-            child: Icon(icon, color: iconColor, size: 24),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 6),
-        Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontFamily: 'Plus Jakarta Sans',
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: SpendzColors.textPrimary(context),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -452,11 +431,21 @@ class _HomeScreenState extends State<HomeScreen> {
             : null;
 
         final hasExpenses = topEntry != null && topEntry.value > 0;
-        final categoryName = hasExpenses ? (cat?.name ?? 'General Expense') : 'No expenses recorded';
+        final categoryName = hasExpenses
+            ? (cat?.name ?? 'General Expense')
+            : 'No expenses recorded';
         final totalSpent = topEntry?.value ?? 0.0;
-        final totalBudget = dashboard.monthlyIncome > 0 ? (dashboard.monthlyIncome * 0.3) : 5000.0;
-        final utilRatio = hasExpenses ? (totalSpent / totalBudget).clamp(0.05, 1.0) : 0.0;
-        final utilPct = hasExpenses ? ((totalSpent / totalBudget) * 100).clamp(1.0, 100.0).toStringAsFixed(0) : '0';
+        final totalBudget = dashboard.monthlyIncome > 0
+            ? (dashboard.monthlyIncome * 0.3)
+            : 5000.0;
+        final utilRatio = hasExpenses
+            ? (totalSpent / totalBudget).clamp(0.05, 1.0)
+            : 0.0;
+        final utilPct = hasExpenses
+            ? ((totalSpent / totalBudget) * 100)
+                  .clamp(1.0, 100.0)
+                  .toStringAsFixed(0)
+            : '0';
 
         return SpendzSurface(
           color: SpendzColors.clayCream,
@@ -530,7 +519,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   widthFactor: utilRatio > 0 ? utilRatio : 0.04,
                   child: Container(
                     decoration: BoxDecoration(
-                      color: hasExpenses ? SpendzColors.tangerine : SpendzColors.border(context),
+                      color: hasExpenses
+                          ? SpendzColors.tangerine
+                          : SpendzColors.border(context),
                       borderRadius: BorderRadius.circular(6),
                       boxShadow: hasExpenses
                           ? [
@@ -550,7 +541,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    hasExpenses ? 'Budget track: Active' : 'Budget track: Inactive',
+                    hasExpenses
+                        ? 'Budget track: Active'
+                        : 'Budget track: Inactive',
                     style: TextStyle(
                       fontSize: 10.5,
                       color: SpendzColors.textSecondary(context),
@@ -562,7 +555,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w800,
-                      color: hasExpenses ? SpendzColors.tangerine : SpendzColors.textSecondary(context),
+                      color: hasExpenses
+                          ? SpendzColors.tangerine
+                          : SpendzColors.textSecondary(context),
                     ),
                   ),
                 ],
@@ -691,9 +686,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                DateFormat(
-                                  'dd MMM • hh:mm a',
-                                ).format(tx.date),
+                                DateFormat('dd MMM • hh:mm a').format(tx.date),
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: SpendzColors.textSecondary(context),

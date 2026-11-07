@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:keybz/widgets/app_keyboard/app_keyboard.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_radius.dart';
@@ -19,10 +21,6 @@ import '../../widgets/design_system/loading_state.dart';
 import '../../widgets/design_system/primary_button.dart';
 import '../../widgets/design_system/reusable_card.dart';
 import 'widgets/stitch_spotlight_card.dart';
-import 'card_studio/card_studio_theme.dart';
-import 'card_studio/card_studio_layout.dart';
-import 'card_studio/card_theme_sheet.dart';
-import 'card_studio/card_layout_sheet.dart';
 
 class CardDetailScreen extends StatefulWidget {
   final WalletCardModel card;
@@ -145,7 +143,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                         ],
                       ),
                       const SizedBox(height: AppSpacing.md),
-                      TextFormField(
+                      AppTextFormField(
                         controller: nicknameController,
                         decoration: const InputDecoration(
                           labelText: 'Card Nickname',
@@ -157,7 +155,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                       Row(
                         children: [
                           Expanded(
-                            child: TextFormField(
+                            child: AppTextFormField(
                               controller: issuerController,
                               decoration: const InputDecoration(
                                 labelText: 'Bank / Issuer',
@@ -180,15 +178,16 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                                 );
                               }).toList(),
                               onChanged: (val) {
-                                if (val != null)
+                                if (val != null) {
                                   setModalState(() => cardType = val);
+                                }
                               },
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: AppSpacing.md),
-                      TextFormField(
+                      AppTextFormField(
                         controller: cardholderController,
                         decoration: const InputDecoration(
                           labelText: 'Cardholder Name',
@@ -197,7 +196,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                             v == null || v.isEmpty ? 'Required' : null,
                       ),
                       const SizedBox(height: AppSpacing.md),
-                      TextFormField(
+                      AppTextFormField(
                         controller: fullNumberController,
                         decoration: InputDecoration(
                           labelText: 'Update Full Card Number (Optional)',
@@ -226,8 +225,9 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                                 );
                               }).toList(),
                               onChanged: (val) {
-                                if (val != null)
+                                if (val != null) {
                                   setModalState(() => expiryMonth = val);
+                                }
                               },
                             ),
                           ),
@@ -245,52 +245,13 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                                 );
                               }).toList(),
                               onChanged: (val) {
-                                if (val != null)
+                                if (val != null) {
                                   setModalState(() => expiryYear = val);
+                                }
                               },
                             ),
                           ),
                         ],
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Text('Card Theme', style: AppTextStyles.labelMedium),
-                      const SizedBox(height: AppSpacing.sm),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: CardStudioTheme.allThemes.map((t) {
-                          final isSelected = themeGradient == t.id;
-                          return ChoiceChip(
-                            label: Text(t.name),
-                            selected: isSelected,
-                            avatar: CircleAvatar(
-                              backgroundColor: t.primaryAccent,
-                              radius: 6,
-                            ),
-                            onSelected: (selected) {
-                              if (selected)
-                                setModalState(() => themeGradient = t.id);
-                            },
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Text('Card Layout', style: AppTextStyles.labelMedium),
-                      const SizedBox(height: AppSpacing.sm),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: CardStudioLayout.allLayouts.map((l) {
-                          final isSelected = cardLayoutId == l.id;
-                          return ChoiceChip(
-                            label: Text(l.name),
-                            selected: isSelected,
-                            onSelected: (selected) {
-                              if (selected)
-                                setModalState(() => cardLayoutId = l.id);
-                            },
-                          );
-                        }).toList(),
                       ),
                       const SizedBox(height: AppSpacing.xl),
                       PrimaryButton(
@@ -469,81 +430,40 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: 24),
 
-            // Quick Theme & Layout Customization Chips
-            Center(
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 6,
-                alignment: WrapAlignment.center,
-                children: [
-                  ActionChip(
-                    avatar: const Icon(Icons.palette_outlined, size: 16),
-                    label: Text(
-                      CardStudioTheme.getTheme(_currentCard.themeGradient).name,
-                    ),
-                    onPressed: () async {
-                      await CardThemeSheet.show(context, _currentCard);
-                      if (!context.mounted) return;
-                      final updated = context
-                          .read<WalletCardProvider>()
-                          .getCardById(_currentCard.id);
-                      if (updated != null && mounted) {
-                        setState(() => _currentCard = updated);
-                      }
-                    },
+            // Clay Action Buttons Row (Open, Share, Edit)
+            Row(
+              children: [
+                Expanded(
+                  child: _buildClayActionButton(
+                    icon: Icons.folder_open_rounded,
+                    label: 'Open',
+                    backgroundColor: const Color(0xFFCBDFBD), // Pistachio
+                    onTap: _openCardPdf,
                   ),
-                  ActionChip(
-                    avatar: const Icon(Icons.view_quilt_outlined, size: 16),
-                    label: Text(
-                      CardStudioLayout.getLayout(
-                        _currentCard.cardLayoutId,
-                      ).name,
-                    ),
-                    onPressed: () async {
-                      await CardLayoutSheet.show(context, _currentCard);
-                      if (!context.mounted) return;
-                      final updated = context
-                          .read<WalletCardProvider>()
-                          .getCardById(_currentCard.id);
-                      if (updated != null && mounted) {
-                        setState(() => _currentCard = updated);
-                      }
-                    },
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildClayActionButton(
+                    icon: Icons.share_rounded,
+                    label: 'Share',
+                    backgroundColor: const Color(0xFFD4E09B), // Chartreuse
+                    onTap: _shareCardDetails,
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildClayActionButton(
+                    icon: Icons.edit_note_rounded,
+                    label: 'Edit',
+                    backgroundColor: const Color(0xFFF19C79), // Terracotta
+                    onTap: _showEditCardDialog,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: AppSpacing.md),
-
-            // Security & Privacy Disclaimer Badge
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: AppColors.getPrimary(context).withAlpha(15),
-                borderRadius: AppRadius.roundedMd,
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.shield_outlined,
-                    color: AppColors.getPrimary(context),
-                    size: 18,
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Text(
-                      'Spendz never stores CVVs or PINs. Card numbers are encrypted with hardware-backed AES-256-GCM and revealed only via biometric verification.',
-                      style: AppTextStyles.getBodySmall(
-                        context,
-                      ).copyWith(fontSize: 11),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: 24),
 
             // Metadata Summary Card
             ReusableCard(
@@ -686,6 +606,94 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                 },
               ),
             const SizedBox(height: AppSpacing.xxl),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openCardPdf() async {
+    // Cards don't have PDF attachments; show info snackbar
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('No PDF attached to this card.'),
+      ),
+    );
+  }
+
+  Future<void> _shareCardDetails() async {
+    final expYearStr = _currentCard.expiryYear.toString();
+    final shortYear = expYearStr.length >= 2
+        ? expYearStr.substring(expYearStr.length - 2)
+        : expYearStr.padLeft(2, '0');
+    final expiry =
+        '${_currentCard.expiryMonth.toString().padLeft(2, '0')}/$shortYear';
+    final text = 'Spendz Card Details:\n'
+        'Bank: ${_currentCard.issuerName}\n'
+        'Cardholder: ${_currentCard.cardholderName}\n'
+        'Type: ${_currentCard.cardType.toUpperCase()} (${_currentCard.cardNetwork.toUpperCase()})\n'
+        'Number: ${_currentCard.maskedNumber}\n'
+        'Expiry: $expiry';
+    
+    // Note: Never share CVVs or full sensitive numbers
+    await SharePlus.instance.share(
+      ShareParams(
+        text: text,
+        subject: '${_currentCard.issuerName} Card Details',
+      ),
+    );
+  }
+
+  Widget _buildClayActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback? onTap,
+    Color? backgroundColor,
+  }) {
+    const espresso = Color(0xFF2C221E);
+    final bgColor = backgroundColor ?? const Color(0xFFF6F4D2);
+    final isEnabled = onTap != null;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x332C221E),
+              blurRadius: 6,
+              offset: Offset(2, 3),
+            ),
+            BoxShadow(
+              color: Colors.white,
+              blurRadius: 2,
+              offset: Offset(-1.5, -1.5),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: isEnabled ? espresso : Colors.grey,
+              size: 22,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              maxLines: 1,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: 'Plus Jakarta Sans',
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: isEnabled ? espresso : Colors.grey,
+              ),
+            ),
           ],
         ),
       ),

@@ -47,22 +47,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 // 2. Data & Categories Section
                 _buildPreferencesSection(context),
-              const SizedBox(height: SpendzSpacing.xl),
+                const SizedBox(height: SpendzSpacing.xl),
 
-              // 5. Danger Zone / Data Management
-              _buildDangerZone(context),
-              const SizedBox(height: SpendzSpacing.xl),
+                // 5. Danger Zone / Data Management
+                _buildDangerZone(context),
+                const SizedBox(height: SpendzSpacing.xl),
 
-              // 6. Security Footer
-              _buildFooter(context),
-              const SizedBox(height: SpendzSpacing.hero),
-            ],
-          );
-        },
+                // 6. Security Footer
+                _buildFooter(context),
+                const SizedBox(height: SpendzSpacing.hero),
+              ],
+            );
+          },
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildProfileHero(BuildContext context) {
     final accent = SpendzColors.primaryAccent(context);

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keybz/widgets/app_keyboard/app_keyboard.dart';
 import 'package:provider/provider.dart';
 
 import '../../app/theme/app_colors.dart';
@@ -178,7 +179,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                   horizontal: AppSpacing.lg,
                   vertical: AppSpacing.xs,
                 ),
-                child: TextField(
+                child: AppTextFormField(
                   onChanged: (val) => setState(() => _searchQuery = val.trim()),
                   decoration: InputDecoration(
                     hintText: 'Search documents, holders, or numbers...',

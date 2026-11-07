@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keybz/widgets/app_keyboard/app_keyboard.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_radius.dart';
 
@@ -37,7 +38,7 @@ class GlassInputField extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = AppColors.isDark(context);
 
-    return TextFormField(
+    return AppTextFormField(
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,

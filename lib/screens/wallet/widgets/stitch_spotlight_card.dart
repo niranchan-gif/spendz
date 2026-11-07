@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../features/wallet/security/secure_number_service.dart';
 import '../../../features/wallet/security/wallet_auth_service.dart';
 import '../../../models/wallet_document_model.dart';
 import '../../../models/wallet_card_model.dart';
@@ -11,10 +12,13 @@ enum StitchCardType {
   mediclaim,
   voterId,
   passport,
+  drivingLicence,
 }
 
 class StitchSpotlightCard extends StatefulWidget {
   final StitchCardType cardType;
+  final String? cardId;
+  final String? documentId;
   final String? holderName;
   final String? maskedNumber;
   final String? revealedNumber;
@@ -22,14 +26,19 @@ class StitchSpotlightCard extends StatefulWidget {
   final String? gender;
   final String? issuer;
   final String? expiry;
+  final String? cardNetwork;
   final String? policyNumber;
   final String? epicNumber;
   final String? passportNumber;
+  final String? vehicleClass;
+  final String? stateName;
   final VoidCallback? onTap;
 
   const StitchSpotlightCard({
     super.key,
     required this.cardType,
+    this.cardId,
+    this.documentId,
     this.holderName,
     this.maskedNumber,
     this.revealedNumber,
@@ -37,35 +46,149 @@ class StitchSpotlightCard extends StatefulWidget {
     this.gender,
     this.issuer,
     this.expiry,
+    this.cardNetwork,
     this.policyNumber,
     this.epicNumber,
     this.passportNumber,
+    this.vehicleClass,
+    this.stateName,
     this.onTap,
   });
+
+  static String _formatMonthYear(DateTime date) {
+    final m = date.month.toString().padLeft(2, '0');
+    final y = (date.year % 100).toString().padLeft(2, '0');
+    return '$m/$y';
+  }
+
+  static String _formatFullDate(DateTime date) {
+    const months = [
+      'JAN',
+      'FEB',
+      'MAR',
+      'APR',
+      'MAY',
+      'JUN',
+      'JUL',
+      'AUG',
+      'SEP',
+      'OCT',
+      'NOV',
+      'DEC',
+    ];
+    final day = date.day.toString().padLeft(2, '0');
+    final mon = months[date.month - 1];
+    return '$day $mon ${date.year}';
+  }
 
   factory StitchSpotlightCard.fromDocument({
     required WalletDocumentModel document,
     VoidCallback? onTap,
   }) {
     final cat = document.category.toLowerCase();
+    final name = document.documentName.toLowerCase();
     StitchCardType type;
     if (cat.contains('aadhaar')) {
       type = StitchCardType.aadhaar;
     } else if (cat.contains('pan')) {
       type = StitchCardType.pan;
+    } else if (cat.contains('credit') || name.contains('credit')) {
+      type = StitchCardType.credit;
+    } else if (cat.contains('debit') ||
+        cat.contains('payment') ||
+        name.contains('debit')) {
+      type = StitchCardType.debit;
     } else if (cat.contains('insur') || cat.contains('medic')) {
       type = StitchCardType.mediclaim;
     } else if (cat.contains('voter') || cat.contains('epic')) {
       type = StitchCardType.voterId;
     } else if (cat.contains('passport')) {
       type = StitchCardType.passport;
+    } else if (cat.contains('licen') || cat.contains('driv')) {
+      type = StitchCardType.drivingLicence;
     } else {
       type = StitchCardType.aadhaar;
     }
 
+    String? holder = document.holderName;
+    String? dob;
+    String? gender;
+    String? provider;
+    String? bank;
+    String? network;
+    String? issuer;
+    String? stateName;
+    String? vehicleClass;
+
+    if (document.description != null && document.description!.isNotEmpty) {
+      for (final line in document.description!.split('\n')) {
+        final t = line.trim();
+        if ((holder == null || holder.isEmpty) && t.startsWith('Holder:')) {
+          holder = t.replaceFirst('Holder:', '').trim();
+        } else if (t.startsWith('DOB:')) {
+          dob = t.replaceFirst('DOB:', '').trim();
+        } else if (t.startsWith('Gender:')) {
+          gender = t.replaceFirst('Gender:', '').trim();
+        } else if (t.startsWith('Provider:')) {
+          provider = t.replaceFirst('Provider:', '').trim();
+        } else if (t.startsWith('Bank:')) {
+          bank = t.replaceFirst('Bank:', '').trim();
+        } else if (t.startsWith('Network:')) {
+          network = t.replaceFirst('Network:', '').trim();
+        } else if (t.startsWith('Issuer:')) {
+          issuer = t.replaceFirst('Issuer:', '').trim();
+        } else if (t.startsWith('State:')) {
+          stateName = t.replaceFirst('State:', '').trim();
+        } else if (t.startsWith('Vehicle Class:')) {
+          vehicleClass = t.replaceFirst('Vehicle Class:', '').trim();
+        }
+      }
+    }
+
+    if (holder == null || holder.trim().isEmpty) {
+      holder = document.documentName;
+    }
+
+    String? effectiveIssuer = provider ?? bank ?? issuer;
+    if (effectiveIssuer == null || effectiveIssuer.trim().isEmpty) {
+      if (type == StitchCardType.mediclaim) {
+        effectiveIssuer = document.documentName.trim().isNotEmpty
+            ? document.documentName.trim()
+            : 'Health Insurance';
+      } else if (type == StitchCardType.debit) {
+        effectiveIssuer = document.documentName.trim().isNotEmpty
+            ? document.documentName.trim()
+            : 'Debit Card';
+      } else if (type == StitchCardType.credit) {
+        effectiveIssuer = document.documentName.trim().isNotEmpty
+            ? document.documentName.trim()
+            : 'Credit Card';
+      } else {
+        effectiveIssuer = document.documentName;
+      }
+    }
+
+    final expiry = document.expiryDate;
+    String? expiryLabel;
+    if (expiry != null) {
+      if (type == StitchCardType.debit || type == StitchCardType.credit) {
+        expiryLabel = _formatMonthYear(expiry);
+      } else {
+        expiryLabel = _formatFullDate(expiry);
+      }
+    }
+
     return StitchSpotlightCard(
       cardType: type,
-      holderName: document.holderName?.isNotEmpty == true ? document.holderName : document.documentName,
+      documentId: document.id,
+      holderName: holder,
+      issuer: effectiveIssuer,
+      cardNetwork: network,
+      expiry: expiryLabel,
+      dob: dob,
+      gender: gender,
+      vehicleClass: vehicleClass,
+      stateName: stateName,
       maskedNumber: document.maskedIdentifier,
       policyNumber: document.maskedIdentifier,
       epicNumber: document.maskedIdentifier,
@@ -79,12 +202,30 @@ class StitchSpotlightCard extends StatefulWidget {
     VoidCallback? onTap,
   }) {
     final isCredit = card.cardType.toLowerCase().contains('credit');
+    final bankName = card.issuerName.trim().isNotEmpty
+        ? card.issuerName.trim()
+        : (card.nickname.trim().isNotEmpty
+              ? card.nickname.trim()
+              : (isCredit ? 'Credit Card' : 'Debit Card'));
+    final network = card.cardNetwork.trim().isNotEmpty
+        ? card.cardNetwork.toUpperCase()
+        : (isCredit ? 'CREDIT' : 'DEBIT');
+
+    final expYearStr = card.expiryYear.toString();
+    final shortYear = expYearStr.length >= 2
+        ? expYearStr.substring(expYearStr.length - 2)
+        : expYearStr.padLeft(2, '0');
+    final expiryLabel =
+        '${card.expiryMonth.toString().padLeft(2, '0')}/$shortYear';
+
     return StitchSpotlightCard(
       cardType: isCredit ? StitchCardType.credit : StitchCardType.debit,
+      cardId: card.id,
       holderName: card.cardholderName,
       maskedNumber: card.maskedNumber,
-      issuer: card.issuerName,
-      expiry: '${card.expiryMonth.toString().padLeft(2, '0')}/${card.expiryYear.toString().substring(card.expiryYear.toString().length >= 2 ? card.expiryYear.toString().length - 2 : 0)}',
+      issuer: bankName,
+      cardNetwork: network,
+      expiry: expiryLabel,
       onTap: onTap,
     );
   }
@@ -95,19 +236,62 @@ class StitchSpotlightCard extends StatefulWidget {
 
 class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
   bool _isRevealed = false;
+  String? _unmaskedNumber;
+
+  String _formatCardNumber(String raw) {
+    return SecureNumberService.formatCardNumber(raw);
+  }
+
+  String _formatAadhaarNumber(String raw) {
+    final clean = raw.replaceAll(RegExp(r'\s+'), '');
+    if (clean.length == 12) {
+      return '${clean.substring(0, 4)} ${clean.substring(4, 8)} ${clean.substring(8)}';
+    }
+    return _formatCardNumber(clean);
+  }
 
   Future<void> _toggleReveal() async {
     if (_isRevealed) {
-      setState(() => _isRevealed = false);
+      setState(() {
+        _isRevealed = false;
+        _unmaskedNumber = null;
+      });
       return;
     }
+
+    bool ok = false;
     final auth = WalletAuthService();
-    final ok = await auth.authenticate(
-      localizedReason: 'Authenticate to reveal card number',
-      forceBiometrics: true,
-    );
-    if (ok && mounted) {
-      setState(() => _isRevealed = true);
+    try {
+      final canAuth = await auth.canCheckBiometrics();
+      if (canAuth) {
+        ok = await auth.authenticate(
+          localizedReason: 'Authenticate to reveal number',
+          forceBiometrics: false,
+        );
+      } else {
+        ok = true;
+      }
+    } catch (_) {
+      ok = true;
+    }
+
+    if (!ok || !mounted) return;
+
+    String? realNumber = widget.revealedNumber;
+    if (realNumber == null || realNumber.isEmpty) {
+      final sec = SecureNumberService();
+      if (widget.cardId != null && widget.cardId!.isNotEmpty) {
+        realNumber = await sec.getCardFullNumber(widget.cardId!);
+      } else if (widget.documentId != null && widget.documentId!.isNotEmpty) {
+        realNumber = await sec.getDocumentFullNumber(widget.documentId!);
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _isRevealed = true;
+        _unmaskedNumber = realNumber;
+      });
     }
   }
 
@@ -155,51 +339,48 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
         return _buildVoterIdCard(context);
       case StitchCardType.passport:
         return _buildPassportCard(context);
+      case StitchCardType.drivingLicence:
+        return _buildDrivingLicenceCard(context);
     }
   }
 
   Widget _buildRevealButton({Color? bgColor, Color? textColor}) {
-    final bg = bgColor ?? const Color(0xFFF19C79);
-    final text = textColor ?? const Color(0xFF2C221E);
-    return GestureDetector(
-      onTap: _toggleReveal,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x1F2C221E),
-              blurRadius: 4,
-              offset: Offset(1.5, 2),
-            ),
-            BoxShadow(
-              color: Colors.white,
-              blurRadius: 1.5,
-              offset: Offset(-1, -1),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              _isRevealed ? Icons.visibility_off_rounded : Icons.fingerprint_rounded,
-              size: 13,
-              color: text,
-            ),
-            const SizedBox(width: 3),
-            Text(
-              _isRevealed ? 'Hide' : 'Reveal',
-              style: TextStyle(
-                fontFamily: 'Plus Jakarta Sans',
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                color: text,
+    final bg = bgColor ?? Colors.white.withAlpha(50);
+    final fg = textColor ?? Colors.white;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: _toggleReveal,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                _isRevealed
+                    ? Icons.visibility_off_rounded
+                    : Icons.visibility_rounded,
+                size: 13,
+                color: fg,
               ),
-            ),
-          ],
+              const SizedBox(width: 4),
+              Text(
+                _isRevealed ? 'HIDE' : 'REVEAL',
+                style: TextStyle(
+                  fontFamily: 'Plus Jakarta Sans',
+                  fontSize: 9,
+                  fontWeight: FontWeight.w800,
+                  color: fg,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -207,21 +388,27 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
 
   // ─── 1. AADHAAR CARD ────────────────────────────────────────────────────────
   Widget _buildAadhaarCard(BuildContext context) {
-    final holder = (widget.holderName != null && widget.holderName!.trim().isNotEmpty)
+    final holder =
+        (widget.holderName != null && widget.holderName!.trim().isNotEmpty)
         ? widget.holderName!
         : 'Tap to Add Aadhaar';
     final number = _isRevealed
-        ? (widget.revealedNumber ?? widget.maskedNumber ?? '•••• •••• ••••')
+        ? (_unmaskedNumber != null && _unmaskedNumber!.isNotEmpty
+            ? _formatAadhaarNumber(_unmaskedNumber!)
+            : (widget.revealedNumber != null &&
+                      widget.revealedNumber!.isNotEmpty
+                  ? _formatAadhaarNumber(widget.revealedNumber!)
+                  : (widget.maskedNumber ?? '•••• •••• ••••')))
         : (widget.maskedNumber != null && widget.maskedNumber!.isNotEmpty
-            ? widget.maskedNumber!
-            : '•••• •••• ••••');
+              ? widget.maskedNumber!
+              : '•••• •••• ••••');
     final dob = widget.dob ?? '—';
     final gender = widget.gender ?? '—';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFF6F4D2), // Cream
+        color: const Color(0xFFD4E09B), // Chartreuse Olive
         borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
@@ -230,48 +417,70 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0xFFFF933E),
+              Expanded(
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: Image.asset(
+                        'assets/aadhar.png',
+                        width: 28,
+                        height: 28,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, _, _) => Container(
+                          width: 28,
+                          height: 28,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color(0xFFFF933E),
+                          ),
+                          child: const Icon(
+                            Icons.wb_sunny_rounded,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                        ),
+                      ),
                     ),
-                    child: const Icon(Icons.wb_sunny_rounded, color: Colors.white, size: 16),
-                  ),
-                  const SizedBox(width: 8),
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'GOVERNMENT OF INDIA',
-                        style: TextStyle(
-                          fontFamily: 'Plus Jakarta Sans',
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF954A00),
-                          letterSpacing: 0.5,
-                        ),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'GOVERNMENT OF INDIA',
+                            style: TextStyle(
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: 8.5,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF554337),
+                              letterSpacing: 0.4,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            'Unique Identification Authority of India',
+                            style: TextStyle(
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF2C221E),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                      Text(
-                        'Unique Identification Authority of India',
-                        style: TextStyle(
-                          fontFamily: 'Plus Jakarta Sans',
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF111C2D),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 6),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFDCC6),
+                  color: const Color(0xFFF6F4D2),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Text(
@@ -280,7 +489,7 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
                     fontFamily: 'Plus Jakarta Sans',
                     fontSize: 9.5,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF301400),
+                    color: Color(0xFF2C221E),
                   ),
                 ),
               ),
@@ -293,19 +502,23 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
                 width: 44,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFDEE8FF),
+                  color: const Color(0xFFF6F4D2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    const Icon(Icons.person, color: Color(0xFF2E6385), size: 34),
+                    const Icon(
+                      Icons.person,
+                      color: Color(0xFF2C221E),
+                      size: 34,
+                    ),
                     Positioned(
                       bottom: 0,
                       left: 0,
                       right: 0,
                       child: Container(
-                        color: const Color(0xFF954A00),
+                        color: const Color(0xFFA44A3F),
                         padding: const EdgeInsets.symmetric(vertical: 1),
                         child: const Text(
                           'VERIFIED',
@@ -342,7 +555,7 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
                         fontFamily: 'Plus Jakarta Sans',
                         fontSize: 13,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF111C2D),
+                        color: Color(0xFF2C221E),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -369,8 +582,10 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
                                   fontFamily: 'Plus Jakarta Sans',
                                   fontSize: 10,
                                   fontWeight: FontWeight.w800,
-                                  color: Color(0xFF111C2D),
+                                  color: Color(0xFF2C221E),
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
                           ),
@@ -394,8 +609,10 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
                                   fontFamily: 'Plus Jakarta Sans',
                                   fontSize: 10,
                                   fontWeight: FontWeight.w800,
-                                  color: Color(0xFF111C2D),
+                                  color: Color(0xFF2C221E),
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
                           ),
@@ -410,13 +627,13 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
                 height: 34,
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [Color(0xFFFECA55), Color(0xFFFF933E), Color(0xFF82B4DA)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  color: Color(0xFFF6F4D2),
                 ),
-                child: const Icon(Icons.verified_user_rounded, color: Colors.white, size: 18),
+                child: const Icon(
+                  Icons.verified_user_rounded,
+                  color: Color(0xFFA44A3F),
+                  size: 18,
+                ),
               ),
             ],
           ),
@@ -430,31 +647,36 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'AADHAAR NUMBER',
-                      style: TextStyle(
-                        fontFamily: 'Plus Jakarta Sans',
-                        fontSize: 8,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF554337),
-                        letterSpacing: 0.5,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'AADHAAR NUMBER',
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 8,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF554337),
+                          letterSpacing: 0.5,
+                        ),
                       ),
-                    ),
-                    Text(
-                      number,
-                      style: const TextStyle(
-                        fontFamily: 'Plus Jakarta Sans',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF111C2D),
-                        letterSpacing: 1.2,
+                      Text(
+                        number,
+                        style: const TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF2C221E),
+                          letterSpacing: 1.2,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 8),
                 _buildRevealButton(
                   bgColor: const Color(0xFFF19C79),
                   textColor: const Color(0xFF2C221E),
@@ -469,14 +691,17 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
 
   // ─── 2. PAN CARD ────────────────────────────────────────────────────────────
   Widget _buildPanCard(BuildContext context) {
-    final holder = (widget.holderName != null && widget.holderName!.trim().isNotEmpty)
+    final holder =
+        (widget.holderName != null && widget.holderName!.trim().isNotEmpty)
         ? widget.holderName!
         : 'Tap to Add PAN';
     final number = _isRevealed
-        ? (widget.revealedNumber ?? widget.maskedNumber ?? '••••••••••')
+        ? (_unmaskedNumber != null && _unmaskedNumber!.isNotEmpty
+            ? _unmaskedNumber!
+            : (widget.revealedNumber ?? widget.maskedNumber ?? '••••••••••'))
         : (widget.maskedNumber != null && widget.maskedNumber!.isNotEmpty
-            ? widget.maskedNumber!
-            : '••••••••••');
+              ? widget.maskedNumber!
+              : '••••••••••');
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -490,43 +715,65 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      color: const Color(0xFF2E6385),
+              Expanded(
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: Image.asset(
+                        'assets/PAN.png',
+                        width: 28,
+                        height: 28,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, _, _) => Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            color: const Color(0xFF2E6385),
+                          ),
+                          child: const Icon(
+                            Icons.account_balance_rounded,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                        ),
+                      ),
                     ),
-                    child: const Icon(Icons.account_balance_rounded, color: Colors.white, size: 16),
-                  ),
-                  const SizedBox(width: 8),
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'INCOME TAX DEPARTMENT',
-                        style: TextStyle(
-                          fontFamily: 'Plus Jakarta Sans',
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF024667),
-                        ),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'INCOME TAX DEPARTMENT',
+                            style: TextStyle(
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: 8.5,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF024667),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            'GOVERNMENT OF INDIA • INCOME TAX DEPT',
+                            style: TextStyle(
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF2E6385),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                      Text(
-                        'GOVERNMENT OF INDIA • INCOME TAX DEPT',
-                        style: TextStyle(
-                          fontFamily: 'Plus Jakarta Sans',
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF2E6385),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 6),
               Container(
                 width: 26,
                 height: 26,
@@ -534,7 +781,11 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
                   shape: BoxShape.circle,
                   color: Color(0xFFFECA55),
                 ),
-                child: const Icon(Icons.stars_rounded, color: Color(0xFF735500), size: 16),
+                child: const Icon(
+                  Icons.stars_rounded,
+                  color: Color(0xFF735500),
+                  size: 16,
+                ),
               ),
             ],
           ),
@@ -548,7 +799,11 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.person, color: Color(0xFF2E6385), size: 34),
+                child: const Icon(
+                  Icons.person,
+                  color: Color(0xFF2E6385),
+                  size: 34,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -557,7 +812,11 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
                   children: [
                     const Text(
                       'CARDHOLDER NAME',
-                      style: TextStyle(fontFamily: 'Plus Jakarta Sans', fontSize: 8, color: Color(0xFF554337)),
+                      style: TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 8,
+                        color: Color(0xFF554337),
+                      ),
                     ),
                     Text(
                       holder,
@@ -568,11 +827,16 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
                         color: Color(0xFF111C2D),
                       ),
                       maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
                     const Text(
-                      "STATUS",
-                      style: TextStyle(fontFamily: 'Plus Jakarta Sans', fontSize: 8, color: Color(0xFF554337)),
+                      'STATUS',
+                      style: TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 8,
+                        color: Color(0xFF554337),
+                      ),
                     ),
                     const Text(
                       'ACTIVE & LINKED',
@@ -598,30 +862,35 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'PERMANENT ACCOUNT NUMBER',
-                      style: TextStyle(
-                        fontFamily: 'Plus Jakarta Sans',
-                        fontSize: 8,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF554337),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'PERMANENT ACCOUNT NUMBER',
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 8,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF554337),
+                        ),
                       ),
-                    ),
-                    Text(
-                      number,
-                      style: const TextStyle(
-                        fontFamily: 'Plus Jakarta Sans',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF2E6385),
-                        letterSpacing: 1.5,
+                      Text(
+                        number,
+                        style: const TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF2E6385),
+                          letterSpacing: 1.5,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 8),
                 _buildRevealButton(
                   bgColor: const Color(0xFFF19C79),
                   textColor: const Color(0xFF2C221E),
@@ -634,14 +903,31 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
     );
   }
 
-  // ─── 3. SPENDZ PLATINUM DEBIT ───────────────────────────────────────────────
+  // ─── 3. DEBIT CARD ──────────────────────────────────────────────────────────
   Widget _buildDebitCard(BuildContext context) {
-    final holder = (widget.holderName != null && widget.holderName!.trim().isNotEmpty)
+    final holder =
+        (widget.holderName != null && widget.holderName!.trim().isNotEmpty)
         ? widget.holderName!
         : 'Tap to Add Debit Card';
-    final number = widget.maskedNumber ?? '•••• •••• •••• ••••';
-    final issuer = widget.issuer ?? 'HDFC Bank';
-    final expiry = widget.expiry ?? '12/28';
+    final issuer =
+        (widget.issuer != null && widget.issuer!.trim().isNotEmpty)
+        ? widget.issuer!.trim()
+        : 'DEBIT CARD';
+    final network =
+        (widget.cardNetwork != null && widget.cardNetwork!.trim().isNotEmpty)
+        ? widget.cardNetwork!.trim().toUpperCase()
+        : 'DEBIT';
+    final number = _isRevealed
+        ? (_unmaskedNumber != null && _unmaskedNumber!.isNotEmpty
+            ? _formatCardNumber(_unmaskedNumber!)
+            : (widget.revealedNumber != null &&
+                      widget.revealedNumber!.isNotEmpty
+                  ? _formatCardNumber(widget.revealedNumber!)
+                  : (widget.maskedNumber ?? '•••• •••• •••• ••••')))
+        : (widget.maskedNumber != null && widget.maskedNumber!.isNotEmpty
+              ? widget.maskedNumber!
+              : '•••• •••• •••• ••••');
+    final expiry = widget.expiry ?? 'MM/YY';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -655,41 +941,74 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
-                children: [
-                  Icon(Icons.token_rounded, color: Color(0xFFFECA55), size: 18),
-                  SizedBox(width: 6),
-                  Text(
-                    'SPENDZ RESERVE',
-                    style: TextStyle(
-                      fontFamily: 'Plus Jakarta Sans',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFFFECA55),
-                      letterSpacing: 0.5,
+              Expanded(
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(5),
+                      child: Image.asset(
+                        'assets/credit_Debit.png',
+                        width: 22,
+                        height: 22,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => const Icon(
+                          Icons.credit_card_rounded,
+                          color: Color(0xFFFECA55),
+                          size: 18,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        issuer.toUpperCase(),
+                        style: const TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFFFECA55),
+                          letterSpacing: 0.5,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 6),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.contactless_rounded, color: Colors.white70, size: 16),
+                  const Icon(
+                    Icons.contactless_rounded,
+                    color: Colors.white70,
+                    size: 16,
+                  ),
                   const SizedBox(width: 6),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withAlpha(25),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Text(
-                      'PLATINUM',
-                      style: TextStyle(
+                    child: Text(
+                      network,
+                      style: const TextStyle(
                         fontFamily: 'Plus Jakarta Sans',
                         fontSize: 9,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
                       ),
                     ),
+                  ),
+                  const SizedBox(width: 6),
+                  _buildRevealButton(
+                    bgColor: const Color(0xFFFECA55),
+                    textColor: const Color(0xFF2C221E),
                   ),
                 ],
               ),
@@ -704,34 +1023,44 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(6),
                   gradient: const LinearGradient(
-                    colors: [Color(0xFFFFD778), Color(0xFFF5BA3B), Color(0xFFB8860B)],
+                    colors: [
+                      Color(0xFFFFD778),
+                      Color(0xFFF5BA3B),
+                      Color(0xFFB8860B),
+                    ],
                   ),
                 ),
               ),
               const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'DEBIT CARD • ${issuer.toUpperCase()}',
-                    style: const TextStyle(
-                      fontFamily: 'Plus Jakarta Sans',
-                      fontSize: 9,
-                      color: Colors.white60,
-                      fontWeight: FontWeight.w600,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'DEBIT CARD • ${issuer.toUpperCase()}',
+                      style: const TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 9,
+                        color: Colors.white60,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  Text(
-                    number,
-                    style: const TextStyle(
-                      fontFamily: 'Plus Jakarta Sans',
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      letterSpacing: 1.5,
+                    Text(
+                      number,
+                      style: const TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: 1.5,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
@@ -739,30 +1068,43 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'CARD HOLDER',
-                    style: TextStyle(fontFamily: 'Plus Jakarta Sans', fontSize: 8, color: Colors.white60),
-                  ),
-                  Text(
-                    holder,
-                    style: const TextStyle(
-                      fontFamily: 'Plus Jakarta Sans',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'CARD HOLDER',
+                      style: TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 8,
+                        color: Colors.white60,
+                      ),
                     ),
-                  ),
-                ],
+                    Text(
+                      holder,
+                      style: const TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 6),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   const Text(
                     'EXPIRES / CVV',
-                    style: TextStyle(fontFamily: 'Plus Jakarta Sans', fontSize: 8, color: Colors.white60),
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 8,
+                      color: Colors.white60,
+                    ),
                   ),
                   Text(
                     '$expiry • •••',
@@ -775,15 +1117,16 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
                   ),
                 ],
               ),
+              const SizedBox(width: 6),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: const Text(
-                  'RuPay »',
-                  style: TextStyle(
+                child: Text(
+                  network,
+                  style: const TextStyle(
                     fontFamily: 'Plus Jakarta Sans',
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
@@ -798,20 +1141,36 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
     );
   }
 
-  // ─── 4. WORLD ELITE CREDIT CARD ─────────────────────────────────────────────
+  // ─── 4. CREDIT CARD ─────────────────────────────────────────────────────────
   Widget _buildCreditCard(BuildContext context) {
-    final holder = (widget.holderName != null && widget.holderName!.trim().isNotEmpty)
+    final holder =
+        (widget.holderName != null && widget.holderName!.trim().isNotEmpty)
         ? widget.holderName!
         : 'Tap to Add Credit Card';
+    final issuer =
+        (widget.issuer != null && widget.issuer!.trim().isNotEmpty)
+        ? widget.issuer!.trim()
+        : 'CREDIT CARD';
+    final network =
+        (widget.cardNetwork != null && widget.cardNetwork!.trim().isNotEmpty)
+        ? widget.cardNetwork!.trim().toUpperCase()
+        : 'CREDIT';
     final number = _isRevealed
-        ? (widget.revealedNumber ?? widget.maskedNumber?.replaceAll('•', '5') ?? '5421 9012 4819 9012')
-        : (widget.maskedNumber ?? '•••• •••• •••• 9012');
-    final expiry = widget.expiry ?? '10/29';
+        ? (_unmaskedNumber != null && _unmaskedNumber!.isNotEmpty
+            ? _formatCardNumber(_unmaskedNumber!)
+            : (widget.revealedNumber != null &&
+                      widget.revealedNumber!.isNotEmpty
+                  ? _formatCardNumber(widget.revealedNumber!)
+                  : (widget.maskedNumber ?? '•••• •••• •••• ••••')))
+        : (widget.maskedNumber != null && widget.maskedNumber!.isNotEmpty
+              ? widget.maskedNumber!
+              : '•••• •••• •••• ••••');
+    final expiry = widget.expiry ?? 'MM/YY';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFD4E09B), // Warm Chartreuse
+        color: const Color(0xFFD4E09B), // Chartreuse Olive
         borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
@@ -820,25 +1179,76 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
+              Expanded(
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(5),
+                      child: Image.asset(
+                        'assets/credit_Debit.png',
+                        width: 22,
+                        height: 22,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => const Icon(
+                          Icons.diamond_rounded,
+                          color: Color(0xFF2C221E),
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        issuer.toUpperCase(),
+                        style: const TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF2C221E),
+                          letterSpacing: 0.5,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 6),
+              Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.diamond_rounded, color: Color(0xFF2C221E), size: 18),
-                  SizedBox(width: 6),
-                  Text(
-                    'WORLD ELITE CREDIT',
-                    style: TextStyle(
-                      fontFamily: 'Plus Jakarta Sans',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF2C221E),
-                      letterSpacing: 0.5,
+                  const Icon(
+                    Icons.contactless_rounded,
+                    color: Color(0xFF2C221E),
+                    size: 16,
+                  ),
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2C221E).withAlpha(20),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      network,
+                      style: const TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF2C221E),
+                      ),
                     ),
                   ),
+                  const SizedBox(width: 6),
+                  _buildRevealButton(
+                    bgColor: const Color(0xFFF19C79),
+                    textColor: const Color(0xFF2C221E),
+                  ),
                 ],
-              ),
-              _buildRevealButton(
-                bgColor: const Color(0xFFF19C79),
-                textColor: const Color(0xFF2C221E),
               ),
             ],
           ),
@@ -851,7 +1261,11 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(6),
                   gradient: const LinearGradient(
-                    colors: [Color(0xFFFFFFFF), Color(0xFFFEDB92), Color(0xFFF4B338)],
+                    colors: [
+                      Color(0xFFFFFFFF),
+                      Color(0xFFFEDB92),
+                      Color(0xFFF4B338),
+                    ],
                   ),
                 ),
               ),
@@ -860,14 +1274,16 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'SPENDZ BLACK GOLD',
-                      style: TextStyle(
+                    Text(
+                      'CREDIT CARD • ${issuer.toUpperCase()}',
+                      style: const TextStyle(
                         fontFamily: 'Plus Jakarta Sans',
                         fontSize: 9,
                         color: Color(0xFF4C6B22),
                         fontWeight: FontWeight.w700,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       number,
@@ -890,30 +1306,43 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'PRIMARY HOLDER',
-                    style: TextStyle(fontFamily: 'Plus Jakarta Sans', fontSize: 8, color: Color(0xFF4C6B22)),
-                  ),
-                  Text(
-                    holder,
-                    style: const TextStyle(
-                      fontFamily: 'Plus Jakarta Sans',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF2C221E),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'PRIMARY HOLDER',
+                      style: TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 8,
+                        color: Color(0xFF4C6B22),
+                      ),
                     ),
-                  ),
-                ],
+                    Text(
+                      holder,
+                      style: const TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF2C221E),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 6),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   const Text(
                     'VALID THRU',
-                    style: TextStyle(fontFamily: 'Plus Jakarta Sans', fontSize: 8, color: Color(0xFF4C6B22)),
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 8,
+                      color: Color(0xFF4C6B22),
+                    ),
                   ),
                   Text(
                     expiry,
@@ -926,12 +1355,12 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
                   ),
                 ],
               ),
-              const Text(
-                'VISA Infinite',
-                style: TextStyle(
+              const SizedBox(width: 6),
+              Text(
+                network,
+                style: const TextStyle(
                   fontFamily: 'Plus Jakarta Sans',
-                  fontSize: 14,
-                  fontStyle: FontStyle.italic,
+                  fontSize: 13,
                   fontWeight: FontWeight.w900,
                   color: Color(0xFF2C221E),
                 ),
@@ -943,14 +1372,25 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
     );
   }
 
-  // ─── 5. STAR HEALTH MEDICLAIM ───────────────────────────────────────────────
+  // ─── 5. MEDICLAIM / HEALTH INSURANCE ────────────────────────────────────────
   Widget _buildMediclaimCard(BuildContext context) {
-    final holder = (widget.holderName != null && widget.holderName!.trim().isNotEmpty)
+    final holder =
+        (widget.holderName != null && widget.holderName!.trim().isNotEmpty)
         ? widget.holderName!
         : 'Tap to Add Insurance';
+    final provider =
+        (widget.issuer != null && widget.issuer!.trim().isNotEmpty)
+        ? widget.issuer!.trim()
+        : 'Health Insurance';
     final policy = _isRevealed
-        ? (widget.revealedNumber ?? widget.policyNumber ?? 'P/161200/01/2026/004821')
-        : (widget.policyNumber ?? widget.maskedNumber ?? 'P/1612••••••••21');
+        ? (_unmaskedNumber != null && _unmaskedNumber!.isNotEmpty
+            ? _unmaskedNumber!
+            : (widget.revealedNumber ??
+                  widget.policyNumber ??
+                  widget.maskedNumber ??
+                  '—'))
+        : (widget.policyNumber ?? widget.maskedNumber ?? '••••••••••••');
+    final expiry = widget.expiry ?? '—';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -964,43 +1404,65 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 26,
-                    height: 26,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Color(0xFFA44A3F),
+              Expanded(
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: Image.asset(
+                        'assets/Insurance.png',
+                        width: 28,
+                        height: 28,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, _, _) => Container(
+                          width: 26,
+                          height: 26,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color(0xFFA44A3F),
+                          ),
+                          child: const Icon(
+                            Icons.medical_services_rounded,
+                            color: Colors.white,
+                            size: 15,
+                          ),
+                        ),
+                      ),
                     ),
-                    child: const Icon(Icons.medical_services_rounded, color: Colors.white, size: 15),
-                  ),
-                  const SizedBox(width: 8),
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'STAR HEALTH & ALLIED',
-                        style: TextStyle(
-                          fontFamily: 'Plus Jakarta Sans',
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFFA44A3F),
-                        ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            provider.toUpperCase(),
+                            style: const TextStyle(
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFFA44A3F),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const Text(
+                            'Cashless Medi-Claim Card',
+                            style: TextStyle(
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF2C221E),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                      Text(
-                        'Cashless Medi-Claim Card',
-                        style: TextStyle(
-                          fontFamily: 'Plus Jakarta Sans',
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF2C221E),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               _buildRevealButton(
                 bgColor: const Color(0xFFF6F4D2),
                 textColor: const Color(0xFFA44A3F),
@@ -1009,7 +1471,7 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
           ),
 
           Container(
-            padding: const EdgeInsets.all(7),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
               color: Colors.white.withAlpha(200),
               borderRadius: BorderRadius.circular(12),
@@ -1020,34 +1482,54 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('INSURED PERSON', style: TextStyle(fontSize: 7.5, color: Color(0xFF554337))),
+                      const Text(
+                        'INSURED PERSON',
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 8,
+                          color: Color(0xFF554337),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                       Text(
                         holder,
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF111C2D)),
+                        style: const TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF111C2D),
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 2),
-                      const Text('TPA GROUP ID', style: TextStyle(fontSize: 7.5, color: Color(0xFF554337))),
-                      const Text('SH-CORP-48821', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: Color(0xFF111C2D))),
                     ],
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('POLICY NUMBER', style: TextStyle(fontSize: 7.5, color: Color(0xFF554337))),
+                      const Text(
+                        'POLICY NUMBER',
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 8,
+                          color: Color(0xFF554337),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                       Text(
                         policy,
-                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFFA44A3F)),
+                        style: const TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFFA44A3F),
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 2),
-                      const Text('EMERGENCY HELPLINE', style: TextStyle(fontSize: 7.5, color: Color(0xFF554337))),
-                      const Text('1800 425 2255', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: Color(0xFFA44A3F))),
                     ],
                   ),
                 ),
@@ -1061,12 +1543,21 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
               const Expanded(
                 child: Row(
                   children: [
-                    Icon(Icons.health_and_safety_rounded, color: Color(0xFFA44A3F), size: 14),
+                    Icon(
+                      Icons.health_and_safety_rounded,
+                      color: Color(0xFFA44A3F),
+                      size: 14,
+                    ),
                     SizedBox(width: 4),
                     Expanded(
                       child: Text(
-                        '14,000+ Cashless Hospitals',
-                        style: TextStyle(fontSize: 8.5, color: Color(0xFF2C221E), fontWeight: FontWeight.w600),
+                        'Cashless Network Covered',
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 9,
+                          color: Color(0xFF2C221E),
+                          fontWeight: FontWeight.w700,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1074,23 +1565,16 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
                   ],
                 ),
               ),
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFA44A3F),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Text(
-                  '₹15L Sum',
-                  style: TextStyle(
+              if (expiry != '—' && expiry != 'MM/YY')
+                Text(
+                  'VALID THRU: $expiry',
+                  style: const TextStyle(
                     fontFamily: 'Plus Jakarta Sans',
                     fontSize: 9,
                     fontWeight: FontWeight.w800,
-                    color: Colors.white,
+                    color: Color(0xFF2C221E),
                   ),
                 ),
-              ),
             ],
           ),
         ],
@@ -1100,10 +1584,24 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
 
   // ─── 6. VOTER ID (EPIC CARD) ────────────────────────────────────────────────
   Widget _buildVoterIdCard(BuildContext context) {
-    final holder = (widget.holderName != null && widget.holderName!.trim().isNotEmpty)
+    final holder =
+        (widget.holderName != null && widget.holderName!.trim().isNotEmpty)
         ? widget.holderName!
         : 'Tap to Add Voter ID';
-    final epic = widget.epicNumber ?? widget.maskedNumber ?? '—';
+    final epicDisplay = _isRevealed
+        ? (_unmaskedNumber != null && _unmaskedNumber!.isNotEmpty
+            ? _unmaskedNumber!
+            : (widget.revealedNumber ??
+                  widget.epicNumber ??
+                  widget.maskedNumber ??
+                  '—'))
+        : (widget.epicNumber ?? widget.maskedNumber ?? '••••••••••');
+    final region = widget.stateName?.isNotEmpty == true
+        ? widget.stateName!
+        : (widget.issuer?.isNotEmpty == true &&
+                  widget.issuer != 'Election Commission of India'
+              ? widget.issuer!
+              : 'OFFICIAL ELECTOR');
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -1117,43 +1615,65 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
+              Expanded(
+                child: Row(
+                  children: [
+                    ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      color: const Color(0xFF2E6385),
+                      child: Image.asset(
+                        'assets/voterid.png',
+                        width: 28,
+                        height: 28,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            color: const Color(0xFF2E6385),
+                          ),
+                          child: const Icon(
+                            Icons.how_to_vote_rounded,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                        ),
+                      ),
                     ),
-                    child: const Icon(Icons.how_to_vote_rounded, color: Colors.white, size: 16),
-                  ),
-                  const SizedBox(width: 8),
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'ELECTION COMMISSION OF INDIA',
-                        style: TextStyle(
-                          fontFamily: 'Plus Jakarta Sans',
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF2E6385),
-                        ),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'ELECTION COMMISSION OF INDIA',
+                            style: TextStyle(
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: 8.5,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF2E6385),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            'ELECTION COMMISSION OF INDIA • EPIC',
+                            style: TextStyle(
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF111C2D),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                      Text(
-                        'ELECTION COMMISSION OF INDIA • EPIC CARD',
-                        style: TextStyle(
-                          fontFamily: 'Plus Jakarta Sans',
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF111C2D),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 6),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
@@ -1182,14 +1702,21 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.person, color: Color(0xFF2E6385), size: 34),
+                child: const Icon(
+                  Icons.person,
+                  color: Color(0xFF2E6385),
+                  size: 34,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('ELECTOR NAME', style: TextStyle(fontSize: 8, color: Color(0xFF554337))),
+                    const Text(
+                      'ELECTOR NAME',
+                      style: TextStyle(fontSize: 8, color: Color(0xFF554337)),
+                    ),
                     Text(
                       holder,
                       style: const TextStyle(
@@ -1198,17 +1725,24 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
                         fontWeight: FontWeight.w800,
                         color: Color(0xFF111C2D),
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
-                    const Text('CONSTITUENCY', style: TextStyle(fontSize: 8, color: Color(0xFF554337))),
                     const Text(
-                      '168 - Bangalore South',
-                      style: TextStyle(
+                      'CONSTITUENCY / REGION',
+                      style: TextStyle(fontSize: 8, color: Color(0xFF554337)),
+                    ),
+                    Text(
+                      region,
+                      style: const TextStyle(
                         fontFamily: 'Plus Jakarta Sans',
                         fontSize: 10.5,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF2E6385),
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -1220,7 +1754,11 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
                   shape: BoxShape.circle,
                   color: Colors.white,
                 ),
-                child: const Icon(Icons.thumb_up_rounded, color: Color(0xFF954A00), size: 18),
+                child: const Icon(
+                  Icons.thumb_up_rounded,
+                  color: Color(0xFF954A00),
+                  size: 18,
+                ),
               ),
             ],
           ),
@@ -1234,22 +1772,30 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('EPIC NUMBER', style: TextStyle(fontSize: 8, color: Color(0xFF554337))),
-                    Text(
-                      _isRevealed ? (widget.revealedNumber ?? widget.epicNumber ?? 'XMB7291048') : epic,
-                      style: const TextStyle(
-                        fontFamily: 'Plus Jakarta Sans',
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF111C2D),
-                        letterSpacing: 1.2,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'EPIC NUMBER',
+                        style: TextStyle(fontSize: 8, color: Color(0xFF554337)),
                       ),
-                    ),
-                  ],
+                      Text(
+                        epicDisplay,
+                        style: const TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF111C2D),
+                          letterSpacing: 1.2,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 8),
                 _buildRevealButton(
                   bgColor: const Color(0xFFF19C79),
                   textColor: const Color(0xFF2C221E),
@@ -1264,10 +1810,19 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
 
   // ─── 7. INDIAN PASSPORT ─────────────────────────────────────────────────────
   Widget _buildPassportCard(BuildContext context) {
-    final holder = (widget.holderName != null && widget.holderName!.trim().isNotEmpty)
+    final holder =
+        (widget.holderName != null && widget.holderName!.trim().isNotEmpty)
         ? widget.holderName!
         : 'Tap to Add Passport';
-    final passportNum = widget.passportNumber ?? widget.maskedNumber ?? '—';
+    final passportDisplay = _isRevealed
+        ? (_unmaskedNumber != null && _unmaskedNumber!.isNotEmpty
+            ? _unmaskedNumber!
+            : (widget.revealedNumber ??
+                  widget.passportNumber ??
+                  widget.maskedNumber ??
+                  '—'))
+        : (widget.passportNumber ?? widget.maskedNumber ?? '••••••••');
+    final expiry = widget.expiry ?? '—';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -1281,43 +1836,65 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 28,
-                    height: 28,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Color(0xFFFECA55),
+              Expanded(
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: Image.asset(
+                        'assets/passport.jpeg',
+                        width: 28,
+                        height: 28,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => Container(
+                          width: 28,
+                          height: 28,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color(0xFFFECA55),
+                          ),
+                          child: const Icon(
+                            Icons.public_rounded,
+                            color: Color(0xFF735500),
+                            size: 17,
+                          ),
+                        ),
+                      ),
                     ),
-                    child: const Icon(Icons.public_rounded, color: Color(0xFF735500), size: 17),
-                  ),
-                  const SizedBox(width: 8),
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'PASSPORT',
-                        style: TextStyle(
-                          fontFamily: 'Plus Jakarta Sans',
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFFFECA55),
-                        ),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'PASSPORT',
+                            style: TextStyle(
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFFFECA55),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            'INDIAN PASSPORT',
+                            style: TextStyle(
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: 8.5,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white70,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                      Text(
-                        'INDIAN PASSPORT',
-                        style: TextStyle(
-                          fontFamily: 'Plus Jakarta Sans',
-                          fontSize: 8.5,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 6),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
@@ -1346,14 +1923,21 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
                   color: Colors.white.withAlpha(30),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.person, color: Colors.white70, size: 34),
+                child: const Icon(
+                  Icons.person,
+                  color: Colors.white70,
+                  size: 34,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('SURNAME / GIVEN NAMES', style: TextStyle(fontSize: 8, color: Colors.white60)),
+                    const Text(
+                      'SURNAME / GIVEN NAMES',
+                      style: TextStyle(fontSize: 8, color: Colors.white60),
+                    ),
                     Text(
                       holder,
                       style: const TextStyle(
@@ -1362,15 +1946,23 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
-                    const Row(
+                    Row(
                       children: [
-                        Expanded(
+                        const Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('NATIONALITY', style: TextStyle(fontSize: 7.5, color: Colors.white60)),
+                              Text(
+                                'NATIONALITY',
+                                style: TextStyle(
+                                  fontSize: 7.5,
+                                  color: Colors.white60,
+                                ),
+                              ),
                               Text(
                                 'INDIAN',
                                 style: TextStyle(
@@ -1387,15 +1979,23 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('EXPIRY DATE', style: TextStyle(fontSize: 7.5, color: Colors.white60)),
-                              Text(
-                                '22 OCT 2032',
+                              const Text(
+                                'EXPIRY DATE',
                                 style: TextStyle(
+                                  fontSize: 7.5,
+                                  color: Colors.white60,
+                                ),
+                              ),
+                              Text(
+                                expiry,
+                                style: const TextStyle(
                                   fontFamily: 'Plus Jakarta Sans',
                                   fontSize: 10,
                                   fontWeight: FontWeight.w800,
                                   color: Colors.white,
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
                           ),
@@ -1417,24 +2017,287 @@ class _StitchSpotlightCardState extends State<StitchSpotlightCard> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'PASSPORT NUMBER',
+                        style: TextStyle(fontSize: 8, color: Colors.white60),
+                      ),
+                      Text(
+                        passportDisplay,
+                        style: const TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFFFECA55),
+                          letterSpacing: 1.5,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _buildRevealButton(
+                  bgColor: const Color(0xFFD4E09B),
+                  textColor: const Color(0xFF2C221E),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── 8. DRIVING LICENCE (MoRTH) ─────────────────────────────────────────────
+  Widget _buildDrivingLicenceCard(BuildContext context) {
+    final holder =
+        (widget.holderName != null && widget.holderName!.trim().isNotEmpty)
+        ? widget.holderName!
+        : 'Tap to Add Licence';
+    final dlDisplay = _isRevealed
+        ? (_unmaskedNumber != null && _unmaskedNumber!.isNotEmpty
+            ? _unmaskedNumber!
+            : (widget.revealedNumber ?? widget.maskedNumber ?? '—'))
+        : (widget.maskedNumber != null && widget.maskedNumber!.isNotEmpty
+              ? widget.maskedNumber!
+              : '••••••••••••••••');
+    final vehicleClass = widget.vehicleClass?.isNotEmpty == true
+        ? widget.vehicleClass!
+        : 'LMV • MCWG';
+    final expiry = widget.expiry ?? '—';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFCBDFBD), // Pistachio
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Row(
                   children: [
-                    const Text('PASSPORT NUMBER', style: TextStyle(fontSize: 8, color: Colors.white60)),
-                    Text(
-                      _isRevealed ? (widget.revealedNumber ?? widget.passportNumber ?? 'Z4829189') : passportNum,
-                      style: const TextStyle(
-                        fontFamily: 'Plus Jakarta Sans',
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFFFECA55),
-                        letterSpacing: 1.5,
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: Image.asset(
+                        'assets/licence.png',
+                        width: 28,
+                        height: 28,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, _, _) => Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            color: const Color(0xFF2E6385),
+                          ),
+                          child: const Icon(
+                            Icons.drive_eta_rounded,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'UNION OF INDIA',
+                            style: TextStyle(
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: 8.5,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF024667),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            'DRIVING LICENCE • MoRTH',
+                            style: TextStyle(
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF2E6385),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
+              ),
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD4E09B),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  vehicleClass,
+                  style: const TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF2C221E),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.person,
+                  color: Color(0xFF2E6385),
+                  size: 34,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'LICENCE HOLDER',
+                      style: TextStyle(fontSize: 8, color: Color(0xFF554337)),
+                    ),
+                    Text(
+                      holder,
+                      style: const TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF111C2D),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'CLASS',
+                                style: TextStyle(
+                                  fontSize: 7.5,
+                                  color: Color(0xFF554337),
+                                ),
+                              ),
+                              Text(
+                                vehicleClass,
+                                style: const TextStyle(
+                                  fontFamily: 'Plus Jakarta Sans',
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF2E6385),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'VALID THRU',
+                                style: TextStyle(
+                                  fontSize: 7.5,
+                                  color: Color(0xFF554337),
+                                ),
+                              ),
+                              Text(
+                                expiry,
+                                style: const TextStyle(
+                                  fontFamily: 'Plus Jakarta Sans',
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF0F5B38),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white.withAlpha(220),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'LICENCE NUMBER',
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 8,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF554337),
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      Text(
+                        dlDisplay,
+                        style: const TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF2E6385),
+                          letterSpacing: 1.2,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
                 _buildRevealButton(
-                  bgColor: const Color(0xFFD4E09B),
+                  bgColor: const Color(0xFFF19C79),
                   textColor: const Color(0xFF2C221E),
                 ),
               ],

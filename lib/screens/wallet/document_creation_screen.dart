@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keybz/widgets/app_keyboard/app_keyboard.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -99,6 +100,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
       'title': 'Aadhaar Card',
       'subtitle': 'UIDAI • 12-Digit Identity',
       'icon': Icons.badge_outlined,
+      'asset': 'assets/aadhar.png',
       'color': Color(0xFFFF9933),
     },
     {
@@ -106,6 +108,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
       'title': 'PAN Card',
       'subtitle': 'Income Tax Dept • 10-Char Tax ID',
       'icon': Icons.credit_card_rounded,
+      'asset': 'assets/PAN.png',
       'color': Color(0xFF0284C7),
     },
     {
@@ -113,6 +116,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
       'title': 'Driving Licence',
       'subtitle': 'Transport Dept • Motor Vehicle Licence',
       'icon': Icons.directions_car_outlined,
+      'asset': 'assets/licence.png',
       'color': Color(0xFF16A34A),
     },
     {
@@ -120,20 +124,23 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
       'title': 'Passport',
       'subtitle': 'Govt of India • International Travel',
       'icon': Icons.flight_takeoff_rounded,
+      'asset': 'assets/passport.jpeg',
       'color': Color(0xFF1E3A8A),
     },
     {
-      'id': 'debit_card',
-      'title': 'Debit / Credit Card',
-      'subtitle': 'Bank Payment Card • Masked & Encrypted',
-      'icon': Icons.payment_rounded,
-      'color': Color(0xFF6366F1),
+      'id': 'voter_id',
+      'title': 'Voter ID (EPIC)',
+      'subtitle': 'Election Commission of India • EPIC Card',
+      'icon': Icons.how_to_vote_rounded,
+      'asset': 'assets/voterid.png',
+      'color': Color(0xFF2E6385),
     },
     {
       'id': 'insurance',
       'title': 'Insurance Policy',
       'subtitle': 'Health, Motor, Life, Term & Travel',
       'icon': Icons.health_and_safety_outlined,
+      'asset': 'assets/Insurance.png',
       'color': Color(0xFF0D9488),
     },
     {
@@ -303,6 +310,12 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
             ? '${clean.substring(0, 1)}••••${clean.substring(clean.length - 3)}'
             : clean;
 
+      case 'voter_id':
+      case 'voter':
+        return clean.length > 4
+            ? '${clean.substring(0, 3)}••••${clean.substring(clean.length - 3)}'
+            : clean;
+
       case 'debit_card':
       case 'credit_card':
         if (clean.length >= 12) {
@@ -437,6 +450,9 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
                 : _selectedCategory == 'driving_license' ||
                       _selectedCategory == 'driving_licence'
                 ? 'Driving Licence'
+                : _selectedCategory == 'voter_id' ||
+                      _selectedCategory == 'voter'
+                ? 'Voter ID'
                 : _selectedCategory == 'insurance'
                 ? 'Health Insurance'
                 : rawPersonName)
@@ -490,28 +506,37 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
       final descBuffer = StringBuffer();
       if (holder != null) descBuffer.writeln('Holder: $holder');
       if (masked.isNotEmpty) descBuffer.writeln('Number: $masked');
-      if (_fatherNameController.text.isNotEmpty)
+      if (_fatherNameController.text.isNotEmpty) {
         descBuffer.writeln('Father: ${_fatherNameController.text.trim()}');
-      if (_dob != null)
+      }
+      if (_dob != null) {
         descBuffer.writeln('DOB: ${DateFormat('dd/MM/yyyy').format(_dob!)}');
-      if (_addressController.text.isNotEmpty)
+      }
+      if (_addressController.text.isNotEmpty) {
         descBuffer.writeln('Address: ${_addressController.text.trim()}');
-      if (_bankController.text.isNotEmpty)
+      }
+      if (_bankController.text.isNotEmpty) {
         descBuffer.writeln('Bank: ${_bankController.text.trim()}');
+      }
       if (_cardNetwork.isNotEmpty) descBuffer.writeln('Network: $_cardNetwork');
-      if (_providerController.text.isNotEmpty)
+      if (_providerController.text.isNotEmpty) {
         descBuffer.writeln('Provider: ${_providerController.text.trim()}');
+      }
       if (_policyType.isNotEmpty) descBuffer.writeln('Type: $_policyType');
-      if (_authorityController.text.isNotEmpty)
+      if (_authorityController.text.isNotEmpty) {
         descBuffer.writeln('Issuer: ${_authorityController.text.trim()}');
-      if (_stateController.text.isNotEmpty)
+      }
+      if (_stateController.text.isNotEmpty) {
         descBuffer.writeln('State: ${_stateController.text.trim()}');
-      if (_selectedVehicleClasses.isNotEmpty)
+      }
+      if (_selectedVehicleClasses.isNotEmpty) {
         descBuffer.writeln(
           'Vehicle Class: ${_selectedVehicleClasses.join(', ')}',
         );
-      if (_notesController.text.isNotEmpty)
+      }
+      if (_notesController.text.isNotEmpty) {
         descBuffer.writeln('Notes: ${_notesController.text.trim()}');
+      }
 
       if (widget.documentToEdit != null) {
         // Updating existing document
@@ -703,7 +728,9 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
         ),
       ),
       body: _isSaving
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFF19C79)))
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFFF19C79)),
+            )
           : (_currentStep == 0
                 ? _buildCategorySelector()
                 : (_currentStep == 1 ? _buildFormStep() : _buildPreviewStep())),
@@ -735,7 +762,9 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           return Container(
             margin: const EdgeInsets.only(bottom: 10),
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFFCBDFBD) : const Color(0xFFF6F4D2),
+              color: isSelected
+                  ? const Color(0xFFCBDFBD)
+                  : const Color(0xFFF6F4D2),
               borderRadius: BorderRadius.circular(18),
               boxShadow: const [
                 BoxShadow(
@@ -756,16 +785,33 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
                 vertical: AppSpacing.xs,
               ),
               leading: Container(
-                padding: const EdgeInsets.all(10),
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   color: (cat['color'] as Color).withAlpha(25),
-                  shape: BoxShape.circle,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  cat['icon'] as IconData,
-                  color: cat['color'] as Color,
-                  size: 24,
-                ),
+                alignment: Alignment.center,
+                child: cat['asset'] is String
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.asset(
+                          cat['asset'] as String,
+                          width: 36,
+                          height: 36,
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, _, _) => Icon(
+                            cat['icon'] as IconData,
+                            color: cat['color'] as Color,
+                            size: 24,
+                          ),
+                        ),
+                      )
+                    : Icon(
+                        cat['icon'] as IconData,
+                        color: cat['color'] as Color,
+                        size: 24,
+                      ),
               ),
               title: Text(
                 cat['title'] as String,
@@ -838,6 +884,9 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
               _selectedCategory == 'driving_licence')
             ..._buildDrivingLicenceFields(),
           if (_selectedCategory == 'passport') ..._buildPassportFields(),
+          if (_selectedCategory == 'voter_id' ||
+              _selectedCategory == 'voter')
+            ..._buildVoterIdFields(),
           if (_selectedCategory == 'debit_card' ||
               _selectedCategory == 'credit_card')
             ..._buildPaymentCardFields(),
@@ -847,6 +896,8 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
               _selectedCategory != 'driving_license' &&
               _selectedCategory != 'driving_licence' &&
               _selectedCategory != 'passport' &&
+              _selectedCategory != 'voter_id' &&
+              _selectedCategory != 'voter' &&
               _selectedCategory != 'debit_card' &&
               _selectedCategory != 'credit_card' &&
               _selectedCategory != 'insurance')
@@ -890,7 +941,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
   // --- AADHAAR FORM FIELDS ---
   List<Widget> _buildAadhaarFields() {
     return [
-      TextFormField(
+      AppTextFormField(
         controller: _nameController,
         decoration: const InputDecoration(
           labelText: 'Full Name *',
@@ -901,7 +952,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
             v == null || v.trim().isEmpty ? 'Full name is required' : null,
       ),
       const SizedBox(height: AppSpacing.sm),
-      TextFormField(
+      AppTextFormField(
         controller: _numberController,
         keyboardType: TextInputType.number,
         inputFormatters: [
@@ -915,8 +966,9 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
         ),
         validator: (v) {
           final digits = v?.replaceAll(RegExp(r'\s+'), '') ?? '';
-          if (digits.length != 12)
+          if (digits.length != 12) {
             return 'Aadhaar number must contain exactly 12 digits';
+          }
           return null;
         },
       ),
@@ -951,7 +1003,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
         onChanged: (v) => setState(() => _gender = v ?? 'Male'),
       ),
       const SizedBox(height: AppSpacing.sm),
-      TextFormField(
+      AppTextFormField(
         controller: _addressController,
         maxLines: 2,
         decoration: const InputDecoration(
@@ -961,7 +1013,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
         ),
       ),
       const SizedBox(height: AppSpacing.sm),
-      TextFormField(
+      AppTextFormField(
         controller: _fatherNameController,
         decoration: const InputDecoration(
           labelText: "Father's / Guardian's Name (Optional)",
@@ -969,7 +1021,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
         ),
       ),
       const SizedBox(height: AppSpacing.sm),
-      TextFormField(
+      AppTextFormField(
         controller: _mobileController,
         keyboardType: TextInputType.phone,
         decoration: const InputDecoration(
@@ -983,7 +1035,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
   // --- PAN FORM FIELDS ---
   List<Widget> _buildPanFields() {
     return [
-      TextFormField(
+      AppTextFormField(
         controller: _nameController,
         decoration: const InputDecoration(
           labelText: "Full Name *",
@@ -994,7 +1046,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
             v == null || v.trim().isEmpty ? 'Full name is required' : null,
       ),
       const SizedBox(height: AppSpacing.sm),
-      TextFormField(
+      AppTextFormField(
         controller: _fatherNameController,
         decoration: const InputDecoration(
           labelText: "Father's Name *",
@@ -1004,7 +1056,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
             v == null || v.trim().isEmpty ? "Father's name is required" : null,
       ),
       const SizedBox(height: AppSpacing.sm),
-      TextFormField(
+      AppTextFormField(
         controller: _numberController,
         textCapitalization: TextCapitalization.characters,
         inputFormatters: [
@@ -1053,7 +1105,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
   // --- DRIVING LICENCE FIELDS ---
   List<Widget> _buildDrivingLicenceFields() {
     return [
-      TextFormField(
+      AppTextFormField(
         controller: _nameController,
         decoration: const InputDecoration(
           labelText: 'Full Name *',
@@ -1064,7 +1116,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
             v == null || v.trim().isEmpty ? 'Holder name is required' : null,
       ),
       const SizedBox(height: AppSpacing.sm),
-      TextFormField(
+      AppTextFormField(
         controller: _numberController,
         textCapitalization: TextCapitalization.characters,
         decoration: const InputDecoration(
@@ -1115,7 +1167,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
         ],
       ),
       const SizedBox(height: AppSpacing.sm),
-      TextFormField(
+      AppTextFormField(
         controller: _authorityController,
         decoration: const InputDecoration(
           labelText: 'Issuing Authority / RTO *',
@@ -1127,7 +1179,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
             : null,
       ),
       const SizedBox(height: AppSpacing.sm),
-      TextFormField(
+      AppTextFormField(
         controller: _stateController,
         decoration: const InputDecoration(
           labelText: 'State / Union Territory *',
@@ -1167,7 +1219,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
   // --- PASSPORT FIELDS ---
   List<Widget> _buildPassportFields() {
     return [
-      TextFormField(
+      AppTextFormField(
         controller: _nameController,
         decoration: const InputDecoration(
           labelText: 'Full Name *',
@@ -1178,7 +1230,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
             v == null || v.trim().isEmpty ? 'Full name is required' : null,
       ),
       const SizedBox(height: AppSpacing.sm),
-      TextFormField(
+      AppTextFormField(
         controller: _numberController,
         textCapitalization: TextCapitalization.characters,
         inputFormatters: [LengthLimitingTextInputFormatter(8)],
@@ -1196,7 +1248,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
         },
       ),
       const SizedBox(height: AppSpacing.sm),
-      TextFormField(
+      AppTextFormField(
         controller: _nationalityController,
         decoration: const InputDecoration(
           labelText: 'Nationality *',
@@ -1245,7 +1297,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
         ],
       ),
       const SizedBox(height: AppSpacing.sm),
-      TextFormField(
+      AppTextFormField(
         controller: _pobController,
         decoration: const InputDecoration(
           labelText: 'Place of Birth *',
@@ -1256,7 +1308,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
             v == null || v.trim().isEmpty ? 'Place of birth is required' : null,
       ),
       const SizedBox(height: AppSpacing.sm),
-      TextFormField(
+      AppTextFormField(
         controller: _poiController,
         decoration: const InputDecoration(
           labelText: 'Place of Issue *',
@@ -1265,6 +1317,61 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
         ),
         validator: (v) =>
             v == null || v.trim().isEmpty ? 'Place of issue is required' : null,
+      ),
+    ];
+  }
+
+  // --- VOTER ID (EPIC) FIELDS ---
+  List<Widget> _buildVoterIdFields() {
+    return [
+      AppTextFormField(
+        controller: _nameController,
+        decoration: const InputDecoration(
+          labelText: 'Elector Name *',
+          hintText: 'Name as on Voter ID',
+          prefixIcon: Icon(Icons.person_outline_rounded),
+        ),
+        validator: (v) =>
+            v == null || v.trim().isEmpty ? 'Elector name is required' : null,
+      ),
+      const SizedBox(height: AppSpacing.sm),
+      AppTextFormField(
+        controller: _numberController,
+        inputFormatters: [
+          LengthLimitingTextInputFormatter(10),
+          _UpperCaseTextFormatter(),
+        ],
+        decoration: const InputDecoration(
+          labelText: 'EPIC Number (10 Digits/Chars) *',
+          hintText: 'e.g. WBD1234567',
+          prefixIcon: Icon(Icons.how_to_vote_rounded),
+        ),
+        validator: (v) {
+          final epic = v?.trim().toUpperCase() ?? '';
+          if (epic.length < 5) {
+            return 'Enter a valid EPIC number';
+          }
+          return null;
+        },
+      ),
+      const SizedBox(height: AppSpacing.sm),
+      AppTextFormField(
+        controller: _fatherNameController,
+        decoration: const InputDecoration(
+          labelText: "Father's / Husband's Name",
+          hintText: 'As printed on card',
+          prefixIcon: Icon(Icons.family_restroom_rounded),
+        ),
+      ),
+      const SizedBox(height: AppSpacing.sm),
+      AppTextFormField(
+        controller: _addressController,
+        maxLines: 2,
+        decoration: const InputDecoration(
+          labelText: 'Constituency / Address',
+          hintText: 'Assembly Constituency or address',
+          prefixIcon: Icon(Icons.location_on_outlined),
+        ),
       ),
     ];
   }
@@ -1316,7 +1423,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
         ),
       ),
       const SizedBox(height: AppSpacing.sm),
-      TextFormField(
+      AppTextFormField(
         controller: _nameController,
         decoration: const InputDecoration(
           labelText: 'Cardholder Name *',
@@ -1328,7 +1435,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
             : null,
       ),
       const SizedBox(height: AppSpacing.sm),
-      TextFormField(
+      AppTextFormField(
         controller: _bankController,
         decoration: const InputDecoration(
           labelText: 'Bank / Issuer Name *',
@@ -1358,7 +1465,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
         onChanged: (v) => setState(() => _cardNetwork = v ?? 'Visa'),
       ),
       const SizedBox(height: AppSpacing.sm),
-      TextFormField(
+      AppTextFormField(
         controller: _numberController,
         keyboardType: TextInputType.number,
         inputFormatters: [
@@ -1419,7 +1526,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
   // --- INSURANCE FIELDS ---
   List<Widget> _buildInsuranceFields() {
     return [
-      TextFormField(
+      AppTextFormField(
         controller: _providerController,
         decoration: const InputDecoration(
           labelText: 'Insurance Provider *',
@@ -1430,7 +1537,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
             v == null || v.trim().isEmpty ? 'Provider name is required' : null,
       ),
       const SizedBox(height: AppSpacing.sm),
-      TextFormField(
+      AppTextFormField(
         controller: _nameController,
         decoration: const InputDecoration(
           labelText: 'Policyholder Name *',
@@ -1442,7 +1549,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
             : null,
       ),
       const SizedBox(height: AppSpacing.sm),
-      TextFormField(
+      AppTextFormField(
         controller: _numberController,
         decoration: const InputDecoration(
           labelText: 'Policy Number *',
@@ -1527,7 +1634,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
         ],
       ),
       const SizedBox(height: AppSpacing.sm),
-      TextFormField(
+      AppTextFormField(
         controller: _coverageController,
         keyboardType: TextInputType.number,
         decoration: const InputDecoration(
@@ -1537,7 +1644,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
         ),
       ),
       const SizedBox(height: AppSpacing.sm),
-      TextFormField(
+      AppTextFormField(
         controller: _contactController,
         decoration: const InputDecoration(
           labelText: 'Helpline / Contact Phone (Optional)',
@@ -1550,7 +1657,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
   // --- OTHER DOCUMENTS FIELDS ---
   List<Widget> _buildOtherDocumentFields() {
     return [
-      TextFormField(
+      AppTextFormField(
         controller: _nameController,
         decoration: const InputDecoration(
           labelText: 'Document Title *',
@@ -1561,7 +1668,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
             v == null || v.trim().isEmpty ? 'Document title is required' : null,
       ),
       const SizedBox(height: AppSpacing.sm),
-      TextFormField(
+      AppTextFormField(
         controller: _holderController,
         decoration: const InputDecoration(
           labelText: 'Issuing Organisation / Holder Name',
@@ -1570,7 +1677,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
         ),
       ),
       const SizedBox(height: AppSpacing.sm),
-      TextFormField(
+      AppTextFormField(
         controller: _numberController,
         decoration: const InputDecoration(
           labelText: 'Reference / Document Number',
@@ -1618,7 +1725,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
         ],
       ),
       const SizedBox(height: AppSpacing.sm),
-      TextFormField(
+      AppTextFormField(
         controller: _notesController,
         maxLines: 2,
         decoration: const InputDecoration(
@@ -1884,34 +1991,34 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
                 ),
               ),
               const Divider(color: Color(0xFFB5CCA7)),
+              _summaryRow(
+                'Type',
+                _selectedCategory.replaceAll('_', ' ').toUpperCase(),
+              ),
+              _summaryRow('Document Title', title),
+              if (holder != null) _summaryRow('Holder', holder),
+              if (masked.isNotEmpty) _summaryRow('Masked ID', masked),
+              if (_issueDate != null)
                 _summaryRow(
-                  'Type',
-                  _selectedCategory.replaceAll('_', ' ').toUpperCase(),
+                  'Issue Date',
+                  DateFormat('dd MMM yyyy').format(_issueDate!),
                 ),
-                _summaryRow('Document Title', title),
-                if (holder != null) _summaryRow('Holder', holder),
-                if (masked.isNotEmpty) _summaryRow('Masked ID', masked),
-                if (_issueDate != null)
-                  _summaryRow(
-                    'Issue Date',
-                    DateFormat('dd MMM yyyy').format(_issueDate!),
-                  ),
-                if (_expiryDate != null)
-                  _summaryRow(
-                    'Expiry Date',
-                    DateFormat('dd MMM yyyy').format(_expiryDate!),
-                  ),
+              if (_expiryDate != null)
                 _summaryRow(
-                  'Attachment',
-                  _attachmentPayload != null
-                      ? 'Attached (${_attachmentPayload!.fileName})'
-                      : (widget.documentToEdit?.hasAttachment == true
-                            ? 'Retaining existing attachment'
-                            : 'No attachment copy'),
+                  'Expiry Date',
+                  DateFormat('dd MMM yyyy').format(_expiryDate!),
                 ),
-              ],
-            ),
+              _summaryRow(
+                'Attachment',
+                _attachmentPayload != null
+                    ? 'Attached (${_attachmentPayload!.fileName})'
+                    : (widget.documentToEdit?.hasAttachment == true
+                          ? 'Retaining existing attachment'
+                          : 'No attachment copy'),
+              ),
+            ],
           ),
+        ),
         const SizedBox(height: AppSpacing.xl),
 
         // Buttons: Edit Details or Save to Vault
@@ -1977,7 +2084,11 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.lock_rounded, size: 16, color: Color(0xFF2C221E)),
+                      const Icon(
+                        Icons.lock_rounded,
+                        size: 16,
+                        color: Color(0xFF2C221E),
+                      ),
                       const SizedBox(width: 6),
                       Text(
                         widget.documentToEdit != null

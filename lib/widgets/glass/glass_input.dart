@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:keybz/widgets/app_keyboard/app_keyboard.dart';
 import 'package:flutter/services.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_radius.dart';
@@ -61,7 +62,7 @@ class GlassInput extends StatelessWidget {
     final textPrimary = AppColors.getTextPrimary(context);
     final textSecondary = AppColors.getTextSecondary(context);
 
-    Widget field = TextFormField(
+    Widget field = AppTextFormField(
       controller: controller,
       initialValue: initialValue,
       focusNode: focusNode,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keybz/widgets/app_keyboard/app_keyboard.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +13,7 @@ import '../../models/wallet_pass_model.dart';
 import '../../presentation/widgets/spendz_button.dart';
 import '../../presentation/widgets/spendz_top_bar.dart';
 import '../../providers/wallet_provider.dart';
+import '../../providers/wallet_card_provider.dart';
 import '../../providers/wallet_document_provider.dart';
 import 'card_detail_screen.dart';
 import 'cards_screen.dart';
@@ -22,7 +24,6 @@ import 'package:uuid/uuid.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'passes_screen.dart';
 import 'widgets/transit_ticket_card.dart';
 import 'widgets/stitch_spotlight_card.dart';
 import '../../providers/wallet_pass_provider.dart';
@@ -130,6 +131,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                 _buildAddOptionTile(
                   context: ctx,
                   icon: Icons.badge_outlined,
+                  imageAsset: 'assets/aadhar.png',
                   title: 'Official Document',
                   subtitle: 'Aadhaar, PAN, Passport, Driving Licence',
                   onTap: () {
@@ -145,8 +147,9 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                 _buildAddOptionTile(
                   context: ctx,
                   icon: Icons.credit_card_rounded,
+                  imageAsset: 'assets/credit_Debit.png',
                   title: 'Payment Card',
-                  subtitle: 'Customize banking card in Card Studio',
+                  subtitle: 'Debit, credit, ATM, or membership card',
                   onTap: () {
                     Navigator.pop(ctx);
                     Navigator.push(
@@ -157,21 +160,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                     );
                   },
                 ),
-                _buildAddOptionTile(
-                  context: ctx,
-                  icon: Icons.qr_code_2_rounded,
-                  title: 'Digital Pass / QR',
-                  subtitle: 'Transit QR, event pass, or ticket',
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const PassesScreen(openAddDialog: true),
-                      ),
-                    );
-                  },
-                ),
+
                 const SizedBox(height: SpendzSpacing.md),
               ],
             ),
@@ -184,6 +173,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
   Widget _buildAddOptionTile({
     required BuildContext context,
     required IconData icon,
+    String? imageAsset,
     required String title,
     required String subtitle,
     required VoidCallback onTap,
@@ -197,7 +187,22 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
           color: SpendzColors.primaryAccent(context).withAlpha(25),
           borderRadius: BorderRadius.circular(SpendzSpacing.radiusMd),
         ),
-        child: Icon(icon, size: 20, color: SpendzColors.primaryAccent(context)),
+        child: imageAsset == null
+            ? Icon(icon, size: 20, color: SpendzColors.primaryAccent(context))
+            : ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(
+                  imageAsset,
+                  width: 30,
+                  height: 30,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, _, _) => Icon(
+                    icon,
+                    size: 20,
+                    color: SpendzColors.primaryAccent(context),
+                  ),
+                ),
+              ),
       ),
       title: Text(
         title,
@@ -221,22 +226,15 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         child: Consumer<WalletProvider>(
           builder: (context, wallet, _) {
             final docProvider = context.watch<WalletDocumentProvider>();
-            final cards = wallet.cards;
-            // Combine live vault documents from all providers
-            final Map<String, WalletDocumentModel> allDocsMap = {};
-            for (final d in wallet.documents) {
-              allDocsMap[d.id] = d;
-            }
-            for (final d in docProvider.documents) {
-              allDocsMap[d.id] = d;
-            }
-            final documents = allDocsMap.values.toList();
-            final passProvider = context.watch<WalletPassProvider>();
+            final cardProvider = context.watch<WalletCardProvider>();
+            final cards = cardProvider.cards;
+            final documents = docProvider.documents;
+            final passProvider = context.watch<WalletPassProvider?>();
             final Map<String, WalletPassModel> allPassesMap = {};
             for (final p in wallet.passes) {
               allPassesMap[p.id] = p;
             }
-            for (final p in passProvider.passes) {
+            for (final p in passProvider?.passes ?? const <WalletPassModel>[]) {
               allPassesMap[p.id] = p;
             }
             final passes = allPassesMap.values.toList();
@@ -244,8 +242,12 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
             return RefreshIndicator(
               color: SpendzColors.tangerine,
               onRefresh: () async {
-                await wallet.loadWallet();
-                await passProvider.loadPasses();
+                await Future.wait([
+                  wallet.loadWallet(),
+                  cardProvider.loadCards(),
+                  docProvider.loadDocuments(),
+                  if (passProvider != null) passProvider.loadPasses(),
+                ]);
               },
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -261,7 +263,12 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                     const SizedBox(height: SpendzSpacing.sm),
 
                     // 1. Vault Header & Filter Chips (Renamed to Wallet, removed DigiLocker Synced)
-                    _buildVaultHeader(context, 7),
+                    _buildVaultHeader(
+                      context,
+                      cards.length + documents.length,
+                      cards.length,
+                      documents.length,
+                    ),
                     const SizedBox(height: SpendzSpacing.md),
 
                     // 2. Spotlight Card Carousel (The 7 Authentic Stitch Cards)
@@ -286,7 +293,12 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
   }
 
   // ─── 2. INDIAN VAULT HEADER & FILTER CHIPS ──────────────────────────────────
-  Widget _buildVaultHeader(BuildContext context, int totalCount) {
+  Widget _buildVaultHeader(
+    BuildContext context,
+    int totalCount,
+    int cardCount,
+    int documentCount,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -313,14 +325,17 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: SpendzColors.tangerine,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Text(
-                    '7 Cards',
-                    style: TextStyle(
+                  child: Text(
+                    '$totalCount Items',
+                    style: const TextStyle(
                       fontFamily: 'Plus Jakarta Sans',
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
@@ -339,11 +354,23 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
           physics: const BouncingScrollPhysics(),
           child: Row(
             children: [
-              _buildVaultFilterPill(context, 'All Cards ($totalCount)', isSelected: true),
+              _buildVaultFilterPill(
+                context,
+                'All Cards ($totalCount)',
+                isSelected: true,
+              ),
               const SizedBox(width: 8),
-              _buildVaultFilterPill(context, 'Identity (4)', isSelected: false),
+              _buildVaultFilterPill(
+                context,
+                'Cards ($cardCount)',
+                isSelected: false,
+              ),
               const SizedBox(width: 8),
-              _buildVaultFilterPill(context, 'Finance & Banking (2)', isSelected: false),
+              _buildVaultFilterPill(
+                context,
+                'Documents ($documentCount)',
+                isSelected: false,
+              ),
             ],
           ),
         ),
@@ -351,7 +378,11 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     );
   }
 
-  Widget _buildVaultFilterPill(BuildContext context, String label, {required bool isSelected}) {
+  Widget _buildVaultFilterPill(
+    BuildContext context,
+    String label, {
+    required bool isSelected,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
@@ -406,265 +437,139 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     final insuranceDoc = findDoc(['insur', 'medic', 'health']);
     final voterDoc = findDoc(['voter', 'epic']);
     final passportDoc = findDoc(['passport']);
+    final licenceDoc = findDoc([
+      'driving_licen',
+      'driving_licen',
+      'licen',
+      'driv',
+    ]);
 
     WalletCardModel? debitCard;
     WalletCardModel? creditCard;
     for (final c in cards) {
-      final isCredit = c.cardType.toLowerCase().contains('credit') || c.nickname.toLowerCase().contains('credit');
+      final type = c.cardType.toLowerCase();
+      final nickname = c.nickname.toLowerCase();
+      final isCredit = type.contains('credit') || nickname.contains('credit');
+      final isDebit = type.contains('debit') || nickname.contains('debit');
       if (isCredit && creditCard == null) {
         creditCard = c;
-      } else if (!isCredit && debitCard == null) {
+      } else if (isDebit && debitCard == null) {
         debitCard = c;
       }
     }
-    debitCard ??= cards.isNotEmpty ? cards.first : null;
-    if (creditCard == null && cards.length > 1) {
-      creditCard = cards[1];
-    }
-
     final List<_CardDeckItem> deckItems = [
-      _CardDeckItem(
-        id: 'spotlight_aadhaar',
-        title: aadhaarDoc?.documentName ?? 'Aadhaar Card',
-        subtitle: aadhaarDoc != null
-            ? (aadhaarDoc.holderName?.isNotEmpty == true ? aadhaarDoc.holderName! : 'UIDAI Government ID')
-            : 'Tap to Add & Encrypt',
-        icon: Icons.fingerprint_rounded,
-        color: const Color(0xFFFF933E),
-        widget: aadhaarDoc != null
-            ? StitchSpotlightCard.fromDocument(
-                document: aadhaarDoc,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => DocumentPreviewScreen(document: aadhaarDoc),
-                    ),
-                  );
-                },
-              )
-            : StitchSpotlightCard(
-                cardType: StitchCardType.aadhaar,
-                holderName: 'Tap to Add Aadhaar',
-                maskedNumber: '•••• •••• ••••',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const DocumentCreationScreen(initialCategory: 'aadhaar'),
-                    ),
-                  );
-                },
-              ),
-      ),
-      _CardDeckItem(
-        id: 'spotlight_pan',
-        title: panDoc?.documentName ?? 'PAN Card',
-        subtitle: panDoc != null
-            ? (panDoc.holderName?.isNotEmpty == true ? panDoc.holderName! : 'Income Tax Dept')
-            : 'Tap to Add & Encrypt',
-        icon: Icons.credit_card_rounded,
-        color: const Color(0xFF2E6385),
-        widget: panDoc != null
-            ? StitchSpotlightCard.fromDocument(
-                document: panDoc,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => DocumentPreviewScreen(document: panDoc),
-                    ),
-                  );
-                },
-              )
-            : StitchSpotlightCard(
-                cardType: StitchCardType.pan,
-                holderName: 'Tap to Add PAN Card',
-                maskedNumber: '••••••••••',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const DocumentCreationScreen(initialCategory: 'pan'),
-                    ),
-                  );
-                },
-              ),
-      ),
-      _CardDeckItem(
-        id: 'spotlight_debit',
-        title: debitCard?.nickname ?? 'Spendz Platinum Debit',
-        subtitle: debitCard != null
-            ? '${debitCard.issuerName} • ${debitCard.cardNetwork}'
-            : 'Tap to Add Debit Card',
-        icon: Icons.credit_card_rounded,
-        color: const Color(0xFF263143),
-        widget: debitCard != null
-            ? StitchSpotlightCard.fromCard(
-                card: debitCard,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => CardDetailScreen(card: debitCard!),
-                    ),
-                  );
-                },
-              )
-            : StitchSpotlightCard(
-                cardType: StitchCardType.debit,
-                holderName: 'Tap to Add Debit Card',
-                maskedNumber: '•••• •••• •••• ••••',
-                issuer: 'Debit Card',
-                expiry: 'MM/YY',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const CardsScreen(openAddDialog: true),
-                    ),
-                  );
-                },
-              ),
-      ),
-      _CardDeckItem(
-        id: 'spotlight_credit',
-        title: creditCard?.nickname ?? 'World Elite Credit',
-        subtitle: creditCard != null
-            ? '${creditCard.issuerName} • ${creditCard.cardNetwork}'
-            : 'Tap to Add Credit Card',
-        icon: Icons.diamond_rounded,
-        color: const Color(0xFFFF933E),
-        widget: creditCard != null
-            ? StitchSpotlightCard.fromCard(
-                card: creditCard,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => CardDetailScreen(card: creditCard!),
-                    ),
-                  );
-                },
-              )
-            : StitchSpotlightCard(
-                cardType: StitchCardType.credit,
-                holderName: 'Tap to Add Credit Card',
-                maskedNumber: '•••• •••• •••• ••••',
-                issuer: 'Credit Card',
-                expiry: 'MM/YY',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const CardsScreen(openAddDialog: true),
-                    ),
-                  );
-                },
-              ),
-      ),
-      _CardDeckItem(
-        id: 'spotlight_mediclaim',
-        title: insuranceDoc?.documentName ?? 'Star Health Mediclaim',
-        subtitle: insuranceDoc != null
-            ? (insuranceDoc.holderName?.isNotEmpty == true ? insuranceDoc.holderName! : 'Cashless Medi-Claim')
-            : 'Tap to Add & Encrypt',
-        icon: Icons.medical_services_rounded,
-        color: const Color(0xFFBA1A1A),
-        widget: insuranceDoc != null
-            ? StitchSpotlightCard.fromDocument(
-                document: insuranceDoc,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => DocumentPreviewScreen(document: insuranceDoc),
-                    ),
-                  );
-                },
-              )
-            : StitchSpotlightCard(
-                cardType: StitchCardType.mediclaim,
-                holderName: 'Tap to Add Health Insurance',
-                policyNumber: '••••••••••••',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const DocumentCreationScreen(initialCategory: 'insurance'),
-                    ),
-                  );
-                },
-              ),
-      ),
-      _CardDeckItem(
-        id: 'spotlight_voter',
-        title: voterDoc?.documentName ?? 'Voter ID (EPIC)',
-        subtitle: voterDoc != null
-            ? (voterDoc.holderName?.isNotEmpty == true ? voterDoc.holderName! : 'ECI Official')
-            : 'Tap to Add & Encrypt',
-        icon: Icons.how_to_vote_rounded,
-        color: const Color(0xFF2E6385),
-        widget: voterDoc != null
-            ? StitchSpotlightCard.fromDocument(
-                document: voterDoc,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => DocumentPreviewScreen(document: voterDoc),
-                    ),
-                  );
-                },
-              )
-            : StitchSpotlightCard(
-                cardType: StitchCardType.voterId,
-                holderName: 'Tap to Add Voter ID',
-                epicNumber: '••••••••••',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const DocumentCreationScreen(initialCategory: 'voter_id'),
-                    ),
-                  );
-                },
-              ),
-      ),
-      _CardDeckItem(
-        id: 'spotlight_passport',
-        title: passportDoc?.documentName ?? 'Indian Passport',
-        subtitle: passportDoc != null
-            ? (passportDoc.holderName?.isNotEmpty == true ? passportDoc.holderName! : 'Official Passport')
-            : 'Tap to Add & Encrypt',
-        icon: Icons.public_rounded,
-        color: const Color(0xFF122238),
-        widget: passportDoc != null
-            ? StitchSpotlightCard.fromDocument(
-                document: passportDoc,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => DocumentPreviewScreen(document: passportDoc),
-                    ),
-                  );
-                },
-              )
-            : StitchSpotlightCard(
-                cardType: StitchCardType.passport,
-                holderName: 'Tap to Add Passport',
-                passportNumber: '••••••••',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const DocumentCreationScreen(initialCategory: 'passport'),
-                    ),
-                  );
-                },
-              ),
-      ),
+      if (aadhaarDoc != null)
+        _CardDeckItem(
+          id: 'spotlight_aadhaar',
+          title: aadhaarDoc.documentName,
+          subtitle: aadhaarDoc.holderName?.isNotEmpty == true
+              ? aadhaarDoc.holderName!
+              : 'UIDAI Government ID',
+          icon: Icons.fingerprint_rounded,
+          color: const Color(0xFFFF933E),
+          widget: StitchSpotlightCard.fromDocument(
+            document: aadhaarDoc,
+            onTap: () => _openDocument(context, aadhaarDoc),
+          ),
+        ),
+      if (panDoc != null)
+        _CardDeckItem(
+          id: 'spotlight_pan',
+          title: panDoc.documentName,
+          subtitle: panDoc.holderName?.isNotEmpty == true
+              ? panDoc.holderName!
+              : 'Income Tax Dept',
+          icon: Icons.credit_card_rounded,
+          color: const Color(0xFF2E6385),
+          widget: StitchSpotlightCard.fromDocument(
+            document: panDoc,
+            onTap: () => _openDocument(context, panDoc),
+          ),
+        ),
+      if (debitCard != null)
+        _CardDeckItem(
+          id: 'spotlight_debit',
+          title: debitCard.nickname.isNotEmpty
+              ? debitCard.nickname
+              : debitCard.issuerName,
+          subtitle: '${debitCard.issuerName} • ${debitCard.cardNetwork}',
+          icon: Icons.credit_card_rounded,
+          color: const Color(0xFF263143),
+          widget: StitchSpotlightCard.fromCard(
+            card: debitCard,
+            onTap: () => _openCard(context, debitCard!),
+          ),
+        ),
+      if (creditCard != null)
+        _CardDeckItem(
+          id: 'spotlight_credit',
+          title: creditCard.nickname.isNotEmpty
+              ? creditCard.nickname
+              : creditCard.issuerName,
+          subtitle: '${creditCard.issuerName} • ${creditCard.cardNetwork}',
+          icon: Icons.diamond_rounded,
+          color: const Color(0xFFFF933E),
+          widget: StitchSpotlightCard.fromCard(
+            card: creditCard,
+            onTap: () => _openCard(context, creditCard!),
+          ),
+        ),
+      if (insuranceDoc != null)
+        _CardDeckItem(
+          id: 'spotlight_mediclaim',
+          title: insuranceDoc.documentName,
+          subtitle: insuranceDoc.holderName?.isNotEmpty == true
+              ? insuranceDoc.holderName!
+              : 'Cashless Medi-Claim',
+          icon: Icons.medical_services_rounded,
+          color: const Color(0xFFBA1A1A),
+          widget: StitchSpotlightCard.fromDocument(
+            document: insuranceDoc,
+            onTap: () => _openDocument(context, insuranceDoc),
+          ),
+        ),
+      if (voterDoc != null)
+        _CardDeckItem(
+          id: 'spotlight_voter',
+          title: voterDoc.documentName,
+          subtitle: voterDoc.holderName?.isNotEmpty == true
+              ? voterDoc.holderName!
+              : 'ECI Official',
+          icon: Icons.how_to_vote_rounded,
+          color: const Color(0xFF2E6385),
+          widget: StitchSpotlightCard.fromDocument(
+            document: voterDoc,
+            onTap: () => _openDocument(context, voterDoc),
+          ),
+        ),
+      if (passportDoc != null)
+        _CardDeckItem(
+          id: 'spotlight_passport',
+          title: passportDoc.documentName,
+          subtitle: passportDoc.holderName?.isNotEmpty == true
+              ? passportDoc.holderName!
+              : 'Official Passport',
+          icon: Icons.public_rounded,
+          color: const Color(0xFF122238),
+          widget: StitchSpotlightCard.fromDocument(
+            document: passportDoc,
+            onTap: () => _openDocument(context, passportDoc),
+          ),
+        ),
+      if (licenceDoc != null)
+        _CardDeckItem(
+          id: 'spotlight_licence',
+          title: licenceDoc.documentName,
+          subtitle: licenceDoc.holderName?.isNotEmpty == true
+              ? licenceDoc.holderName!
+              : 'MoRTH — Union of India',
+          icon: Icons.drive_eta_rounded,
+          color: const Color(0xFF2E6385),
+          widget: StitchSpotlightCard.fromDocument(
+            document: licenceDoc,
+            onTap: () => _openDocument(context, licenceDoc),
+          ),
+        ),
     ];
 
     // Include any additional custom documents
@@ -674,6 +579,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
       if (insuranceDoc != null) insuranceDoc.id,
       if (voterDoc != null) voterDoc.id,
       if (passportDoc != null) passportDoc.id,
+      if (licenceDoc != null) licenceDoc.id,
     };
     for (final customDoc in documents) {
       if (!matchedDocIds.contains(customDoc.id)) {
@@ -681,7 +587,9 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
           _CardDeckItem(
             id: 'doc_${customDoc.id}',
             title: customDoc.documentName,
-            subtitle: customDoc.holderName?.isNotEmpty == true ? customDoc.holderName! : customDoc.category.toUpperCase(),
+            subtitle: customDoc.holderName?.isNotEmpty == true
+                ? customDoc.holderName!
+                : customDoc.category.toUpperCase(),
             icon: Icons.description_rounded,
             color: const Color(0xFF2E6385),
             widget: StitchSpotlightCard.fromDocument(
@@ -730,6 +638,17 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
       }
     }
 
+    if (_customCardOrder.isNotEmpty) {
+      deckItems.sort((a, b) {
+        final indexA = _customCardOrder.indexOf(a.id);
+        final indexB = _customCardOrder.indexOf(b.id);
+        if (indexA >= 0 && indexB >= 0) return indexA.compareTo(indexB);
+        if (indexA >= 0) return -1;
+        if (indexB >= 0) return 1;
+        return 0;
+      });
+    }
+
     // Sort according to custom card order if set
     if (_customCardOrder.isNotEmpty) {
       deckItems.sort((a, b) {
@@ -744,8 +663,43 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
 
     final cardWidgets = deckItems.map((e) => e.widget).toList();
 
+    if (deckItems.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Spotlight',
+            style: TextStyle(
+              fontFamily: 'Plus Jakarta Sans',
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: SpendzColors.textPrimary(context),
+            ),
+          ),
+          const SizedBox(height: SpendzSpacing.sm),
+          Text(
+            'Add a card or document to see it here.',
+            style: SpendzTypography.caption(context),
+          ),
+          const SizedBox(height: SpendzSpacing.sm),
+          SpendzButton(
+            label: 'Add to Wallet',
+            icon: Icons.add_rounded,
+            isFullWidth: true,
+            onPressed: () => _showAddOptions(context),
+          ),
+        ],
+      );
+    }
+
     if (_currentCardIndex >= cardWidgets.length) {
       _currentCardIndex = cardWidgets.length - 1;
+      final validIndex = _currentCardIndex;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _cardPageController.hasClients) {
+          _cardPageController.jumpToPage(validIndex);
+        }
+      });
     }
     if (_currentCardIndex < 0) {
       _currentCardIndex = 0;
@@ -848,7 +802,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
           builder: (context, constraints) {
             const viewportFraction = 0.94;
             final cardWidth = constraints.maxWidth * viewportFraction - 8;
-            final cardHeight = cardWidth / 1.586;
+            final cardHeight = (cardWidth / 1.586).clamp(215.0, 250.0);
             return SizedBox(
               height: cardHeight,
               child: PageView.builder(
@@ -863,9 +817,14 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: Center(
-                      child: AspectRatio(
-                        aspectRatio: 1.586,
-                        child: cardWidgets[index],
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.center,
+                        child: SizedBox(
+                          width: cardWidth,
+                          height: cardWidth / 1.586,
+                          child: cardWidgets[index],
+                        ),
                       ),
                     ),
                   );
@@ -907,7 +866,10 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                   GestureDetector(
                     onTap: () => _showRearrangeCardsModal(context, deckItems),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
                       decoration: BoxDecoration(
                         color: SpendzColors.surface(context),
                         borderRadius: BorderRadius.circular(16),
@@ -915,7 +877,11 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.swap_vert_rounded, size: 14, color: SpendzColors.textPrimary(context)),
+                          Icon(
+                            Icons.swap_vert_rounded,
+                            size: 14,
+                            color: SpendzColors.textPrimary(context),
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             'Reorder',
@@ -934,7 +900,10 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                   GestureDetector(
                     onTap: () => _showAddOptions(context),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 5,
+                      ),
                       decoration: BoxDecoration(
                         color: SpendzColors.tangerine,
                         borderRadius: BorderRadius.circular(16),
@@ -949,7 +918,11 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.add_rounded, size: 14, color: Colors.white),
+                          Icon(
+                            Icons.add_rounded,
+                            size: 14,
+                            color: Colors.white,
+                          ),
                           SizedBox(width: 3),
                           Text(
                             'Add Card',
@@ -970,6 +943,22 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  void _openDocument(BuildContext context, WalletDocumentModel document) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DocumentPreviewScreen(document: document),
+      ),
+    );
+  }
+
+  void _openCard(BuildContext context, WalletCardModel card) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => CardDetailScreen(card: card)),
     );
   }
 
@@ -1170,454 +1159,184 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
   Widget _buildOfficialCardsDirectory(
     BuildContext context,
     List<WalletCardModel> cards,
-    List<WalletDocumentModel> docs,
+    List<WalletDocumentModel> documents,
   ) {
-    WalletDocumentModel? findDoc(List<String> keywords) {
-      for (final doc in docs) {
-        final cat = doc.category.toLowerCase();
-        final name = doc.documentName.toLowerCase();
-        for (final k in keywords) {
-          if (cat.contains(k) || name.contains(k)) return doc;
-        }
-      }
-      return null;
-    }
+    final items = <Widget>[
+      ...documents.map((document) {
+        final category = document.category.toLowerCase();
+        final asset = category.contains('aadhaar')
+            ? 'assets/aadhar.png'
+            : category.contains('pan')
+            ? 'assets/PAN.png'
+            : category.contains('debit') || category.contains('credit')
+            ? 'assets/credit_Debit.png'
+            : category.contains('voter') || category.contains('epic')
+            ? 'assets/voterid.png'
+            : category.contains('passport')
+            ? 'assets/passport.jpeg'
+            : category.contains('insur') || category.contains('medic')
+            ? 'assets/Insurance.png'
+            : category.contains('licen') || category.contains('driv')
+            ? 'assets/licence.png'
+            : null;
+        final identifier = document.maskedIdentifier?.trim();
+        final subtitle = identifier?.isNotEmpty == true
+            ? identifier!
+            : document.holderName?.trim().isNotEmpty == true
+            ? document.holderName!
+            : document.category.replaceAll('_', ' ');
 
-    final aadhaarDoc = findDoc(['aadhaar']);
-    final panDoc = findDoc(['pan']);
-    final insuranceDoc = findDoc(['insur', 'medic', 'health']);
-    final voterDoc = findDoc(['voter', 'epic']);
-    final passportDoc = findDoc(['passport']);
+        return _buildLiveDirectoryItem(
+          context: context,
+          title: document.documentName,
+          badge: document.category.replaceAll('_', ' ').toUpperCase(),
+          subtitle: subtitle,
+          imageAsset: asset,
+          icon: Icons.description_outlined,
+          onTap: () => _openDocument(context, document),
+        );
+      }),
+      ...cards.map((card) {
+        final title = card.nickname.trim().isNotEmpty
+            ? card.nickname
+            : card.issuerName;
+        final details = <String>[
+          if (card.maskedNumber.trim().isNotEmpty) card.maskedNumber,
+          if (card.lastFour.isNotEmpty && card.maskedNumber.trim().isEmpty)
+            '•••• ${card.lastFour}',
+          card.cardType.toUpperCase(),
+        ];
+        final issuerAndNetwork = <String>[
+          if (card.issuerName.trim().isNotEmpty) card.issuerName,
+          if (card.cardNetwork.trim().isNotEmpty)
+            card.cardNetwork.toUpperCase(),
+        ];
 
-    WalletCardModel? debitCard;
-    WalletCardModel? creditCard;
-    for (final c in cards) {
-      final isCredit = c.cardType.toLowerCase().contains('credit') || c.nickname.toLowerCase().contains('credit');
-      if (isCredit && creditCard == null) {
-        creditCard = c;
-      } else if (!isCredit && debitCard == null) {
-        debitCard = c;
-      }
-    }
-    debitCard ??= cards.isNotEmpty ? cards.first : null;
-    if (creditCard == null && cards.length > 1) {
-      creditCard = cards[1];
-    }
+        return _buildLiveDirectoryItem(
+          context: context,
+          title: title,
+          badge: issuerAndNetwork.isEmpty
+              ? card.cardType.toUpperCase()
+              : issuerAndNetwork.join(' • '),
+          subtitle: details.join(' • '),
+          imageAsset: 'assets/credit_Debit.png',
+          icon: Icons.credit_card_rounded,
+          isPaymentCard: true,
+          onTap: () => _openCard(context, card),
+        );
+      }),
+    ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Official Cards Directory',
-              style: TextStyle(
-                fontFamily: 'Plus Jakarta Sans',
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: SpendzColors.textPrimary(context),
-                letterSpacing: -0.3,
-              ),
-            ),
-            Text(
-              'Tap to inspect',
-              style: TextStyle(
-                fontFamily: 'Plus Jakarta Sans',
-                fontSize: 11.5,
-                fontWeight: FontWeight.w600,
-                color: SpendzColors.textSecondary(context),
-              ),
-            ),
-          ],
+        Text(
+          'Wallet Directory',
+          style: TextStyle(
+            fontFamily: 'Plus Jakarta Sans',
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            color: SpendzColors.textPrimary(context),
+          ),
         ),
         const SizedBox(height: 12),
-
-        // Item 1: Aadhaar Card (Cream Matte Clay)
-        _buildDirectoryCardItem(
-          context: context,
-          tileBg: const Color(0xFFF6F4D2), // Cream
-          tileBorder: const Color(0xFFE2E0BD),
-          icon: Icons.fingerprint_rounded,
-          iconBg: const Color(0xFFF19C79), // Coral
-          iconColor: const Color(0xFF2C221E),
-          title: aadhaarDoc?.documentName ?? 'Aadhaar Card',
-          badgeText: 'UIDAI',
-          badgeBg: const Color(0xFFD4E09B), // Chartreuse
-          badgeColor: const Color(0xFF2C221E),
-          subtitle: aadhaarDoc != null
-              ? 'ID: ${aadhaarDoc.maskedIdentifier != null && aadhaarDoc.maskedIdentifier!.isNotEmpty ? aadhaarDoc.maskedIdentifier : "•••• ••••"} • Biometric Locked'
-              : 'Not linked • Tap to add',
-          statusWidget: Icon(
-            aadhaarDoc != null ? Icons.check_circle_rounded : Icons.add_circle_outline_rounded,
-            size: 18,
-            color: const Color(0xFFF19C79),
-          ),
-          onTap: () {
-            if (aadhaarDoc != null) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => DocumentPreviewScreen(document: aadhaarDoc),
-                ),
-              );
-            } else {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const DocumentCreationScreen(initialCategory: 'aadhaar'),
-                ),
-              );
-            }
-          },
-        ),
-        const SizedBox(height: 10),
-
-        // Item 2: PAN Card (Pistachio Matte Clay)
-        _buildDirectoryCardItem(
-          context: context,
-          tileBg: const Color(0xFFCBDFBD), // Pistachio
-          tileBorder: const Color(0xFFB5CCA7),
-          icon: Icons.badge_outlined,
-          iconBg: const Color(0xFFD4E09B), // Chartreuse
-          iconColor: const Color(0xFF2C221E),
-          title: panDoc?.documentName ?? 'PAN Card',
-          badgeText: 'Linked',
-          badgeBg: const Color(0xFFF6F4D2), // Cream
-          badgeColor: const Color(0xFF2C221E),
-          subtitle: panDoc != null
-              ? 'PAN: ${panDoc.maskedIdentifier != null && panDoc.maskedIdentifier!.isNotEmpty ? panDoc.maskedIdentifier : "••••••••••"} • Income Tax Dept'
-              : 'Not linked • Tap to link',
-          statusWidget: Icon(
-            panDoc != null ? Icons.link_rounded : Icons.add_circle_outline_rounded,
-            size: 18,
-            color: const Color(0xFF4C6B22),
-          ),
-          onTap: () {
-            if (panDoc != null) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => DocumentPreviewScreen(document: panDoc),
-                ),
-              );
-            } else {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const DocumentCreationScreen(initialCategory: 'pan'),
-                ),
-              );
-            }
-          },
-        ),
-        const SizedBox(height: 10),
-
-        // Item 3: Spendz Platinum Debit (Deep Crimson Brick Matte Clay)
-        _buildDirectoryCardItem(
-          context: context,
-          tileBg: const Color(0xFFA44A3F), // Deep Crimson Brick
-          tileBorder: const Color(0xFF883B32),
-          textColor: const Color(0xFFF6F4D2),
-          subtitleColor: const Color(0xFFF6F4D2).withAlpha(200),
-          icon: Icons.credit_card_rounded,
-          iconBg: const Color(0xFFD4E09B), // Chartreuse
-          iconColor: const Color(0xFF2C221E),
-          title: debitCard?.nickname ?? 'Spendz Platinum Debit',
-          badgeText: debitCard != null ? '${debitCard.issuerName} • ${debitCard.cardNetwork}' : 'RuPay Platinum',
-          badgeBg: const Color(0xFFF6F4D2),
-          badgeColor: const Color(0xFFA44A3F),
-          subtitle: debitCard != null
-              ? '${debitCard.maskedNumber.isNotEmpty ? debitCard.maskedNumber : "•••• " + debitCard.lastFour} • Tap & Pay Active'
-              : 'Not added • Tap to add',
-          statusWidget: debitCard != null
-              ? Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color(0xFFD4E09B),
-                  ),
-                )
-              : const Icon(
-                  Icons.add_circle_outline_rounded,
-                  size: 18,
-                  color: Color(0xFFF6F4D2),
-                ),
-          onTap: () {
-            if (debitCard != null) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => CardDetailScreen(card: debitCard!),
-                ),
-              );
-            } else {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const CardsScreen(openAddDialog: true),
-                ),
-              );
-            }
-          },
-        ),
-        const SizedBox(height: 10),
-
-        // Item 4: World Elite Credit (Warm Chartreuse Matte Clay)
-        _buildDirectoryCardItem(
-          context: context,
-          tileBg: const Color(0xFFD4E09B), // Chartreuse
-          tileBorder: const Color(0xFFBFCC85),
-          icon: Icons.diamond_outlined,
-          iconBg: const Color(0xFFF19C79), // Coral
-          iconColor: const Color(0xFF2C221E),
-          title: creditCard?.nickname ?? 'World Elite Credit',
-          badgeText: creditCard != null ? '${creditCard.issuerName} • ${creditCard.cardNetwork}' : 'Visa Infinite',
-          badgeBg: const Color(0xFFA44A3F),
-          badgeColor: const Color(0xFFF6F4D2),
-          subtitle: creditCard != null
-              ? '${creditCard.maskedNumber.isNotEmpty ? creditCard.maskedNumber : "•••• " + creditCard.lastFour} • Active'
-              : 'Not added • Tap to add',
-          statusWidget: Icon(
-            creditCard != null ? Icons.stars_rounded : Icons.add_circle_outline_rounded,
-            size: 18,
-            color: const Color(0xFFA44A3F),
-          ),
-          onTap: () {
-            if (creditCard != null) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => CardDetailScreen(card: creditCard!),
-                ),
-              );
-            } else {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const CardsScreen(openAddDialog: true),
-                ),
-              );
-            }
-          },
-        ),
-        const SizedBox(height: 10),
-
-        // Item 5: Star Health Mediclaim (Coral Terracotta Matte Clay)
-        _buildDirectoryCardItem(
-          context: context,
-          tileBg: const Color(0xFFF19C79), // Coral Terracotta
-          textColor: const Color(0xFF2C221E),
-          subtitleColor: const Color(0xFF4A3B32),
-          icon: Icons.health_and_safety_rounded,
-          iconBg: const Color(0xFFF6F4D2), // Cream
-          iconColor: const Color(0xFFA44A3F), // Brick
-          title: insuranceDoc?.documentName ?? 'Star Health Mediclaim',
-          badgeText: 'Coverage',
-          badgeBg: const Color(0xFFF6F4D2),
-          badgeColor: const Color(0xFFA44A3F),
-          subtitle: insuranceDoc != null
-              ? 'Policy: ${insuranceDoc.maskedIdentifier != null && insuranceDoc.maskedIdentifier!.isNotEmpty ? insuranceDoc.maskedIdentifier : "Active"} • Cashless Medi-Claim'
-              : 'Not added • Tap to add',
-          statusWidget: Icon(
-            insuranceDoc != null ? Icons.verified_rounded : Icons.add_circle_outline_rounded,
-            size: 18,
-            color: const Color(0xFF2C221E),
-          ),
-          onTap: () {
-            if (insuranceDoc != null) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => DocumentPreviewScreen(document: insuranceDoc),
-                ),
-              );
-            } else {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const DocumentCreationScreen(initialCategory: 'insurance'),
-                ),
-              );
-            }
-          },
-        ),
-        const SizedBox(height: 10),
-
-        // Item 6: Voter ID (EPIC) (Pistachio Matte Clay)
-        _buildDirectoryCardItem(
-          context: context,
-          tileBg: const Color(0xFFCBDFBD), // Pistachio
-          tileBorder: const Color(0xFFB5CCA7),
-          icon: Icons.how_to_vote_outlined,
-          iconBg: const Color(0xFFF6F4D2), // Cream
-          iconColor: const Color(0xFF2C221E),
-          title: voterDoc?.documentName ?? 'Voter ID (EPIC)',
-          badgeText: 'ECI Official',
-          badgeBg: const Color(0xFFD4E09B),
-          badgeColor: const Color(0xFF2C221E),
-          subtitle: voterDoc != null
-              ? 'EPIC: ${voterDoc.maskedIdentifier != null && voterDoc.maskedIdentifier!.isNotEmpty ? voterDoc.maskedIdentifier : "Verified"} • ECI Official'
-              : 'Not added • Tap to add',
-          statusWidget: Icon(
-            voterDoc != null ? Icons.how_to_vote_rounded : Icons.add_circle_outline_rounded,
-            size: 18,
-            color: const Color(0xFF4C6B22),
-          ),
-          onTap: () {
-            if (voterDoc != null) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => DocumentPreviewScreen(document: voterDoc),
-                ),
-              );
-            } else {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const DocumentCreationScreen(initialCategory: 'voter_id'),
-                ),
-              );
-            }
-          },
-        ),
-        const SizedBox(height: 10),
-
-        // Item 7: Indian Passport (Deep Crimson Brick Matte Clay)
-        _buildDirectoryCardItem(
-          context: context,
-          tileBg: const Color(0xFFA44A3F), // Deep Crimson Brick
-          tileBorder: const Color(0xFF883B32),
-          textColor: const Color(0xFFF6F4D2),
-          subtitleColor: const Color(0xFFF6F4D2).withAlpha(200),
-          icon: Icons.public_rounded,
-          iconBg: const Color(0xFFF6F4D2),
-          iconColor: const Color(0xFFA44A3F),
-          title: passportDoc?.documentName ?? 'Indian Passport',
-          badgeText: 'Passport',
-          badgeBg: const Color(0xFFD4E09B),
-          badgeColor: const Color(0xFF2C221E),
-          subtitle: passportDoc != null
-              ? '${passportDoc.maskedIdentifier != null && passportDoc.maskedIdentifier!.isNotEmpty ? passportDoc.maskedIdentifier : "Valid"} • Official Passport'
-              : 'Not added • Tap to add',
-          statusWidget: Icon(
-            passportDoc != null ? Icons.public_rounded : Icons.add_circle_outline_rounded,
-            size: 18,
-            color: const Color(0xFFD4E09B),
-          ),
-          onTap: () {
-            if (passportDoc != null) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => DocumentPreviewScreen(document: passportDoc),
-                ),
-              );
-            } else {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const DocumentCreationScreen(initialCategory: 'passport'),
-                ),
-              );
-            }
-          },
-        ),
+        if (items.isEmpty)
+          Text(
+            'Cards and documents you add will appear here.',
+            style: SpendzTypography.caption(context),
+          )
+        else
+          ...items.expand((item) => [item, const SizedBox(height: 10)]),
       ],
     );
   }
 
-  Widget _buildDirectoryCardItem({
+  Widget _buildLiveDirectoryItem({
     required BuildContext context,
-    required IconData icon,
-    required Color iconBg,
-    required Color iconColor,
     required String title,
-    required String badgeText,
-    required Color badgeBg,
-    required Color badgeColor,
+    required String badge,
     required String subtitle,
-    Widget? statusWidget,
-    Color? tileBg,
-    Color? tileBorder,
-    Color? textColor,
-    Color? subtitleColor,
+    required String? imageAsset,
+    required IconData icon,
     required VoidCallback onTap,
+    bool isPaymentCard = false,
   }) {
+    final tileColor = isPaymentCard
+        ? SpendzColors.chartreuse
+        : SpendzColors.pistachio;
+
     return Container(
       decoration: BoxDecoration(
-        color: tileBg ?? SpendzColors.surface(context),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x1F2C221E),
-            blurRadius: 5,
-            offset: Offset(2, 3),
-          ),
-          BoxShadow(
-            color: Colors.white,
-            blurRadius: 1.5,
-            offset: Offset(-1, -1),
-          ),
-        ],
+        color: tileColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: SpendzColors.clayDropShadow(context, blur: 4),
       ),
       child: Material(
         type: MaterialType.transparency,
         child: InkWell(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Row(
               children: [
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 42,
+                  height: 42,
                   decoration: BoxDecoration(
-                    color: iconBg,
-                    borderRadius: BorderRadius.circular(14),
+                    color: SpendzColors.cream,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(icon, color: iconColor, size: 22),
+                  alignment: Alignment.center,
+                  child: imageAsset == null
+                      ? Icon(icon, size: 22, color: SpendzColors.espresso)
+                      : ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.asset(
+                            imageAsset,
+                            width: 32,
+                            height: 32,
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, _, _) => Icon(
+                              icon,
+                              size: 22,
+                              color: SpendzColors.espresso,
+                            ),
+                          ),
+                        ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          Flexible(
+                          Expanded(
                             child: Text(
                               title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontFamily: 'Plus Jakarta Sans',
-                                fontSize: 13.5,
+                                fontSize: 13,
                                 fontWeight: FontWeight.w800,
-                                color: textColor ?? SpendzColors.textPrimary(context),
+                                color: SpendzColors.espresso,
                               ),
-                              maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: badgeBg,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 120),
                             child: Text(
-                              badgeText,
-                              style: TextStyle(
+                              badge,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
                                 fontFamily: 'Plus Jakarta Sans',
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w800,
-                                color: badgeColor,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                color: SpendzColors.espresso,
                               ),
                             ),
                           ),
@@ -1626,25 +1345,23 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                       const SizedBox(height: 3),
                       Text(
                         subtitle,
-                        style: TextStyle(
-                          fontFamily: 'Plus Jakarta Sans',
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: subtitleColor ?? SpendzColors.textSecondary(context),
-                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w500,
+                          color: SpendzColors.espressoMuted,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(width: 8),
-                if (statusWidget != null) statusWidget,
-                const SizedBox(width: 4),
-                Icon(
+                const Icon(
                   Icons.chevron_right_rounded,
                   size: 18,
-                  color: (textColor ?? SpendzColors.textSecondary(context)).withAlpha(120),
+                  color: SpendzColors.espressoMuted,
                 ),
               ],
             ),
@@ -1654,7 +1371,6 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     );
   }
 
-  // ─── 5. TRAVEL & TRANSIT PASSES SECTION matching Image 3 ────────────────────
   Widget _buildPassesSection(
     BuildContext context,
     List<WalletPassModel> passes,
@@ -1679,52 +1395,63 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: SpendzColors.tertiarySky.withAlpha(35),
-                  ),
-                  child: const Icon(
-                    Icons.confirmation_number_outlined,
-                    color: SpendzColors.tertiarySky,
-                    size: 17,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Travel & Transit Passes',
-                      style: TextStyle(
-                        fontFamily: 'Plus Jakarta Sans',
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: SpendzColors.textPrimary(context),
-                        letterSpacing: -0.3,
-                      ),
+            Expanded(
+              child: Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: SpendzColors.tertiarySky.withAlpha(35),
                     ),
-                    Text(
-                      'Live upcoming trips & tickets',
-                      style: TextStyle(
-                        fontFamily: 'Plus Jakarta Sans',
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: SpendzColors.textSecondary(context),
-                      ),
+                    child: const Icon(
+                      Icons.confirmation_number_outlined,
+                      color: SpendzColors.tertiarySky,
+                      size: 17,
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Travel & Transit Passes',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: 'Plus Jakarta Sans',
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: SpendzColors.textPrimary(context),
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                        Text(
+                          'Live upcoming trips & tickets',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: 'Plus Jakarta Sans',
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: SpendzColors.textSecondary(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
             GestureDetector(
               onTap: () => _showAddTransitTicketModal(context),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF19C79), // Coral Terracotta
                   borderRadius: BorderRadius.circular(16),
@@ -1882,8 +1609,6 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
     );
   }
 
-
-
   void _showAddTransitTicketModal(BuildContext context) {
     final carrierController = TextEditingController();
     final pnrController = TextEditingController();
@@ -1967,7 +1692,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                       const SizedBox(height: SpendzSpacing.lg),
 
                       // Carrier Field
-                      TextField(
+                      AppTextFormField(
                         controller: carrierController,
                         decoration: InputDecoration(
                           labelText: 'Carrier / Transport Authority',
@@ -1987,7 +1712,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                       const SizedBox(height: SpendzSpacing.md),
 
                       // PNR Field
-                      TextField(
+                      AppTextFormField(
                         controller: pnrController,
                         decoration: InputDecoration(
                           labelText: 'PNR Number',
@@ -2007,7 +1732,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                       const SizedBox(height: SpendzSpacing.md),
 
                       // Seat Field
-                      TextField(
+                      AppTextFormField(
                         controller: seatController,
                         decoration: InputDecoration(
                           labelText: 'Seat / Berth Number',
@@ -2030,18 +1755,18 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                           Expanded(
                             child: InkWell(
                               onTap: () async {
-                                final d = await showDatePicker(
+                                final date = await showDatePicker(
                                   context: modalCtx,
                                   initialDate: selectedDate,
                                   firstDate: DateTime.now().subtract(
                                     const Duration(days: 30),
                                   ),
                                   lastDate: DateTime.now().add(
-                                    const Duration(days: 365),
+                                    const Duration(days: 730),
                                   ),
                                 );
-                                if (d != null) {
-                                  setModalState(() => selectedDate = d);
+                                if (date != null) {
+                                  setModalState(() => selectedDate = date);
                                 }
                               },
                               borderRadius: BorderRadius.circular(
@@ -2164,7 +1889,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                                     fontSize: 12.5,
                                   ),
                                   maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
@@ -2230,8 +1955,12 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
                             );
 
                             try {
-                              await context.read<WalletProvider>().addPass(newPass);
-                              await context.read<WalletPassProvider>().loadPasses();
+                              await context.read<WalletProvider>().addPass(
+                                newPass,
+                              );
+                              await context
+                                  .read<WalletPassProvider>()
+                                  .loadPasses();
                               await context.read<WalletProvider>().loadWallet();
                               if (ctx.mounted) Navigator.pop(ctx);
                               if (context.mounted) {

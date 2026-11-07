@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:keybz/widgets/app_keyboard/app_keyboard_overlay.dart';
 
 import '../features/wallet/security/wallet_auth_service.dart';
 import '../features/wallet/services/document_vault_service.dart';
@@ -83,6 +84,8 @@ class _SpendzAppState extends State<SpendzApp> with WidgetsBindingObserver {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.lightTheme,
             themeMode: ThemeMode.light,
+            builder: (context, child) =>
+                AppKeyboardOverlay(child: child ?? const SizedBox.shrink()),
             home: const SplashScreen(),
             routes: AppRoutes.getRoutes(),
           );

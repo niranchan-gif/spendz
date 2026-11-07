@@ -53,38 +53,52 @@ class ExtractedFields {
   /// that is both human-readable and structured for later parsing.
   String toDescriptionString() {
     final buffer = StringBuffer();
-    if (holderName != null && holderName!.isNotEmpty)
+    if (holderName != null && holderName!.isNotEmpty) {
       buffer.writeln('Holder: $holderName');
-    if (documentNumber != null && documentNumber!.isNotEmpty)
+    }
+    if (documentNumber != null && documentNumber!.isNotEmpty) {
       buffer.writeln('Number: $documentNumber');
+    }
     if (issuer != null && issuer!.isNotEmpty) buffer.writeln('Issuer: $issuer');
-    if (cardNetwork != null && cardNetwork!.isNotEmpty)
+    if (cardNetwork != null && cardNetwork!.isNotEmpty) {
       buffer.writeln('Network: $cardNetwork');
-    if (issuingBank != null && issuingBank!.isNotEmpty)
+    }
+    if (issuingBank != null && issuingBank!.isNotEmpty) {
       buffer.writeln('Bank: $issuingBank');
-    if (fatherName != null && fatherName!.isNotEmpty)
+    }
+    if (fatherName != null && fatherName!.isNotEmpty) {
       buffer.writeln("Father's Name: $fatherName");
-    if (dob != null)
+    }
+    if (dob != null) {
       buffer.writeln(
         'DOB: ${dob!.year}-${dob!.month.toString().padLeft(2, '0')}-${dob!.day.toString().padLeft(2, '0')}',
       );
+    }
     if (gender != null && gender!.isNotEmpty) buffer.writeln('Gender: $gender');
-    if (vehicleCategories != null && vehicleCategories!.isNotEmpty)
+    if (vehicleCategories != null && vehicleCategories!.isNotEmpty) {
       buffer.writeln('Vehicle Class: $vehicleCategories');
-    if (vehicleNumber != null && vehicleNumber!.isNotEmpty)
+    }
+    if (vehicleNumber != null && vehicleNumber!.isNotEmpty) {
       buffer.writeln('Vehicle No: $vehicleNumber');
-    if (nationality != null && nationality!.isNotEmpty)
+    }
+    if (nationality != null && nationality!.isNotEmpty) {
       buffer.writeln('Nationality: $nationality');
-    if (placeOfBirth != null && placeOfBirth!.isNotEmpty)
+    }
+    if (placeOfBirth != null && placeOfBirth!.isNotEmpty) {
       buffer.writeln('Place of Birth: $placeOfBirth');
-    if (policyType != null && policyType!.isNotEmpty)
+    }
+    if (policyType != null && policyType!.isNotEmpty) {
       buffer.writeln('Policy Type: $policyType');
-    if (accountNumber != null && accountNumber!.isNotEmpty)
+    }
+    if (accountNumber != null && accountNumber!.isNotEmpty) {
       buffer.writeln('Account No: $accountNumber');
-    if (ifscCode != null && ifscCode!.isNotEmpty)
+    }
+    if (ifscCode != null && ifscCode!.isNotEmpty) {
       buffer.writeln('IFSC: $ifscCode');
-    if (address != null && address!.isNotEmpty)
+    }
+    if (address != null && address!.isNotEmpty) {
       buffer.writeln('Address: $address');
+    }
 
     if (unclassifiedLines.isNotEmpty) {
       buffer.writeln('\n--- Unclassified OCR Text ---');
@@ -493,16 +507,20 @@ class DocumentFieldExtractor {
 
   String? _detectBank(String lower) {
     if (lower.contains('hdfc')) return 'HDFC Bank';
-    if (lower.contains('state bank of india') || lower.contains('sbi'))
+    if (lower.contains('state bank of india') || lower.contains('sbi')) {
       return 'State Bank of India (SBI)';
+    }
     if (lower.contains('icici')) return 'ICICI Bank';
-    if (lower.contains('axis bank') || lower.contains('axis'))
+    if (lower.contains('axis bank') || lower.contains('axis')) {
       return 'Axis Bank';
+    }
     if (lower.contains('kotak')) return 'Kotak Mahindra Bank';
-    if (lower.contains('punjab national') || lower.contains('pnb'))
+    if (lower.contains('punjab national') || lower.contains('pnb')) {
       return 'Punjab National Bank';
-    if (lower.contains('bank of baroda') || lower.contains('bob'))
+    }
+    if (lower.contains('bank of baroda') || lower.contains('bob')) {
       return 'Bank of Baroda';
+    }
     if (lower.contains('canara')) return 'Canara Bank';
     if (lower.contains('indusind')) return 'IndusInd Bank';
     if (lower.contains('yes bank')) return 'Yes Bank';
@@ -513,13 +531,15 @@ class DocumentFieldExtractor {
   }
 
   String? _detectInsuranceProvider(String lower) {
-    if (lower.contains('lic') || lower.contains('life insurance corporation'))
+    if (lower.contains('lic') || lower.contains('life insurance corporation')) {
       return 'Life Insurance Corporation (LIC)';
+    }
     if (lower.contains('star health')) return 'Star Health & Allied Insurance';
     if (lower.contains('icici lombard')) return 'ICICI Lombard';
     if (lower.contains('hdfc ergo')) return 'HDFC ERGO';
-    if (lower.contains('care health') || lower.contains('religare'))
+    if (lower.contains('care health') || lower.contains('religare')) {
       return 'Care Health Insurance';
+    }
     if (lower.contains('bajaj allianz')) return 'Bajaj Allianz';
     if (lower.contains('new india assurance')) return 'The New India Assurance';
     if (lower.contains('united india')) return 'United India Insurance';
@@ -832,8 +852,9 @@ class DocumentFieldExtractor {
     if (RegExp(r'\d').hasMatch(trimmed)) return false;
     if (trimmed.contains('/') ||
         trimmed.contains('\\') ||
-        trimmed.contains('@'))
+        trimmed.contains('@')) {
       return false;
+    }
     return true;
   }
 

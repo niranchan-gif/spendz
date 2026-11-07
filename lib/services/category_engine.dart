@@ -55,12 +55,14 @@ class CategoryEngine {
 
   static String? _findCategoryName(String normalized, String type) {
     if (type.toUpperCase() == 'CREDIT') {
-      if (normalized.contains('salary') || normalized.contains('payroll'))
+      if (normalized.contains('salary') || normalized.contains('payroll')) {
         return 'Salary';
+      }
       if (normalized.contains('refund') ||
           normalized.contains('cashback') ||
-          normalized.contains('reversal'))
+          normalized.contains('reversal')) {
         return 'Refund';
+      }
       if (normalized.contains('interest')) return 'Interest';
       return 'Other Income';
     }
@@ -71,31 +73,38 @@ class CategoryEngine {
     if (normalized.contains('chandra food products')) return 'Food & Dining';
 
     if (normalized.contains('state transport corporation') ||
-        normalized.contains('state transpo'))
+        normalized.contains('state transpo')) {
       return 'Transport';
+    }
     if (normalized.contains('tamilnadu state transport') ||
-        normalized.contains('tamilnadu state transpo'))
+        normalized.contains('tamilnadu state transpo')) {
       return 'Transport';
+    }
     if (normalized.contains('metropolitan transport corporation') ||
-        normalized.contains('metropolitan transpo'))
+        normalized.contains('metropolitan transpo')) {
       return 'Transport';
+    }
     if (normalized.contains('indian railways')) return 'Transport';
     if (normalized.contains('irctc')) return 'Transport';
-    if (normalized.contains('redbus') || normalized.contains('red bus'))
+    if (normalized.contains('redbus') || normalized.contains('red bus')) {
       return 'Transport';
+    }
     if (normalized.contains('abhibus')) return 'Transport';
     if (normalized.contains('cumta')) return 'Transport';
 
     if (normalized.contains('amazon pay balance') ||
-        normalized.contains('amazon pay'))
+        normalized.contains('amazon pay')) {
       return 'Shopping';
+    }
     if (normalized.contains('amazon')) return 'Shopping';
 
     if (normalized.contains('current bill') ||
-        normalized.contains('water bill'))
+        normalized.contains('water bill')) {
       return 'Bills & Utilities';
-    if (normalized.contains('tneb') || normalized.contains('tangedco'))
+    }
+    if (normalized.contains('tneb') || normalized.contains('tangedco')) {
       return 'Bills & Utilities';
+    }
 
     // Single keywords with word boundaries (Medium priority)
     final words = normalized.split(' ');
@@ -110,8 +119,9 @@ class CategoryEngine {
         'hotel',
         'swiggy',
         'zomato',
-      ].contains(word))
+      ].contains(word)) {
         return 'Food & Dining';
+      }
       if ([
         'transport',
         'transpo',
@@ -123,8 +133,9 @@ class CategoryEngine {
         'auto',
         'metro',
         'cumta',
-      ].contains(word))
+      ].contains(word)) {
         return 'Transport';
+      }
       if ([
         'recharge',
         'electricity',
@@ -136,8 +147,9 @@ class CategoryEngine {
         'airtel',
         'vi',
         'bsnl',
-      ].contains(word))
+      ].contains(word)) {
         return 'Bills & Utilities';
+      }
       if ([
         'grocery',
         'supermarket',
@@ -145,8 +157,9 @@ class CategoryEngine {
         'store',
         'kirana',
         'dairy',
-      ].contains(word))
+      ].contains(word)) {
         return 'Groceries';
+      }
       if ([
         'hospital',
         'clinic',
@@ -154,18 +167,21 @@ class CategoryEngine {
         'medical',
         'doctor',
         'meds',
-      ].contains(word))
+      ].contains(word)) {
         return 'Health';
+      }
       if ([
         'movie',
         'cinema',
         'games',
         'entertainment',
         'ticket',
-      ].contains(word))
+      ].contains(word)) {
         return 'Entertainment';
-      if (['shopping', 'mall', 'cloth', 'apparel', 'shoes'].contains(word))
+      }
+      if (['shopping', 'mall', 'cloth', 'apparel', 'shoes'].contains(word)) {
         return 'Shopping';
+      }
     }
 
     return null;
