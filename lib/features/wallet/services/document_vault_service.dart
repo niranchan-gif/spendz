@@ -219,6 +219,56 @@ class DocumentVaultService {
     return docModel;
   }
 
+  /// Migrates legacy encrypted attachment files to Drive. A local ciphertext
+  /// is deleted only after the remote upload and metadata update both succeed.
+  Future<int> migrateLegacyAttachments() async {
+    await DriveDocumentService.instance.ensureConnected();
+    final documents = await _documentRepository.getAllDocuments();
+    var migrated = 0;
+    for (final document in documents) {
+      if (document.driveFileId?.isNotEmpty == true ||
+          document.encryptedFilePath.isEmpty) {
+        continue;
+      }
+      final legacyFile = File(document.encryptedFilePath);
+      if (!await legacyFile.exists()) continue;
+
+      final masterKey = await _keyService.getMasterKey();
+      if (masterKey == null) {
+        throw MasterKeyLostException();
+      }
+      final ciphertext = await legacyFile.readAsBytes();
+      final plaintext = await _encryptionService.decryptBytes(
+        ciphertext,
+        keyBytes: masterKey,
+      );
+      final stored = await DriveDocumentService.instance.upload(
+        documentId: document.id,
+        fileName: '\${document.documentName.replaceAll(RegExp(r'[^A-Za-z0-9._ -]'), '_')}.\${document.mimeType.contains('pdf') ? 'pdf' : document.mimeType.contains('png') ? 'png' : 'jpg'}',
+        mimeType: document.mimeType,
+        bytes: plaintext,
+        metadata: {
+          'spendzCategory': document.category,
+          'spendzCreatedAt': document.createdAt.toIso8601String(),
+          if (document.issueDate != null)
+            'spendzIssueDate': document.issueDate!.toIso8601String(),
+          if (document.expiryDate != null)
+            'spendzExpiryDate': document.expiryDate!.toIso8601String(),
+          'spendzAttachmentType': document.attachmentType,
+        },
+      );
+      final migratedDocument = document.copyWith(
+        encryptedFilePath: '',
+        driveFileId: stored.fileId,
+        updatedAt: DateTime.now(),
+      );
+      await _documentRepository.update(migratedDocument);
+      await legacyFile.delete();
+      migrated++;
+    }
+    return migrated;
+  }
+
   /// Legacy import method preserved for backwards compatibility.
   Future<WalletDocumentModel> importDocument({
     required String documentName,
