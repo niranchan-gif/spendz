@@ -210,6 +210,22 @@ class DriveDocumentService {
     );
   }
 
+  Future<void> updateMetadata({
+    required String fileId,
+    required String fileName,
+    required Map<String, String> metadata,
+  }) async {
+    await _send(
+      'PATCH',
+      Uri.parse('$_driveBase/files/$fileId'),
+      headers: const {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'name': fileName,
+        'appProperties': metadata,
+      }),
+    );
+  }
+
   Future<Uint8List> download(String fileId) async {
     final response = await _send(
       'GET',
