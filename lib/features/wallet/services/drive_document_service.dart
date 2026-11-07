@@ -167,6 +167,7 @@ class DriveDocumentService {
     required String fileName,
     required String mimeType,
     required Uint8List bytes,
+    Map<String, String> metadata = const {},
   }) async {
     await ensureConnected();
     if (bytes.isEmpty) {
@@ -181,7 +182,10 @@ class DriveDocumentService {
       'name': fileName,
       'mimeType': mimeType,
       'parents': [folderId],
-      'appProperties': {'spendzDocumentId': documentId},
+      'appProperties': {
+        'spendzDocumentId': documentId,
+        for (final entry in metadata.entries) entry.key: entry.value,
+      },
     });
     final body = BytesBuilder(copy: false)
       ..add(utf8.encode('--$boundary\r\n'
@@ -232,6 +236,7 @@ class DriveDocumentService {
       fileName: item['name'] as String? ?? 'Document',
       mimeType: item['mimeType'] as String? ?? 'application/octet-stream',
       size: int.tryParse(item['size']?.toString() ?? '') ?? 0,
+      appProperties: Map<String, String>.from(item['appProperties'] as Map? ?? const {}),
     )).toList();
   }
 
@@ -253,12 +258,14 @@ class DriveStoredDocument {
   final String fileName;
   final String mimeType;
   final int size;
+  final Map<String, String> appProperties;
 
   const DriveStoredDocument({
     required this.fileId,
     required this.fileName,
     required this.mimeType,
     required this.size,
+    this.appProperties = const {},
   });
 }
 
