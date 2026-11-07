@@ -178,7 +178,7 @@ class DriveDocumentService {
     }
     final folderId = await _ensureFolder();
     final boundary = 'spendz_${const Uuid().v4().replaceAll('-', '')}';
-    final metadata = jsonEncode({
+    final fileMetadataJson = jsonEncode({
       'name': fileName,
       'mimeType': mimeType,
       'parents': [folderId],
@@ -190,7 +190,7 @@ class DriveDocumentService {
     final body = BytesBuilder(copy: false)
       ..add(utf8.encode('--$boundary\r\n'
           'Content-Type: application/json; charset=UTF-8\r\n\r\n'
-          '$metadata\r\n'
+          '$fileMetadataJson\r\n'
           '--$boundary\r\n'
           'Content-Type: $mimeType\r\n\r\n'))
       ..add(bytes)
