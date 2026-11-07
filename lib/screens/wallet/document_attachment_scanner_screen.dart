@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:open_filex/open_filex.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
@@ -520,21 +520,25 @@ class _DocumentAttachmentScannerScreenState
   }
 
   Future<void> _previewPdfBytes(Uint8List pdfData, String fileName) async {
-    try {
-      final file = await _scannerService.stageBytesToCache(
-        pdfData,
-        extension: 'pdf',
-      );
-      if (file != null) {
-        await OpenFilex.open(file.path);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Could not open preview: $e')));
-      }
-    }
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        insetPadding: const EdgeInsets.all(8),
+        child: Column(
+          children: [
+            ListTile(
+              title: Text(fileName, maxLines: 1, overflow: TextOverflow.ellipsis),
+              trailing: IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.pop(dialogContext),
+              ),
+            ),
+            Expanded(child: SfPdfViewer.memory(pdfData)),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showAddPageBottomSheet() {

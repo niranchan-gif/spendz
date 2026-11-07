@@ -47,6 +47,8 @@ dependencies:
   syncfusion_flutter_pdf: ^33.2.13
   google_fonts: ^8.2.1
   http: ^1.6.0
+  google_sign_in: ^7.2.0
+  syncfusion_flutter_pdfviewer: ^33.2.13
   cryptography: ^2.9.0
   flutter_secure_storage: ^11.2.0
   local_auth: ^3.0.2

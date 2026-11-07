@@ -516,7 +516,7 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
       if (widget.documentToEdit != null) {
         // Updating existing document
         final existing = widget.documentToEdit!;
-        await _vaultService.updateDocumentDetails(
+        final updatedDocument = await _vaultService.updateDocumentDetails(
           document: existing,
           documentName: docTitle,
           category: _selectedCategory,
@@ -529,12 +529,12 @@ class _DocumentCreationScreenState extends State<DocumentCreationScreen> {
           expiryDate: _expiryDate,
         );
 
-        // If new attachment was provided, attach it
+        // Upload a replacement directly to Drive, using the updated metadata.
         if (_attachmentPayload != null) {
           final bytes = _attachmentPayload!.primaryBytes;
           if (bytes.isNotEmpty) {
             await _vaultService.attachFileToDocument(
-              document: existing,
+              document: updatedDocument,
               fileBytes: bytes,
               mimeType: _attachmentPayload!.mimeType,
               attachmentType: _attachmentPayload!.attachmentType,

@@ -5,6 +5,8 @@ class WalletDocumentModel {
   category; // 'aadhaar', 'pan', 'driving_license', 'passport', 'debit_card', 'credit_card', 'insurance', 'rc', 'college_id', 'certificate', 'other'
   final String? description;
   final String encryptedFilePath;
+  /// Google Drive file ID; document bytes are stored remotely, not in SQLite.
+  final String? driveFileId;
   final String? thumbnailPath;
   final String mimeType; // 'application/pdf', 'image/jpeg', 'image/png'
   final int fileSize;
@@ -24,6 +26,7 @@ class WalletDocumentModel {
     required this.category,
     this.description,
     this.encryptedFilePath = '',
+    this.driveFileId,
     this.thumbnailPath,
     this.mimeType = 'image/jpeg',
     this.fileSize = 0,
@@ -38,7 +41,8 @@ class WalletDocumentModel {
     required this.updatedAt,
   });
 
-  bool get hasAttachment => encryptedFilePath.isNotEmpty;
+  bool get hasAttachment => driveFileId?.isNotEmpty == true || encryptedFilePath.isNotEmpty;
+  bool get isDriveStored => driveFileId?.isNotEmpty == true;
 
   String get documentTitle => documentName;
   String get documentType => category;
@@ -65,6 +69,7 @@ class WalletDocumentModel {
       'category': category,
       'description': description,
       'encrypted_file_path': encryptedFilePath,
+      'drive_file_id': driveFileId,
       'thumbnail_path': thumbnailPath,
       'mime_type': mimeType,
       'file_size': fileSize,
@@ -87,6 +92,7 @@ class WalletDocumentModel {
       category: map['category'] ?? 'other',
       description: map['description'],
       encryptedFilePath: map['encrypted_file_path'] ?? '',
+      driveFileId: map['drive_file_id'] as String?,
       thumbnailPath: map['thumbnail_path'],
       mimeType: map['mime_type'] ?? 'image/jpeg',
       fileSize: map['file_size'] ?? 0,
@@ -121,6 +127,7 @@ class WalletDocumentModel {
     String? category,
     String? description,
     String? encryptedFilePath,
+    String? driveFileId,
     String? thumbnailPath,
     String? mimeType,
     int? fileSize,
@@ -140,6 +147,7 @@ class WalletDocumentModel {
       category: category ?? this.category,
       description: description ?? this.description,
       encryptedFilePath: encryptedFilePath ?? this.encryptedFilePath,
+      driveFileId: driveFileId ?? this.driveFileId,
       thumbnailPath: thumbnailPath ?? this.thumbnailPath,
       mimeType: mimeType ?? this.mimeType,
       fileSize: fileSize ?? this.fileSize,

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Replace with the Web OAuth 2.0 client ID from Google Cloud Console.
+         Register the Android OAuth client with this app's applicationId and SHA-1. -->
+    <string name="default_web_client_id">REPLACE_WITH_WEB_OAUTH_CLIENT_ID</string>
+</resources>

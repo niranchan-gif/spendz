@@ -245,6 +245,7 @@ class _WalletDashboardScreenState extends State<WalletDashboardScreen> {
               color: SpendzColors.tangerine,
               onRefresh: () async {
                 await wallet.loadWallet();
+                await docProvider.loadDocuments();
                 await passProvider.loadPasses();
               },
               child: SingleChildScrollView(

@@ -11,6 +11,7 @@ import '../../../models/wallet_document_model.dart';
 import '../security/document_encryption_service.dart';
 import '../security/secure_number_service.dart';
 import '../security/wallet_key_service.dart';
+import 'drive_document_service.dart';
 
 class VaultValidationException extends VaultSecurityException {
   VaultValidationException(super.message);
@@ -156,8 +157,10 @@ class DocumentVaultService {
       );
     }
 
-    // 3. Encrypt and write attachment file if provided
+    // 3. Upload attachment bytes directly to the user's private Drive folder.
+    // No document bytes are written to the app's permanent local directories.
     String encryptedFilePath = '';
+    String? driveFileId;
     String normalizedMime = 'none';
     int fileSize = 0;
     String finalAttachmentType = 'none';
@@ -168,45 +171,25 @@ class DocumentVaultService {
           'Attachment size exceeds maximum allowed size of 25 MB.',
         );
       }
-
-      normalizedMime = (attachmentMimeType ?? 'image/jpeg')
-          .toLowerCase()
-          .trim();
-      final vaultDir = await getVaultDirectory();
-      final stagingFile = File(p.join(vaultDir.path, '$docId.tmp'));
-      final finalEncryptedFile = File(p.join(vaultDir.path, '$docId.enc'));
-
-      try {
-        final masterKey = await _keyService.getOrCreateMasterKey();
-
-        final encryptedBytes = await _encryptionService.encryptBytes(
-          attachmentBytes,
-          keyBytes: masterKey,
-        );
-
-        await stagingFile.writeAsBytes(encryptedBytes, flush: true);
-        if (!await stagingFile.exists() ||
-            await stagingFile.length() != encryptedBytes.length) {
-          throw VaultStorageException(
-            'Failed to verify staged attachment ciphertext write.',
-          );
-        }
-
-        await stagingFile.rename(finalEncryptedFile.path);
-        encryptedFilePath = finalEncryptedFile.path;
-        fileSize = attachmentBytes.length;
-        finalAttachmentType =
-            attachmentType ??
-            (normalizedMime.contains('pdf') ? 'pdf' : 'image');
-      } catch (e) {
-        if (await stagingFile.exists())
-          await stagingFile.delete().catchError((_) => stagingFile);
-        if (await finalEncryptedFile.exists())
-          await finalEncryptedFile.delete().catchError(
-            (_) => finalEncryptedFile,
-          );
-        rethrow;
-      }
+      normalizedMime = (attachmentMimeType ?? 'image/jpeg').toLowerCase().trim();
+      final stored = await DriveDocumentService.instance.upload(
+        documentId: docId,
+        fileName: '${documentName.trim().replaceAll(RegExp(r'[^A-Za-z0-9._ -]'), '_')}.${normalizedMime.contains('pdf') ? 'pdf' : normalizedMime.contains('png') ? 'png' : 'jpg'}',
+        mimeType: normalizedMime,
+        bytes: Uint8List.fromList(attachmentBytes),
+        metadata: {
+          'spendzCategory': category.toLowerCase().trim(),
+          'spendzCreatedAt': now.toIso8601String(),
+          if (issueDate != null) 'spendzIssueDate': issueDate.toIso8601String(),
+          if (expiryDate != null) 'spendzExpiryDate': expiryDate.toIso8601String(),
+          'spendzAttachmentType': attachmentType ??
+              (normalizedMime.contains('pdf') ? 'pdf' : 'image'),
+        },
+      );
+      driveFileId = stored.fileId;
+      fileSize = attachmentBytes.length;
+      finalAttachmentType = attachmentType ??
+          (normalizedMime.contains('pdf') ? 'pdf' : 'image');
     }
 
     final docModel = WalletDocumentModel(
@@ -217,6 +200,7 @@ class DocumentVaultService {
           ? null
           : description?.trim(),
       encryptedFilePath: encryptedFilePath,
+      driveFileId: driveFileId,
       thumbnailPath: null,
       mimeType: normalizedMime,
       fileSize: fileSize,
@@ -233,6 +217,56 @@ class DocumentVaultService {
 
     await _documentRepository.insert(docModel);
     return docModel;
+  }
+
+  /// Migrates legacy encrypted attachment files to Drive. A local ciphertext
+  /// is deleted only after the remote upload and metadata update both succeed.
+  Future<int> migrateLegacyAttachments() async {
+    await DriveDocumentService.instance.ensureConnected();
+    final documents = await _documentRepository.getAllDocuments();
+    var migrated = 0;
+    for (final document in documents) {
+      if (document.driveFileId?.isNotEmpty == true ||
+          document.encryptedFilePath.isEmpty) {
+        continue;
+      }
+      final legacyFile = File(document.encryptedFilePath);
+      if (!await legacyFile.exists()) continue;
+
+      final masterKey = await _keyService.getMasterKey();
+      if (masterKey == null) {
+        throw MasterKeyLostException();
+      }
+      final ciphertext = await legacyFile.readAsBytes();
+      final plaintext = await _encryptionService.decryptBytes(
+        ciphertext,
+        keyBytes: masterKey,
+      );
+      final stored = await DriveDocumentService.instance.upload(
+        documentId: document.id,
+        fileName: '\${document.documentName.replaceAll(RegExp(r'[^A-Za-z0-9._ -]'), '_')}.\${document.mimeType.contains('pdf') ? 'pdf' : document.mimeType.contains('png') ? 'png' : 'jpg'}',
+        mimeType: document.mimeType,
+        bytes: plaintext,
+        metadata: {
+          'spendzCategory': document.category,
+          'spendzCreatedAt': document.createdAt.toIso8601String(),
+          if (document.issueDate != null)
+            'spendzIssueDate': document.issueDate!.toIso8601String(),
+          if (document.expiryDate != null)
+            'spendzExpiryDate': document.expiryDate!.toIso8601String(),
+          'spendzAttachmentType': document.attachmentType,
+        },
+      );
+      final migratedDocument = document.copyWith(
+        encryptedFilePath: '',
+        driveFileId: stored.fileId,
+        updatedAt: DateTime.now(),
+      );
+      await _documentRepository.update(migratedDocument);
+      await legacyFile.delete();
+      migrated++;
+    }
+    return migrated;
   }
 
   /// Legacy import method preserved for backwards compatibility.
@@ -276,7 +310,7 @@ class DocumentVaultService {
     );
   }
 
-  /// Replaces or attaches a new file to an existing document.
+  /// Uploads/replaces an attachment in private Google Drive.
   Future<WalletDocumentModel> attachFileToDocument({
     required WalletDocumentModel document,
     required List<int> fileBytes,
@@ -289,57 +323,64 @@ class DocumentVaultService {
     if (fileBytes.length > maxFileSizeBytes) {
       throw VaultValidationException('Attachment size exceeds 25 MB.');
     }
-
-    final vaultDir = await getVaultDirectory();
-    final stagingFile = File(p.join(vaultDir.path, '${document.id}_new.tmp'));
-    final finalEncryptedFile = File(
-      p.join(vaultDir.path, '${document.id}.enc'),
-    );
-
-    final masterKey = await _keyService.getOrCreateMasterKey();
-
-    final encryptedBytes = await _encryptionService.encryptBytes(
-      fileBytes,
-      keyBytes: masterKey,
-    );
-
-    await stagingFile.writeAsBytes(encryptedBytes, flush: true);
-    await stagingFile.rename(finalEncryptedFile.path);
-
     final normalizedMime = mimeType.toLowerCase().trim();
+    final stored = await DriveDocumentService.instance.upload(
+      documentId: document.id,
+      fileName: '${document.documentName.replaceAll(RegExp(r'[^A-Za-z0-9._ -]'), '_')}.${normalizedMime.contains('pdf') ? 'pdf' : normalizedMime.contains('png') ? 'png' : 'jpg'}',
+      mimeType: normalizedMime,
+      bytes: Uint8List.fromList(fileBytes),
+      metadata: {
+        'spendzCategory': document.category,
+        'spendzCreatedAt': document.createdAt.toIso8601String(),
+        if (document.issueDate != null) 'spendzIssueDate': document.issueDate!.toIso8601String(),
+        if (document.expiryDate != null) 'spendzExpiryDate': document.expiryDate!.toIso8601String(),
+        'spendzAttachmentType': attachmentType ??
+            (normalizedMime.contains('pdf') ? 'pdf' : 'image'),
+      },
+    );
+    final previousDriveFileId = document.driveFileId;
     final updated = document.copyWith(
-      encryptedFilePath: finalEncryptedFile.path,
+      encryptedFilePath: '',
+      driveFileId: stored.fileId,
       mimeType: normalizedMime,
       fileSize: fileBytes.length,
-      attachmentType:
-          attachmentType ?? (normalizedMime.contains('pdf') ? 'pdf' : 'image'),
+      attachmentType: attachmentType ??
+          (normalizedMime.contains('pdf') ? 'pdf' : 'image'),
       updatedAt: DateTime.now(),
     );
-
     await _documentRepository.update(updated);
+    if (previousDriveFileId != null &&
+        previousDriveFileId.isNotEmpty &&
+        previousDriveFileId != stored.fileId) {
+      await DriveDocumentService.instance.delete(previousDriveFileId);
+    }
     return updated;
   }
 
-  /// Removes the attachment from an existing document while preserving all metadata.
+  /// Removes a Drive attachment while preserving document metadata.
   Future<WalletDocumentModel> removeAttachmentFromDocument(
     WalletDocumentModel document,
   ) async {
-    if (document.hasAttachment) {
-      final file = File(document.encryptedFilePath);
-      if (await file.exists()) {
-        await file.delete().catchError((_) => file);
-      }
-    }
-
+    final previousDriveFileId = document.driveFileId;
+    final legacyFile = document.encryptedFilePath.isNotEmpty
+        ? File(document.encryptedFilePath)
+        : null;
     final updated = document.copyWith(
       encryptedFilePath: '',
+      driveFileId: '',
       mimeType: 'none',
       fileSize: 0,
       attachmentType: 'none',
       updatedAt: DateTime.now(),
     );
-
     await _documentRepository.update(updated);
+    if (previousDriveFileId?.isNotEmpty == true) {
+      await DriveDocumentService.instance.delete(previousDriveFileId!);
+    }
+    // Legacy local-vault cleanup for documents created by older Spendz builds.
+    if (legacyFile != null && await legacyFile.exists()) {
+      await legacyFile.delete();
+    }
     return updated;
   }
 
@@ -382,6 +423,27 @@ class DocumentVaultService {
       updatedAt: DateTime.now(),
     );
 
+    if (updated.driveFileId?.isNotEmpty == true) {
+      final extension = updated.mimeType.contains('pdf')
+          ? 'pdf'
+          : updated.mimeType.contains('png')
+              ? 'png'
+              : 'jpg';
+      await DriveDocumentService.instance.updateMetadata(
+        fileId: updated.driveFileId!,
+        fileName: '${updated.documentName.replaceAll(RegExp(r'[^A-Za-z0-9._ -]'), '_')}.$extension',
+        metadata: {
+          'spendzDocumentId': updated.id,
+          'spendzCategory': updated.category,
+          'spendzCreatedAt': updated.createdAt.toIso8601String(),
+          if (updated.issueDate != null)
+            'spendzIssueDate': updated.issueDate!.toIso8601String(),
+          if (updated.expiryDate != null)
+            'spendzExpiryDate': updated.expiryDate!.toIso8601String(),
+          'spendzAttachmentType': updated.attachmentType,
+        },
+      );
+    }
     await _documentRepository.update(updated);
     return updated;
   }
@@ -390,6 +452,10 @@ class DocumentVaultService {
   Future<Uint8List> decryptDocumentBytes(WalletDocumentModel document) async {
     if (!document.hasAttachment) {
       return Uint8List(0);
+    }
+
+    if (document.driveFileId?.isNotEmpty == true) {
+      return await DriveDocumentService.instance.download(document.driveFileId!);
     }
 
     final masterKey = await _keyService.getMasterKey();
@@ -458,11 +524,11 @@ class DocumentVaultService {
   /// Deletes a document from SQLite database, private encrypted storage, and secure keystore.
   Future<void> deleteDocument(String documentId) async {
     final doc = await _documentRepository.getDocumentById(documentId);
-    if (doc != null && doc.hasAttachment) {
+    if (doc?.driveFileId?.isNotEmpty == true) {
+      await DriveDocumentService.instance.delete(doc!.driveFileId!);
+    } else if (doc != null && doc.encryptedFilePath.isNotEmpty) {
       final file = File(doc.encryptedFilePath);
-      if (await file.exists()) {
-        await file.delete().catchError((_) => file);
-      }
+      if (await file.exists()) await file.delete().catchError((_) => file);
     }
     await _secureNumberService.deleteDocumentFullNumber(documentId);
     await _documentRepository.delete(documentId);

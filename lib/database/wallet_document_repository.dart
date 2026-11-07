@@ -1,8 +1,18 @@
+import 'package:sqflite/sqflite.dart';
 import '../models/wallet_document_model.dart';
 import 'database_helper.dart';
 
 class WalletDocumentRepository {
   final dbHelper = DatabaseHelper.instance;
+
+  Future<void> upsert(WalletDocumentModel document) async {
+    final db = await dbHelper.database;
+    await db.insert(
+      'wallet_documents',
+      document.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
 
   Future<WalletDocumentModel> insert(WalletDocumentModel document) async {
     final db = await dbHelper.database;
