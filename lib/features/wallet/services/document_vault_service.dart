@@ -361,13 +361,10 @@ class DocumentVaultService {
   Future<WalletDocumentModel> removeAttachmentFromDocument(
     WalletDocumentModel document,
   ) async {
-    if (document.driveFileId?.isNotEmpty == true) {
-      await DriveDocumentService.instance.delete(document.driveFileId!);
-    } else if (document.encryptedFilePath.isNotEmpty) {
-      // Legacy local-vault cleanup for documents created by older Spendz builds.
-      final file = File(document.encryptedFilePath);
-      if (await file.exists()) await file.delete();
-    }
+    final previousDriveFileId = document.driveFileId;
+    final legacyFile = document.encryptedFilePath.isNotEmpty
+        ? File(document.encryptedFilePath)
+        : null;
     final updated = document.copyWith(
       encryptedFilePath: '',
       driveFileId: '',
@@ -377,6 +374,13 @@ class DocumentVaultService {
       updatedAt: DateTime.now(),
     );
     await _documentRepository.update(updated);
+    if (previousDriveFileId?.isNotEmpty == true) {
+      await DriveDocumentService.instance.delete(previousDriveFileId!);
+    }
+    // Legacy local-vault cleanup for documents created by older Spendz builds.
+    if (legacyFile != null && await legacyFile.exists()) {
+      await legacyFile.delete();
+    }
     return updated;
   }
 
