@@ -168,6 +168,7 @@ class DriveDocumentService {
     required String mimeType,
     required Uint8List bytes,
   }) async {
+    await ensureConnected();
     if (bytes.isEmpty) {
       throw const DriveDocumentException('Cannot upload an empty document.');
     }
