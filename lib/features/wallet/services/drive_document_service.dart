@@ -42,6 +42,11 @@ class DriveDocumentService {
     );
   }
 
+  Future<void> ensureConnected() async {
+    if (_account == null) await signIn();
+    await _authorizedHeaders(interactive: true);
+  }
+
   Future<GoogleSignInAccount> signIn() async {
     await _initialize();
     _account = await _googleSignIn.authenticate(scopeHint: const [driveFileScope]);
