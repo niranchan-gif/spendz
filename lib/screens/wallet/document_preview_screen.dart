@@ -1,8 +1,8 @@
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:provider/provider.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
@@ -45,7 +45,7 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
   bool _isExporting = false;
   String? _errorMessage;
   Uint8List? _decryptedImageBytes;
-  File? _stagedPdfFile;
+  Uint8List? _decryptedPdfBytes;
   String? _secureDocumentNumber;
   Map<String, dynamic> _decryptedExtraFields = {};
 
@@ -85,9 +85,6 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
 
   @override
   void dispose() {
-    if (_stagedPdfFile != null) {
-      _vaultService.cleanupPreviewFile(_stagedPdfFile!);
-    }
     super.dispose();
   }
 
@@ -130,28 +127,21 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
     });
 
     try {
-      if (_currentDocument.mimeType.contains('pdf')) {
-        final file = await _vaultService.stageDecryptedPreviewFile(
-          _currentDocument,
-        );
-        if (!mounted) {
-          await _vaultService.cleanupPreviewFile(file);
-          return;
-        }
-        setState(() {
-          _stagedPdfFile = file;
-          _isDecrypting = false;
-        });
-      } else {
-        final bytes = await _vaultService.decryptDocumentBytes(
-          _currentDocument,
-        );
-        if (!mounted) return;
-        setState(() {
+      // Download from Drive (or decrypt a legacy local vault item) directly
+      // into memory. PDF bytes are rendered with SfPdfViewer.memory; no preview
+      // file is staged in the app cache or documents directory.
+      final bytes = await _vaultService.decryptDocumentBytes(_currentDocument);
+      if (!mounted) return;
+      setState(() {
+        if (_currentDocument.mimeType.toLowerCase().contains('pdf')) {
+          _decryptedPdfBytes = bytes;
+          _decryptedImageBytes = null;
+        } else {
           _decryptedImageBytes = bytes;
-          _isDecrypting = false;
-        });
-      }
+          _decryptedPdfBytes = null;
+        }
+        _isDecrypting = false;
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -170,32 +160,19 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
 
   Future<void> _openDocument() async {
     if (_currentDocument.hasAttachment) {
-      if (_decryptedImageBytes == null && _stagedPdfFile == null) {
+      if (_decryptedImageBytes == null && _decryptedPdfBytes == null) {
         await _authenticateAndDecrypt();
         if (!mounted) return;
       }
 
-      if (_stagedPdfFile != null) {
-        try {
-          final result = await OpenFilex.open(_stagedPdfFile!.path);
-          if (result.type != ResultType.done && mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Could not open PDF viewer: ${result.message}'),
-                backgroundColor: AppColors.error,
-              ),
-            );
-          }
-        } catch (e) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Error opening PDF: $e'),
-                backgroundColor: AppColors.error,
-              ),
-            );
-          }
-        }
+      if (_decryptedPdfBytes != null) {
+        showDialog(
+          context: context,
+          builder: (ctx) => Dialog(
+            insetPadding: const EdgeInsets.all(8),
+            child: SfPdfViewer.memory(_decryptedPdfBytes!),
+          ),
+        );
         return;
       }
 
@@ -305,15 +282,15 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
     try {
       Uint8List bytes = Uint8List(0);
       if (_currentDocument.hasAttachment) {
-        if (_decryptedImageBytes == null && _stagedPdfFile == null) {
+        if (_decryptedImageBytes == null && _decryptedPdfBytes == null) {
           await _authenticateAndDecrypt();
           if (!mounted) {
             setState(() => _isExporting = false);
             return;
           }
         }
-        if (_stagedPdfFile != null) {
-          bytes = await _stagedPdfFile!.readAsBytes();
+        if (_decryptedPdfBytes != null) {
+          bytes = _decryptedPdfBytes!;
         } else if (_decryptedImageBytes != null) {
           bytes = _decryptedImageBytes!;
         }
@@ -467,7 +444,7 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
       setState(() {
         _currentDocument = updated;
         _decryptedImageBytes = null;
-        _stagedPdfFile = null;
+        _decryptedPdfBytes = null;
       });
       if (!mounted) return;
       await context.read<WalletDocumentProvider>().loadDocuments();
@@ -1271,41 +1248,13 @@ class _DocumentPreviewScreenState extends State<DocumentPreviewScreen> {
       );
     }
 
-    if (_stagedPdfFile != null) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.picture_as_pdf_rounded,
-              size: 64,
-              color: AppColors.error,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              'PDF Document Staged Decrypted',
-              style: AppTextStyles.bodyLarge.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              'PDF will be safely wiped from cache upon screen exit.',
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.getTextSecondary(context),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            ElevatedButton.icon(
-              onPressed: _openDocument,
-              icon: const Icon(Icons.open_in_new_rounded),
-              label: const Text('Open with PDF Viewer'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-              ),
-            ),
-          ],
+    if (_decryptedPdfBytes != null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        child: SfPdfViewer.memory(
+          _decryptedPdfBytes!,
+          canShowScrollHead: true,
+          canShowScrollStatus: true,
         ),
       );
     }
