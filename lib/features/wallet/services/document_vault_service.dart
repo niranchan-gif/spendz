@@ -11,6 +11,7 @@ import '../../../models/wallet_document_model.dart';
 import '../security/document_encryption_service.dart';
 import '../security/secure_number_service.dart';
 import '../security/wallet_key_service.dart';
+import 'drive_document_service.dart';
 
 class VaultValidationException extends VaultSecurityException {
   VaultValidationException(super.message);
@@ -156,8 +157,10 @@ class DocumentVaultService {
       );
     }
 
-    // 3. Encrypt and write attachment file if provided
+    // 3. Upload attachment bytes directly to the user's private Drive folder.
+    // No document bytes are written to the app's permanent local directories.
     String encryptedFilePath = '';
+    String? driveFileId;
     String normalizedMime = 'none';
     int fileSize = 0;
     String finalAttachmentType = 'none';
@@ -168,45 +171,17 @@ class DocumentVaultService {
           'Attachment size exceeds maximum allowed size of 25 MB.',
         );
       }
-
-      normalizedMime = (attachmentMimeType ?? 'image/jpeg')
-          .toLowerCase()
-          .trim();
-      final vaultDir = await getVaultDirectory();
-      final stagingFile = File(p.join(vaultDir.path, '$docId.tmp'));
-      final finalEncryptedFile = File(p.join(vaultDir.path, '$docId.enc'));
-
-      try {
-        final masterKey = await _keyService.getOrCreateMasterKey();
-
-        final encryptedBytes = await _encryptionService.encryptBytes(
-          attachmentBytes,
-          keyBytes: masterKey,
-        );
-
-        await stagingFile.writeAsBytes(encryptedBytes, flush: true);
-        if (!await stagingFile.exists() ||
-            await stagingFile.length() != encryptedBytes.length) {
-          throw VaultStorageException(
-            'Failed to verify staged attachment ciphertext write.',
-          );
-        }
-
-        await stagingFile.rename(finalEncryptedFile.path);
-        encryptedFilePath = finalEncryptedFile.path;
-        fileSize = attachmentBytes.length;
-        finalAttachmentType =
-            attachmentType ??
-            (normalizedMime.contains('pdf') ? 'pdf' : 'image');
-      } catch (e) {
-        if (await stagingFile.exists())
-          await stagingFile.delete().catchError((_) => stagingFile);
-        if (await finalEncryptedFile.exists())
-          await finalEncryptedFile.delete().catchError(
-            (_) => finalEncryptedFile,
-          );
-        rethrow;
-      }
+      normalizedMime = (attachmentMimeType ?? 'image/jpeg').toLowerCase().trim();
+      final stored = await DriveDocumentService.instance.upload(
+        documentId: docId,
+        fileName: '${documentName.trim().replaceAll(RegExp(r'[^A-Za-z0-9._ -]'), '_')}.${normalizedMime.contains('pdf') ? 'pdf' : normalizedMime.contains('png') ? 'png' : 'jpg'}',
+        mimeType: normalizedMime,
+        bytes: Uint8List.fromList(attachmentBytes),
+      );
+      driveFileId = stored.fileId;
+      fileSize = attachmentBytes.length;
+      finalAttachmentType = attachmentType ??
+          (normalizedMime.contains('pdf') ? 'pdf' : 'image');
     }
 
     final docModel = WalletDocumentModel(
@@ -217,6 +192,7 @@ class DocumentVaultService {
           ? null
           : description?.trim(),
       encryptedFilePath: encryptedFilePath,
+      driveFileId: driveFileId,
       thumbnailPath: null,
       mimeType: normalizedMime,
       fileSize: fileSize,
