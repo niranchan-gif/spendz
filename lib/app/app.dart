@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../features/wallet/security/wallet_auth_service.dart';
 import '../features/wallet/services/document_vault_service.dart';
+import '../features/wallet/services/drive_document_service.dart';
 import '../providers/transaction_provider.dart';
 import '../providers/category_provider.dart';
 import '../providers/dashboard_provider.dart';
@@ -36,6 +37,8 @@ class _SpendzAppState extends State<SpendzApp> with WidgetsBindingObserver {
 
     // Clean up any stale decrypted temporary preview files left from previous sessions
     _vaultService.cleanupAllTemporaryFiles();
+    // Restore only an existing Drive session; never show consent on app launch.
+    DriveDocumentService.instance.restoreSession().catchError((_) {});
   }
 
   @override
