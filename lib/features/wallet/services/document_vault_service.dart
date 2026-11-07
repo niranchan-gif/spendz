@@ -252,7 +252,7 @@ class DocumentVaultService {
     );
   }
 
-  /// Replaces or attaches a new file to an existing document.
+  /// Uploads/replaces an attachment in private Google Drive.
   Future<WalletDocumentModel> attachFileToDocument({
     required WalletDocumentModel document,
     required List<int> fileBytes,
@@ -265,33 +265,26 @@ class DocumentVaultService {
     if (fileBytes.length > maxFileSizeBytes) {
       throw VaultValidationException('Attachment size exceeds 25 MB.');
     }
-
-    final vaultDir = await getVaultDirectory();
-    final stagingFile = File(p.join(vaultDir.path, '${document.id}_new.tmp'));
-    final finalEncryptedFile = File(
-      p.join(vaultDir.path, '${document.id}.enc'),
-    );
-
-    final masterKey = await _keyService.getOrCreateMasterKey();
-
-    final encryptedBytes = await _encryptionService.encryptBytes(
-      fileBytes,
-      keyBytes: masterKey,
-    );
-
-    await stagingFile.writeAsBytes(encryptedBytes, flush: true);
-    await stagingFile.rename(finalEncryptedFile.path);
-
     final normalizedMime = mimeType.toLowerCase().trim();
+    final stored = await DriveDocumentService.instance.upload(
+      documentId: document.id,
+      fileName: '${document.documentName.replaceAll(RegExp(r'[^A-Za-z0-9._ -]'), '_')}.${normalizedMime.contains('pdf') ? 'pdf' : normalizedMime.contains('png') ? 'png' : 'jpg'}',
+      mimeType: normalizedMime,
+      bytes: Uint8List.fromList(fileBytes),
+    );
+    if (document.driveFileId != null && document.driveFileId!.isNotEmpty &&
+        document.driveFileId != stored.fileId) {
+      await DriveDocumentService.instance.delete(document.driveFileId!);
+    }
     final updated = document.copyWith(
-      encryptedFilePath: finalEncryptedFile.path,
+      encryptedFilePath: '',
+      driveFileId: stored.fileId,
       mimeType: normalizedMime,
       fileSize: fileBytes.length,
-      attachmentType:
-          attachmentType ?? (normalizedMime.contains('pdf') ? 'pdf' : 'image'),
+      attachmentType: attachmentType ??
+          (normalizedMime.contains('pdf') ? 'pdf' : 'image'),
       updatedAt: DateTime.now(),
     );
-
     await _documentRepository.update(updated);
     return updated;
   }
